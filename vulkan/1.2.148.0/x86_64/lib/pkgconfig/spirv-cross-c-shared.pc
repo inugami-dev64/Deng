@@ -1,0 +1,15 @@
+# These paths must be manually configured
+
+prefix=/root/sdk-build/1.2.148.0/x86_64
+exec_prefix=${prefix}
+libdir=${prefix}//root/sdk-build/1.2.148.0/x86_64/lib
+sharedlibdir=${prefix}//root/sdk-build/1.2.148.0/x86_64/lib
+includedir=${prefix}/include/spirv_cross
+
+Name: spirv-cross-c-shared
+Description: C API for SPIRV-Cross
+Version: 0.36.0
+
+Requires:
+Libs: -L${libdir} -L${sharedlibdir} -lspirv-cross-c-shared
+Cflags: -I${includedir}

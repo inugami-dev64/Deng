@@ -1,0 +1,14 @@
+# These paths must be manually configured
+
+prefix=/root/sdk-build/1.2.148.0/x86_64
+exec_prefix=${prefix}
+libdir=${prefix}//root/sdk-build/1.2.148.0/x86_64/lib
+includedir=${prefix}/include
+
+Name: shaderc
+Description: Tools and libraries for Vulkan shader compilation
+Version: 2020.2.1
+URL: https://github.com/google/shaderc
+
+Libs: -L${libdir} -lshaderc_shared
+Cflags: -I${includedir}

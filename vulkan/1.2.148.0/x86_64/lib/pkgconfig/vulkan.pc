@@ -1,0 +1,14 @@
+# These paths must be manually configured
+
+prefix=/root/sdk-build/1.2.148.0/x86_64
+exec_prefix=/root/sdk-build/1.2.148.0/x86_64
+libdir=${exec_prefix}//root/sdk-build/1.2.148.0/x86_64/lib
+includedir=${prefix}/include
+
+Name: Vulkan-Loader
+Description: Vulkan Loader
+Version: 1.2.148
+Libs: -L${libdir} -lvulkan
+Libs.private:  -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc
+Cflags: -I${includedir}
+
