@@ -2,7 +2,7 @@ INCLUDEFLAGS += -I dependencies/src/
 
 LIBFLAGS += -L dependencies/lib
 LIBS = -lpthread -lX11 -ldl -lglfw3 -lvulkan
-LINKOBJS = main.o renderer.o queuemanager.o window.o swapchaindetails.o filemanager.o
+LINKOBJS = main.o renderer.o queuemanager.o window.o swapchaindetails.o filemanager.o dengmath.o
 
 deng: $(LINKOBJS)
 	g++ $(LINKOBJS) -o deng $(LIBFLAGS) $(LIBS) 
@@ -24,6 +24,12 @@ swapchaindetails.o: src/swapchaindetails.cpp
 
 filemanager.o: src/filemanager.cpp
 	g++ -c src/filemanager.cpp $(INCLUDEFLAGS)
+
+dengmath.o: src/dengmath.cpp
+	g++ -c src/dengmath.cpp $(INCLUDEFLAGS)
+
+precompile:	src/headers/renderer.h
+	g++ src/headers/renderer.h -o src/headers/renderer.h.gch $(INCLUDEFLAGS)
 
 clean:	
 	rm *.o

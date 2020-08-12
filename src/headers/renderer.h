@@ -2,8 +2,9 @@
 #define RENDERER_H
 
 #include "files.h"
-#define DEBUG 0
-#define ERR(x) throw std::runtime_error(x) 
+#define DEBUG 1
+#define ERR(x) throw std::runtime_error(x)
+#define ERRME(x) std::cout << "\033[1;31m" << x << "\033[0m\n" 
 
 #if DEBUG
     #define LOG(x) std::cout << x << "\n"
@@ -18,11 +19,11 @@ namespace Deng {
             const int m_MAX_FRAMES_IN_FLIGHT = 2; 
             size_t m_currentFrame = 0;
 
-            VkInstance m_instance = nullptr;
-            VkPhysicalDevice m_gpu = nullptr;
+            VkInstance m_instance;
+            VkPhysicalDevice m_gpu;
             VkPhysicalDeviceProperties m_gpu_properties{};
             VkPhysicalDeviceFeatures m_gpu_features{};
-            VkDevice m_device = nullptr;
+            VkDevice m_device;
             VkSurfaceKHR m_surface;
             VkSwapchainKHR m_swapChain;
 
@@ -37,8 +38,10 @@ namespace Deng {
 
             std::vector<VkFramebuffer> m_swapChain_frameBuffers;
             VkCommandPool m_commandPool;
-            std::vector<VkCommandBuffer> m_commandBuffers;
+            VkBuffer m_vertex_buffer;
+            VkDeviceMemory m_vertex_bufferMem;
 
+            std::vector<VkCommandBuffer> m_commandBuffers;
             std::vector<VkImage> m_swapChain_images;
             std::vector<VkImageView> m_swapChain_imageviews;
             std::vector<const char*> m_req_extensions_name;
@@ -53,6 +56,9 @@ namespace Deng {
             QueueFamilies m_queueFamilies;
             Queues m_queues;
             FileManager fm;
+
+            //vertex data
+            std::vector<Vertex> m_vertexData;
 
         private:
             void initInstance();
@@ -70,9 +76,13 @@ namespace Deng {
             void initGraphicsPipeline();
             void initFrameBuffers();
             void initCommandPool();
+            void initVertexBuffer();
+            uint32_t getMemType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
             void initCommandBuffer();
             void initSemaphores();
+            void initVertices();
 
+            void deleteCommandBuffers();
             void deleteSemaphores();
             void deleteCommandPool();
             void deleteFrameBuffers();
@@ -81,10 +91,13 @@ namespace Deng {
             void deleteShaders(VkShaderModule &module);
             void deleteImageViews();
             void deleteSwapChain();
+            void deleteVertexBuffer();
+            void freeMemory();
             void deleteInstance();
             void deleteSurface();
             void deleteDevice();
 
+            void makeVertexBuffer();
             void makeFrame();
 
         public:

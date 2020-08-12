@@ -7,6 +7,7 @@ namespace Deng
         this->m_req_extensions_name.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
         this->window = &win;
+        this->initVertices();
         this->initInstance();
         this->initWindowSurface();
         this->selectPhysicalDevice();
@@ -18,23 +19,27 @@ namespace Deng
         this->initGraphicsPipeline();
         this->initFrameBuffers();
         this->initCommandPool();
+        this->initVertexBuffer();
         this->initCommandBuffer();
         this->initSemaphores();
     }
 
     Renderer::~Renderer() {
-        this->deleteSemaphores();
-        this->deleteCommandPool();
         this->deleteFrameBuffers();
+        this->deleteCommandBuffers();
         this->deletePipeline();
         this->deleteRenderPass();
         this->deleteImageViews();
         this->deleteSwapChain();
+        this->deleteVertexBuffer();
+        this->freeMemory();
+        this->deleteSemaphores();
+        this->deleteCommandPool();
         this->deleteDevice();
         this->deleteSurface();
         this->deleteInstance();
+        
         delete this->m_device_swapChainDetails;
-        delete this->ev;
     }
 
     void Renderer::deleteInstance() {
@@ -90,8 +95,34 @@ namespace Deng
         for(size_t i = 0; i < this->m_MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(this->m_device, this->m_imageAvailableSem_set[i], nullptr);
             vkDestroySemaphore(this->m_device, this->m_renderFinishedSem_set[i], nullptr);
-            vkDestroyFence(this->m_device, this->m_flightFences[i], nullptr);
         }
+    }
+
+    void Renderer::deleteCommandBuffers() {
+        vkFreeCommandBuffers(this->m_device, this->m_commandPool, this->m_commandBuffers.size(), this->m_commandBuffers.data());
+    }
+
+    void Renderer::freeMemory() {
+        vkFreeMemory(this->m_device, this->m_vertex_bufferMem, nullptr);
+    }
+
+    void Renderer::deleteVertexBuffer() {
+        vkDestroyBuffer(this->m_device, this->m_vertex_buffer, nullptr);
+    }
+
+    void Renderer::initVertices() {
+        std::vector<std::string> contents;
+        this->fm.getFileContents("objects/obj1.obj", nullptr, &contents);
+        auto local_vertData = this->fm.objHandle.getVertices(contents);
+        this->m_vertexData.resize(local_vertData.size());
+
+        for(vec3 &vertVec3 : local_vertData) {
+            Vertex temp;
+            temp.pos = vertVec3;
+            temp.colors = {1.0f, 1.0f, 1.0f};
+            this->m_vertexData.push_back(temp);
+        }
+                    
     }
 
     //Function that initialises instance 
@@ -417,8 +448,10 @@ namespace Deng
     }
 
     void Renderer::initGraphicsPipeline() {
-        std::vector<char> vertShaderBinVec = this->fm.getFileContents("shaders/vert.spv");
-        std::vector<char> fragShaderBinVec = this->fm.getFileContents("shaders/frag.spv");
+        std::vector<char> vertShaderBinVec;
+        std::vector<char> fragShaderBinVec;
+        this->fm.getFileContents("shaders/vert.spv", &vertShaderBinVec, nullptr);
+        this->fm.getFileContents("shaders/frag.spv", &fragShaderBinVec, nullptr);
 
         VkShaderModule vertexModule = this->initShaderModule(vertShaderBinVec);
         VkShaderModule fragModule = this->initShaderModule(fragShaderBinVec);
@@ -437,10 +470,16 @@ namespace Deng
 
         VkPipelineShaderStageCreateInfo shaderStages[] = {local_vModule_createInfo, local_fModule_createinfo};
 
+        auto local_input_binding_desc = Vertex::getBindingDesc();
+        auto local_input_attribute_desc = Vertex::getAttributeDesc();
+
         VkPipelineVertexInputStateCreateInfo local_vertexInput_createInfo{};
         local_vertexInput_createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        local_vertexInput_createInfo.vertexBindingDescriptionCount = 0;
-        local_vertexInput_createInfo.vertexAttributeDescriptionCount = 0;
+        local_vertexInput_createInfo.vertexBindingDescriptionCount = 1;
+        local_vertexInput_createInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(local_input_attribute_desc.size());
+        local_vertexInput_createInfo.pVertexBindingDescriptions = &local_input_binding_desc;
+        local_vertexInput_createInfo.pVertexAttributeDescriptions = local_input_attribute_desc.data();
+
 
         VkPipelineInputAssemblyStateCreateInfo local_inputAssembly_createInfo{};
         local_inputAssembly_createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -563,6 +602,57 @@ namespace Deng
         }
     }
 
+    uint32_t Renderer::getMemType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
+        VkPhysicalDeviceMemoryProperties local_memProperties;
+        vkGetPhysicalDeviceMemoryProperties(this->m_gpu, &local_memProperties);
+
+        for(uint32_t i = 0; i < local_memProperties.memoryTypeCount; i++) {
+            if(typeFilter & (1 << i) && (local_memProperties.memoryTypes[i].propertyFlags & properties)) {
+                LOG("Vertex buffer mem type: " + std::to_string(i));
+                return i;
+            }
+        }
+
+        ERR("Failed to find suitable memory type");
+    }
+
+    void Renderer::initVertexBuffer() {
+        VkBufferCreateInfo local_buffer_createInfo{};
+        local_buffer_createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        local_buffer_createInfo.size = sizeof(this->m_vertexData[0]) * this->m_vertexData.size();
+        local_buffer_createInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        local_buffer_createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        
+        if(vkCreateBuffer(this->m_device, &local_buffer_createInfo, nullptr, &this->m_vertex_buffer) != VK_SUCCESS) {
+            ERR("Failed to create vertex buffer!");
+        }
+        else {
+            LOG("Vertex buffer created successfully!");
+        }
+
+        VkMemoryRequirements local_memReq;
+        vkGetBufferMemoryRequirements(this->m_device, this->m_vertex_buffer, &local_memReq);
+
+        VkMemoryAllocateInfo local_allocInfo{};
+        local_allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        local_allocInfo.allocationSize = local_memReq.size;
+        local_allocInfo.memoryTypeIndex = this->getMemType(local_memReq.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        if(vkAllocateMemory(this->m_device, &local_allocInfo, nullptr, &this->m_vertex_bufferMem) != VK_SUCCESS) {
+            ERR("Failed to allocate vertex buffer memory!");
+        }
+        else {
+            LOG("Vertex buffer memory allocated successfully!");
+        }
+
+        vkBindBufferMemory(this->m_device, this->m_vertex_buffer, this->m_vertex_bufferMem, 0);
+
+        void *data;
+        vkMapMemory(this->m_device, this->m_vertex_bufferMem, 0, local_buffer_createInfo.size, 0, &data);
+        memcpy(data, this->m_vertexData.data(), (size_t) local_buffer_createInfo.size);
+        vkUnmapMemory(this->m_device, this->m_vertex_bufferMem);
+    }
+
     void Renderer::initCommandBuffer() {
         this->m_commandBuffers.resize(this->m_swapChain_frameBuffers.size());
 
@@ -600,7 +690,13 @@ namespace Deng
 
             vkCmdBeginRenderPass(this->m_commandBuffers[i], &local_renderpass_begininfo, VK_SUBPASS_CONTENTS_INLINE);
             vkCmdBindPipeline(this->m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipeline);
-            vkCmdDraw(this->m_commandBuffers[i], 3, 1, 0, 0);
+
+            VkBuffer local_vertex_buffers[] = {this->m_vertex_buffer};
+            VkDeviceSize offsets[] = {0};
+
+            vkCmdBindVertexBuffers(this->m_commandBuffers[i], 0, 1, local_vertex_buffers, offsets);
+
+            vkCmdDraw(this->m_commandBuffers[i], static_cast<uint32_t>(this->m_vertexData.size()), 1, 0, 0);
             vkCmdEndRenderPass(this->m_commandBuffers[i]);
 
             if(vkEndCommandBuffer(this->m_commandBuffers[i]) != VK_SUCCESS) {
@@ -637,7 +733,14 @@ namespace Deng
         vkWaitForFences(this->m_device, 1, &this->m_flightFences[this->m_currentFrame], VK_TRUE, UINT64_MAX);
 
         uint32_t imgIndex;
-        vkAcquireNextImageKHR(this->m_device, this->m_swapChain, UINT64_MAX, this->m_imageAvailableSem_set[this->m_currentFrame], VK_NULL_HANDLE, &imgIndex);
+        VkResult result = vkAcquireNextImageKHR(this->m_device, this->m_swapChain, UINT64_MAX, this->m_imageAvailableSem_set[this->m_currentFrame], VK_NULL_HANDLE, &imgIndex);
+        if(result == VK_ERROR_OUT_OF_DATE_KHR) {
+            LOG("Acquiring new image from swap chain timed out!");
+            return;
+        }
+        else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+            ERR("Error acquiring swap chain image!");
+        }
 
         VkSubmitInfo local_submitInfo{};
         local_submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

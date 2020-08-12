@@ -5,7 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/src/headers",
                 "${workspaceFolder}/src/",
-                "${workspaceFolder}/vulkan/1.2.148.0/source/Vulkan-Headers/include"
+                "${workspaceFolder}/dependencies/src"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

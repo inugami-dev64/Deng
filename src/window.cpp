@@ -2,8 +2,7 @@
 
 namespace Deng {
     Window::Window(const uint32_t &x, const uint32_t &y, const char *title) {
-        this->size.x = x;
-        this->size.y = y;
+        this->size = {(float) x, (float) y};
 
         glfwInit();
 
@@ -26,7 +25,7 @@ namespace Deng {
         return this->title;
     }
 
-    Vector2D Window::getSize() {
+    vec2 Window::getSize() {
         return this->size;
     }
 }
