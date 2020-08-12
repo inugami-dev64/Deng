@@ -1,8 +1,6 @@
-INCLUDEFLAGS += -I vulkan/1.2.148.0/source/Vulkan-Headers/include/
-INCLUDEFLAGS += -I glfw/include
+INCLUDEFLAGS += -I dependencies/src/
 
-LIBFLAGS += -L vulkan/1.2.148.0/x86_64/lib/
-LIBFLAGS += -L glfw/build/src
+LIBFLAGS += -L dependencies/lib
 LIBS = -lpthread -lX11 -ldl -lglfw3 -lvulkan
 LINKOBJS = main.o renderer.o queuemanager.o window.o swapchaindetails.o filemanager.o
 
