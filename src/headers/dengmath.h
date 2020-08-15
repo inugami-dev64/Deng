@@ -15,35 +15,33 @@
 
 namespace Deng {
 
-    enum ShaderType {
-        DENG_SHADER_VERTEX  = 0,
-        DENG_SHADER_FRAG = 1
-    };
-
+    template<typename T>
     struct vec2 {
-        float x;
-        float y;
+        T x, y;
     };
 
+    template<typename T>
     struct vec3 {
-        float x;
-        float y;
-        float z;
+        T x, y, z;
     };
-
+    
+    template<typename T>
     struct vec4 {
-        float x;
-        float y;
-        float z;
-        float a;
+        T x, y, z, a;
     };
 
-    struct Vertex {
-        vec3 pos;
-        vec3 colors;
+    template<typename T>
+    struct mat3 {
+        vec3<T> line1;
+        vec3<T> line2;
+        vec3<T> line3;
+    };
 
-        static VkVertexInputBindingDescription getBindingDesc();
-        static std::array<VkVertexInputAttributeDescription, 2> getAttributeDesc();
+    template<typename T>
+    struct mat2x3 {
+        vec2<T> line1;
+        vec2<T> line2;
+        vec2<T> line3; 
     };
 }
 

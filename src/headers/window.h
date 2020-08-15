@@ -10,14 +10,14 @@ namespace Deng
         private:
             GLFWwindow *gameWindow;
             const char *title;
-            vec2 size;
+            vec2<uint32_t> size;
 
         public:
             Window(const uint32_t &x, const uint32_t &y, const char *title);
             ~Window();
             GLFWwindow *getWindow();
             const char *getTitle();
-            vec2 getSize();
+            vec2<uint32_t> getSize();
     };
 }
 

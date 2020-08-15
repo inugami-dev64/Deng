@@ -1,7 +1,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include "files.h"
+#include "objloader.h"
 #define DEBUG 1
 #define ERR(x) throw std::runtime_error(x)
 #define ERRME(x) std::cout << "\033[1;31m" << x << "\033[0m\n" 
@@ -13,6 +13,16 @@
 #endif
 
 namespace Deng {
+    enum CoordinateMode {
+        DENG_COORDINATE_MODE_DEFAULT = 0,
+        DENG_COORDINATE_MODE_REVERSE = 1
+    };
+
+    enum BufferMode {
+        DENG_BUFFER_TYPE_STAGING = 0,
+        DENG_BUFFER_TYPE_VERTEX = 1
+    };
+
     class Renderer
     {   
         private:
@@ -38,8 +48,6 @@ namespace Deng {
 
             std::vector<VkFramebuffer> m_swapChain_frameBuffers;
             VkCommandPool m_commandPool;
-            VkBuffer m_vertex_buffer;
-            VkDeviceMemory m_vertex_bufferMem;
 
             std::vector<VkCommandBuffer> m_commandBuffers;
             std::vector<VkImage> m_swapChain_images;
@@ -51,14 +59,14 @@ namespace Deng {
             std::vector<VkFence> m_flightFences;
 
             SwapChainDetails *m_device_swapChainDetails;
-            Events *ev;
-            Window *window;
+            Events *m_ev;
+            Window *m_window;
             QueueFamilies m_queueFamilies;
             Queues m_queues;
             FileManager fm;
 
-            //vertex data
-            std::vector<Vertex> m_vertexData;
+            //game objects (currently just hardcoded, soon to be added from editor)
+            GameObject m_statue;
 
         private:
             void initInstance();
@@ -75,12 +83,14 @@ namespace Deng {
             void initRenderPass();
             void initGraphicsPipeline();
             void initFrameBuffers();
+            void initTextureImage(GameObject &obj);
             void initCommandPool();
-            void initVertexBuffer();
+            void initVertexBuffer(GameObject &obj);
+            void initTextureBuffer();
             uint32_t getMemType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-            void initCommandBuffer();
+            void initCommandBufferFromSwapChain();
             void initSemaphores();
-            void initVertices();
+            void initObjects(GameObject &object, const std::string &objSourceFilePath, const std::string &texSourceFilePath, const bool &coordinateMode);
 
             void deleteCommandBuffers();
             void deleteSemaphores();
@@ -97,8 +107,16 @@ namespace Deng {
             void deleteSurface();
             void deleteDevice();
 
+            void makeTextureImage(const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj);
             void makeVertexBuffer();
             void makeFrame();
+            void makeBuffer(const VkDeviceSize &size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj, const uint8_t &type);
+
+            void populateBufferMem(const VkDeviceSize &size, const void *srcData, VkBuffer &buffer, VkDeviceMemory &bufferMem);
+            void copyBufferToTextureImage(GameObject &obj);
+
+            void beginCommandBufferSingleCommand(VkCommandBuffer &commandBuffer);
+            void endCommandBufferSingleCommand(VkCommandBuffer &commandBuffer);
 
         public:
             void run();

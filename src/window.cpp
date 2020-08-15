@@ -25,7 +25,7 @@ namespace Deng {
         return this->title;
     }
 
-    vec2 Window::getSize() {
+    vec2<uint32_t> Window::getSize() {
         return this->size;
     }
 }

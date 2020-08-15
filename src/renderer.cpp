@@ -6,8 +6,8 @@ namespace Deng
         //Required extensions vector initialisation
         this->m_req_extensions_name.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
-        this->window = &win;
-        this->initVertices();
+        this->m_window = &win;
+        this->initObjects(this->m_statue, "objects/obj1.obj", "textures/obj1.bmp", DENG_COORDINATE_MODE_REVERSE);
         this->initInstance();
         this->initWindowSurface();
         this->selectPhysicalDevice();
@@ -19,14 +19,14 @@ namespace Deng
         this->initGraphicsPipeline();
         this->initFrameBuffers();
         this->initCommandPool();
-        this->initVertexBuffer();
-        this->initCommandBuffer();
+        this->initTextureImage(this->m_statue);
+        this->initVertexBuffer(this->m_statue);
+        this->initCommandBufferFromSwapChain();
         this->initSemaphores();
     }
 
     Renderer::~Renderer() {
         this->deleteFrameBuffers();
-        this->deleteCommandBuffers();
         this->deletePipeline();
         this->deleteRenderPass();
         this->deleteImageViews();
@@ -98,31 +98,24 @@ namespace Deng
         }
     }
 
-    void Renderer::deleteCommandBuffers() {
-        vkFreeCommandBuffers(this->m_device, this->m_commandPool, this->m_commandBuffers.size(), this->m_commandBuffers.data());
-    }
-
     void Renderer::freeMemory() {
-        vkFreeMemory(this->m_device, this->m_vertex_bufferMem, nullptr);
+        vkFreeMemory(this->m_device, this->m_statue.buffers.staging_bufferMem, nullptr);
+        vkFreeMemory(this->m_device, this->m_statue.buffers.vertex_bufferMem, nullptr);
     }
 
     void Renderer::deleteVertexBuffer() {
-        vkDestroyBuffer(this->m_device, this->m_vertex_buffer, nullptr);
+        vkDestroyBuffer(this->m_device, this->m_statue.buffers.staging_buffer, nullptr);
+        vkDestroyBuffer(this->m_device, this->m_statue.buffers.vertex_buffer, nullptr);
     }
 
-    void Renderer::initVertices() {
-        std::vector<std::string> contents;
-        this->fm.getFileContents("objects/obj1.obj", nullptr, &contents);
-        auto local_vertData = this->fm.objHandle.getVertices(contents);
-        this->m_vertexData.resize(local_vertData.size());
+    void Renderer::initObjects(GameObject &obj, const std::string &objFilePath, const std::string &texFilePath, const bool &coordinateMode) {
+        ObjLoader obj_loader(objFilePath, coordinateMode);
+        obj_loader.getObjMatrices(obj);
 
-        for(vec3 &vertVec3 : local_vertData) {
-            Vertex temp;
-            temp.pos = vertVec3;
-            temp.colors = {1.0f, 1.0f, 1.0f};
-            this->m_vertexData.push_back(temp);
-        }
-                    
+        TextureLoader tex_loader(texFilePath);
+        ObjTextureData texture_data;
+        tex_loader.getTextureDetails(&texture_data.width, &texture_data.height, &texture_data.texSize, &texture_data.texturePixelsData);
+        obj.textureData = texture_data;
     }
 
     //Function that initialises instance 
@@ -130,7 +123,7 @@ namespace Deng
         //initialise appinfo
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = this->window->getTitle();
+        appInfo.pApplicationName = this->m_window->getTitle();
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.pEngineName = "Deng";
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -159,7 +152,7 @@ namespace Deng
 
     void Renderer::initWindowSurface() {
         LOG("Initialising window surface!");
-        if(glfwCreateWindowSurface(this->m_instance, this->window->getWindow(), nullptr, &this->m_surface) != VK_SUCCESS) {
+        if(glfwCreateWindowSurface(this->m_instance, this->m_window->getWindow(), nullptr, &this->m_surface) != VK_SUCCESS) {
             ERR("Failed to create window surface!");
         }
         else {
@@ -308,8 +301,8 @@ namespace Deng
             this->m_extent = this->m_device_swapChainDetails->getCapabilities().currentExtent;
         }
         else {
-            this->m_extent.width = this->window->getSize().x;
-            this->m_extent.height = this->window->getSize().y;
+            this->m_extent.width = this->m_window->getSize().x;
+            this->m_extent.height = this->m_window->getSize().y;
         }
 
         LOG("Successfully initialised swap chain settings!");
@@ -470,13 +463,13 @@ namespace Deng
 
         VkPipelineShaderStageCreateInfo shaderStages[] = {local_vModule_createInfo, local_fModule_createinfo};
 
-        auto local_input_binding_desc = Vertex::getBindingDesc();
-        auto local_input_attribute_desc = Vertex::getAttributeDesc();
+        auto local_input_binding_desc = VertexInputDesc::getBindingDesc(this->m_statue);
+        auto local_input_attribute_desc = VertexInputDesc::getAttributeDesc();
 
         VkPipelineVertexInputStateCreateInfo local_vertexInput_createInfo{};
         local_vertexInput_createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         local_vertexInput_createInfo.vertexBindingDescriptionCount = 1;
-        local_vertexInput_createInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(local_input_attribute_desc.size());
+        local_vertexInput_createInfo.vertexAttributeDescriptionCount = local_input_attribute_desc.size();
         local_vertexInput_createInfo.pVertexBindingDescriptions = &local_input_binding_desc;
         local_vertexInput_createInfo.pVertexAttributeDescriptions = local_input_attribute_desc.data();
 
@@ -616,44 +609,23 @@ namespace Deng
         ERR("Failed to find suitable memory type");
     }
 
-    void Renderer::initVertexBuffer() {
-        VkBufferCreateInfo local_buffer_createInfo{};
-        local_buffer_createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        local_buffer_createInfo.size = sizeof(this->m_vertexData[0]) * this->m_vertexData.size();
-        local_buffer_createInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-        local_buffer_createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        
-        if(vkCreateBuffer(this->m_device, &local_buffer_createInfo, nullptr, &this->m_vertex_buffer) != VK_SUCCESS) {
-            ERR("Failed to create vertex buffer!");
-        }
-        else {
-            LOG("Vertex buffer created successfully!");
-        }
+    void Renderer::initTextureImage(GameObject &obj) {
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMem;
+        VkDeviceSize img_size = obj.textureData.texSize;
+        this->makeBuffer(img_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_STAGING);
+        this->populateBufferMem(img_size, obj.textureData.texturePixelsData.data(), stagingBuffer, stagingBufferMem);
+        this->makeTextureImage(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, obj);
 
-        VkMemoryRequirements local_memReq;
-        vkGetBufferMemoryRequirements(this->m_device, this->m_vertex_buffer, &local_memReq);
-
-        VkMemoryAllocateInfo local_allocInfo{};
-        local_allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        local_allocInfo.allocationSize = local_memReq.size;
-        local_allocInfo.memoryTypeIndex = this->getMemType(local_memReq.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-        if(vkAllocateMemory(this->m_device, &local_allocInfo, nullptr, &this->m_vertex_bufferMem) != VK_SUCCESS) {
-            ERR("Failed to allocate vertex buffer memory!");
-        }
-        else {
-            LOG("Vertex buffer memory allocated successfully!");
-        }
-
-        vkBindBufferMemory(this->m_device, this->m_vertex_buffer, this->m_vertex_bufferMem, 0);
-
-        void *data;
-        vkMapMemory(this->m_device, this->m_vertex_bufferMem, 0, local_buffer_createInfo.size, 0, &data);
-        memcpy(data, this->m_vertexData.data(), (size_t) local_buffer_createInfo.size);
-        vkUnmapMemory(this->m_device, this->m_vertex_bufferMem);
     }
 
-    void Renderer::initCommandBuffer() {
+    void Renderer::initVertexBuffer(GameObject &obj) {
+        VkDeviceSize local_size = sizeof(obj.vertexData[0]) * obj.vertexData.size();
+        this->makeBuffer(local_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_VERTEX);
+        this->populateBufferMem(local_size, obj.vertexData.data(), obj.buffers.vertex_buffer, obj.buffers.vertex_bufferMem);
+    }
+
+    void Renderer::initCommandBufferFromSwapChain() {
         this->m_commandBuffers.resize(this->m_swapChain_frameBuffers.size());
 
         VkCommandBufferAllocateInfo local_commandbuffer_allocinfo{};
@@ -691,12 +663,12 @@ namespace Deng
             vkCmdBeginRenderPass(this->m_commandBuffers[i], &local_renderpass_begininfo, VK_SUBPASS_CONTENTS_INLINE);
             vkCmdBindPipeline(this->m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipeline);
 
-            VkBuffer local_vertex_buffers[] = {this->m_vertex_buffer};
+            VkBuffer local_vertex_buffers[] = {this->m_statue.buffers.vertex_buffer};
             VkDeviceSize offsets[] = {0};
 
             vkCmdBindVertexBuffers(this->m_commandBuffers[i], 0, 1, local_vertex_buffers, offsets);
 
-            vkCmdDraw(this->m_commandBuffers[i], static_cast<uint32_t>(this->m_vertexData.size()), 1, 0, 0);
+            vkCmdDraw(this->m_commandBuffers[i], static_cast<uint32_t>(this->m_statue.vertexData.size()), 1, 0, 0);
             vkCmdEndRenderPass(this->m_commandBuffers[i]);
 
             if(vkEndCommandBuffer(this->m_commandBuffers[i]) != VK_SUCCESS) {
@@ -727,6 +699,92 @@ namespace Deng
 
         
         LOG("Successfully initialised semaphores and fences!");
+    }
+
+    /* maker functions */
+
+    void Renderer::makeTextureImage(const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj) {
+        VkImageCreateInfo local_image_createInfo{};
+        local_image_createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        local_image_createInfo.imageType = VK_IMAGE_TYPE_2D;
+        local_image_createInfo.extent.width = static_cast<uint32_t>(obj.textureData.width);
+        local_image_createInfo.extent.height = static_cast<uint32_t>(obj.textureData.height);
+        local_image_createInfo.extent.depth = 1;
+        local_image_createInfo.mipLevels = 1;
+        local_image_createInfo.arrayLayers = 1;
+
+        local_image_createInfo.format = format;
+        local_image_createInfo.tiling = tiling;
+        local_image_createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        local_image_createInfo.usage = usage;
+        local_image_createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        local_image_createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+
+        if(vkCreateImage(this->m_device, &local_image_createInfo, nullptr, &obj.images.textureImage) != VK_SUCCESS) {
+            ERR("Failed to create a texture image!");
+        }
+        else {
+            LOG("Successfully created texture image!");
+        }
+
+        VkMemoryRequirements local_mem_req;
+        vkGetImageMemoryRequirements(this->m_device, obj.images.textureImage, &local_mem_req);
+
+        VkMemoryAllocateInfo local_mem_allocInfo{};
+        local_mem_allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        local_mem_allocInfo.allocationSize = local_mem_req.size;
+        local_mem_allocInfo.memoryTypeIndex = getMemType(local_mem_req.memoryTypeBits, properties);
+
+        if(vkAllocateMemory(this->m_device, &local_mem_allocInfo, nullptr, &obj.images.textureImageMem) != VK_SUCCESS) {
+            ERR("Failed to allocate memory for texture image!");
+        }
+
+        vkBindImageMemory(this->m_device, obj.images.textureImage, obj.images.textureImageMem, 0);
+    }
+
+    void Renderer::makeBuffer(const VkDeviceSize &size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj, const uint8_t &bufferType) {
+        VkBuffer *local_buffer;
+        VkDeviceMemory *local_bufferMem;
+
+        switch (bufferType)
+        {
+        case DENG_BUFFER_TYPE_STAGING:
+            local_buffer = &obj.buffers.staging_buffer;
+            local_bufferMem = &obj.buffers.staging_bufferMem;
+            break;
+        
+        case DENG_BUFFER_TYPE_VERTEX:
+            local_buffer = &obj.buffers.vertex_buffer;
+            local_bufferMem = &obj.buffers.vertex_bufferMem;
+            break;
+
+        default:
+            break;
+        }
+        
+        VkBufferCreateInfo local_buffer_createInfo{};
+        local_buffer_createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        local_buffer_createInfo.size = size;
+        local_buffer_createInfo.usage = usage;
+        local_buffer_createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if(vkCreateBuffer(this->m_device, &local_buffer_createInfo, nullptr, local_buffer) != VK_SUCCESS) {
+            ERR("Failed to create a buffer!");
+        }
+
+        VkMemoryRequirements local_mem_req;
+        vkGetBufferMemoryRequirements(this->m_device, *local_buffer, &local_mem_req);
+
+        VkMemoryAllocateInfo local_mem_allocInfo{};
+        local_mem_allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        local_mem_allocInfo.allocationSize = local_mem_req.size;
+        local_mem_allocInfo.memoryTypeIndex = this->getMemType(local_mem_req.memoryTypeBits, properties);
+
+        if(vkAllocateMemory(this->m_device, &local_mem_allocInfo, nullptr, local_bufferMem) != VK_SUCCESS) {
+            ERR("Failed to allocate buffer memory!");
+        }
+
+        vkBindBufferMemory(this->m_device, *local_buffer, *local_bufferMem, 0);
     }
 
     void Renderer::makeFrame() {
@@ -779,8 +837,58 @@ namespace Deng
         this->m_currentFrame = (m_currentFrame + 1) % this->m_MAX_FRAMES_IN_FLIGHT;
     }
 
+    void Renderer::populateBufferMem(const VkDeviceSize &size, const void *srcData, VkBuffer &buffer, VkDeviceMemory &bufferMem) {
+        LOG("Populating buffer memory!");
+        void *data;
+        vkMapMemory(this->m_device, bufferMem, 0, size, 0, &data);
+        memcpy(data, srcData, (size_t) size);
+        vkUnmapMemory(this->m_device, bufferMem);
+    }
+
+    void Renderer::beginCommandBufferSingleCommand(VkCommandBuffer &commandBuffer) {
+        VkCommandBufferAllocateInfo local_commandBuffer_allocInfo{};
+        local_commandBuffer_allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        local_commandBuffer_allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        local_commandBuffer_allocInfo.commandPool = this->m_commandPool;
+        local_commandBuffer_allocInfo.commandBufferCount = 1;
+
+        vkAllocateCommandBuffers(this->m_device, &local_commandBuffer_allocInfo, &commandBuffer);
+        
+        VkCommandBufferBeginInfo local_commandBuffer_beginInfo{};
+        local_commandBuffer_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        local_commandBuffer_beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        if(vkBeginCommandBuffer(commandBuffer, &local_commandBuffer_beginInfo) != VK_SUCCESS) {
+            ERR("Failed to begin command recording buffer!");
+        }
+    }
+
+    void Renderer::endCommandBufferSingleCommand(VkCommandBuffer &commandBuffer) {
+        vkEndCommandBuffer(commandBuffer);
+
+        VkSubmitInfo local_submitInfo{};
+        local_submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        local_submitInfo.commandBufferCount = 1;
+        local_submitInfo.pCommandBuffers = &commandBuffer;
+        
+        vkQueueSubmit(this->m_queues.graphicsQueue, 1, &local_submitInfo, VK_NULL_HANDLE);
+        vkQueueWaitIdle(this->m_queues.graphicsQueue);
+
+        vkFreeCommandBuffers(this->m_device, this->m_commandPool, 1, &commandBuffer);
+    }
+
+    void Renderer::copyBufferToTextureImage(GameObject &obj) {
+        VkCommandBuffer local_commandBuffer;
+        this->beginCommandBufferSingleCommand(local_commandBuffer);
+
+        VkBufferCopy local_bufferCopy_region{};
+        local_bufferCopy_region.size = obj.textureData.texSize;
+
+        this->endCommandBufferSingleCommand(local_commandBuffer);
+    }
+
     void Renderer::run() {
-        while(!glfwWindowShouldClose(this->window->getWindow())) {
+        while(!glfwWindowShouldClose(this->m_window->getWindow())) {
             glfwPollEvents();
             this->makeFrame();
         }
