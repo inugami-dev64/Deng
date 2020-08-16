@@ -4,6 +4,11 @@
 
 namespace Deng {
     
+    enum CoordinateMode {
+        DENG_COORDINATE_MODE_DEFAULT = 0,
+        DENG_COORDINATE_MODE_REVERSE = 1
+    };
+
     enum coordTypes {
         DENG_VERTEX_COORD = 0,
         DENG_VERTEX_NORMAL_COORD = 1,
@@ -12,22 +17,22 @@ namespace Deng {
 
     class ObjLoader {
         private:
-            bool reverseCoordinates;
+            CoordinateMode reverseCoordinates;
             std::vector<vec3<float>> vertexCoordVec;
             std::vector<vec3<float>> vertexNormCoordVec;
             std::vector<vec2<float>> vertexTexCoordVec;
 
-            std::vector<vec3<int>> vertexCoordFacesVec;
-            std::vector<vec3<int>> vertexTexCoordFacesVec;
-            std::vector<vec3<int>> vertexNormCoordFacesVec; 
+            std::vector<uint32_t> vertexCoordFacesVec;
+            std::vector<uint32_t> vertexTexCoordFacesVec;
+            std::vector<uint32_t> vertexNormCoordFacesVec; 
 
         private:
             void getVerticesCoord(const std::vector<std::string> &objContents);
             void getVertexFaces(const std::vector<std::string> &objContents);
 
         public:
-            ObjLoader(const std::string &fileName, const bool &reverseCoordinates);
-            void getObjMatrices(GameObject &obj);
+            ObjLoader(const std::string &fileName, const CoordinateMode &reverseCoordinates);
+            void getObjVerticesAndIndices(GameObject &obj);
     };
 }
 

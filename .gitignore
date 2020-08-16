@@ -1,0 +1,13 @@
+deng
+filemanager.o
+main.o
+objectshandler.o
+objloader.o
+queuemanager.o
+renderer.o
+rgbbitmap.log
+swapchaindetails.o
+textureloader.o
+window.o
+src/helloworld.cpp
+src/helloworld

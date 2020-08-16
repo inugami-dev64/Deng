@@ -16,28 +16,43 @@ namespace Deng
         this->initSwapChain();
         this->initImageView();
         this->initRenderPass();
+        // this->initDescriptorSetLayout();
         this->initGraphicsPipeline();
         this->initFrameBuffers();
         this->initCommandPool();
-        this->initTextureImage(this->m_statue);
-        this->initVertexBuffer(this->m_statue);
+        // this->initTextureImage(this->m_statue);
+        this->initBuffers(this->m_statue);
         this->initCommandBufferFromSwapChain();
         this->initSemaphores();
     }
 
     Renderer::~Renderer() {
+        LOG("Destroying renderer!");
+        // this->deleteTextureImage(this->m_statue);
         this->deleteFrameBuffers();
+        LOG("Deleted frame buffers!");
         this->deletePipeline();
+        LOG("Deleted pipeline!");
         this->deleteRenderPass();
+        LOG("Deleted renderpass!");
         this->deleteImageViews();
+        LOG("Deleted imageviews!");
         this->deleteSwapChain();
+        LOG("Deleted swapchain!");
         this->deleteVertexBuffer();
+        LOG("Deleted vertex buffer!");
         this->freeMemory();
+        LOG("Freed buffer memory!");
         this->deleteSemaphores();
+        LOG("Deleted semaphores!");
         this->deleteCommandPool();
+        LOG("Deleted command pool!");
         this->deleteDevice();
+        LOG("Deleted virtual device!");
         this->deleteSurface();
+        LOG("Deleted surface!");
         this->deleteInstance();
+        LOG("Deleted instance!");
         
         delete this->m_device_swapChainDetails;
     }
@@ -99,18 +114,21 @@ namespace Deng
     }
 
     void Renderer::freeMemory() {
-        vkFreeMemory(this->m_device, this->m_statue.buffers.staging_bufferMem, nullptr);
         vkFreeMemory(this->m_device, this->m_statue.buffers.vertex_bufferMem, nullptr);
     }
 
     void Renderer::deleteVertexBuffer() {
-        vkDestroyBuffer(this->m_device, this->m_statue.buffers.staging_buffer, nullptr);
         vkDestroyBuffer(this->m_device, this->m_statue.buffers.vertex_buffer, nullptr);
     }
 
-    void Renderer::initObjects(GameObject &obj, const std::string &objFilePath, const std::string &texFilePath, const bool &coordinateMode) {
+    void Renderer::deleteTextureImage(GameObject &obj) {
+        vkDestroyImage(this->m_device, obj.images.textureImage, nullptr);
+        vkFreeMemory(this->m_device, obj.images.textureImageMem, nullptr);
+    }
+
+    void Renderer::initObjects(GameObject &obj, const std::string &objFilePath, const std::string &texFilePath, const CoordinateMode &coordinateMode) {
         ObjLoader obj_loader(objFilePath, coordinateMode);
-        obj_loader.getObjMatrices(obj);
+        obj_loader.getObjVerticesAndIndices(obj);
 
         TextureLoader tex_loader(texFilePath);
         ObjTextureData texture_data;
@@ -126,7 +144,7 @@ namespace Deng
         appInfo.pApplicationName = this->m_window->getTitle();
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.pEngineName = "Deng";
-        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+        appInfo.engineVersion = VK_MAKE_VERSION(0, 1, 0);
         appInfo.apiVersion = VK_API_VERSION_1_0;
 
         //initialise create info
@@ -440,6 +458,13 @@ namespace Deng
         }
     }
 
+    // void Renderer::initDescriptorSetLayout() {
+    //     VkDescriptorSetLayoutBinding local_ubo_layout_binding{};
+    //     local_ubo_layout_binding.binding = 0;
+    //     local_ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    //     local_ubo_layout_binding.descriptorCount = 1;
+    // }
+
     void Renderer::initGraphicsPipeline() {
         std::vector<char> vertShaderBinVec;
         std::vector<char> fragShaderBinVec;
@@ -609,20 +634,28 @@ namespace Deng
         ERR("Failed to find suitable memory type");
     }
 
-    void Renderer::initTextureImage(GameObject &obj) {
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMem;
-        VkDeviceSize img_size = obj.textureData.texSize;
-        this->makeBuffer(img_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_STAGING);
-        this->populateBufferMem(img_size, obj.textureData.texturePixelsData.data(), stagingBuffer, stagingBufferMem);
-        this->makeTextureImage(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, obj);
-
-    }
-
-    void Renderer::initVertexBuffer(GameObject &obj) {
+    void Renderer::initBuffers(GameObject &obj) {
         VkDeviceSize local_size = sizeof(obj.vertexData[0]) * obj.vertexData.size();
-        this->makeBuffer(local_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_VERTEX);
-        this->populateBufferMem(local_size, obj.vertexData.data(), obj.buffers.vertex_buffer, obj.buffers.vertex_bufferMem);
+
+        this->makeBuffer(local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_STAGING);
+        this->populateBufferMem(local_size, obj.vertexData.data(), obj.buffers.staging_buffer, obj.buffers.staging_bufferMem);
+
+        this->makeBuffer(local_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, obj, DENG_BUFFER_TYPE_VERTEX);
+        this->copyBuffer(obj.buffers.staging_buffer, obj.buffers.vertex_buffer, local_size);
+
+        vkDestroyBuffer(this->m_device, obj.buffers.staging_buffer, nullptr);
+        vkFreeMemory(this->m_device, obj.buffers.staging_bufferMem, nullptr);
+
+        local_size = sizeof(obj.vertexIndicesData.posIndices[0]) * obj.vertexIndicesData.posIndices.size();
+
+        this->makeBuffer(local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_STAGING);
+        this->populateBufferMem(local_size, obj.vertexIndicesData.posIndices.data(), obj.buffers.staging_buffer, obj.buffers.staging_bufferMem);
+        
+        this->makeBuffer(local_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, obj, DENG_BUFFER_TYPE_INDICES);
+        this->copyBuffer(obj.buffers.staging_buffer, obj.buffers.index_buffer, local_size);
+
+        vkDestroyBuffer(this->m_device, obj.buffers.staging_buffer, nullptr);
+        vkFreeMemory(this->m_device, obj.buffers.staging_bufferMem, nullptr);
     }
 
     void Renderer::initCommandBufferFromSwapChain() {
@@ -667,8 +700,9 @@ namespace Deng
             VkDeviceSize offsets[] = {0};
 
             vkCmdBindVertexBuffers(this->m_commandBuffers[i], 0, 1, local_vertex_buffers, offsets);
+            vkCmdBindIndexBuffer(this->m_commandBuffers[i], this->m_statue.buffers.index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
-            vkCmdDraw(this->m_commandBuffers[i], static_cast<uint32_t>(this->m_statue.vertexData.size()), 1, 0, 0);
+            vkCmdDrawIndexed(this->m_commandBuffers[i], static_cast<uint32_t>(this->m_statue.vertexIndicesData.posIndices.size()), 1, 0, 0, 0);
             vkCmdEndRenderPass(this->m_commandBuffers[i]);
 
             if(vkEndCommandBuffer(this->m_commandBuffers[i]) != VK_SUCCESS) {
@@ -711,7 +745,7 @@ namespace Deng
         local_image_createInfo.extent.height = static_cast<uint32_t>(obj.textureData.height);
         local_image_createInfo.extent.depth = 1;
         local_image_createInfo.mipLevels = 1;
-        local_image_createInfo.arrayLayers = 1;
+        local_image_createInfo.arrayLayers = static_cast<uint32_t>(std::floor(std::log2(std::max(obj.textureData.width, obj.textureData.height)))) + 1;
 
         local_image_createInfo.format = format;
         local_image_createInfo.tiling = tiling;
@@ -742,7 +776,7 @@ namespace Deng
         vkBindImageMemory(this->m_device, obj.images.textureImage, obj.images.textureImageMem, 0);
     }
 
-    void Renderer::makeBuffer(const VkDeviceSize &size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj, const uint8_t &bufferType) {
+    void Renderer::makeBuffer(const VkDeviceSize &size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj, const BufferMode &bufferType) {
         VkBuffer *local_buffer;
         VkDeviceMemory *local_bufferMem;
 
@@ -757,6 +791,10 @@ namespace Deng
             local_buffer = &obj.buffers.vertex_buffer;
             local_bufferMem = &obj.buffers.vertex_bufferMem;
             break;
+
+        case DENG_BUFFER_TYPE_INDICES:
+            local_buffer = &obj.buffers.index_buffer;
+            local_bufferMem = &obj.buffers.index_bufferMem;
 
         default:
             break;
@@ -841,7 +879,7 @@ namespace Deng
         LOG("Populating buffer memory!");
         void *data;
         vkMapMemory(this->m_device, bufferMem, 0, size, 0, &data);
-        memcpy(data, srcData, (size_t) size);
+        memcpy(data, srcData, static_cast<size_t>(size));
         vkUnmapMemory(this->m_device, bufferMem);
     }
 
@@ -877,13 +915,14 @@ namespace Deng
         vkFreeCommandBuffers(this->m_device, this->m_commandPool, 1, &commandBuffer);
     }
 
-    void Renderer::copyBufferToTextureImage(GameObject &obj) {
+    void Renderer::copyBuffer(VkBuffer &srcBuf, VkBuffer &dstBuf, const VkDeviceSize &size) {
         VkCommandBuffer local_commandBuffer;
         this->beginCommandBufferSingleCommand(local_commandBuffer);
 
-        VkBufferCopy local_bufferCopy_region{};
-        local_bufferCopy_region.size = obj.textureData.texSize;
-
+        VkBufferCopy local_copy_region{};
+        local_copy_region.size = size;
+        
+        vkCmdCopyBuffer(local_commandBuffer, srcBuf, dstBuf, 1, &local_copy_region);
         this->endCommandBufferSingleCommand(local_commandBuffer);
     }
 
@@ -895,7 +934,4 @@ namespace Deng
         vkDeviceWaitIdle(this->m_device);
         glfwTerminate();
     }
-
-
-    
 } 

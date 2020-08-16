@@ -1,7 +1,7 @@
 #include "headers/renderer.h"
 
 namespace Deng {
-    ObjLoader::ObjLoader(const std::string &fileName, const bool &reverseCoordinates) {
+    ObjLoader::ObjLoader(const std::string &fileName, const CoordinateMode &coordinateMode) {
         FileManager fm;
         this->reverseCoordinates = reverseCoordinates;
         std::vector<std::string> contents;
@@ -96,12 +96,8 @@ namespace Deng {
                 char buffer[objContents[i].size()];
                 strncpy(buffer, objContents[i].c_str(), objContents[i].size());
                 uint32_t vertexTypeCount = DENG_VERTEX_COORD;
-                uint32_t vertexCount = 0;
 
                 std::string iStr;
-                vec3<int> vertexTriangleVector;
-                vec3<int> vertexNormalTriangleVector;
-                vec3<int> vertexTextureTriangleVector;
 
                 for(size_t lineIndex = 2; lineIndex < sizeof(buffer)/sizeof(buffer[0]); lineIndex++) {
                     
@@ -110,28 +106,21 @@ namespace Deng {
                         switch (vertexTypeCount)
                         {
                         case DENG_VERTEX_COORD:
-                            if(vertexCount == DENG_X) vertexTriangleVector.x = (std::stoi(iStr) - 1);
-                            else if(vertexCount == DENG_Y) vertexTriangleVector.y = (std::stoi(iStr) - 1);
-                            else if(vertexCount == DENG_Z) vertexTriangleVector.z = (std::stoi(iStr) - 1);
+                            this->vertexCoordFacesVec.push_back(std::stoi(iStr) - 1);
                             iStr.clear();
                             vertexTypeCount++;
                             break;
 
                         case DENG_VERTEX_NORMAL_COORD:
-                            if(vertexCount == DENG_X) vertexNormalTriangleVector.x = (std::stoi(iStr) - 1);
-                            else if(vertexCount == DENG_Y) vertexNormalTriangleVector.y = (std::stoi(iStr) - 1);
-                            else if(vertexCount == DENG_Z) vertexNormalTriangleVector.z = (std::stoi(iStr) - 1);
+                            this->vertexNormCoordFacesVec.push_back(std::stoi(iStr) - 1);
                             iStr.clear();
                             vertexTypeCount++;
                             break;
 
                         case DENG_VERTEX_TEXTURE_COORD:
-                            if(vertexCount == DENG_X) vertexTextureTriangleVector.x = (std::stoi(iStr) - 1);
-                            else if(vertexCount == DENG_Y) vertexTextureTriangleVector.y = (std::stoi(iStr) - 1);
-                            else if(vertexCount == DENG_Z) vertexTextureTriangleVector.z = (std::stoi(iStr) - 1);
+                            this->vertexTexCoordFacesVec.push_back(std::stoi(iStr) - 1);
                             iStr.clear();
                             vertexTypeCount = DENG_VERTEX_COORD;
-                            vertexCount++;
                             break;
                     
                         default:
@@ -139,49 +128,26 @@ namespace Deng {
                         }
                     }
                 }
-
-                this->vertexCoordFacesVec.push_back(vertexTriangleVector);
-                this->vertexNormCoordFacesVec.push_back(vertexNormalTriangleVector); 
-                this->vertexTexCoordFacesVec.push_back(vertexTextureTriangleVector);
             }
         }
     }
 
-    void ObjLoader::getObjMatrices(GameObject &obj) {
-        obj.vertexData.resize(this->vertexCoordFacesVec.size() * 3);
-
+    void ObjLoader::getObjVerticesAndIndices(GameObject &obj) {
+        obj.vertexData.resize(this->vertexCoordVec.size());
+        obj.vertexIndicesData.texIndices.resize(this->vertexTexCoordFacesVec.size());
+        obj.vertexIndicesData.posIndices.resize(this->vertexCoordFacesVec.size());
         
-        for(size_t i = 0; i < vertexCoordFacesVec.size(); i++) {
-            for(size_t ii = 0; ii < 3; ii++) {
-                vec3<float> posTemp;
-                vec2<float> texTemp;
-                switch (ii)
-                {
-                case DENG_X:
-                    posTemp = this->vertexCoordVec[this->vertexCoordFacesVec[i].x];
-                    texTemp = this->vertexTexCoordVec[this->vertexTexCoordFacesVec[i].x];
-                    break;
-                
-                case DENG_Y:
-                    posTemp = this->vertexCoordVec[this->vertexCoordFacesVec[i].y];
-                    texTemp = this->vertexTexCoordVec[this->vertexTexCoordFacesVec[i].y];
-                    break;
+        for(size_t i = 0; i < this->vertexCoordVec.size(); i++) {
+            obj.vertexData[i].posVec = this->vertexCoordVec[i];
+            obj.vertexData[i].colorVec = {1.0f, 1.0f, 1.0f, 1.0f};
+        }
 
-                case DENG_Z:
-                    posTemp = this->vertexCoordVec[this->vertexCoordFacesVec[i].z];
-                    texTemp = this->vertexTexCoordVec[this->vertexTexCoordFacesVec[i].z];
-                    break;
+        for(size_t i = 0; i < this->vertexCoordFacesVec.size(); i++) {
+            obj.vertexIndicesData.posIndices[i] = this->vertexCoordFacesVec[i];
+        }
 
-                default:
-                    break;
-                }
-
-                ObjVertexData vertexData;
-                vertexData.posVec = posTemp;
-                vertexData.textureVec = texTemp;
-
-                obj.vertexData.push_back(vertexData);
-            }
+        for(size_t i = 0; i < this->vertexTexCoordFacesVec.size(); i++) {
+            obj.vertexIndicesData.texIndices[i] = this->vertexTexCoordFacesVec[i];
         }
     }
 }

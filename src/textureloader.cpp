@@ -93,7 +93,7 @@ namespace Deng {
         FileManager fm;
 
         fm.writeToFile("rgbbitmap.log", "#entry point", DENG_WRITEMODE_REWRITE);
-        fm.writeToFile("rgbbitmap.log", ("Size: " + std::to_string(this->m_file_header.file_size / 1024 / 1024)), DENG_WRITEMODE_FROM_END);
+        fm.writeToFile("rgbbitmap.log", ("Size: " + std::to_string(this->m_file_header.file_size)), DENG_WRITEMODE_FROM_END);
         fm.writeToFile("rgbbitmap.log", ("Width: " + std::to_string(this->m_info_header.width)), DENG_WRITEMODE_FROM_END);
         fm.writeToFile("rgbbitmap.log", ("Height: " + std::to_string(this->m_info_header.height)), DENG_WRITEMODE_FROM_END);
         for(vec4<unsigned char> &rgbVal : this->pixelData) {

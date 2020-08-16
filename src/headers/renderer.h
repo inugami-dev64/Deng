@@ -13,14 +13,11 @@
 #endif
 
 namespace Deng {
-    enum CoordinateMode {
-        DENG_COORDINATE_MODE_DEFAULT = 0,
-        DENG_COORDINATE_MODE_REVERSE = 1
-    };
 
     enum BufferMode {
         DENG_BUFFER_TYPE_STAGING = 0,
-        DENG_BUFFER_TYPE_VERTEX = 1
+        DENG_BUFFER_TYPE_VERTEX = 1,
+        DENG_BUFFER_TYPE_INDICES = 2
     };
 
     class Renderer
@@ -81,17 +78,18 @@ namespace Deng {
             void initImageView();
             VkShaderModule initShaderModule(const std::vector<char> &bin);
             void initRenderPass();
+            void initDescriptorSetLayout();
             void initGraphicsPipeline();
             void initFrameBuffers();
-            void initTextureImage(GameObject &obj);
             void initCommandPool();
-            void initVertexBuffer(GameObject &obj);
+            void initBuffers(GameObject &obj);
             void initTextureBuffer();
             uint32_t getMemType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
             void initCommandBufferFromSwapChain();
             void initSemaphores();
-            void initObjects(GameObject &object, const std::string &objSourceFilePath, const std::string &texSourceFilePath, const bool &coordinateMode);
+            void initObjects(GameObject &object, const std::string &objSourceFilePath, const std::string &texSourceFilePath, const CoordinateMode &coordinateMode);
 
+            void deleteTextureImage(GameObject &obj);
             void deleteCommandBuffers();
             void deleteSemaphores();
             void deleteCommandPool();
@@ -110,10 +108,10 @@ namespace Deng {
             void makeTextureImage(const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj);
             void makeVertexBuffer();
             void makeFrame();
-            void makeBuffer(const VkDeviceSize &size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj, const uint8_t &type);
+            void makeBuffer(const VkDeviceSize &size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj, const BufferMode &type);
 
             void populateBufferMem(const VkDeviceSize &size, const void *srcData, VkBuffer &buffer, VkDeviceMemory &bufferMem);
-            void copyBufferToTextureImage(GameObject &obj);
+            void copyBuffer(VkBuffer &srcBuf, VkBuffer &dstBuf, const VkDeviceSize &size);
 
             void beginCommandBufferSingleCommand(VkCommandBuffer &commandBuffer);
             void endCommandBufferSingleCommand(VkCommandBuffer &commandBuffer);

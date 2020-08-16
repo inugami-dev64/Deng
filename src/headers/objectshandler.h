@@ -4,19 +4,18 @@
 
 namespace Deng {
 
-    enum AttributeDescOffsetType {
-        DENG_ATTRIBUTE_OFFSET_TYPE_VERTICES_COORD = 0,
-        DENG_ATTRIBUTE_OFFSET_TYPE_VERTICES_TEXTURE_COORD = 1
-    };
-
     struct ObjVertexData {
         vec3<float> posVec;
-        vec4<float> colorVec; 
-        vec2<float> textureVec;    
+        vec4<float> colorVec;     
+    };
+
+    struct ObjVertexIndicesData {
+        std::vector<uint32_t> posIndices;
+        std::vector<uint32_t> texIndices;
     };
 
     struct ObjTextureData {
-        std::vector<vec4<unsigned char>> texturePixelsData;
+        std::vector<vec4<uint8_t>> texturePixelsData;
 
         uint32_t width;
         uint32_t height;
@@ -29,6 +28,9 @@ namespace Deng {
 
         VkBuffer staging_buffer;
         VkDeviceMemory staging_bufferMem;
+
+        VkBuffer index_buffer;
+        VkDeviceMemory index_bufferMem;
     };
 
     struct Images {
@@ -36,8 +38,15 @@ namespace Deng {
         VkDeviceMemory textureImageMem;
     };
 
+    struct UniformBufferData {
+        mat4<float> model;
+        mat4<float> view;
+        mat4<float> projection;
+    };
+
     struct GameObject {
         std::vector<ObjVertexData> vertexData;
+        ObjVertexIndicesData vertexIndicesData;
         ObjTextureData textureData;
         
         Images images;
@@ -46,7 +55,7 @@ namespace Deng {
 
     struct VertexInputDesc {
         static VkVertexInputBindingDescription getBindingDesc(GameObject &obj);
-        static std::array<VkVertexInputAttributeDescription, 3> getAttributeDesc();
+        static std::array<VkVertexInputAttributeDescription, 2> getAttributeDesc();
     };
 }
 
