@@ -1,10 +1,12 @@
 #ifndef DENGMATH_H
 #define DENGMATH_H
+#define PI 3.1415926
 
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 #include <cmath>
+#include <chrono>
 #include <type_traits>
 #include <vector>
 #include <fstream>
@@ -14,21 +16,56 @@
 #include <iostream>
 #include <map>
 
-namespace Deng {
+namespace deng {
+
+    enum DengBool {
+        DENG_FALSE = 0,
+        DENG_TRUE = 1
+    };
+
+    enum CoordinateType {
+        DENG_X = 0,
+        DENG_Y = 1,
+        DENG_Z = 2
+    };
 
     template<typename T>
     struct vec2 {
         T x, y;
+
+        vec2<T> operator+(const vec2<T> &vector) {
+            return {(x + vector.x), (y + vector.y)};
+        }
+
+        vec2<T> operator-(const vec2<T> &vector) {
+            return {(x - vector.x), (y - vector.y)};
+        }
     };
 
     template<typename T>
     struct vec3 {
         T x, y, z;
+        
+        vec3<T> operator+(const vec3<T> &vector) {
+            return {(x + vector.x), (y + vector.y), (z + vector.z)};
+        }
+
+        vec3<T> operator-(const vec3<T> &vector) {
+            return {(x - vector.x), (y - vector.y), (z - vector.z)};
+        }
     };
     
     template<typename T>
     struct vec4 {
         T x, y, z, a;
+
+        vec4<T> operator+(const vec4<T> &vector) {
+            return {(x + vector.x), (y + vector.y), (z + vector.z), (a + vector.a)};
+        }
+
+        vec4<T> operator-(const vec4<T> &vector) {
+            return {(x - vector.x), (y - vector.y), (z - vector.z), (a - vector.a)};
+        }
     };
 
     template<typename T>
@@ -78,41 +115,48 @@ namespace Deng {
         }
     };
 
+    // generic conversion functions
+    float degToRad(const uint16_t &deg) {
+        return (deg/360) * 2 * PI;
+    }
+
+    struct CameraMath {
+        void getMaxCoords(const float &currentRotationXY, const float &FOV, const float &draw_distance, vec2<float> *camera_max_centre_coords, vec2<float> *camera_max_left_corner_coord, vec2<float> *camera_max_right_corner_coord);
+
+    };
+
     class ModelMatrix {
-        private:
-            double Rx;
-            double Ry;
-            double Rz;
+    private:
+        mat4<float> RxMat;
+        mat4<float> RyMat;
+        mat4<float> RzMat;
 
-            float Tx;
-            float Ty;
-            float Tz;
+        mat4<float> transformMat;
+        mat4<float> scaleMat;
 
-            mat4<float> modelMatrix;
+    public:
+        void setRotation(const uint16_t &Rx, const uint16_t &Ry, const uint16_t &Rz);
+        void setTransformation(const float &Tx, const float &Ty, const float &Tz);
+        void setScale(const float &Sx, const float &Sy, const float &Sz);
+        void getMatrix(mat4<float> *model);
+    };
 
-            const mat4<float> RxMat = {{1.0f, 0.0f, 0.0f, 0.0f},
-                                       {0.0f, cos(this->Rx), -(sin(this->Rx)), 0.0f},
-                                       {0.0f, sin(this->Rx), cos(this->Rx), 0.0f}, 
-                                       {0.0f, 0.0f, 0.0f, 1.0f}};
+    class ViewMatrix {
+    private:
+        vec4<float> rightSide;
+        vec4<float> forwardSide;
+        vec4<float> upSide;
+        vec4<float> cameraPosition;
 
-            const mat4<float> RyMat = {{cos(this->Ry), 0.0f, sin(this->Ry), 0.0f},
-                                       {0.0f, 1.0f, 0.0f, 0.0f},
-                                       {-(sin(this->Ry)), 0.0f, cos(this->Ry), 0.0f},
-                                       {0.0f, 0.0f, 0.0f, 1.0f}};
+    public:
+        void setAxes(const vec4<float> &right, const vec4<float> &forward, const vec4<float> &up);
+        void setPosition(const vec4<float> &cam_Position);
+        void addToPosition(const vec4<float> &addition, const CoordinateType &type, const bool &substract);
+        void getViewMatrix(mat4<float> *view);
+    };
 
-            const mat4<float> RzMat = {{cos(this->Rz), -(sin(this->Rz)), 0.0f, 0.0f},
-                                       {sin(this->Rz), cos(this->Rz), 0.0f, 0.0f},
-                                       {0.0f, 0.0f, 1.0f, 0.0f}, 
-                                       {0.0f, 0.0f, 0.0f, 1.0f}};
-
-            const mat4<float> transformMat = {{1.0f, 0.0f, 0.0f, this->Tx}, 
-                                              {0.0f, 1.0f, 0.0f, this->Ty},
-                                              {0.0f, 0.0f, 1.0f, this->Tz},
-                                              {0.0f, 0.0f, 0.0f, 1.0f}};
-
-        public:
-            void setRotation(const double &Rx, const double &Ry, const double &Rz);
-            void setTransformation();
+    class ProjectionMatrix {
+    private:
 
     };
 }

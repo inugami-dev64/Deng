@@ -2,7 +2,7 @@
 #define OBJLOADER_H
 #include "objectshandler.h"
 
-namespace Deng {
+namespace deng {
     
     enum CoordinateMode {
         DENG_COORDINATE_MODE_DEFAULT = 0,
@@ -16,23 +16,23 @@ namespace Deng {
     };
 
     class ObjLoader {
-        private:
-            CoordinateMode reverseCoordinates;
-            std::vector<vec3<float>> vertexCoordVec;
-            std::vector<vec3<float>> vertexNormCoordVec;
-            std::vector<vec2<float>> vertexTexCoordVec;
+    private:
+        CoordinateMode reverseCoordinates;
+        std::vector<vec3<float>> vertexCoordVec;
+        std::vector<vec3<float>> vertexNormCoordVec;
+        std::vector<vec2<float>> vertexTexCoordVec;
 
-            std::vector<uint32_t> vertexCoordFacesVec;
-            std::vector<uint32_t> vertexTexCoordFacesVec;
-            std::vector<uint32_t> vertexNormCoordFacesVec; 
+        std::vector<uint32_t> vertexCoordFacesVec;
+        std::vector<uint32_t> vertexTexCoordFacesVec;
+        std::vector<uint32_t> vertexNormCoordFacesVec; 
 
-        private:
-            void getVerticesCoord(const std::vector<std::string> &objContents);
-            void getVertexFaces(const std::vector<std::string> &objContents);
+    private:
+        void getVerticesCoord(const std::vector<std::string> &objContents);
+        void getVertexFaces(const std::vector<std::string> &objContents);
 
-        public:
-            ObjLoader(const std::string &fileName, const CoordinateMode &reverseCoordinates);
-            void getObjVerticesAndIndices(GameObject &obj);
+    public:
+        ObjLoader(const std::string &fileName, const CoordinateMode &reverseCoordinates);
+        void getObjVerticesAndIndices(GameObject &obj);
     };
 }
 

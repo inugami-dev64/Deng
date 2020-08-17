@@ -1,6 +1,6 @@
 #include "headers/renderer.h"
 
-namespace Deng {
+namespace deng {
     ObjLoader::ObjLoader(const std::string &fileName, const CoordinateMode &coordinateMode) {
         FileManager fm;
         this->reverseCoordinates = reverseCoordinates;

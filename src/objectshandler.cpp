@@ -1,6 +1,6 @@
 #include "headers/renderer.h"
 
-namespace Deng {
+namespace deng {
     VkVertexInputBindingDescription VertexInputDesc::getBindingDesc(GameObject &obj) {
         VkVertexInputBindingDescription local_input_binding_desc{};
         local_input_binding_desc.binding = 0;

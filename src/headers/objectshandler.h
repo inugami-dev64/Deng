@@ -2,7 +2,7 @@
 #define OBJECTSHANDLER_H
 #include "textureloader.h"
 
-namespace Deng {
+namespace deng {
 
     struct ObjVertexData {
         vec3<float> posVec;
@@ -31,6 +31,9 @@ namespace Deng {
 
         VkBuffer index_buffer;
         VkDeviceMemory index_bufferMem;
+
+        std::vector<VkBuffer> uniform_buffers;
+        std::vector<VkDeviceMemory> uniform_buffersMem;
     };
 
     struct Images {
@@ -45,9 +48,11 @@ namespace Deng {
     };
 
     struct GameObject {
+        vec3<float> origin;
         std::vector<ObjVertexData> vertexData;
         ObjVertexIndicesData vertexIndicesData;
         ObjTextureData textureData;
+        ModelMatrix modelMatrix;
         
         Images images;
         Buffers buffers;

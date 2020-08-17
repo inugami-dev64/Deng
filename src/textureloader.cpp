@@ -1,6 +1,6 @@
 #include "headers/renderer.h"
 
-namespace Deng {
+namespace deng {
     TextureLoader::TextureLoader(const std::string &fileName) {
         std::ifstream textureFile{fileName.c_str(), std::fstream::binary};
         if(textureFile) {

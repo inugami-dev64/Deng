@@ -2,18 +2,18 @@
 #define QUEUEFAMILIES_H
 #include "events.h"
 
-namespace Deng {
+namespace deng {
     class QueueFamilies {
-        private:
-            uint32_t graphicsFamilyIndex;
-            uint32_t presentFamilyIndex;
-        
-        public:
-            bool findGraphicsFamily(VkPhysicalDevice &gpu);
-            uint32_t getGraphicsFamily();
+    private:
+        uint32_t graphicsFamilyIndex;
+        uint32_t presentFamilyIndex;
+    
+    public:
+        bool findGraphicsFamily(VkPhysicalDevice &gpu);
+        uint32_t getGraphicsFamily();
 
-            bool findPresentSupportFamily(VkPhysicalDevice &gpu, VkSurfaceKHR &surface);
-            uint32_t getPresentFamily();
+        bool findPresentSupportFamily(VkPhysicalDevice &gpu, VkSurfaceKHR &surface);
+        uint32_t getPresentFamily();
     };
 
     class Queues {

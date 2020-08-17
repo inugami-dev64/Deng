@@ -1,6 +1,6 @@
 #include "headers/renderer.h"
 
-namespace Deng {
+namespace deng {
 
     void FileManager::getFileContents(const std::string &fileName, std::vector<char> *charOutputVector, std::vector<std::string> *stringOutputVector) {
         this->fileIn = new std::ifstream(fileName, std::ios::ate | std::ios::binary);

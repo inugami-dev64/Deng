@@ -1,6 +1,6 @@
 #include "headers/renderer.h"
 
-namespace Deng {
+namespace deng {
     Window::Window(const uint32_t &x, const uint32_t &y, const char *title) {
         this->size = {(float) x, (float) y};
 

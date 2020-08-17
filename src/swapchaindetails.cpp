@@ -1,6 +1,6 @@
 #include "headers/renderer.h"
 
-namespace Deng {
+namespace deng {
     SwapChainDetails::SwapChainDetails(VkPhysicalDevice &gpu, VkSurfaceKHR &surface) {
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(gpu, surface, &this->capabilities);
 

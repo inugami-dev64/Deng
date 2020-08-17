@@ -1,6 +1,6 @@
 #include "headers/renderer.h"
 
-namespace Deng
+namespace deng
 {
     bool QueueFamilies::findGraphicsFamily(VkPhysicalDevice &gpu) {
         uint32_t family_count = 0;

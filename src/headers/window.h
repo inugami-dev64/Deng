@@ -1,23 +1,23 @@
 #ifndef WINDOWS_H
 #define WINDOWS_H
 
-#include "dengmath.h"
+#include "timer.h"
 
-namespace Deng
+namespace deng
 {   
     class Window
     {
-        private:
-            GLFWwindow *gameWindow;
-            const char *title;
-            vec2<uint32_t> size;
+    private:
+        GLFWwindow *gameWindow;
+        const char *title;
+        vec2<uint32_t> size;
 
-        public:
-            Window(const uint32_t &x, const uint32_t &y, const char *title);
-            ~Window();
-            GLFWwindow *getWindow();
-            const char *getTitle();
-            vec2<uint32_t> getSize();
+    public:
+        Window(const uint32_t &x, const uint32_t &y, const char *title);
+        ~Window();
+        GLFWwindow *getWindow();
+        const char *getTitle();
+        vec2<uint32_t> getSize();
     };
 }
 
