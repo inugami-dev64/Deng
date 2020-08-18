@@ -5,9 +5,13 @@ objectshandler.o
 objloader.o
 queuemanager.o
 renderer.o
-rgbbitmap.log
+camera.o
+dengmath.o
+events.o
 swapchaindetails.o
 textureloader.o
 window.o
+timer.o
+rgbbitmap.o
 src/helloworld.cpp
 src/helloworld
