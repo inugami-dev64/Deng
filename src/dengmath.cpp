@@ -1,6 +1,11 @@
 #include "headers/renderer.h"
 
 namespace deng {
+
+    float degToRad(const uint16_t &deg)  {
+        return (deg/360) * 2 * PI;
+    }
+
     void ModelMatrix::setRotation(const uint16_t &Rx, const uint16_t &Ry, const uint16_t &Rz) {
         this->RxMat = {{1.0f, 0.0f, 0.0f, 0.0f},
                        {0.0f, cos(degToRad(Rx)), -(sin(degToRad(Rx))), 0.0f},
@@ -36,11 +41,10 @@ namespace deng {
         *model = this->transformMat * this->RxMat * this->RyMat * this->RzMat * this->scaleMat;
     }
 
-
-    void CameraMath::getMaxCoords(const float &currentRotationXY, const float &FOV, const float &draw_distance, vec2<float> *camera_max_centre_coords, vec2<float> *camera_max_left_corner_coord, vec2<float> *camera_max_right_corner_coord) {
-        camera_max_centre_coords->x = sin(degToRad(currentRotationXY)) * draw_distance, camera_max_centre_coords->y = cos(degToRad(currentRotationXY)) * draw_distance;
-        camera_max_left_corner_coord->x = sin(degToRad(currentRotationXY - (FOV/2))) * draw_distance, camera_max_left_corner_coord->y = cos(degToRad(currentRotationXY - (FOV/2))) * draw_distance;  
-        camera_max_right_corner_coord->x = sin(degToRad(currentRotationXY + (FOV/2))) * draw_distance, camera_max_left_corner_coord->y = cos(degToRad(currentRotationXY + (FOV/2))) * draw_distance; 
+    void ViewMatrix::setAxes(const vec4<float> &right, const vec4<float> &up, const vec4<float> &forward) {
+        this->rightSide = right;
+        this->upSide = up;
+        this->forwardSide = forward;
     }
 
     void ViewMatrix::setPosition(const vec4<float> &newPos) {
@@ -72,8 +76,28 @@ namespace deng {
 
     void ViewMatrix::getViewMatrix(mat4<float> *view) {
         view->row1 = this->rightSide;
-        view->row2 = this->forwardSide;
-        view->row3 = this->upSide;
+        view->row2 = this->upSide;
+        view->row3 = this->forwardSide;
         view->row4 = this->cameraPosition;
+    }
+
+    ProjectionMatrix::ProjectionMatrix(const float &FOV, const float &near, const float &far, const float &aspect_ratio) {
+        this->m_FOV = FOV;
+        this->m_near = near;
+        this->m_far = far;
+        this->m_aspectRatio = aspect_ratio;
+
+        this->m_top = (this->m_near * tan(PI/180 * this->m_FOV/2));
+        this->m_bottom = -(this->m_near * tan(PI/180 * this->m_FOV/2));
+        this->m_right = (this->m_near * tan(PI/180 * this->m_FOV/2) * this->m_aspectRatio);
+        this->m_left = -(this->m_near * tan(PI/180 * this->m_FOV/2) * this->m_aspectRatio);
+
+    }
+
+    void ProjectionMatrix::getProjectionMatrix(mat4<float> *matrix) {
+        matrix->row1 = {2*this->m_near/(this->m_right - this->m_left), 0, (this->m_right + this->m_left) / (this->m_right - this->m_left), 0};
+        matrix->row2 = {0, 2*this->m_near/(this->m_top - this->m_bottom), (this->m_top + this->m_bottom) / (this->m_top - this->m_bottom), 0};
+        matrix->row3 = {0, 0, -(this->m_far + this->m_near) / (this->m_far = this->m_near), -(2*this->m_far*this->m_near) / (this->m_far - this->m_near)};
+        matrix->row4 = {0, 0, -1, 0};
     }
 }  

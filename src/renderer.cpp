@@ -7,7 +7,7 @@ namespace deng
         this->m_req_extensions_name.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
         this->m_window = &win;
-        this->m_camera = new Camera({0.0005, 0.0005, 0.0005}, 65, 10.0f);
+        this->m_camera = new Camera({0.00005f, 0.00005, 0.00005, 0.0f}, 65.0f, 1.0f, 10.0f, this->m_window);
         this->m_ev = new Events(this->m_window, this->m_camera);
 
         this->initObjects(this->m_statue, "objects/obj1.obj", "textures/obj1.bmp", DENG_COORDINATE_MODE_DEFAULT);
@@ -25,6 +25,8 @@ namespace deng
         this->initCommandPool();
         // this->initTextureImage(this->m_statue);
         this->initBuffers(this->m_statue);
+        this->initDescriptorPool();
+        this->initDescriptorSets();
         this->initCommandBufferFromSwapChain();
         this->initSemaphores();
     }
@@ -83,9 +85,16 @@ namespace deng
         this->m_swapChain = nullptr;
 
         for(size_t i = 0; i < this->m_swapChain_images.size(); i++) {
-            vkDestroyBuffer(this->m_device, this->m_statue.buffers.uniform_buffers[i], nullptr);
-            vkFreeMemory(this->m_device, this->m_statue.buffers.uniform_buffersMem[i], nullptr);
+            vkDestroyBuffer(this->m_device, this->m_uniform_buffers[i], nullptr);
+            vkFreeMemory(this->m_device, this->m_uniform_buffersMem[i], nullptr);
         }
+
+        for(size_t i = 0; i < this->m_swapChain_images.size(); i++) {
+            vkDestroyBuffer(this->m_device, this->m_uniform_buffers[i], nullptr);
+            vkFreeMemory(this->m_device, this->m_uniform_buffersMem[i], nullptr);
+        }
+
+        vkDestroyDescriptorPool(this->m_device, this->m_descriptorPool, nullptr);
     }
 
     void Renderer::deleteImageViews() {
@@ -138,6 +147,10 @@ namespace deng
         vkFreeMemory(this->m_device, obj.images.textureImageMem, nullptr);
     }
 
+    void Renderer::deleteDescriptorSetLayout() {
+        vkDestroyDescriptorSetLayout(this->m_device, this->m_descriptorSet_Layout, nullptr);
+    }
+
     void Renderer::initObjects(GameObject &obj, const std::string &objFilePath, const std::string &texFilePath, const CoordinateMode &coordinateMode) {
         ObjLoader obj_loader(objFilePath, coordinateMode);
         obj_loader.getObjVerticesAndIndices(obj);
@@ -146,38 +159,87 @@ namespace deng
         ObjTextureData texture_data;
         tex_loader.getTextureDetails(&texture_data.width, &texture_data.height, &texture_data.texSize, &texture_data.texturePixelsData);
         obj.textureData = texture_data;
+
+        obj.modelMatrix.setRotation(1, 0, 0);
+        obj.modelMatrix.setScale(1, 1, 1);
+        obj.modelMatrix.setTransformation(0, 0, 0);
+    }
+
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
+        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+        return VK_FALSE;
     }
 
     //Function that initialises instance 
     void Renderer::initInstance() {
         //initialise appinfo
-        VkApplicationInfo appInfo{};
-        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = this->m_window->getTitle();
-        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.pEngineName = "Deng";
-        appInfo.engineVersion = VK_MAKE_VERSION(0, 1, 0);
-        appInfo.apiVersion = VK_API_VERSION_1_0;
+        VkApplicationInfo local_appInfo{};
+        local_appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        local_appInfo.pApplicationName = this->m_window->getTitle();
+        local_appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 3);
+        local_appInfo.pEngineName = "Deng";
+        local_appInfo.engineVersion = VK_MAKE_VERSION(0, 1, 0);
+        local_appInfo.apiVersion = VK_API_VERSION_1_0;
 
         //initialise create info
-        VkInstanceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        createInfo.pApplicationInfo = &appInfo;
+        VkInstanceCreateInfo local_instance_createInfo{};
+        local_instance_createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        local_instance_createInfo.pApplicationInfo = &local_appInfo;
 
         //get count of required extensions
         uint32_t glfwExtensionCount = 0;
         const char **glfwExtensions;
         glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-        createInfo.enabledExtensionCount = glfwExtensionCount;
+        local_instance_createInfo.enabledExtensionCount = glfwExtensionCount;
         LOG("GLFW extension count: " + std::to_string(glfwExtensionCount));
-        createInfo.ppEnabledExtensionNames = glfwExtensions;
+        local_instance_createInfo.ppEnabledExtensionNames = glfwExtensions;
         LOG(glfwExtensions);
+        
+        VkDebugUtilsMessengerCreateInfoEXT local_debug_createInfo{};
+        if(enable_validation_layers && !this->checkValidationLayerSupport()) {
+            ERR("No validation layers available!");
+        }
 
-        if(vkCreateInstance(&createInfo, nullptr, &this->m_instance) != VK_SUCCESS) {
+        else if(enable_validation_layers && this->checkValidationLayerSupport()) {
+            local_instance_createInfo.enabledLayerCount = 1;
+            local_instance_createInfo.ppEnabledLayerNames = &this->m_validationLayer;
+
+            local_debug_createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+            local_debug_createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+            local_debug_createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+            local_debug_createInfo.pfnUserCallback = debugCallback;
+
+            local_instance_createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &local_debug_createInfo;
+        }
+
+        else if(!enable_validation_layers) {
+            local_instance_createInfo.enabledLayerCount = 0;
+            local_instance_createInfo.pNext = nullptr;
+        }
+
+        if(vkCreateInstance(&local_instance_createInfo, nullptr, &this->m_instance) != VK_SUCCESS) {
             ERR("Failed to create an instance!");
         }
 
         else LOG("Successfully created an instance");
+    }
+
+    bool Renderer::checkValidationLayerSupport() {
+        uint32_t layerCount;
+        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+        std::vector<VkLayerProperties> local_available_layers(layerCount);
+        vkEnumerateInstanceLayerProperties(&layerCount, local_available_layers.data());
+        bool isLayer = false;
+
+        for(const VkLayerProperties &properties : local_available_layers) {
+            if(strcmp(this->m_validationLayer, properties.layerName) == 0) {
+                isLayer = true;
+                break;
+            }
+        }
+
+        return isLayer;
     }
 
     void Renderer::initWindowSurface() {
@@ -389,7 +451,7 @@ namespace deng
             VkImageViewCreateInfo local_createInfo{};
             local_createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
             local_createInfo.image = this->m_swapChain_images[imageIndex];
-            local_createInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;
+            local_createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
             local_createInfo.format = this->m_surface_format.format;
 
             local_createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -475,6 +537,8 @@ namespace deng
         local_ubo_layout_binding.binding = 0;
         local_ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         local_ubo_layout_binding.descriptorCount = 1;
+        local_ubo_layout_binding.pImmutableSamplers = nullptr;
+        local_ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
         VkDescriptorSetLayoutCreateInfo local_layout_createInfo{};
         local_layout_createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -681,13 +745,69 @@ namespace deng
 
         local_size = sizeof(UniformBufferData);
 
-        obj.buffers.uniform_buffers.resize(this->m_swapChain_images.size());
-        obj.buffers.uniform_buffersMem.resize(this->m_swapChain_images.size());
+        this->m_uniform_buffers.resize(this->m_swapChain_images.size());
+        this->m_uniform_buffersMem.resize(this->m_swapChain_images.size());
 
         for(size_t i = 0; i < this->m_swapChain_images.size(); i++) {
             this->makeBuffer(local_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_UNIFORM, &i);
         }
 
+    }
+
+    void Renderer::initDescriptorPool() {
+        VkDescriptorPoolSize local_desc_poolSize{};
+        local_desc_poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        local_desc_poolSize.descriptorCount = static_cast<uint32_t>(this->m_swapChain_images.size());
+
+        VkDescriptorPoolCreateInfo local_desc_pool_createInfo{};
+        local_desc_pool_createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        local_desc_pool_createInfo.poolSizeCount = 1;
+        local_desc_pool_createInfo.pPoolSizes = &local_desc_poolSize;
+        local_desc_pool_createInfo.maxSets = static_cast<uint32_t>(this->m_swapChain_images.size());
+
+        if(vkCreateDescriptorPool(this->m_device, &local_desc_pool_createInfo, nullptr, &this->m_descriptorPool) != VK_SUCCESS) {
+            ERR("Failed to create descriptor pool!");
+        }
+
+        else {
+            LOG("Descriptor pool created successfully!");
+        }
+    }
+
+    void Renderer::initDescriptorSets() {
+        std::vector<VkDescriptorSetLayout> local_descset_layouts(this->m_swapChain_images.size(), this->m_descriptorSet_Layout);
+        VkDescriptorSetAllocateInfo local_allocInfo{};
+        local_allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        local_allocInfo.descriptorPool = this->m_descriptorPool;
+        local_allocInfo.descriptorSetCount = static_cast<uint32_t>(this->m_swapChain_images.size());
+        local_allocInfo.pSetLayouts = local_descset_layouts.data();
+
+        this->m_descriptorSets.resize(this->m_swapChain_images.size());
+        if(vkAllocateDescriptorSets(this->m_device, &local_allocInfo, this->m_descriptorSets.data()) != VK_SUCCESS) {
+            ERR("Failed to allocate descriptor sets!");
+        }
+
+        else {
+            LOG("Successfully allocated descriptor sets!");
+        }
+
+        for(size_t i = 0; i < this->m_swapChain_images.size(); i++) {
+            VkDescriptorBufferInfo local_bufferInfo{};
+            local_bufferInfo.buffer = this->m_uniform_buffers[i];
+            local_bufferInfo.offset = 0;
+            local_bufferInfo.range = sizeof(UniformBufferData);
+
+            VkWriteDescriptorSet local_desc_write{};
+            local_desc_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            local_desc_write.dstSet = this->m_descriptorSets[i];
+            local_desc_write.dstBinding = 0;
+            local_desc_write.dstArrayElement = 0;
+            local_desc_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            local_desc_write.descriptorCount = 1;
+            local_desc_write.pBufferInfo = &local_bufferInfo;
+
+            vkUpdateDescriptorSets(this->m_device, 1, &local_desc_write, 0, nullptr);
+        }
     }
 
     void Renderer::initCommandBufferFromSwapChain() {
@@ -714,6 +834,10 @@ namespace deng
                 ERR("Failed to begin recording command buffers!");
             }
 
+            else {
+                LOG("Successfully begun to record command buffers!");
+            }
+
             VkRenderPassBeginInfo local_renderpass_begininfo{};
             local_renderpass_begininfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
             local_renderpass_begininfo.renderPass = this->m_renderPass;
@@ -733,9 +857,15 @@ namespace deng
 
             vkCmdBindVertexBuffers(this->m_commandBuffers[i], 0, 1, local_vertex_buffers, offsets);
             vkCmdBindIndexBuffer(this->m_commandBuffers[i], this->m_statue.buffers.index_buffer, 0, VK_INDEX_TYPE_UINT32);
+            LOG("Commandbuffer array size: " + std::to_string(this->m_commandBuffers.size()));
+            LOG("Descriptor set size: " + std::to_string(this->m_descriptorSets.size()));
+            vkCmdBindDescriptorSets(this->m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipeline_layout, 0, 1, &this->m_descriptorSets[i], 0, nullptr);
 
+            LOG("Binded descriptor sets!");
             vkCmdDrawIndexed(this->m_commandBuffers[i], static_cast<uint32_t>(this->m_statue.vertexIndicesData.posIndices.size()), 1, 0, 0, 0);
+            LOG("Done drawing indexed vertices!");
             vkCmdEndRenderPass(this->m_commandBuffers[i]);
+            LOG("Ended renderPass!");
 
             if(vkEndCommandBuffer(this->m_commandBuffers[i]) != VK_SUCCESS) {
                 ERR("Failed to end recording command buffer!");
@@ -830,8 +960,8 @@ namespace deng
             break;
 
         case DENG_BUFFER_TYPE_UNIFORM:
-            local_buffer = &obj.buffers.uniform_buffers[*bufferIndex];
-            local_bufferMem = &obj.buffers.uniform_buffersMem[*bufferIndex];
+            local_buffer = &this->m_uniform_buffers[*bufferIndex];
+            local_bufferMem = &this->m_uniform_buffersMem[*bufferIndex];
             break;
 
         default:
@@ -863,15 +993,16 @@ namespace deng
         vkBindBufferMemory(this->m_device, *local_buffer, *local_bufferMem, 0);
     }
 
-    void Renderer::updateUniformBufferData(const uint32_t &currentImg) {
-        this->m_statue.modelMatrix.setRotation(1, 0, 0);
-        this->m_statue.modelMatrix.setScale(1, 1, 1);
-        this->m_statue.modelMatrix.setTransformation(0, 0, 0);
-
+    void Renderer::updateUniformBufferData(const uint32_t &currentImg, GameObject &obj) {
         UniformBufferData ubo{};
-        this->m_statue.modelMatrix.getMatrix(&ubo.model);
-        this->m_camera->getViewMatrix(&ubo.view);
-        
+        obj.modelMatrix.getMatrix(&ubo.model);
+        this->m_camera->view_matrix.getViewMatrix(&ubo.view);
+        this->m_camera->proj_matrix->getProjectionMatrix(&ubo.projection);
+
+        void *data;
+        vkMapMemory(this->m_device, this->m_uniform_buffersMem[currentImg], 0, sizeof(ubo), 0, &data);
+        memcpy(data, &ubo, sizeof(ubo));
+        vkUnmapMemory(this->m_device, this->m_uniform_buffersMem[currentImg]);
     }
 
     void Renderer::makeFrame() {
@@ -887,7 +1018,7 @@ namespace deng
             ERR("Error acquiring swap chain image!");
         }
 
-        this->updateUniformBufferData(imgIndex);
+        this->updateUniformBufferData(imgIndex, this->m_statue);
 
         VkSubmitInfo local_submitInfo{};
         local_submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

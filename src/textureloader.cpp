@@ -97,7 +97,7 @@ namespace deng {
         fm.writeToFile("rgbbitmap.log", ("Width: " + std::to_string(this->m_info_header.width)), DENG_WRITEMODE_FROM_END);
         fm.writeToFile("rgbbitmap.log", ("Height: " + std::to_string(this->m_info_header.height)), DENG_WRITEMODE_FROM_END);
         for(vec4<unsigned char> &rgbVal : this->pixelData) {
-            fm.writeToFile("rgbbitmap.log", "{" + std::to_string(rgbVal.x) + ", " + std::to_string(rgbVal.y) + ", " + std::to_string(rgbVal.z) + ", " + std::to_string(rgbVal.a) + "}", DENG_WRITEMODE_FROM_END);
+            fm.writeToFile("rgbbitmap.log", "{" + std::to_string(rgbVal.x) + ", " + std::to_string(rgbVal.y) + ", " + std::to_string(rgbVal.z) + ", " + std::to_string(rgbVal.w) + "}", DENG_WRITEMODE_FROM_END);
         }
 
         *texWidth = this->m_info_header.width;

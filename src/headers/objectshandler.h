@@ -31,20 +31,11 @@ namespace deng {
 
         VkBuffer index_buffer;
         VkDeviceMemory index_bufferMem;
-
-        std::vector<VkBuffer> uniform_buffers;
-        std::vector<VkDeviceMemory> uniform_buffersMem;
     };
 
     struct Images {
         VkImage textureImage;
         VkDeviceMemory textureImageMem;
-    };
-
-    struct UniformBufferData {
-        mat4<float> model;
-        mat4<float> view;
-        mat4<float> projection;
     };
 
     struct GameObject {

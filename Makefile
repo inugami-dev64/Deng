@@ -1,8 +1,8 @@
 INCLUDEFLAGS += -I dependencies/src/
 
 LIBFLAGS += -L dependencies/lib
-LIBS = -lpthread -lX11 -ldl -lglfw3 -lvulkan
-LINKOBJS = main.o renderer.o queuemanager.o window.o swapchaindetails.o filemanager.o objectshandler.o objloader.o textureloader.o timer.o
+LIBS = -lpthread -lX11 -ldl -lglfw3 -lvulkan -lVkLayer_utils
+LINKOBJS = main.o renderer.o queuemanager.o window.o swapchaindetails.o filemanager.o objectshandler.o objloader.o textureloader.o timer.o events.o camera.o dengmath.o
 
 deng: $(LINKOBJS)
 	g++ $(LINKOBJS) -o deng $(LIBFLAGS) $(LIBS) 
@@ -36,6 +36,15 @@ textureloader.o: src/textureloader.cpp
 
 timer.o: src/timer.cpp
 	g++ -c src/timer.cpp $(INCLUDEFLAGS)
+
+events.o: src/events.cpp
+	g++ -c src/events.cpp $(INCLUDEFLAGS)
+
+camera.o: src/camera.cpp
+	g++ -c src/camera.cpp $(INCLUDEFLAGS)
+
+dengmath.o: src/dengmath.cpp
+	g++ -c src/dengmath.cpp $(INCLUDEFLAGS)
 
 precompile:	src/headers/renderer.h
 	g++ src/headers/renderer.h -o src/headers/renderer.h.gch $(INCLUDEFLAGS)

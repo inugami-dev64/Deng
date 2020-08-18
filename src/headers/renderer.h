@@ -8,8 +8,10 @@
 
 #if DEBUG
     #define LOG(x) std::cout << x << "\n"
+    const bool enable_validation_layers = true;
 #else
     #define LOG(x)
+    const bool enable_validation_layers = false;
 #endif
 
 namespace deng {
@@ -24,6 +26,8 @@ namespace deng {
     class Renderer
     {   
     private:
+        const char* m_validationLayer = "VK_LAYER_KHRONOS_validation";
+
         const int m_MAX_FRAMES_IN_FLIGHT = 2; 
         size_t m_currentFrame = 0;
 
@@ -48,6 +52,8 @@ namespace deng {
 
         std::vector<VkFramebuffer> m_swapChain_frameBuffers;
         VkCommandPool m_commandPool;
+        VkDescriptorPool m_descriptorPool;
+        std::vector<VkDescriptorSet> m_descriptorSets;
 
         std::vector<VkCommandBuffer> m_commandBuffers;
         std::vector<VkImage> m_swapChain_images;
@@ -57,6 +63,10 @@ namespace deng {
         std::vector<VkSemaphore> m_imageAvailableSem_set;
         std::vector<VkSemaphore> m_renderFinishedSem_set;
         std::vector<VkFence> m_flightFences;
+
+        // uniform buffers
+        std::vector<VkBuffer> m_uniform_buffers;
+        std::vector<VkDeviceMemory> m_uniform_buffersMem;
 
         SwapChainDetails *m_device_swapChainDetails;
         Camera *m_camera;
@@ -72,6 +82,7 @@ namespace deng {
 
     private:
         void initInstance();
+        bool checkValidationLayerSupport();
         uint32_t getDeviceScore(const VkPhysicalDevice &device);
         bool getExtensionSupport(const VkPhysicalDevice &gpu, const char *extName);
         void selectPhysicalDevice();
@@ -88,6 +99,8 @@ namespace deng {
         void initFrameBuffers();
         void initCommandPool();
         void initBuffers(GameObject &obj);
+        void initDescriptorPool();
+        void initDescriptorSets();
         void initTextureBuffer();
         uint32_t getMemType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
         void initCommandBufferFromSwapChain();
@@ -122,7 +135,7 @@ namespace deng {
         void beginCommandBufferSingleCommand(VkCommandBuffer &commandBuffer);
         void endCommandBufferSingleCommand(VkCommandBuffer &commandBuffer);
 
-        void updateUniformBufferData(const uint32_t &currentImg);
+        void updateUniformBufferData(const uint32_t &currentImg, GameObject &obj);
 
     public:
         void run();
