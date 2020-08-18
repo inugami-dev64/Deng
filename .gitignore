@@ -12,6 +12,6 @@ swapchaindetails.o
 textureloader.o
 window.o
 timer.o
-rgbbitmap.o
+rgbbitmap.log
 src/helloworld.cpp
 src/helloworld
