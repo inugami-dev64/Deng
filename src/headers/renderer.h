@@ -32,6 +32,11 @@ namespace deng {
         size_t m_currentFrame = 0;
 
         VkInstance m_instance;
+
+        #if DEBUG
+            VkDebugUtilsMessengerEXT m_debug_messenger;
+        #endif
+
         VkPhysicalDevice m_gpu;
         VkPhysicalDeviceProperties m_gpu_properties{};
         VkPhysicalDeviceFeatures m_gpu_features{};
@@ -82,6 +87,7 @@ namespace deng {
 
     private:
         void initInstance();
+        void initDebugMessenger();
         bool checkValidationLayerSupport();
         uint32_t getDeviceScore(const VkPhysicalDevice &device);
         bool getExtensionSupport(const VkPhysicalDevice &gpu, const char *extName);
@@ -120,6 +126,7 @@ namespace deng {
         void deleteDescriptorSetLayout();
         void deleteVertexBuffer();
         void freeMemory();
+        void deleteDebugMessenger();
         void deleteInstance();
         void deleteSurface();
         void deleteDevice();
@@ -136,6 +143,10 @@ namespace deng {
         void endCommandBufferSingleCommand(VkCommandBuffer &commandBuffer);
 
         void updateUniformBufferData(const uint32_t &currentImg, GameObject &obj);
+
+        VkResult createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo);
+        std::vector<const char*> getRequiredExtensions();
+
 
     public:
         void run();

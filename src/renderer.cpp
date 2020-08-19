@@ -12,6 +12,7 @@ namespace deng
 
         this->initObjects(this->m_statue, "objects/obj1.obj", "textures/obj1.bmp", DENG_COORDINATE_MODE_DEFAULT);
         this->initInstance();
+        this->initDebugMessenger();
         this->initWindowSurface();
         this->selectPhysicalDevice();
         this->initDeviceQueues();
@@ -58,11 +59,19 @@ namespace deng
         this->deleteSurface();
         LOG("Deleted surface!");
         this->deleteInstance();
+        this->deleteDebugMessenger();
         LOG("Deleted instance!");
         
         delete this->m_ev;
         delete this->m_camera;
         delete this->m_device_swapChainDetails;
+    }
+
+    void Renderer::deleteDebugMessenger() {
+        auto fun = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(this->m_instance, "vkDestroyDebugUtilsMessengerEXT");
+        if(fun != nullptr) {
+            fun(this->m_instance, this->m_debug_messenger, nullptr);
+        }
     }
 
     void Renderer::deleteInstance() {
@@ -187,13 +196,9 @@ namespace deng
         local_instance_createInfo.pApplicationInfo = &local_appInfo;
 
         //get count of required extensions
-        uint32_t glfwExtensionCount = 0;
-        const char **glfwExtensions;
-        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-        local_instance_createInfo.enabledExtensionCount = glfwExtensionCount;
-        LOG("GLFW extension count: " + std::to_string(glfwExtensionCount));
-        local_instance_createInfo.ppEnabledExtensionNames = glfwExtensions;
-        LOG(glfwExtensions);
+        std::vector<const char*> local_extensions = this->getRequiredExtensions();
+        local_instance_createInfo.enabledExtensionCount = local_extensions.size();
+        local_instance_createInfo.ppEnabledExtensionNames = local_extensions.data();
         
         VkDebugUtilsMessengerCreateInfoEXT local_debug_createInfo{};
         if(enable_validation_layers && !this->checkValidationLayerSupport()) {
@@ -222,6 +227,50 @@ namespace deng
         }
 
         else LOG("Successfully created an instance");
+    }
+
+    std::vector<const char*> Renderer::getRequiredExtensions() {
+        uint32_t glfwExtensionCount = 0;
+        const char **glfwExtensions;
+        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+        std::vector<const char*> local_extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+
+        if(enable_validation_layers) local_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        LOG("GLFW extension count: " + std::to_string(glfwExtensionCount));
+
+        return local_extensions;
+    }
+
+    VkResult Renderer::createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo) {
+        auto fun = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(this->m_instance, "vkCreateDebugUtilsMessengerEXT");
+        if(fun == nullptr) {
+            ERRME("Couldn't find vkCreateDebugUtilsMessengerEXT locations!");
+            return VK_ERROR_EXTENSION_NOT_PRESENT;
+        }
+        else {
+            LOG("");
+            fun(this->m_instance, pCreateInfo, nullptr, &this->m_debug_messenger);
+        }
+    }
+
+    void Renderer::initDebugMessenger() {
+        if(!enable_validation_layers) return;
+        else {
+            VkDebugUtilsMessengerCreateInfoEXT local_messenger_createInfo{};
+            local_messenger_createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+            local_messenger_createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+            local_messenger_createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+            local_messenger_createInfo.pfnUserCallback = debugCallback;
+
+            if(this->createDebugMessenger(&local_messenger_createInfo) != VK_SUCCESS) {
+                ERR("Couldn't create debug messenger!");
+            }
+            else {
+                LOG("Debug messenger created successfully!");
+            }
+
+        }
     }
 
     bool Renderer::checkValidationLayerSupport() {
