@@ -7,7 +7,7 @@ namespace deng
         this->m_req_extensions_name.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
         this->m_window = &win;
-        this->m_camera = new Camera({0.00005f, 0.00005, 0.00005, 0.0f}, 65.0f, 1.0f, 10.0f, this->m_window);
+        this->m_camera = new Camera({0.005f, 0.005f, 0.005f, 0.0f}, 65.0f, this->m_nearPlane, this->m_farPlane, this->m_window);
         this->m_ev = new Events(this->m_window, this->m_camera);
 
         this->initObjects(this->m_statue, "objects/obj1.obj", "textures/obj1.bmp", DENG_COORDINATE_MODE_DEFAULT);
@@ -33,38 +33,29 @@ namespace deng
     }
 
     Renderer::~Renderer() {
-        LOG("Destroying renderer!");
-        // this->deleteTextureImage(this->m_statue);
         this->deleteFrameBuffers();
-        LOG("Deleted frame buffers!");
+        this->deleteCommandBuffers();
         this->deletePipeline();
-        LOG("Deleted pipeline!");
         this->deleteRenderPass();
-        LOG("Deleted renderpass!");
         this->deleteImageViews();
-        LOG("Deleted imageviews!");
-        this->deleteSwapChain();
-        LOG("Deleted swapchain!");
+        this->deleteSwapChain();    
         this->deleteDescriptorSetLayout();
         this->deleteVertexBuffer();
-        LOG("Deleted vertex buffer!");
         this->freeMemory();
-        LOG("Freed buffer memory!");
         this->deleteSemaphores();
-        LOG("Deleted semaphores!");
         this->deleteCommandPool();
-        LOG("Deleted command pool!");
         this->deleteDevice();
-        LOG("Deleted virtual device!");
         this->deleteSurface();
-        LOG("Deleted surface!");
-        this->deleteInstance();
         this->deleteDebugMessenger();
-        LOG("Deleted instance!");
+        this->deleteInstance();
         
         delete this->m_ev;
         delete this->m_camera;
         delete this->m_device_swapChainDetails;
+    }
+
+    void Renderer::deleteCommandBuffers() {
+        vkFreeCommandBuffers(this->m_device, this->m_commandPool, this->m_commandBuffers.size(), this->m_commandBuffers.data());
     }
 
     void Renderer::deleteDebugMessenger() {
@@ -92,11 +83,6 @@ namespace deng
     void Renderer::deleteSwapChain() {
         vkDestroySwapchainKHR(this->m_device, this->m_swapChain, nullptr);
         this->m_swapChain = nullptr;
-
-        for(size_t i = 0; i < this->m_swapChain_images.size(); i++) {
-            vkDestroyBuffer(this->m_device, this->m_uniform_buffers[i], nullptr);
-            vkFreeMemory(this->m_device, this->m_uniform_buffersMem[i], nullptr);
-        }
 
         for(size_t i = 0; i < this->m_swapChain_images.size(); i++) {
             vkDestroyBuffer(this->m_device, this->m_uniform_buffers[i], nullptr);
@@ -139,11 +125,13 @@ namespace deng
         for(size_t i = 0; i < this->m_MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(this->m_device, this->m_imageAvailableSem_set[i], nullptr);
             vkDestroySemaphore(this->m_device, this->m_renderFinishedSem_set[i], nullptr);
+            vkDestroyFence(this->m_device, this->m_flightFences[i], nullptr);
         }
     }
 
     void Renderer::freeMemory() {
         vkFreeMemory(this->m_device, this->m_statue.buffers.vertex_bufferMem, nullptr);
+        vkFreeMemory(this->m_device, this->m_statue.buffers.index_bufferMem, nullptr);
     }
 
     void Renderer::deleteVertexBuffer() {
@@ -169,7 +157,7 @@ namespace deng
         tex_loader.getTextureDetails(&texture_data.width, &texture_data.height, &texture_data.texSize, &texture_data.texturePixelsData);
         obj.textureData = texture_data;
 
-        obj.modelMatrix.setRotation(1, 0, 0);
+        obj.modelMatrix.setRotation(90, 90, 90);
         obj.modelMatrix.setScale(1, 1, 1);
         obj.modelMatrix.setTransformation(0, 0, 0);
     }
@@ -480,7 +468,6 @@ namespace deng
         local_createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         local_createInfo.presentMode = this->m_present_mode;
         local_createInfo.clipped = VK_TRUE;
-        local_createInfo.oldSwapchain = VK_NULL_HANDLE;
         LOG("Filled out createInfo structure!");
 
         if(vkCreateSwapchainKHR(this->m_device, &local_createInfo, nullptr, &this->m_swapChain) != VK_SUCCESS) {
@@ -561,6 +548,8 @@ namespace deng
 
         VkSubpassDependency local_subpass_dependency{};
         local_subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        local_subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        local_subpass_dependency.srcAccessMask = 0;
         local_subpass_dependency.dstSubpass = 0;
         local_subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         local_subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
@@ -664,7 +653,7 @@ namespace deng
         local_rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
         local_rasterizer.lineWidth = 1.0f;
         local_rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-        local_rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+        local_rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         local_rasterizer.depthBiasEnable = VK_FALSE;
 
         VkPipelineMultisampleStateCreateInfo local_multisampling{};
@@ -908,7 +897,7 @@ namespace deng
             vkCmdBindIndexBuffer(this->m_commandBuffers[i], this->m_statue.buffers.index_buffer, 0, VK_INDEX_TYPE_UINT32);
             LOG("Commandbuffer array size: " + std::to_string(this->m_commandBuffers.size()));
             LOG("Descriptor set size: " + std::to_string(this->m_descriptorSets.size()));
-            vkCmdBindDescriptorSets(this->m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipeline_layout, 0, 1, &this->m_descriptorSets[i], 0, nullptr);
+            vkCmdBindDescriptorSets(this->m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipelineLayout, 0, 1, &this->m_descriptorSets[i], 0, nullptr);
 
             LOG("Binded descriptor sets!");
             vkCmdDrawIndexed(this->m_commandBuffers[i], static_cast<uint32_t>(this->m_statue.vertexIndicesData.posIndices.size()), 1, 0, 0, 0);
@@ -1044,7 +1033,7 @@ namespace deng
 
     void Renderer::updateUniformBufferData(const uint32_t &currentImg, GameObject &obj) {
         UniformBufferData ubo{};
-        obj.modelMatrix.getMatrix(&ubo.model);
+        obj.modelMatrix.getModelMatrix(&ubo.model);
         this->m_camera->view_matrix.getViewMatrix(&ubo.view);
         this->m_camera->proj_matrix->getProjectionMatrix(&ubo.projection);
 
@@ -1161,6 +1150,7 @@ namespace deng
         while(!glfwWindowShouldClose(this->m_window->getWindow())) {
             glfwPollEvents();
             this->m_ev->update();
+            this->m_camera->proj_matrix->updatePlanes(this->m_camera->view_matrix.getPosition().z + this->m_nearPlane, this->m_camera->view_matrix.getPosition().z + this->m_farPlane);
             this->makeFrame();
         }
         vkDeviceWaitIdle(this->m_device);

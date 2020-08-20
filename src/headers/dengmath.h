@@ -122,32 +122,33 @@ namespace deng {
 
     class ModelMatrix {
     private:
-        mat4<float> RxMat;
-        mat4<float> RyMat;
-        mat4<float> RzMat;
+        mat4<float> m_RxMat;
+        mat4<float> m_RyMat;
+        mat4<float> m_RzMat;
 
-        mat4<float> transformMat;
-        mat4<float> scaleMat;
+        mat4<float> m_transformMat;
+        mat4<float> m_scaleMat;
 
     public:
         void setRotation(const uint16_t &Rx, const uint16_t &Ry, const uint16_t &Rz);
         void setTransformation(const float &Tx, const float &Ty, const float &Tz);
         void setScale(const float &Sx, const float &Sy, const float &Sz);
-        void getMatrix(mat4<float> *model);
+        void getModelMatrix(mat4<float> *model);
     };
 
     class ViewMatrix {
     private:
-        vec4<float> rightSide;
-        vec4<float> upSide;
-        vec4<float> forwardSide;
-        vec4<float> cameraPosition;
+        vec4<float> m_rightSide;
+        vec4<float> m_upSide;
+        vec4<float> m_forwardSide;
+        vec4<float> m_cameraPosition;
 
     public:
         void setAxes(const vec4<float> &right, const vec4<float> &up, const vec4<float> &forward);
         void setPosition(const vec4<float> &cam_Position);
         void addToPosition(const vec4<float> &addition, const CoordinateType &type, const bool &substract);
         void getViewMatrix(mat4<float> *view);
+        vec4<float> getPosition();
     };
 
     class ProjectionMatrix {
@@ -165,6 +166,7 @@ namespace deng {
 
     public:
         ProjectionMatrix(const float &FOV, const float &near,const float &far, const float &aspect_ratio);
+        void updatePlanes(const float &near, const float &far);
         void getProjectionMatrix(mat4<float> *matrix);
     };
 

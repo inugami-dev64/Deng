@@ -26,6 +26,9 @@ namespace deng {
     class Renderer
     {   
     private:
+        const float m_nearPlane = 0.1f;
+        const float m_farPlane = 10.0f;
+
         const char* m_validationLayer = "VK_LAYER_KHRONOS_validation";
 
         const int m_MAX_FRAMES_IN_FLIGHT = 2; 
@@ -43,8 +46,6 @@ namespace deng {
         VkDevice m_device;
         VkSurfaceKHR m_surface;
         VkSwapchainKHR m_swapChain;
-        VkDescriptorSetLayout m_descriptorSet_Layout{};
-        VkPipelineLayout m_pipeline_layout{};
 
         //swap chain settings
         VkSurfaceFormatKHR m_surface_format;
@@ -54,6 +55,8 @@ namespace deng {
         VkRenderPass m_renderPass;
         VkPipelineLayout m_pipelineLayout;
         VkPipeline m_pipeline;
+        VkDescriptorSetLayout m_descriptorSet_Layout;
+
 
         std::vector<VkFramebuffer> m_swapChain_frameBuffers;
         VkCommandPool m_commandPool;

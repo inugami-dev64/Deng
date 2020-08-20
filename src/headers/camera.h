@@ -1,6 +1,6 @@
 #include "window.h"
 #define DENG_CAMERA_DEFAULT_X 0
-#define DENG_CAMERA_DEFAULT_Y -1.5696856
+#define DENG_CAMERA_DEFAULT_Y 0
 #define DENG_CAMERA_DEFAULT_Z 0
 
 namespace deng {
