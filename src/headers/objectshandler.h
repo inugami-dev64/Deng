@@ -1,6 +1,6 @@
 #ifndef OBJECTSHANDLER_H
 #define OBJECTSHANDLER_H
-#include "textureloader.h"
+#include "camera.h"
 
 namespace deng {
 

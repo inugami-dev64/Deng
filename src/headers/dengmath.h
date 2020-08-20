@@ -113,12 +113,21 @@ namespace deng {
 
             return newMat;
         }
+
+        // theoretically this operation would be impossible, because of the lenght of vector but in our case we can just add w value of 1.0f to the end
+        vec4<T> operator*(const vec3<T> vector) {
+            vec4<T> newVec;
+            newVec.x = {(row1.x * vector.x) + (row1.y * vector.y) + (row1.z * vector.z) + row1.w};
+            newVec.y = {(row2.x * vector.x) + (row2.y * vector.y) + (row2.z * vector.z) + row2.w};
+            newVec.z = {(row3.x * vector.x) + (row3.y * vector.y) + (row3.z * vector.z) + row3.w};
+            newVec.w = {(row4.x * vector.x) + (row4.y * vector.y) + (row4.z * vector.z) + row4.w};
+
+            return newVec;
+        }
     };
 
-    #pragma pack(1)
     // generic conversion functions
-    float degToRad(const uint16_t &deg);
-    #pragma pack()
+    // float degToRad(const uint16_t &deg);
 
     class ModelMatrix {
     private:
@@ -166,7 +175,6 @@ namespace deng {
 
     public:
         ProjectionMatrix(const float &FOV, const float &near,const float &far, const float &aspect_ratio);
-        void updatePlanes(const float &near, const float &far);
         void getProjectionMatrix(mat4<float> *matrix);
     };
 

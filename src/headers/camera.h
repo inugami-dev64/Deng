@@ -1,7 +1,7 @@
 #include "window.h"
 #define DENG_CAMERA_DEFAULT_X 0
 #define DENG_CAMERA_DEFAULT_Y 0
-#define DENG_CAMERA_DEFAULT_Z 0
+#define DENG_CAMERA_DEFAULT_Z 1
 
 namespace deng {
     class Camera
@@ -26,13 +26,11 @@ namespace deng {
         Camera(const vec4<float> &movementSpeed, const float &FOV, const float &near,const float &far, Window *window);
         ~Camera();
         void moveF();
-        void moveFL();
-        void moveFR();
         void moveB();
-        void moveBL();
-        void moveBR();
         void moveR();
         void moveL();
+        void moveUp();
+        void moveDown();
 
     };
     

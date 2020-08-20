@@ -1,6 +1,6 @@
 #ifndef OBJLOADER_H
 #define OBJLOADER_H
-#include "objectshandler.h"
+#include "textureloader.h"
 
 namespace deng {
     

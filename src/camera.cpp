@@ -16,35 +16,23 @@ namespace deng {
         this->view_matrix.addToPosition(this->m_movementSpeed, DENG_Z, DENG_TRUE);
     }
 
-    void Camera::moveFL() {
-        this->view_matrix.addToPosition(this->m_movementSpeed, DENG_X, DENG_TRUE);
-        this->view_matrix.addToPosition(this->m_movementSpeed, DENG_Z, DENG_TRUE);
-    }
-
-    void Camera::moveFR() {
-        this->view_matrix.addToPosition(this->m_movementSpeed, DENG_X, DENG_FALSE);
-        this->view_matrix.addToPosition(this->m_movementSpeed, DENG_Z, DENG_TRUE);
-    }
-
     void Camera::moveB() {
         this->view_matrix.addToPosition(this->m_movementSpeed, DENG_Z, DENG_FALSE);
     }
 
-    void Camera::moveBL() {
-        this->view_matrix.addToPosition(this->m_movementSpeed, DENG_X, DENG_TRUE);
-        this->view_matrix.addToPosition(this->m_movementSpeed, DENG_Z, DENG_FALSE);
-    }
-
-    void Camera::moveBR() {
-        this->view_matrix.addToPosition(this->m_movementSpeed, DENG_X, DENG_FALSE);
-        this->view_matrix.addToPosition(this->m_movementSpeed, DENG_Z, DENG_FALSE);
-}
-
     void Camera::moveR() {
-        this->view_matrix.addToPosition(this->m_movementSpeed, DENG_X, DENG_FALSE);
+        this->view_matrix.addToPosition(this->m_movementSpeed, DENG_X, DENG_TRUE);
     }
 
     void Camera::moveL() {
-        this->view_matrix.addToPosition(this->m_movementSpeed, DENG_X, DENG_TRUE);
+        this->view_matrix.addToPosition(this->m_movementSpeed, DENG_X, DENG_FALSE);
+    }
+
+    void Camera::moveUp(){
+        this->view_matrix.addToPosition(this->m_movementSpeed, DENG_Y, DENG_FALSE);
+    }
+
+    void Camera::moveDown() {
+        this->view_matrix.addToPosition(this->m_movementSpeed, DENG_Y, DENG_TRUE);
     }
 }

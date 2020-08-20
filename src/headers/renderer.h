@@ -36,9 +36,7 @@ namespace deng {
 
         VkInstance m_instance;
 
-        #if DEBUG
-            VkDebugUtilsMessengerEXT m_debug_messenger;
-        #endif
+        VkDebugUtilsMessengerEXT m_debug_messenger;
 
         VkPhysicalDevice m_gpu;
         VkPhysicalDeviceProperties m_gpu_properties{};

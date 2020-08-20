@@ -1,31 +1,38 @@
-#include "camera.h"
+#include "objectshandler.h"
 
 namespace deng {
     enum MovementEvents {
         DENG_MOVEMENT_NONE = -1,
         DENG_MOVEMENT_FORWARD = 0,
-        DENG_MOVEMENT_FORWARDRIGHT = 1,
-        DENG_MOVEMENT_FORWARDLEFT = 2,
-        DENG_MOVEMENT_BACKWARD = 3,
-        DENG_MOVEMENT_BACKWARDRIGHT = 4,
-        DENG_MOVEMENT_BACKWARDLEFT = 5,
-        DENG_MOVEMENT_RIGHTWARD = 6,
-        DENG_MOVEMENT_LEFTWARD = 7
+        DENG_MOVEMENT_BACKWARD = 1,
+        DENG_MOVEMENT_RIGHTWARD = 2,
+        DENG_MOVEMENT_LEFTWARD = 3,
+        DENG_MOVEMENT_UPWARD = 4,
+        DENG_MOVEMENT_DOWNWARD = 5
+    };
+
+    struct Movements {
+        MovementEvents x;
+        MovementEvents y;
+        MovementEvents z;
     };
 
     class Events
     {
     private:
         Timer m_timer;
-        MovementEvents m_deng_movement;
         Camera *m_camera;
         Window *m_window;
+        GameObject *m_obj;
+        Movements m_movements;
 
     private:
         void getMovementType(GLFWwindow *window);
+        void checkForObjLogRequest(GLFWwindow *window);
+        void handleLogging();
 
     public:
-        Events(Window *win, Camera *camera);
+        Events(Window *win, Camera *camera, GameObject *obj);
         MovementEvents getMovement();
         void handleExit();
         void update();

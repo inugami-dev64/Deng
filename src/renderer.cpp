@@ -7,8 +7,8 @@ namespace deng
         this->m_req_extensions_name.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
         this->m_window = &win;
-        this->m_camera = new Camera({0.005f, 0.005f, 0.005f, 0.0f}, 65.0f, this->m_nearPlane, this->m_farPlane, this->m_window);
-        this->m_ev = new Events(this->m_window, this->m_camera);
+        this->m_camera = new Camera({0.01f, 0.01f, 0.01f, 0.0f}, 65.0f, this->m_nearPlane, this->m_farPlane, this->m_window);
+        this->m_ev = new Events(this->m_window, this->m_camera, &this->m_statue);
 
         this->initObjects(this->m_statue, "objects/obj1.obj", "textures/obj1.bmp", DENG_COORDINATE_MODE_DEFAULT);
         this->initInstance();
@@ -157,7 +157,7 @@ namespace deng
         tex_loader.getTextureDetails(&texture_data.width, &texture_data.height, &texture_data.texSize, &texture_data.texturePixelsData);
         obj.textureData = texture_data;
 
-        obj.modelMatrix.setRotation(90, 90, 90);
+        obj.modelMatrix.setRotation(0, 0, 0);
         obj.modelMatrix.setScale(1, 1, 1);
         obj.modelMatrix.setTransformation(0, 0, 0);
     }
@@ -653,7 +653,7 @@ namespace deng
         local_rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
         local_rasterizer.lineWidth = 1.0f;
         local_rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-        local_rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        local_rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
         local_rasterizer.depthBiasEnable = VK_FALSE;
 
         VkPipelineMultisampleStateCreateInfo local_multisampling{};
@@ -1032,8 +1032,9 @@ namespace deng
     }
 
     void Renderer::updateUniformBufferData(const uint32_t &currentImg, GameObject &obj) {
-        UniformBufferData ubo{};
+        UniformBufferData ubo;
         obj.modelMatrix.getModelMatrix(&ubo.model);
+        
         this->m_camera->view_matrix.getViewMatrix(&ubo.view);
         this->m_camera->proj_matrix->getProjectionMatrix(&ubo.projection);
 
@@ -1150,7 +1151,6 @@ namespace deng
         while(!glfwWindowShouldClose(this->m_window->getWindow())) {
             glfwPollEvents();
             this->m_ev->update();
-            this->m_camera->proj_matrix->updatePlanes(this->m_camera->view_matrix.getPosition().z + this->m_nearPlane, this->m_camera->view_matrix.getPosition().z + this->m_farPlane);
             this->makeFrame();
         }
         vkDeviceWaitIdle(this->m_device);

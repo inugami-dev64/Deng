@@ -2,8 +2,8 @@
 
 namespace deng {
 
-    float degToRad(const uint16_t &deg)  {
-        return (deg/360) * 2 * PI;
+    float degToRad(uint16_t deg) {
+        return (float) deg/180 * PI;
     }
 
     void ModelMatrix::setRotation(const uint16_t &Rx, const uint16_t &Ry, const uint16_t &Rz) {
@@ -11,6 +11,8 @@ namespace deng {
                        {0.0f, cos(degToRad(Rx)), -(sin(degToRad(Rx))), 0.0f},
                        {0.0f, sin(degToRad(Rx)), cos(degToRad(Rx)), 0.0f}, 
                        {0.0f, 0.0f, 0.0f, 1.0f}};
+
+        
 
         this->m_RyMat = {{cos(degToRad(Ry)), 0.0f, sin(degToRad(Ry)), 0.0f},
                        {0.0f, 1.0f, 0.0f, 0.0f},
@@ -73,7 +75,7 @@ namespace deng {
             break;
         }
 
-        LOG("Camera X: " + std::to_string(this->m_cameraPosition.x) + "/Camera Y: " + std::to_string(this->m_cameraPosition.y) + "Camera Z: " + std::to_string(this->m_cameraPosition.z) + "Camera W: " + std::to_string(this->m_cameraPosition.w));
+        LOG("Camera X: " + std::to_string(this->m_cameraPosition.x) + "/Camera Y: " + std::to_string(this->m_cameraPosition.y) + "/Camera Z: " + std::to_string(this->m_cameraPosition.z) + "/Camera W: " + std::to_string(this->m_cameraPosition.w));
     }
 
     void ViewMatrix::getViewMatrix(mat4<float> *view) {
@@ -81,6 +83,10 @@ namespace deng {
         view->row2 = this->m_upSide;
         view->row3 = this->m_forwardSide;
         view->row4 = this->m_cameraPosition;
+        // view->row1 = {1, 0, 0, 0};
+        // view->row2 = {0, 1, 0, 0};
+        // view->row3 = {0, 0, 1, 0};
+        // view->row4 = {0, 0, 0, 1};
     }
 
     vec4<float> ViewMatrix::getPosition() {
@@ -101,18 +107,13 @@ namespace deng {
     }
 
     void ProjectionMatrix::getProjectionMatrix(mat4<float> *matrix) {
-        // matrix->row1 = {this->m_aspectRatio * 1/tan(degToRad(this->m_FOV/2)), 0, 0, 0};
-        // matrix->row2 = {0, 1/tan(degToRad(this->m_FOV/2)), 0, 0};
-        // matrix->row3 = {0, 0, this->m_far / (m_far - m_near), 1};
-        // matrix->row4 = {0, 0, -(this->m_far * this->m_near) / (this->m_far - this->m_near), 0};
-        matrix->row1 = {1, 0, 0, 0};
-        matrix->row2 = {0, 1, 0, 0};
-        matrix->row3 = {0, 0, 1, 0};
-        matrix->row4 = {0, 0, 0, 1};
-    }
-
-    void ProjectionMatrix::updatePlanes(const float &near, const float &far) {
-        this->m_near = near;
-        this->m_far = far;
+        matrix->row1 = {this->m_aspectRatio * 1/tan(degToRad(this->m_FOV/2)), 0, 0, 0};
+        matrix->row2 = {0, 1/tan(degToRad(this->m_FOV/2)), 0, 0};
+        matrix->row3 = {0, 0, this->m_far / (m_far - m_near), 1};
+        matrix->row4 = {0, 0, -(this->m_far * this->m_near) / (this->m_far - this->m_near), 0};
+        // matrix->row1 = {1, 0, 0, 0};
+        // matrix->row2 = {0, 1, 0, 0};
+        // matrix->row3 = {0, 0, 1, 0};
+        // matrix->row4 = {0, 0, 0, 1};
     }
 }  

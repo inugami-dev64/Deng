@@ -14,6 +14,8 @@ textureloader.o
 window.o
 timer.o
 rgbbitmap.log
+matobject.log
+object.log
 src/helloworld.cpp
 src/helloworld
 dependencies/lib/debug/libVkLayer_khronos_validation.so
