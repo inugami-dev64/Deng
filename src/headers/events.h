@@ -27,8 +27,9 @@ namespace deng {
         Movements m_movements;
 
     private:
-        void getMovementType(GLFWwindow *window);
-        void checkForObjLogRequest(GLFWwindow *window);
+        void getMovementType();
+        void checkForObjLogRequest();
+        void checkForInputModeChange();
         void handleLogging();
 
     public:

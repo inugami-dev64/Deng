@@ -7,12 +7,12 @@ namespace deng {
         this->m_obj = obj;
     }
 
-    void Events::getMovementType(GLFWwindow *window) {
-        if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_W) == GLFW_REPEAT) {
+    void Events::getMovementType() {
+        if(glfwGetKey(this->m_window->getWindow(), GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(this->m_window->getWindow(), GLFW_KEY_W) == GLFW_REPEAT) {
             this->m_movements.z = DENG_MOVEMENT_FORWARD;
         }
 
-        else if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_S) == GLFW_REPEAT) {
+        else if(glfwGetKey(this->m_window->getWindow(), GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(this->m_window->getWindow(), GLFW_KEY_S) == GLFW_REPEAT) {
             this->m_movements.z = DENG_MOVEMENT_BACKWARD;
         }
         else {
@@ -20,11 +20,11 @@ namespace deng {
         }
 
 
-        if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_A) == GLFW_REPEAT) {
+        if(glfwGetKey(this->m_window->getWindow(), GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(this->m_window->getWindow(), GLFW_KEY_A) == GLFW_REPEAT) {
             this->m_movements.x = DENG_MOVEMENT_LEFTWARD;
         }
 
-        else if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_D) == GLFW_REPEAT) {
+        else if(glfwGetKey(this->m_window->getWindow(), GLFW_KEY_D) == GLFW_PRESS || glfwGetKey(this->m_window->getWindow(), GLFW_KEY_D) == GLFW_REPEAT) {
             this->m_movements.x = DENG_MOVEMENT_RIGHTWARD;
         }
         else {
@@ -32,11 +32,11 @@ namespace deng {
         }
 
 
-        if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_REPEAT) {
+        if(glfwGetKey(this->m_window->getWindow(), GLFW_KEY_SPACE) == GLFW_PRESS || glfwGetKey(this->m_window->getWindow(), GLFW_KEY_SPACE) == GLFW_REPEAT) {
             this->m_movements.y = DENG_MOVEMENT_UPWARD;
         }
 
-        else if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_REPEAT) {
+        else if(glfwGetKey(this->m_window->getWindow(), GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(this->m_window->getWindow(), GLFW_KEY_LEFT_CONTROL) == GLFW_REPEAT) {
             this->m_movements.y = DENG_MOVEMENT_DOWNWARD;
         }
 
@@ -47,11 +47,37 @@ namespace deng {
     }
 
     //Function for creating log about the object coordinates when multiplied with projection view and model matrices
-    //press F10
-    void Events::checkForObjLogRequest(GLFWwindow *window) {
+    //F10
+    void Events::checkForObjLogRequest() {
         if(!DEBUG) return;
-        else if(glfwGetKey(window, GLFW_KEY_F10) == GLFW_PRESS) {
+        else if(glfwGetKey(this->m_window->getWindow(), GLFW_KEY_F10) == GLFW_PRESS) {
             this->handleLogging();
+        }
+    }
+
+    void Events::checkForInputModeChange() {
+        switch (this->m_window->getInputMode())
+        {
+        case DENG_INPUT_MOVEMENT:
+            this->getMovementType();
+            this->m_camera->updateCursorPos();
+
+            if(glfwGetKey(this->m_window->getWindow(), GLFW_KEY_ESCAPE)) {
+                this->m_window->setInputMode(DENG_INPUT_NONMOVEMENT);
+            }
+            break;
+
+        case DENG_INPUT_NONMOVEMENT:
+            this->m_movements.x = DENG_MOVEMENT_NONE;
+            this->m_movements.y = DENG_MOVEMENT_NONE;
+            this->m_movements.z = DENG_MOVEMENT_NONE;
+            if(glfwGetMouseButton(this->m_window->getWindow(), GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
+                this->m_window->setInputMode(DENG_INPUT_MOVEMENT);
+            }
+            break;
+        
+        default:
+            break;
         }
     }
 
@@ -76,8 +102,9 @@ namespace deng {
     }
 
     void Events::update() {
-        this->getMovementType(this->m_window->getWindow());
-        this->checkForObjLogRequest(this->m_window->getWindow());
+        this->checkForObjLogRequest();
+        this->checkForInputModeChange();
+        this->m_camera->setCameraViewRotation();
         
         if(this->m_timer.isTimePassed(1)) {
 
@@ -128,6 +155,8 @@ namespace deng {
             default:
                 break;
             }
+
+            LOG("Cam X: " + std::to_string(this->m_camera->view_matrix.getPosition().x) + "/Cam Y: " + std::to_string(this->m_camera->view_matrix.getPosition().y) + "/Cam Z: " + std::to_string(this->m_camera->view_matrix.getPosition().z));
 
             this->m_timer.setNewTimePoint();
         }

@@ -487,7 +487,7 @@ namespace deng
             VkImageViewCreateInfo local_createInfo{};
             local_createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
             local_createInfo.image = this->m_swapChain_images[imageIndex];
-            local_createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            local_createInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;
             local_createInfo.format = this->m_surface_format.format;
 
             local_createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -1042,6 +1042,7 @@ namespace deng
         vkMapMemory(this->m_device, this->m_uniform_buffersMem[currentImg], 0, sizeof(ubo), 0, &data);
         memcpy(data, &ubo, sizeof(ubo));
         vkUnmapMemory(this->m_device, this->m_uniform_buffersMem[currentImg]);
+
     }
 
     void Renderer::makeFrame() {
@@ -1148,6 +1149,7 @@ namespace deng
     }
 
     void Renderer::run() {
+        this->m_window->setInputMode(DENG_INPUT_MOVEMENT);
         while(!glfwWindowShouldClose(this->m_window->getWindow())) {
             glfwPollEvents();
             this->m_ev->update();

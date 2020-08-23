@@ -8,6 +8,10 @@ namespace deng {
     {
     private:
         Timer m_timer;
+        Window *m_window;
+        float m_mouse_sens;
+        double m_mouse_xPos, m_mouse_yPos;
+
         vec4<float> m_movementSpeed;
         
         float m_draw_distance; // distance
@@ -18,6 +22,8 @@ namespace deng {
         vec2<float> m_camera_max_centre_point_coord;
         vec2<float> m_camera_max_right_corner_coord;
 
+        DengBool m_isInit;
+
     public:
         ViewMatrix view_matrix;
         ProjectionMatrix *proj_matrix;
@@ -25,6 +31,8 @@ namespace deng {
     public:
         Camera(const vec4<float> &movementSpeed, const float &FOV, const float &near,const float &far, Window *window);
         ~Camera();
+        void updateCursorPos();
+        void setCameraViewRotation();
         void moveF();
         void moveB();
         void moveR();

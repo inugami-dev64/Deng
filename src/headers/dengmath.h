@@ -126,8 +126,10 @@ namespace deng {
         }
     };
 
-    // generic conversion functions
-    // float degToRad(const uint16_t &deg);
+    // generic math functions
+    float degToRad(const float &deg);
+    void getCircleCoords(const float &centre_x, const float &centre_y, const uint16_t &angle, const float &radius, float *out_x, float *out_y);
+    float getFractionNumerator(const float &valNum, const float &valDenom, const float &equivalentDenom);
 
     class ModelMatrix {
     private:
@@ -139,7 +141,7 @@ namespace deng {
         mat4<float> m_scaleMat;
 
     public:
-        void setRotation(const uint16_t &Rx, const uint16_t &Ry, const uint16_t &Rz);
+        void setRotation(const float &x_rot, const float &y_rot, const float &z_rot);
         void setTransformation(const float &Tx, const float &Ty, const float &Tz);
         void setScale(const float &Sx, const float &Sy, const float &Sz);
         void getModelMatrix(mat4<float> *model);
@@ -147,16 +149,25 @@ namespace deng {
 
     class ViewMatrix {
     private:
+        vec4<float> m_cameraPosition;
+        mat4<float> m_transformationMat;
+
         vec4<float> m_rightSide;
         vec4<float> m_upSide;
         vec4<float> m_forwardSide;
-        vec4<float> m_cameraPosition;
+
+        mat4<float> m_RxMat;
+        mat4<float> m_RyMat;
 
     public:
-        void setAxes(const vec4<float> &right, const vec4<float> &up, const vec4<float> &forward);
-        void setPosition(const vec4<float> &cam_Position);
+        ViewMatrix();
+        void setCameraPosition(const vec4<float> &camera_pos);
         void addToPosition(const vec4<float> &addition, const CoordinateType &type, const bool &substract);
-        void getViewMatrix(mat4<float> *view);
+
+        void updateSideCoords(const float &x_rot, const float &y_rot);
+        void setRotation(const float &x_rot, const float &y_rot);
+        void setTransformationMatrix();
+        void getViewMatrix(mat4<float> *viewMat);
         vec4<float> getPosition();
     };
 

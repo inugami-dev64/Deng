@@ -2,25 +2,32 @@
 
 namespace deng {
 
-    float degToRad(uint16_t deg) {
+    float degToRad(const float &deg) {
         return (float) deg/180 * PI;
     }
 
-    void ModelMatrix::setRotation(const uint16_t &Rx, const uint16_t &Ry, const uint16_t &Rz) {
+    void getCircleCoords(const float &centre_x, const float &centre_y, const uint16_t &angle, const float &radius, float *out_x, float *out_y) {
+        if(out_x != nullptr) *out_x = radius * sin(degToRad(angle)) + centre_x;
+        if(out_x != nullptr) *out_y = radius * cos(degToRad(angle)) + centre_y;
+    }
+
+    float getFractionNumerator(const float &valNum, const float &valDenom, const float &equivalentDenom) {
+        return (valNum * equivalentDenom) / valDenom;
+    }
+
+    void ModelMatrix::setRotation(const float &x_rot, const float &y_rot, const float &z_rot) {
         this->m_RxMat = {{1.0f, 0.0f, 0.0f, 0.0f},
-                       {0.0f, cos(degToRad(Rx)), -(sin(degToRad(Rx))), 0.0f},
-                       {0.0f, sin(degToRad(Rx)), cos(degToRad(Rx)), 0.0f}, 
+                       {0.0f, cos(degToRad(x_rot)), -(sin(degToRad(x_rot))), 0.0f},
+                       {0.0f, sin(degToRad(x_rot)), cos(degToRad(x_rot)), 0.0f}, 
                        {0.0f, 0.0f, 0.0f, 1.0f}};
 
-        
-
-        this->m_RyMat = {{cos(degToRad(Ry)), 0.0f, sin(degToRad(Ry)), 0.0f},
+        this->m_RyMat = {{cos(degToRad(y_rot)), 0.0f, sin(degToRad(y_rot)), 0.0f},
                        {0.0f, 1.0f, 0.0f, 0.0f},
-                       {-(sin(degToRad(Ry))), 0.0f, cos(degToRad(Ry)), 0.0f},
+                       {-(sin(degToRad(y_rot))), 0.0f, cos(degToRad(y_rot)), 0.0f},
                        {0.0f, 0.0f, 0.0f, 1.0f}};
 
-        this->m_RzMat = {{cos(degToRad(Rz)), -(sin(degToRad(Rz))), 0.0f, 0.0f},
-                       {sin(degToRad(Rz)), cos(degToRad(Rz)), 0.0f, 0.0f},
+        this->m_RzMat = {{cos(degToRad(z_rot)), -(sin(degToRad(z_rot))), 0.0f, 0.0f},
+                       {sin(degToRad(z_rot)), cos(degToRad(z_rot)), 0.0f, 0.0f},
                        {0.0f, 0.0f, 1.0f, 0.0f}, 
                        {0.0f, 0.0f, 0.0f, 1.0f}};
     }
@@ -43,13 +50,15 @@ namespace deng {
         *model = this->m_transformMat * this->m_RxMat * this->m_RyMat * this->m_RzMat * this->m_scaleMat;
     }
 
-    void ViewMatrix::setAxes(const vec4<float> &right, const vec4<float> &up, const vec4<float> &forward) {
-        this->m_rightSide = right;
-        this->m_upSide = up;
-        this->m_forwardSide = forward;
+    ViewMatrix::ViewMatrix() {
+        this->m_rightSide = {1.0f, 0.0f, 0.0f, 0.0f};
+        this->m_upSide = {0.0f, 1.0f, 0.0f, 0.0f};
+        this->m_forwardSide = {0.0f, 0.0f, -1.0f, 0.0f};
+
+        this->m_cameraPosition = {DENG_CAMERA_DEFAULT_X, DENG_CAMERA_DEFAULT_Y, DENG_CAMERA_DEFAULT_Z, 1.0f};
     }
 
-    void ViewMatrix::setPosition(const vec4<float> &newPos) {
+    void ViewMatrix::setCameraPosition(const vec4<float> &newPos) {
         this->m_cameraPosition = newPos;
     }
 
@@ -74,23 +83,39 @@ namespace deng {
         default:
             break;
         }
-
-        LOG("Camera X: " + std::to_string(this->m_cameraPosition.x) + "/Camera Y: " + std::to_string(this->m_cameraPosition.y) + "/Camera Z: " + std::to_string(this->m_cameraPosition.z) + "/Camera W: " + std::to_string(this->m_cameraPosition.w));
     }
 
     void ViewMatrix::getViewMatrix(mat4<float> *view) {
-        view->row1 = this->m_rightSide;
-        view->row2 = this->m_upSide;
-        view->row3 = this->m_forwardSide;
-        view->row4 = this->m_cameraPosition;
-        // view->row1 = {1, 0, 0, 0};
-        // view->row2 = {0, 1, 0, 0};
-        // view->row3 = {0, 0, 1, 0};
-        // view->row4 = {0, 0, 0, 1};
+        *view = this->m_transformationMat * this->m_RxMat * this->m_RyMat;
+    }
+
+    void ViewMatrix::setTransformationMatrix() {
+        this->m_transformationMat.row1 = this->m_rightSide;
+        this->m_transformationMat.row2 = this->m_upSide;
+        this->m_transformationMat.row3 = this->m_forwardSide;
+        this->m_transformationMat.row4 = this->m_cameraPosition;
     }
 
     vec4<float> ViewMatrix::getPosition() {
         return this->m_cameraPosition;
+    }
+
+    void ViewMatrix::setRotation(const float &x_rot, const float &y_rot) {
+        this->m_RxMat = {{1.0f, 0.0f, 0.0f, 0.0f},
+                       {0.0f, cos(degToRad(x_rot)), -(sin(degToRad(x_rot))), 0.0f},
+                       {0.0f, sin(degToRad(x_rot)), cos(degToRad(x_rot)), 0.0f}, 
+                       {0.0f, 0.0f, 0.0f, 1.0f}};
+
+        this->m_RyMat = {{cos(degToRad(y_rot)), 0.0f, sin(degToRad(y_rot)), 0.0f},
+                       {0.0f, 1.0f, 0.0f, 0.0f},
+                       {-(sin(degToRad(y_rot))), 0.0f, cos(degToRad(y_rot)), 0.0f},
+                       {0.0f, 0.0f, 0.0f, 1.0f}};
+
+    }
+
+    void ViewMatrix::updateSideCoords(const float &x_rot, const float &y_rot) {
+        getCircleCoords(0.0f, 0.0f, y_rot, 1.0f, &this->m_rightSide.x, &this->m_rightSide.y);
+        getCircleCoords(0.0f, 0.0f, x_rot, 1.0f, &this->m_upSide.x, &this->m_upSide.y);
     }
 
     ProjectionMatrix::ProjectionMatrix(const float &FOV, const float &near, const float &far, const float &aspect_ratio) {
