@@ -1,6 +1,6 @@
 # DimentionalENG (Deng)
 Deng is a project to make cross platform game engine based on vulkan! <br>
-Currently developing functional renderer <br>
+Currently developing renderer <br>
 <br>
 
 In order to compile and run the engine with Vulkan validation layers enabled <br>
