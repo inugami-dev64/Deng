@@ -13,6 +13,6 @@ In order to compile and run the engine without validation layers <br>
     - In renderer.h change ``` #define DEBUG 1 ``` to ``` #define DEBUG 0 ``` <br>
     - Run ``` $ make precompile ``` and then ``` $ make ``` <br>
     
-PS! I haven't tried to compile it on windows yet! <br>
+PS! I haven't tried to compile and run it on windows yet! <br>
 
  
