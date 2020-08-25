@@ -142,6 +142,10 @@ namespace deng {
             obj.vertexData[i].colorVec = {1.0f, 1.0f, 1.0f, 1.0f};
         }
 
+        for(size_t i = 0; i < this->vertexTexCoordVec.size(); i++) {
+            obj.vertexData[i].texVec = this->vertexTexCoordVec[i];
+        }
+
         for(size_t i = 0; i < this->vertexCoordFacesVec.size(); i++) {
             obj.vertexIndicesData.posIndices[i] = this->vertexCoordFacesVec[i];
         }

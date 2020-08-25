@@ -128,7 +128,7 @@ namespace deng {
 
     // generic math functions
     float degToRad(const float &deg);
-    void getCircleCoords(const float &centre_x, const float &centre_y, const uint16_t &angle, const float &radius, float *out_x, float *out_y);
+    void getCirclePointCoords(const float &centre_x, const float &centre_y, const uint16_t &angle, const float &radius, float *out_x, float *out_y);
     float getFractionNumerator(const float &valNum, const float &valDenom, const float &equivalentDenom);
 
     class ModelMatrix {
@@ -152,19 +152,23 @@ namespace deng {
         vec4<float> m_cameraPosition;
         mat4<float> m_transformationMat;
 
+        float x_rot;
+        float y_rot;
+        float z_rot;
+
         vec4<float> m_rightSide;
         vec4<float> m_upSide;
         vec4<float> m_forwardSide;
 
         mat4<float> m_RxMat;
         mat4<float> m_RyMat;
+        mat4<float> m_RzMat;
 
     public:
         ViewMatrix();
         void setCameraPosition(const vec4<float> &camera_pos);
-        void addToPosition(const vec4<float> &addition, const CoordinateType &type, const bool &substract);
+        void addToPosition(const vec4<float> &movement_speed, const CoordinateType &movementType, const bool &substract);
 
-        void updateSideCoords(const float &x_rot, const float &y_rot);
         void setRotation(const float &x_rot, const float &y_rot);
         void setTransformationMatrix();
         void getViewMatrix(mat4<float> *viewMat);

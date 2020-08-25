@@ -61,6 +61,7 @@ namespace deng {
         case DENG_INPUT_MOVEMENT:
             this->getMovementType();
             this->m_camera->updateCursorPos();
+            this->m_camera->setCameraViewRotation();
 
             if(glfwGetKey(this->m_window->getWindow(), GLFW_KEY_ESCAPE)) {
                 this->m_window->setInputMode(DENG_INPUT_NONMOVEMENT);
@@ -104,7 +105,6 @@ namespace deng {
     void Events::update() {
         this->checkForObjLogRequest();
         this->checkForInputModeChange();
-        this->m_camera->setCameraViewRotation();
         
         if(this->m_timer.isTimePassed(1)) {
 
@@ -155,8 +155,6 @@ namespace deng {
             default:
                 break;
             }
-
-            LOG("Cam X: " + std::to_string(this->m_camera->view_matrix.getPosition().x) + "/Cam Y: " + std::to_string(this->m_camera->view_matrix.getPosition().y) + "/Cam Z: " + std::to_string(this->m_camera->view_matrix.getPosition().z));
 
             this->m_timer.setNewTimePoint();
         }

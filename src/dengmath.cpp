@@ -6,7 +6,7 @@ namespace deng {
         return (float) deg/180 * PI;
     }
 
-    void getCircleCoords(const float &centre_x, const float &centre_y, const uint16_t &angle, const float &radius, float *out_x, float *out_y) {
+    void getCirclePointCoords(const float &centre_x, const float &centre_y, const uint16_t &angle, const float &radius, float *out_x, float *out_y) {
         if(out_x != nullptr) *out_x = radius * sin(degToRad(angle)) + centre_x;
         if(out_x != nullptr) *out_y = radius * cos(degToRad(angle)) + centre_y;
     }
@@ -51,9 +51,13 @@ namespace deng {
     }
 
     ViewMatrix::ViewMatrix() {
+        this->x_rot = 0.0f;
+        this->y_rot = 0.0f;
+        this->z_rot = 0.0f;
+
         this->m_rightSide = {1.0f, 0.0f, 0.0f, 0.0f};
         this->m_upSide = {0.0f, 1.0f, 0.0f, 0.0f};
-        this->m_forwardSide = {0.0f, 0.0f, -1.0f, 0.0f};
+        this->m_forwardSide = {0.0f, 0.0f, 1.0f, 0.0f};
 
         this->m_cameraPosition = {DENG_CAMERA_DEFAULT_X, DENG_CAMERA_DEFAULT_Y, DENG_CAMERA_DEFAULT_Z, 1.0f};
     }
@@ -62,22 +66,27 @@ namespace deng {
         this->m_cameraPosition = newPos;
     }
 
-    void ViewMatrix::addToPosition(const vec4<float> &addition, const CoordinateType &type, const bool &substract) {
-        switch (type)
+    void ViewMatrix::addToPosition(const vec4<float> &movement_speed, const CoordinateType &movementType, const bool &substract) {
+        float movement_X, movement_Y, movement_Z;
+        switch (movementType)
         {
         case DENG_X:
-            if(substract) this->m_cameraPosition.x -= addition.x;
-            else this->m_cameraPosition.x += addition.x;
+            getCirclePointCoords(0.0f, 0.0f, (this->y_rot + 90), movement_speed.x, &movement_X, &movement_Z);
+
+            if(substract) this->m_cameraPosition.x -= movement_X, this->m_cameraPosition.z -= movement_Z;
+            else this->m_cameraPosition.x += movement_X, this->m_cameraPosition.z += movement_Z;
             break;
 
         case DENG_Y:
-            if(substract) this->m_cameraPosition.y -= addition.y;
-            else this->m_cameraPosition.y += addition.y;
+            if(substract) this->m_cameraPosition.y -= movement_speed.y;
+            else this->m_cameraPosition.y += movement_speed.y;
             break;
 
         case DENG_Z:
-            if(substract) this->m_cameraPosition.z -= addition.z;
-            else this->m_cameraPosition.z += addition.z;
+            getCirclePointCoords(0.0f, 0.0f, this->y_rot, movement_speed.z, &movement_X, &movement_Z);
+            
+            if(substract) this->m_cameraPosition.x -= movement_X, this->m_cameraPosition.z -= movement_Z;
+            else this->m_cameraPosition.x += movement_X, this->m_cameraPosition.z += movement_Z;
             break;
         
         default:
@@ -86,7 +95,7 @@ namespace deng {
     }
 
     void ViewMatrix::getViewMatrix(mat4<float> *view) {
-        *view = this->m_transformationMat * this->m_RxMat * this->m_RyMat;
+        *view = this->m_transformationMat * this->m_RxMat * this->m_RzMat * this->m_RyMat;
     }
 
     void ViewMatrix::setTransformationMatrix() {
@@ -101,21 +110,25 @@ namespace deng {
     }
 
     void ViewMatrix::setRotation(const float &x_rot, const float &y_rot) {
+        this->y_rot = y_rot;
+        getCirclePointCoords(0.0f, 0.0f, this->y_rot, x_rot, &this->z_rot, &this->x_rot); 
+        this->z_rot = -this->z_rot;
+
         this->m_RxMat = {{1.0f, 0.0f, 0.0f, 0.0f},
-                       {0.0f, cos(degToRad(x_rot)), -(sin(degToRad(x_rot))), 0.0f},
-                       {0.0f, sin(degToRad(x_rot)), cos(degToRad(x_rot)), 0.0f}, 
+                       {0.0f, cos(degToRad(this->x_rot)), -(sin(degToRad(this->x_rot))), 0.0f},
+                       {0.0f, sin(degToRad(this->x_rot)), cos(degToRad(this->x_rot)), 0.0f}, 
                        {0.0f, 0.0f, 0.0f, 1.0f}};
 
-        this->m_RyMat = {{cos(degToRad(y_rot)), 0.0f, sin(degToRad(y_rot)), 0.0f},
+        this->m_RyMat = {{cos(degToRad(this->y_rot)), 0.0f, sin(degToRad(this->y_rot)), 0.0f},
                        {0.0f, 1.0f, 0.0f, 0.0f},
-                       {-(sin(degToRad(y_rot))), 0.0f, cos(degToRad(y_rot)), 0.0f},
+                       {-(sin(degToRad(this->y_rot))), 0.0f, cos(degToRad(this->y_rot)), 0.0f},
                        {0.0f, 0.0f, 0.0f, 1.0f}};
 
-    }
+        this->m_RzMat = {{cos(degToRad(this->z_rot)), -(sin(degToRad(this->z_rot))), 0.0f, 0.0f},
+                       {sin(degToRad(this->z_rot)), cos(degToRad(this->z_rot)), 0.0f, 0.0f},
+                       {0.0f, 0.0f, 1.0f, 0.0f}, 
+                       {0.0f, 0.0f, 0.0f, 1.0f}};
 
-    void ViewMatrix::updateSideCoords(const float &x_rot, const float &y_rot) {
-        getCircleCoords(0.0f, 0.0f, y_rot, 1.0f, &this->m_rightSide.x, &this->m_rightSide.y);
-        getCircleCoords(0.0f, 0.0f, x_rot, 1.0f, &this->m_upSide.x, &this->m_upSide.y);
     }
 
     ProjectionMatrix::ProjectionMatrix(const float &FOV, const float &near, const float &far, const float &aspect_ratio) {

@@ -7,7 +7,7 @@ namespace deng
         this->m_req_extensions_name.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
         this->m_window = &win;
-        this->m_camera = new Camera({0.01f, 0.01f, 0.01f, 0.0f}, 65.0f, this->m_nearPlane, this->m_farPlane, this->m_window);
+        this->m_camera = new Camera({0.01f, 0.01f, -0.01f, 0.0f}, 65.0f, this->m_nearPlane, this->m_farPlane, this->m_window);
         this->m_ev = new Events(this->m_window, this->m_camera, &this->m_statue);
 
         this->initObjects(this->m_statue, "objects/obj1.obj", "textures/obj1.bmp", DENG_COORDINATE_MODE_DEFAULT);
@@ -15,7 +15,7 @@ namespace deng
         this->initDebugMessenger();
         this->initWindowSurface();
         this->selectPhysicalDevice();
-        this->initDeviceQueues();
+        this->initLogicalDevice();
         this->initSwapChainSettings();
         this->initSwapChain();
         this->initImageView();
@@ -24,34 +24,56 @@ namespace deng
         this->initGraphicsPipeline();
         this->initFrameBuffers();
         this->initCommandPool();
-        // this->initTextureImage(this->m_statue);
+        this->initTextureImage(this->m_statue);
+        this->initTextureSampler(this->m_statue);
         this->initBuffers(this->m_statue);
         this->initDescriptorPool();
-        this->initDescriptorSets();
+        this->initDescriptorSets(this->m_statue);
         this->initCommandBufferFromSwapChain();
         this->initSemaphores();
     }
 
     Renderer::~Renderer() {
+        LOG(1);
         this->deleteFrameBuffers();
+        LOG(2);
         this->deleteCommandBuffers();
+        LOG(3);
         this->deletePipeline();
+        LOG(4);
         this->deleteRenderPass();
+        LOG(5);
         this->deleteImageViews();
-        this->deleteSwapChain();    
+        LOG(6);
+        this->deleteSwapChain();
+        LOG(7);    
+        this->deleteTextureImage(this->m_statue);
+        LOG(8);
         this->deleteDescriptorSetLayout();
+        LOG(9);
         this->deleteVertexBuffer();
+        LOG(10);
         this->freeMemory();
+        LOG(11);
         this->deleteSemaphores();
+        LOG(12);
         this->deleteCommandPool();
+        LOG(13);
         this->deleteDevice();
+        LOG(14);
         this->deleteSurface();
+        LOG(15);
         this->deleteDebugMessenger();
+        LOG(16);
         this->deleteInstance();
+        LOG(17);
         
         delete this->m_ev;
+        LOG(17);
         delete this->m_camera;
+        LOG(18);
         delete this->m_device_swapChainDetails;
+        LOG(19);
     }
 
     void Renderer::deleteCommandBuffers() {
@@ -140,8 +162,10 @@ namespace deng
     }
 
     void Renderer::deleteTextureImage(GameObject &obj) {
-        vkDestroyImage(this->m_device, obj.images.textureImage, nullptr);
-        vkFreeMemory(this->m_device, obj.images.textureImageMem, nullptr);
+        vkDestroySampler(this->m_device, obj.textureData.textureSampler, nullptr);
+        vkDestroyImageView(this->m_device, obj.textureData.textureImageView, nullptr);
+        vkDestroyImage(this->m_device, obj.textureData.textureImage, nullptr);
+        vkFreeMemory(this->m_device, obj.textureData.textureImageMem, nullptr);
     }
 
     void Renderer::deleteDescriptorSetLayout() {
@@ -153,9 +177,9 @@ namespace deng
         obj_loader.getObjVerticesAndIndices(obj);
 
         TextureLoader tex_loader(texFilePath);
-        ObjTextureData texture_data;
-        tex_loader.getTextureDetails(&texture_data.width, &texture_data.height, &texture_data.texSize, &texture_data.texturePixelsData);
-        obj.textureData = texture_data;
+        ObjRawTextureData texture_data;
+        tex_loader.getTextureDetails(texture_data.width, texture_data.height, texture_data.texSize, texture_data.texturePixelsData);
+        obj.rawTextureData = texture_data;
 
         obj.modelMatrix.setRotation(0, 0, 0);
         obj.modelMatrix.setScale(1, 1, 1);
@@ -294,36 +318,39 @@ namespace deng
         uint32_t deviceCount;
         vkEnumeratePhysicalDevices(this->m_instance, &deviceCount, nullptr);
 
-        if(deviceCount == 0) ERR("Failed to find graphics cards!");
-        else {
-            std::vector<VkPhysicalDevice> devices(deviceCount);
-            std::multimap<uint32_t, VkPhysicalDevice> deviceCandidates;
-            VkResult result = vkEnumeratePhysicalDevices(this->m_instance, &deviceCount, devices.data());
-            if(result != VK_SUCCESS) ERR("Failed to count physical GPUs!");
-
-            for(uint32_t i = 0; i < deviceCount; i++) {
-                uint32_t score = this->getDeviceScore(devices[i]);
-                LOG("Score for device " + std::to_string(i) + ": " + std::to_string(score));
-                SwapChainDetails swapChainDetails(devices[i], this->m_surface);
-
-                if(!swapChainDetails.getFormats().empty() && !swapChainDetails.getPresentModes().empty()) {
-                    deviceCandidates.insert(std::make_pair(score, devices[i]));
-                }
-            }
-
-            if(!deviceCandidates.empty() && deviceCandidates.rbegin()->first > 0) {
-                this->m_gpu = deviceCandidates.rbegin()->second;
-                this->m_device_swapChainDetails = new SwapChainDetails(this->m_gpu, this->m_surface);
-            }
-
-            else ERR("Failed to find suitable GPU!");
-            LOG(this->m_gpu);
+        if(deviceCount == 0) {
+            ERR("Failed to find graphics cards!");
         }
+
+        std::vector<VkPhysicalDevice> devices(deviceCount);
+        std::multimap<uint32_t, VkPhysicalDevice> deviceCandidates;
+        VkResult result = vkEnumeratePhysicalDevices(this->m_instance, &deviceCount, devices.data());
+        if(result != VK_SUCCESS) ERR("Failed to count physical GPUs!");
+
+        for(uint32_t i = 0; i < deviceCount; i++) {
+            uint32_t score = this->getDeviceScore(devices[i]);
+            LOG("Score for device " + std::to_string(i) + ": " + std::to_string(score));
+            SwapChainDetails swapChainDetails(devices[i], this->m_surface);
+
+            if(!swapChainDetails.getFormats().empty() && !swapChainDetails.getPresentModes().empty()) {
+                deviceCandidates.insert(std::make_pair(score, devices[i]));
+            }
+        }
+
+        if(!deviceCandidates.empty() && deviceCandidates.rbegin()->first > 0) {
+            this->m_gpu = deviceCandidates.rbegin()->second;
+            this->m_device_swapChainDetails = new SwapChainDetails(this->m_gpu, this->m_surface);
+        }
+
+        else ERR("Failed to find suitable GPU!");
+        LOG(this->m_gpu);
+        
     }
 
     uint32_t Renderer::getDeviceScore(const VkPhysicalDevice &device) {
         uint32_t score = 0;
         VkPhysicalDeviceFeatures deviceFeatures;
+
         vkGetPhysicalDeviceProperties(device, &this->m_gpu_properties);
         vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
@@ -334,6 +361,7 @@ namespace deng
         score += this->m_gpu_properties.limits.maxVertexOutputComponents;
 
         if(!deviceFeatures.geometryShader) return 0;
+        if(!deviceFeatures.samplerAnisotropy) return 0;
 
         for(const char* extName : this->m_req_extensions_name) {
             if(!this->getExtensionSupport(device, extName)) return 0;
@@ -356,45 +384,54 @@ namespace deng
         return false;
     }
 
-    void Renderer::initDeviceQueues() {
+    void Renderer::initLogicalDevice() {
         if(!this->m_queueFamilies.findGraphicsFamily(this->m_gpu) || !this->m_queueFamilies.findPresentSupportFamily(this->m_gpu, this->m_surface)) {
             ERR("Queue supporting GPU not found!");
         }
 
-        else {
-            uint32_t queueFamilies_indexes[] = {this->m_queueFamilies.getGraphicsFamily(), this->m_queueFamilies.getPresentFamily()};
-            std::vector<VkDeviceQueueCreateInfo> queueInfos;
+        std::vector<VkDeviceQueueCreateInfo> queueInfos;
+        uint32_t queueFamilies_indexes[] = {this->m_queueFamilies.getGraphicsFamily(), this->m_queueFamilies.getPresentFamily()};
 
-            float queue_priority = 1.0f;
-            for(uint32_t i = 0; i < 2; i++) {
-                VkDeviceQueueCreateInfo dev_queue_create_info{};
-                dev_queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-                dev_queue_create_info.queueFamilyIndex = queueFamilies_indexes[i];
-                dev_queue_create_info.queueCount = 1;
-                dev_queue_create_info.pQueuePriorities = &queue_priority;
-                queueInfos.push_back(dev_queue_create_info);                
-            } 
+        // queueInfos.resize(2);
+        float queue_priority = 1.0f;
 
-            VkDeviceCreateInfo dev_create_info{};
-            dev_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-            dev_create_info.queueCreateInfoCount = queueInfos.size();
-            dev_create_info.pQueueCreateInfos = queueInfos.data();
-            dev_create_info.pEnabledFeatures = &this->m_gpu_features;
-            dev_create_info.enabledExtensionCount = this->m_req_extensions_name.size();
-            dev_create_info.ppEnabledExtensionNames = this->m_req_extensions_name.data();
+        for(uint32_t i = 0; i < 2; i++) {
+            VkDeviceQueueCreateInfo dev_queue_create_info{};
+            dev_queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            dev_queue_create_info.queueFamilyIndex = queueFamilies_indexes[i];
+            dev_queue_create_info.queueCount = 1;
+            dev_queue_create_info.pQueuePriorities = &queue_priority;
+            queueInfos.push_back(dev_queue_create_info);                
+        } 
 
+        VkPhysicalDeviceFeatures local_devFeatures{};
+        local_devFeatures.samplerAnisotropy = VK_TRUE;
 
-            if(vkCreateDevice(this->m_gpu, &dev_create_info, nullptr, &this->m_device) != VK_SUCCESS) {
-                ERR("Failed to create logical device!");
-            }
-            else {
-                LOG("Logical device created successfully!");
-                vkGetDeviceQueue(this->m_device, this->m_queueFamilies.getGraphicsFamily(), 0, &this->m_queues.graphicsQueue);
-                LOG("Device graphics queue recieved successfully!");
-                vkGetDeviceQueue(this->m_device, this->m_queueFamilies.getPresentFamily(), 0, &this->m_queues.presentQueue);
-                LOG("Device present queue recieved successfully!");
-            }
+        VkDeviceCreateInfo local_logicalDev_create_info{};
+        local_logicalDev_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        local_logicalDev_create_info.queueCreateInfoCount = static_cast<uint32_t>(queueInfos.size());
+        local_logicalDev_create_info.pQueueCreateInfos = queueInfos.data();
+        local_logicalDev_create_info.pEnabledFeatures = &local_devFeatures;
+        local_logicalDev_create_info.enabledExtensionCount = this->m_req_extensions_name.size();
+        local_logicalDev_create_info.ppEnabledExtensionNames = this->m_req_extensions_name.data();
+
+        if(enable_validation_layers) {
+            local_logicalDev_create_info.enabledLayerCount = 1;
+            local_logicalDev_create_info.ppEnabledLayerNames = &this->m_validationLayer;
         }
+
+        else {
+            local_logicalDev_create_info.enabledLayerCount = 0;
+        }
+
+        if(vkCreateDevice(this->m_gpu, &local_logicalDev_create_info, nullptr, &this->m_device) != VK_SUCCESS) {
+            ERR("Failed to create logical device!");
+        }
+
+        vkGetDeviceQueue(this->m_device, this->m_queueFamilies.getGraphicsFamily(), 0, &this->m_queues.graphicsQueue);
+        LOG("Device graphics queue recieved successfully!");
+        vkGetDeviceQueue(this->m_device, this->m_queueFamilies.getPresentFamily(), 0, &this->m_queues.presentQueue);
+        LOG("Device present queue recieved successfully!");
     }
 
     void Renderer::initSwapChainSettings() {
@@ -483,17 +520,12 @@ namespace deng
         }
     }
 
-    VkImageViewCreateInfo Renderer::getImageViewInfo(uint32_t imageIndex) {
+    VkImageViewCreateInfo Renderer::getImageViewInfo(VkImage &image, const VkFormat &format) {
             VkImageViewCreateInfo local_createInfo{};
             local_createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            local_createInfo.image = this->m_swapChain_images[imageIndex];
-            local_createInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;
-            local_createInfo.format = this->m_surface_format.format;
-
-            local_createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-            local_createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-            local_createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-            local_createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+            local_createInfo.image = image;
+            local_createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            local_createInfo.format = format;
 
             local_createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             local_createInfo.subresourceRange.baseMipLevel = 0;
@@ -506,7 +538,7 @@ namespace deng
     void Renderer::initImageView() {
         this->m_swapChain_imageviews.resize(this->m_swapChain_images.size());
         for(uint32_t i = 0; i < this->m_swapChain_imageviews.size(); i++) {
-            VkImageViewCreateInfo local_createInfo = this->getImageViewInfo(i);
+            VkImageViewCreateInfo local_createInfo = this->getImageViewInfo(this->m_swapChain_images[i], this->m_surface_format.format);
             if(vkCreateImageView(this->m_device, &local_createInfo, nullptr, &this->m_swapChain_imageviews[i]) != VK_SUCCESS) {
                 ERR("Failed to create image views!");
             }
@@ -578,14 +610,36 @@ namespace deng
         local_ubo_layout_binding.pImmutableSamplers = nullptr;
         local_ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
+        VkDescriptorSetLayoutBinding local_sampler_layout_binding{};
+        local_sampler_layout_binding.binding = 1;
+        local_sampler_layout_binding.descriptorCount = 1;
+        local_sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        local_sampler_layout_binding.pImmutableSamplers = nullptr;
+        local_sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 2> local_bindings = {local_ubo_layout_binding, local_sampler_layout_binding};
+
         VkDescriptorSetLayoutCreateInfo local_layout_createInfo{};
         local_layout_createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        local_layout_createInfo.bindingCount = 1;
-        local_layout_createInfo.pBindings = &local_ubo_layout_binding;
+        local_layout_createInfo.bindingCount = local_bindings.size();
+        local_layout_createInfo.pBindings = local_bindings.data();
+
+        std::array<VkDescriptorPoolSize, 2> local_poolSizes{};
+        local_poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        local_poolSizes[0].descriptorCount = this->m_swapChain_images.size();
+        local_poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        local_poolSizes[1].descriptorCount = this->m_swapChain_images.size();
+
+        VkDescriptorPoolCreateInfo local_poolInfo{};
+        local_poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        local_poolInfo.poolSizeCount = this->m_swapChain_images.size();
+        local_poolInfo.pPoolSizes = local_poolSizes.data();
+        local_poolInfo.maxSets = this->m_swapChain_images.size();
 
         if(vkCreateDescriptorSetLayout(this->m_device, &local_layout_createInfo, nullptr, &this->m_descriptorSet_Layout) != VK_SUCCESS) {
             ERR("Failed to create descriptor set layout!");
         }
+
     }
 
     void Renderer::initGraphicsPipeline() {
@@ -651,9 +705,9 @@ namespace deng
         local_rasterizer.depthClampEnable = VK_FALSE;
         local_rasterizer.rasterizerDiscardEnable = VK_FALSE;
         local_rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-        local_rasterizer.lineWidth = 1.0f;
+        local_rasterizer.lineWidth = 0.1f;
         local_rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-        local_rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+        local_rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         local_rasterizer.depthBiasEnable = VK_FALSE;
 
         VkPipelineMultisampleStateCreateInfo local_multisampling{};
@@ -731,6 +785,9 @@ namespace deng
             if(vkCreateFramebuffer(this->m_device, &local_framebuffer_createinfo, nullptr, &this->m_swapChain_frameBuffers[i]) != VK_SUCCESS) {
                 ERR("Failed to create framebuffer!");
             }
+            else {
+                LOG("Successfully created framebuffer!");
+            }
         }
     }
 
@@ -741,6 +798,9 @@ namespace deng
 
         if(vkCreateCommandPool(this->m_device, &local_commandPool_createinfo, nullptr, &this->m_commandPool) != VK_SUCCESS) {
             ERR("Failed to create command pool!");
+        }
+        else {
+            LOG("Successfully created commandpool!");
         }
     }
 
@@ -758,25 +818,74 @@ namespace deng
         ERR("Failed to find suitable memory type");
     }
 
+    void Renderer::initTextureImage(GameObject &obj) {
+        this->makeBuffer(obj.rawTextureData.texSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_STAGING, nullptr);
+        LOG("Successfully created texture staging buffer!");
+        this->populateBufferMem(obj.rawTextureData.texSize, obj.rawTextureData.texturePixelsData.data(), obj.buffers.staging_buffer, obj.buffers.staging_bufferMem);
+
+        obj.rawTextureData.cpyDims(obj.textureData);
+        obj.rawTextureData.clear();
+
+        this->makeImage(obj, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+        this->transitionImageLayout(obj.textureData.textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        this->copyBufferToImage(obj.buffers.staging_buffer, obj.textureData.textureImage, obj.textureData.width, obj.textureData.height);
+        this->transitionImageLayout(obj.textureData.textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        vkDestroyBuffer(this->m_device, obj.buffers.staging_buffer, nullptr);
+        vkFreeMemory(this->m_device, obj.buffers.staging_bufferMem, nullptr);
+
+        VkImageViewCreateInfo local_viewInfo = this->getImageViewInfo(obj.textureData.textureImage, VK_FORMAT_R8G8B8A8_SRGB);
+
+        if(vkCreateImageView(this->m_device, &local_viewInfo, nullptr, &obj.textureData.textureImageView) != VK_SUCCESS) {
+            ERR("Failed to create texture image view!");
+        }
+    }
+
+    void Renderer::initTextureSampler(GameObject &obj) {
+        VkSamplerCreateInfo local_samplerInfo{};
+        local_samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        local_samplerInfo.magFilter = VK_FILTER_LINEAR;
+        local_samplerInfo.minFilter = VK_FILTER_LINEAR;
+        local_samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        local_samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        local_samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+
+        local_samplerInfo.anisotropyEnable = VK_TRUE;
+        local_samplerInfo.maxAnisotropy = 16.0f;
+        local_samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        local_samplerInfo.unnormalizedCoordinates = VK_FALSE;
+        local_samplerInfo.compareEnable = VK_FALSE;
+        local_samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        local_samplerInfo.mipLodBias = 0.0f;
+        local_samplerInfo.minLod = 0.0f;
+        local_samplerInfo.maxLod = 0.0f;
+
+        if(vkCreateSampler(this->m_device, &local_samplerInfo, nullptr, &obj.textureData.textureSampler) != VK_SUCCESS) {
+            ERR("Failed to create texture sampler!");
+        }
+
+    }
+
     void Renderer::initBuffers(GameObject &obj) {
         VkDeviceSize local_size = sizeof(obj.vertexData[0]) * obj.vertexData.size();
 
-        this->makeBuffer(local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_STAGING, nullptr);
-        this->populateBufferMem(local_size, obj.vertexData.data(), obj.buffers.staging_buffer, obj.buffers.staging_bufferMem);
+        this->makeBuffer(&local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_STAGING, nullptr);
+        this->populateBufferMem(&local_size, obj.vertexData.data(), obj.buffers.staging_buffer, obj.buffers.staging_bufferMem);
 
-        this->makeBuffer(local_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, obj, DENG_BUFFER_TYPE_VERTEX, nullptr);
-        this->copyBuffer(obj.buffers.staging_buffer, obj.buffers.vertex_buffer, local_size);
+        this->makeBuffer(&local_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, obj, DENG_BUFFER_TYPE_VERTEX, nullptr);
+        this->copyBufferToBuffer(obj.buffers.staging_buffer, obj.buffers.vertex_buffer, local_size);
 
         vkDestroyBuffer(this->m_device, obj.buffers.staging_buffer, nullptr);
         vkFreeMemory(this->m_device, obj.buffers.staging_bufferMem, nullptr);
 
         local_size = sizeof(obj.vertexIndicesData.posIndices[0]) * obj.vertexIndicesData.posIndices.size();
 
-        this->makeBuffer(local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_STAGING, nullptr);
-        this->populateBufferMem(local_size, obj.vertexIndicesData.posIndices.data(), obj.buffers.staging_buffer, obj.buffers.staging_bufferMem);
+        this->makeBuffer(&local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_STAGING, nullptr);
+        this->populateBufferMem(&local_size, obj.vertexIndicesData.posIndices.data(), obj.buffers.staging_buffer, obj.buffers.staging_bufferMem);
         
-        this->makeBuffer(local_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, obj, DENG_BUFFER_TYPE_INDICES, nullptr);
-        this->copyBuffer(obj.buffers.staging_buffer, obj.buffers.index_buffer, local_size);
+        this->makeBuffer(&local_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, obj, DENG_BUFFER_TYPE_INDICES, nullptr);
+        this->copyBufferToBuffer(obj.buffers.staging_buffer, obj.buffers.index_buffer, local_size);
 
         vkDestroyBuffer(this->m_device, obj.buffers.staging_buffer, nullptr);
         vkFreeMemory(this->m_device, obj.buffers.staging_bufferMem, nullptr);
@@ -787,7 +896,7 @@ namespace deng
         this->m_uniform_buffersMem.resize(this->m_swapChain_images.size());
 
         for(size_t i = 0; i < this->m_swapChain_images.size(); i++) {
-            this->makeBuffer(local_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_UNIFORM, &i);
+            this->makeBuffer(&local_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_UNIFORM, &i);
         }
 
     }
@@ -812,7 +921,7 @@ namespace deng
         }
     }
 
-    void Renderer::initDescriptorSets() {
+    void Renderer::initDescriptorSets(GameObject &obj) {
         std::vector<VkDescriptorSetLayout> local_descset_layouts(this->m_swapChain_images.size(), this->m_descriptorSet_Layout);
         VkDescriptorSetAllocateInfo local_allocInfo{};
         local_allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -835,16 +944,29 @@ namespace deng
             local_bufferInfo.offset = 0;
             local_bufferInfo.range = sizeof(UniformBufferData);
 
-            VkWriteDescriptorSet local_desc_write{};
-            local_desc_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            local_desc_write.dstSet = this->m_descriptorSets[i];
-            local_desc_write.dstBinding = 0;
-            local_desc_write.dstArrayElement = 0;
-            local_desc_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            local_desc_write.descriptorCount = 1;
-            local_desc_write.pBufferInfo = &local_bufferInfo;
+            VkDescriptorImageInfo local_desc_imageInfo{};
+            local_desc_imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            local_desc_imageInfo.imageView = obj.textureData.textureImageView;
+            local_desc_imageInfo.sampler = obj.textureData.textureSampler;
 
-            vkUpdateDescriptorSets(this->m_device, 1, &local_desc_write, 0, nullptr);
+            std::array<VkWriteDescriptorSet, 2> local_desc_writes{};
+            local_desc_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            local_desc_writes[0].dstSet = this->m_descriptorSets[i];
+            local_desc_writes[0].dstBinding = 0;
+            local_desc_writes[0].dstArrayElement = 0;
+            local_desc_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            local_desc_writes[0].descriptorCount = 1;
+            local_desc_writes[0].pBufferInfo = &local_bufferInfo;
+
+            local_desc_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            local_desc_writes[1].dstSet = this->m_descriptorSets[i];
+            local_desc_writes[1].dstBinding = 1;
+            local_desc_writes[1].dstArrayElement = 0;
+            local_desc_writes[1].descriptorCount = 1;
+            local_desc_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            local_desc_writes[1].pImageInfo = &local_desc_imageInfo;
+
+            vkUpdateDescriptorSets(this->m_device, local_desc_writes.size(), local_desc_writes.data(), 0, nullptr);
         }
     }
 
@@ -888,20 +1010,16 @@ namespace deng
             local_renderpass_begininfo.pClearValues = &local_clearColor;
 
             vkCmdBeginRenderPass(this->m_commandBuffers[i], &local_renderpass_begininfo, VK_SUBPASS_CONTENTS_INLINE);
-            vkCmdBindPipeline(this->m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipeline);
+                vkCmdBindPipeline(this->m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipeline);
 
-            VkBuffer local_vertex_buffers[] = {this->m_statue.buffers.vertex_buffer};
-            VkDeviceSize offsets[] = {0};
+                VkBuffer local_vertex_buffers[] = {this->m_statue.buffers.vertex_buffer};
+                VkDeviceSize offsets[] = {0};
 
-            vkCmdBindVertexBuffers(this->m_commandBuffers[i], 0, 1, local_vertex_buffers, offsets);
-            vkCmdBindIndexBuffer(this->m_commandBuffers[i], this->m_statue.buffers.index_buffer, 0, VK_INDEX_TYPE_UINT32);
-            LOG("Commandbuffer array size: " + std::to_string(this->m_commandBuffers.size()));
-            LOG("Descriptor set size: " + std::to_string(this->m_descriptorSets.size()));
-            vkCmdBindDescriptorSets(this->m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipelineLayout, 0, 1, &this->m_descriptorSets[i], 0, nullptr);
+                vkCmdBindVertexBuffers(this->m_commandBuffers[i], 0, 1, local_vertex_buffers, offsets);
+                vkCmdBindIndexBuffer(this->m_commandBuffers[i], this->m_statue.buffers.index_buffer, 0, VK_INDEX_TYPE_UINT32);
+                vkCmdBindDescriptorSets(this->m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipelineLayout, 0, 1, &this->m_descriptorSets[i], 0, nullptr);
 
-            LOG("Binded descriptor sets!");
-            vkCmdDrawIndexed(this->m_commandBuffers[i], static_cast<uint32_t>(this->m_statue.vertexIndicesData.posIndices.size()), 1, 0, 0, 0);
-            LOG("Done drawing indexed vertices!");
+                vkCmdDrawIndexed(this->m_commandBuffers[i], static_cast<uint32_t>(this->m_statue.vertexIndicesData.posIndices.size()), 1, 0, 0, 0);
             vkCmdEndRenderPass(this->m_commandBuffers[i]);
             LOG("Ended renderPass!");
 
@@ -937,46 +1055,7 @@ namespace deng
 
     /* maker functions */
 
-    void Renderer::makeTextureImage(const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj) {
-        VkImageCreateInfo local_image_createInfo{};
-        local_image_createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        local_image_createInfo.imageType = VK_IMAGE_TYPE_2D;
-        local_image_createInfo.extent.width = static_cast<uint32_t>(obj.textureData.width);
-        local_image_createInfo.extent.height = static_cast<uint32_t>(obj.textureData.height);
-        local_image_createInfo.extent.depth = 1;
-        local_image_createInfo.mipLevels = 1;
-        local_image_createInfo.arrayLayers = static_cast<uint32_t>(std::floor(std::log2(std::max(obj.textureData.width, obj.textureData.height)))) + 1;
-
-        local_image_createInfo.format = format;
-        local_image_createInfo.tiling = tiling;
-        local_image_createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        local_image_createInfo.usage = usage;
-        local_image_createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        local_image_createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-
-        if(vkCreateImage(this->m_device, &local_image_createInfo, nullptr, &obj.images.textureImage) != VK_SUCCESS) {
-            ERR("Failed to create a texture image!");
-        }
-        else {
-            LOG("Successfully created texture image!");
-        }
-
-        VkMemoryRequirements local_mem_req;
-        vkGetImageMemoryRequirements(this->m_device, obj.images.textureImage, &local_mem_req);
-
-        VkMemoryAllocateInfo local_mem_allocInfo{};
-        local_mem_allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        local_mem_allocInfo.allocationSize = local_mem_req.size;
-        local_mem_allocInfo.memoryTypeIndex = getMemType(local_mem_req.memoryTypeBits, properties);
-
-        if(vkAllocateMemory(this->m_device, &local_mem_allocInfo, nullptr, &obj.images.textureImageMem) != VK_SUCCESS) {
-            ERR("Failed to allocate memory for texture image!");
-        }
-
-        vkBindImageMemory(this->m_device, obj.images.textureImage, obj.images.textureImageMem, 0);
-    }
-
-    void Renderer::makeBuffer(const VkDeviceSize &size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj, const BufferMode &bufferType, size_t *bufferIndex) {
+    void Renderer::makeBuffer(const VkDeviceSize *size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj, const BufferMode &bufferType, size_t *bufferIndex) {
         VkBuffer *local_buffer;
         VkDeviceMemory *local_bufferMem;
 
@@ -1008,7 +1087,7 @@ namespace deng
         
         VkBufferCreateInfo local_buffer_createInfo{};
         local_buffer_createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        local_buffer_createInfo.size = size;
+        local_buffer_createInfo.size = *size;
         local_buffer_createInfo.usage = usage;
         local_buffer_createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
@@ -1029,6 +1108,41 @@ namespace deng
         }
 
         vkBindBufferMemory(this->m_device, *local_buffer, *local_bufferMem, 0);
+    }
+
+    void Renderer::makeImage(GameObject &obj, const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties) {
+        VkImageCreateInfo local_image_createInfo{};
+        local_image_createInfo.sType  = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        local_image_createInfo.imageType = VK_IMAGE_TYPE_2D;
+        local_image_createInfo.extent.width = obj.textureData.width;
+        local_image_createInfo.extent.height = obj.textureData.height;
+        local_image_createInfo.extent.depth = 1;
+        local_image_createInfo.mipLevels = 1;
+        local_image_createInfo.arrayLayers = 1;
+        local_image_createInfo.format = format;
+        local_image_createInfo.tiling = tiling;
+        local_image_createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        local_image_createInfo.usage = usage;
+        local_image_createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        local_image_createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if(vkCreateImage(this->m_device, &local_image_createInfo, nullptr, &obj.textureData.textureImage) != VK_SUCCESS) {
+            ERR("Failed to create image!");
+        }
+
+        VkMemoryRequirements local_memReq;
+        vkGetImageMemoryRequirements(this->m_device, obj.textureData.textureImage, &local_memReq);
+
+        VkMemoryAllocateInfo local_allocInfo{};
+        local_allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        local_allocInfo.allocationSize = local_memReq.size;
+        local_allocInfo.memoryTypeIndex = this->getMemType(local_memReq.memoryTypeBits, properties);
+
+        if(vkAllocateMemory(this->m_device, &local_allocInfo, nullptr, &obj.textureData.textureImageMem) != VK_SUCCESS) {
+            ERR("Failed to allocate image memory!");
+        }
+
+        vkBindImageMemory(this->m_device, obj.textureData.textureImage, obj.textureData.textureImageMem, 0);
     }
 
     void Renderer::updateUniformBufferData(const uint32_t &currentImg, GameObject &obj) {
@@ -1097,11 +1211,11 @@ namespace deng
         this->m_currentFrame = (m_currentFrame + 1) % this->m_MAX_FRAMES_IN_FLIGHT;
     }
 
-    void Renderer::populateBufferMem(const VkDeviceSize &size, const void *srcData, VkBuffer &buffer, VkDeviceMemory &bufferMem) {
+    void Renderer::populateBufferMem(const VkDeviceSize *size, const void *srcData, VkBuffer &buffer, VkDeviceMemory &bufferMem) {
         LOG("Populating buffer memory!");
         void *data;
-        vkMapMemory(this->m_device, bufferMem, 0, size, 0, &data);
-        memcpy(data, srcData, static_cast<size_t>(size));
+        vkMapMemory(this->m_device, bufferMem, 0, *size, 0, &data);
+        memcpy(data, srcData, static_cast<size_t>(*size));
         vkUnmapMemory(this->m_device, bufferMem);
     }
 
@@ -1137,7 +1251,7 @@ namespace deng
         vkFreeCommandBuffers(this->m_device, this->m_commandPool, 1, &commandBuffer);
     }
 
-    void Renderer::copyBuffer(VkBuffer &srcBuf, VkBuffer &dstBuf, const VkDeviceSize &size) {
+    void Renderer::copyBufferToBuffer(VkBuffer &srcBuf, VkBuffer &dstBuf, const VkDeviceSize &size) {
         VkCommandBuffer local_commandBuffer;
         this->beginCommandBufferSingleCommand(local_commandBuffer);
 
@@ -1145,6 +1259,71 @@ namespace deng
         local_copy_region.size = size;
         
         vkCmdCopyBuffer(local_commandBuffer, srcBuf, dstBuf, 1, &local_copy_region);
+        this->endCommandBufferSingleCommand(local_commandBuffer);
+    }
+
+    void Renderer::transitionImageLayout(VkImage &image, const VkFormat &format, const VkImageLayout &oldLayout, const VkImageLayout &newLayout) {
+        VkCommandBuffer local_commandBuffer;
+        this->beginCommandBufferSingleCommand(local_commandBuffer);
+
+        VkImageMemoryBarrier local_memBarrier{};
+        local_memBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        local_memBarrier.oldLayout = oldLayout;
+        local_memBarrier.newLayout = newLayout;
+        local_memBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        local_memBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        local_memBarrier.image = image;
+        local_memBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        local_memBarrier.subresourceRange.baseMipLevel = 0;
+        local_memBarrier.subresourceRange.levelCount = 1;
+        local_memBarrier.subresourceRange.baseArrayLayer = 0;
+        local_memBarrier.subresourceRange.layerCount = 1;
+
+        VkPipelineStageFlags local_srcStage;
+        VkPipelineStageFlags local_dstStage;
+        
+        if(oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+            local_memBarrier.srcAccessMask = 0;
+            local_memBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+            local_srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            local_dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        }
+        else if(oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+            local_memBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            local_memBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+            local_srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            local_dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        }
+        else {
+            ERR("Invalid layout transitions!");
+        }
+
+        vkCmdPipelineBarrier(local_commandBuffer, local_srcStage, local_dstStage, 0, 0, nullptr, 0, nullptr, 1, &local_memBarrier);
+
+        this->endCommandBufferSingleCommand(local_commandBuffer);
+    }
+
+    void Renderer::copyBufferToImage(VkBuffer &srcBuf, VkImage &dstImg, const uint32_t &width, const uint32_t &height) {
+        VkCommandBuffer local_commandBuffer;
+        this->beginCommandBufferSingleCommand(local_commandBuffer);
+
+        VkBufferImageCopy local_copy_region{};
+        local_copy_region.bufferOffset = 0;
+        local_copy_region.bufferRowLength = 0;
+        local_copy_region.bufferImageHeight = 0;
+
+        local_copy_region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        local_copy_region.imageSubresource.mipLevel = 0;
+        local_copy_region.imageSubresource.baseArrayLayer = 0;
+        local_copy_region.imageSubresource.layerCount = 1;
+
+        local_copy_region.imageOffset = {0, 0, 0};
+        local_copy_region.imageExtent = {width, height, 1};
+
+        vkCmdCopyBufferToImage(local_commandBuffer, srcBuf, dstImg, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &local_copy_region);
+
         this->endCommandBufferSingleCommand(local_commandBuffer);
     }
 

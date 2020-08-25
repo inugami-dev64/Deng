@@ -89,7 +89,7 @@ namespace deng {
         else return true;
     }
 
-    void TextureLoader::getTextureDetails(uint32_t *texWidth, uint32_t *texHeight, VkDeviceSize *texSize, std::vector<vec4<unsigned char>> *texPixelData) {
+    void TextureLoader::getTextureDetails(uint32_t *texWidth, uint32_t *texHeight, VkDeviceSize *texSize, std::vector<vec4<unsigned char>> &texPixelData) {
         FileManager fm;
 
         fm.writeToFile("rgbbitmap.log", "#entry point", DENG_WRITEMODE_REWRITE);
@@ -102,7 +102,7 @@ namespace deng {
 
         *texWidth = this->m_info_header.width;
         *texHeight = this->m_info_header.height;
-        *texSize = this->m_info_header.width * m_info_header.height * 4;
-        *texPixelData = this->pixelData;
+        *texSize = this->m_info_header.width * this->m_info_header.height * 4;
+        texPixelData = this->pixelData;
     }
 }

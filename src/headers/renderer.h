@@ -40,7 +40,6 @@ namespace deng {
 
         VkPhysicalDevice m_gpu;
         VkPhysicalDeviceProperties m_gpu_properties{};
-        VkPhysicalDeviceFeatures m_gpu_features{};
         VkDevice m_device;
         VkSurfaceKHR m_surface;
         VkSwapchainKHR m_swapChain;
@@ -93,11 +92,11 @@ namespace deng {
         uint32_t getDeviceScore(const VkPhysicalDevice &device);
         bool getExtensionSupport(const VkPhysicalDevice &gpu, const char *extName);
         void selectPhysicalDevice();
+        void initLogicalDevice();
         void initWindowSurface();
-        void initDeviceQueues();
         void initSwapChainSettings();
         void initSwapChain();
-        VkImageViewCreateInfo getImageViewInfo(uint32_t imageIndex);
+        VkImageViewCreateInfo getImageViewInfo(VkImage &image, const VkFormat &format);
         void initImageView();
         VkShaderModule initShaderModule(const std::vector<char> &bin);
         void initRenderPass();
@@ -105,14 +104,16 @@ namespace deng {
         void initGraphicsPipeline();
         void initFrameBuffers();
         void initCommandPool();
+        void initTextureImage(GameObject &obj);
+        void initTextureSampler(GameObject &obj);
         void initBuffers(GameObject &obj);
         void initDescriptorPool();
-        void initDescriptorSets();
+        void initDescriptorSets(GameObject &obj);
         void initTextureBuffer();
         uint32_t getMemType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
         void initCommandBufferFromSwapChain();
         void initSemaphores();
-        void initObjects(GameObject &object, const std::string &objSourceFilePath, const std::string &texSourceFilePath, const CoordinateMode &coordinateMode);
+        void initObjects(GameObject &obj, const std::string &objSourceFilePath, const std::string &texSourceFilePath, const CoordinateMode &coordinateMode);
 
         void deleteTextureImage(GameObject &obj);
         void deleteCommandBuffers();
@@ -132,13 +133,16 @@ namespace deng {
         void deleteSurface();
         void deleteDevice();
 
-        void makeTextureImage(const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj);
         void makeVertexBuffer();
         void makeFrame();
-        void makeBuffer(const VkDeviceSize &size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj, const BufferMode &type, size_t *bufferIndex);
+        void makeBuffer(const VkDeviceSize *size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj, const BufferMode &type, size_t *bufferIndex);
+        void makeImage(GameObject &obj, const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties);
 
-        void populateBufferMem(const VkDeviceSize &size, const void *srcData, VkBuffer &buffer, VkDeviceMemory &bufferMem);
-        void copyBuffer(VkBuffer &srcBuf, VkBuffer &dstBuf, const VkDeviceSize &size);
+        void populateBufferMem(const VkDeviceSize *size, const void *srcData, VkBuffer &buffer, VkDeviceMemory &bufferMem);
+        void copyBufferToBuffer(VkBuffer &srcBuf, VkBuffer &dstBuf, const VkDeviceSize &size);
+
+        void transitionImageLayout(VkImage &image, const VkFormat &format, const VkImageLayout &oldLayout, const VkImageLayout &newLayout); 
+        void copyBufferToImage(VkBuffer &srcBuf, VkImage &dstImg, const uint32_t &width, const uint32_t &height);
 
         void beginCommandBufferSingleCommand(VkCommandBuffer &commandBuffer);
         void endCommandBufferSingleCommand(VkCommandBuffer &commandBuffer);
