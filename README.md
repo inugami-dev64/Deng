@@ -13,6 +13,8 @@ In order to compile and run the engine without validation layers <br>
     - In renderer.h change ``` #define DEBUG 1 ``` to ``` #define DEBUG 0 ``` <br>
     - Run ``` $ make precompile ``` and then ``` $ make ``` <br>
     
+Link to Liberty Statue model used as a example: https://free3d.com/3d-model/statue-of-liberty-73656.html <br> 
+    
 PS! I haven't tried to compile and run it on windows yet! <br>
 
  
