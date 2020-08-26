@@ -43,14 +43,14 @@ namespace deng {
         BMPFileHeader m_file_header;
         BMPInfoHeader m_info_header;
         BMPColorHeader m_color_header;
-        std::vector<vec4<unsigned char>> pixelData;
+        std::vector<uint8_t> pixelData;
 
     private:
         bool checkColorData();
 
     public:
         TextureLoader(const std::string &fileName);
-        void getTextureDetails(uint32_t *texWidth, uint32_t *texHeight, VkDeviceSize *texSize, std::vector<vec4<uint8_t>> &texPixelData);
+        void getTextureDetails(uint32_t *texWidth, uint32_t *texHeight, VkDeviceSize *texSize, std::vector<uint8_t> &texPixelData);
     };
 }
 

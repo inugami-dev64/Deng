@@ -83,7 +83,7 @@ namespace deng {
         FileManager fm;
 
         //game objects (currently just hardcoded, soon to be added from editor)
-        GameObject m_statue;
+        GameObject m_sample_object;
 
     private:
         void initInstance();

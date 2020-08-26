@@ -33,9 +33,11 @@ namespace deng
         for(uint32_t i = 0; i < family_count; i++) {
             vkGetPhysicalDeviceSurfaceSupportKHR(gpu, i, surface, &support);
             if(support) {
-                this->presentFamilyIndex = i; 
-                LOG("Presentation queue family index: " + std::to_string(this->presentFamilyIndex));
-                return true;
+                if(this->graphicsFamilyIndex != i) {
+                    this->presentFamilyIndex = i; 
+                    LOG("Presentation queue family index: " + std::to_string(this->presentFamilyIndex));
+                    return true;
+                }
             }
         }
         return false;

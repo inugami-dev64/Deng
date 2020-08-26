@@ -45,28 +45,26 @@ namespace deng {
                 return;
             }
 
-            this->pixelData.resize(this->m_info_header.width * this->m_info_header.height);
+            this->pixelData.resize(this->m_info_header.width * this->m_info_header.height * 4);
 
+            //without padding
             if(this->m_info_header.width % 4 == 0) {
-                for(size_t i = 0; i < this->pixelData.size(); i++) {
-                    vec4<unsigned char> rgb_per_pixel;
-                    textureFile.read((char*) &rgb_per_pixel, 4);
-                    pixelData[i] = rgb_per_pixel;
-
-                }
-                this->m_file_header.file_size += this->pixelData.size() * 4;
+                textureFile.read((char*) this->pixelData.data(), this->m_info_header.width * this->m_info_header.height * 4);
+                this->m_file_header.file_size += static_cast<uint32_t>(this->pixelData.size());
             }
 
+            //with padding
             else {
-                int32_t padding_count = this->m_info_header.width % 4 + 1;
-                for(size_t hI = 1; hI <= this->m_info_header.height; hI++) {
-                    for(size_t wI = 1; wI <= this->m_info_header.width - padding_count; wI++) {
-                        vec4<unsigned char> rgb_per_pixel;
-                        textureFile.read((char*) &rgb_per_pixel, 4);
-                        pixelData[(hI - 1) * wI + wI] = rgb_per_pixel;
-                    }
-                    textureFile.seekg(textureFile.tellg() + padding_count);
-                }
+                // int32_t padding_count = this->m_info_header.width * 4;
+                // for(size_t hI = 1; hI <= this->m_info_header.height; hI++) {
+                //     for(size_t wI = 1; wI <= this->m_info_header.width - padding_count; wI++) {
+                //         textureFile.read((char*) this->pixelData.data(), 4);
+                //     }
+                //     textureFile.seekg(textureFile.tellg() + padding_count);
+                // }
+
+                ERRME("No padding supported!");
+                ERR("Please use image with following dimentional requirements fulfilled: w % 4 = 0 && h % 4 = 0!");
             }
         }
 
@@ -89,17 +87,7 @@ namespace deng {
         else return true;
     }
 
-    void TextureLoader::getTextureDetails(uint32_t *texWidth, uint32_t *texHeight, VkDeviceSize *texSize, std::vector<vec4<unsigned char>> &texPixelData) {
-        FileManager fm;
-
-        fm.writeToFile("rgbbitmap.log", "#entry point", DENG_WRITEMODE_REWRITE);
-        fm.writeToFile("rgbbitmap.log", ("Size: " + std::to_string(this->m_file_header.file_size)), DENG_WRITEMODE_FROM_END);
-        fm.writeToFile("rgbbitmap.log", ("Width: " + std::to_string(this->m_info_header.width)), DENG_WRITEMODE_FROM_END);
-        fm.writeToFile("rgbbitmap.log", ("Height: " + std::to_string(this->m_info_header.height)), DENG_WRITEMODE_FROM_END);
-        for(vec4<unsigned char> &rgbVal : this->pixelData) {
-            fm.writeToFile("rgbbitmap.log", "{" + std::to_string(rgbVal.x) + ", " + std::to_string(rgbVal.y) + ", " + std::to_string(rgbVal.z) + ", " + std::to_string(rgbVal.w) + "}", DENG_WRITEMODE_FROM_END);
-        }
-
+    void TextureLoader::getTextureDetails(uint32_t *texWidth, uint32_t *texHeight, VkDeviceSize *texSize, std::vector<uint8_t> &texPixelData) {
         *texWidth = this->m_info_header.width;
         *texHeight = this->m_info_header.height;
         *texSize = this->m_info_header.width * this->m_info_header.height * 4;

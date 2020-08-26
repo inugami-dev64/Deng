@@ -6,8 +6,10 @@ namespace deng {
 
     struct ObjVertexData {
         vec3<float> posVec;
-        vec2<float> texVec;     
-        vec4<float> colorVec;
+        vec2<float> texVec;
+
+        static VkVertexInputBindingDescription getBindingDesc();
+        static std::array<VkVertexInputAttributeDescription, 2> getAttributeDesc();
     };
 
     struct ObjVertexIndicesData {
@@ -37,7 +39,7 @@ namespace deng {
     };
 
     struct ObjRawTextureData {
-        std::vector<vec4<uint8_t>> texturePixelsData;
+        std::vector<uint8_t> texturePixelsData;
 
         uint32_t *width;
         uint32_t *height;
@@ -58,11 +60,6 @@ namespace deng {
         ModelMatrix modelMatrix;
         
         Buffers buffers;
-    };
-
-    struct VertexInputDesc {
-        static VkVertexInputBindingDescription getBindingDesc(GameObject &obj);
-        static std::array<VkVertexInputAttributeDescription, 3> getAttributeDesc();
     };
 }
 

@@ -7,8 +7,8 @@ namespace deng {
         std::vector<std::string> contents;
         fm.getFileContents(fileName, nullptr, &contents);
         
-        this->getVertexFaces(contents);
         this->getVerticesCoord(contents);
+        this->getVertexFaces(contents);
     }
 
     void ObjLoader::getVerticesCoord(const std::vector<std::string> &fileContents) {
@@ -95,7 +95,7 @@ namespace deng {
             if(objContents[i].find("f ") == 0) {
                 char buffer[objContents[i].size()];
                 strncpy(buffer, objContents[i].c_str(), objContents[i].size());
-                uint32_t vertexTypeCount = DENG_VERTEX_COORD;
+                coordTypes vertexTypeCount = DENG_VERTEX_COORD;
 
                 std::string iStr;
 
@@ -108,13 +108,13 @@ namespace deng {
                         case DENG_VERTEX_COORD:
                             this->vertexCoordFacesVec.push_back(std::stoi(iStr) - 1);
                             iStr.clear();
-                            vertexTypeCount++;
+                            vertexTypeCount = DENG_VERTEX_NORMAL_COORD;
                             break;
 
                         case DENG_VERTEX_NORMAL_COORD:
                             this->vertexNormCoordFacesVec.push_back(std::stoi(iStr) - 1);
                             iStr.clear();
-                            vertexTypeCount++;
+                            vertexTypeCount = DENG_VERTEX_TEXTURE_COORD;
                             break;
 
                         case DENG_VERTEX_TEXTURE_COORD:
@@ -127,31 +127,40 @@ namespace deng {
                             break;
                         }
                     }
+
+                    if(lineIndex == (sizeof(buffer)/sizeof(buffer[0]) - 1)) {
+                        iStr += buffer[lineIndex];
+                        this->vertexTexCoordFacesVec.push_back(std::stoi(iStr) - 1);
+                        iStr.clear();
+                        vertexTypeCount = DENG_VERTEX_COORD;
+                    }
                 }
             }
         }
     }
 
     void ObjLoader::getObjVerticesAndIndices(GameObject &obj) {
-        obj.vertexData.resize(this->vertexCoordVec.size());
+        obj.vertexData.resize(this->vertexCoordFacesVec.size());
+
         obj.vertexIndicesData.texIndices.resize(this->vertexTexCoordFacesVec.size());
         obj.vertexIndicesData.posIndices.resize(this->vertexCoordFacesVec.size());
+
+        if(this->vertexCoordFacesVec.size() != this->vertexTexCoordFacesVec.size()) {
+            ERR("Corrupted .obj file!");
+        }
         
+
         for(size_t i = 0; i < this->vertexCoordVec.size(); i++) {
-            obj.vertexData[i].posVec = this->vertexCoordVec[i];
-            obj.vertexData[i].colorVec = {1.0f, 1.0f, 1.0f, 1.0f};
+            obj.vertexData[i].posVec = this->vertexCoordVec[this->vertexCoordFacesVec[i]];
+            obj.vertexData[i].texVec = this->vertexTexCoordVec[this->vertexTexCoordFacesVec[i]];
         }
 
-        for(size_t i = 0; i < this->vertexTexCoordVec.size(); i++) {
-            obj.vertexData[i].texVec = this->vertexTexCoordVec[i];
-        }
+        // for(size_t i = 0; i < this->vertexCoordFacesVec.size(); i++) {
+        //     obj.vertexIndicesData.posIndices[i] = this->vertexCoordFacesVec[i];
+        // }
 
-        for(size_t i = 0; i < this->vertexCoordFacesVec.size(); i++) {
-            obj.vertexIndicesData.posIndices[i] = this->vertexCoordFacesVec[i];
-        }
-
-        for(size_t i = 0; i < this->vertexTexCoordFacesVec.size(); i++) {
-            obj.vertexIndicesData.texIndices[i] = this->vertexTexCoordFacesVec[i];
-        }
+        // for(size_t i = 0; i < this->vertexTexCoordFacesVec.size(); i++) {
+        //     obj.vertexIndicesData.texIndices[i] = this->vertexTexCoordFacesVec[i];
+        // }
     }
 }

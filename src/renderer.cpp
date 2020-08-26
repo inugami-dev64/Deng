@@ -8,9 +8,9 @@ namespace deng
 
         this->m_window = &win;
         this->m_camera = new Camera({0.01f, 0.01f, -0.01f, 0.0f}, 65.0f, this->m_nearPlane, this->m_farPlane, this->m_window);
-        this->m_ev = new Events(this->m_window, this->m_camera, &this->m_statue);
+        this->m_ev = new Events(this->m_window, this->m_camera, &this->m_sample_object);
 
-        this->initObjects(this->m_statue, "objects/obj1.obj", "textures/obj1.bmp", DENG_COORDINATE_MODE_DEFAULT);
+        this->initObjects(this->m_sample_object, "objects/obj1.obj", "textures/obj1.bmp", DENG_COORDINATE_MODE_DEFAULT);
         this->initInstance();
         this->initDebugMessenger();
         this->initWindowSurface();
@@ -24,56 +24,36 @@ namespace deng
         this->initGraphicsPipeline();
         this->initFrameBuffers();
         this->initCommandPool();
-        this->initTextureImage(this->m_statue);
-        this->initTextureSampler(this->m_statue);
-        this->initBuffers(this->m_statue);
+        this->initTextureImage(this->m_sample_object); 
+        this->initTextureSampler(this->m_sample_object);
+        this->initBuffers(this->m_sample_object);
         this->initDescriptorPool();
-        this->initDescriptorSets(this->m_statue);
+        this->initDescriptorSets(this->m_sample_object);
         this->initCommandBufferFromSwapChain();
         this->initSemaphores();
     }
 
     Renderer::~Renderer() {
-        LOG(1);
         this->deleteFrameBuffers();
-        LOG(2);
         this->deleteCommandBuffers();
-        LOG(3);
         this->deletePipeline();
-        LOG(4);
         this->deleteRenderPass();
-        LOG(5);
         this->deleteImageViews();
-        LOG(6);
         this->deleteSwapChain();
-        LOG(7);    
-        this->deleteTextureImage(this->m_statue);
-        LOG(8);
+        this->deleteTextureImage(this->m_sample_object);
         this->deleteDescriptorSetLayout();
-        LOG(9);
         this->deleteVertexBuffer();
-        LOG(10);
         this->freeMemory();
-        LOG(11);
         this->deleteSemaphores();
-        LOG(12);
         this->deleteCommandPool();
-        LOG(13);
         this->deleteDevice();
-        LOG(14);
         this->deleteSurface();
-        LOG(15);
         this->deleteDebugMessenger();
-        LOG(16);
         this->deleteInstance();
-        LOG(17);
         
         delete this->m_ev;
-        LOG(17);
         delete this->m_camera;
-        LOG(18);
         delete this->m_device_swapChainDetails;
-        LOG(19);
     }
 
     void Renderer::deleteCommandBuffers() {
@@ -152,13 +132,13 @@ namespace deng
     }
 
     void Renderer::freeMemory() {
-        vkFreeMemory(this->m_device, this->m_statue.buffers.vertex_bufferMem, nullptr);
-        vkFreeMemory(this->m_device, this->m_statue.buffers.index_bufferMem, nullptr);
+        vkFreeMemory(this->m_device, this->m_sample_object.buffers.vertex_bufferMem, nullptr);
+        // vkFreeMemory(this->m_device, this->m_sample_object.buffers.index_bufferMem, nullptr);
     }
 
     void Renderer::deleteVertexBuffer() {
-        vkDestroyBuffer(this->m_device, this->m_statue.buffers.vertex_buffer, nullptr);
-        vkDestroyBuffer(this->m_device, this->m_statue.buffers.index_buffer, nullptr);
+        vkDestroyBuffer(this->m_device, this->m_sample_object.buffers.vertex_buffer, nullptr);
+        // vkDestroyBuffer(this->m_device, this->m_sample_object.buffers.index_buffer, nullptr);
     }
 
     void Renderer::deleteTextureImage(GameObject &obj) {
@@ -175,6 +155,11 @@ namespace deng
     void Renderer::initObjects(GameObject &obj, const std::string &objFilePath, const std::string &texFilePath, const CoordinateMode &coordinateMode) {
         ObjLoader obj_loader(objFilePath, coordinateMode);
         obj_loader.getObjVerticesAndIndices(obj);
+
+        // obj.vertexData = {{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f}},
+        //                   {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f}},
+        //                   {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f}},
+        //                   {{0.5f, 0.5f, 0.0f}, {1.0f, 1.0f}}};
 
         TextureLoader tex_loader(texFilePath);
         ObjRawTextureData texture_data;
@@ -203,7 +188,7 @@ namespace deng
         local_appInfo.apiVersion = VK_API_VERSION_1_0;
 
         //initialise create info
-        VkInstanceCreateInfo local_instance_createInfo{};
+        VkInstanceCreateInfo local_instance_createInfo{}; 
         local_instance_createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         local_instance_createInfo.pApplicationInfo = &local_appInfo;
 
@@ -261,8 +246,8 @@ namespace deng
             return VK_ERROR_EXTENSION_NOT_PRESENT;
         }
         else {
-            LOG("");
             fun(this->m_instance, pCreateInfo, nullptr, &this->m_debug_messenger);
+            return VK_SUCCESS;
         }
     }
 
@@ -605,8 +590,8 @@ namespace deng
     void Renderer::initDescriptorSetLayout() {
         VkDescriptorSetLayoutBinding local_ubo_layout_binding{};
         local_ubo_layout_binding.binding = 0;
-        local_ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         local_ubo_layout_binding.descriptorCount = 1;
+        local_ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         local_ubo_layout_binding.pImmutableSamplers = nullptr;
         local_ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
@@ -623,18 +608,6 @@ namespace deng
         local_layout_createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         local_layout_createInfo.bindingCount = local_bindings.size();
         local_layout_createInfo.pBindings = local_bindings.data();
-
-        std::array<VkDescriptorPoolSize, 2> local_poolSizes{};
-        local_poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        local_poolSizes[0].descriptorCount = this->m_swapChain_images.size();
-        local_poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        local_poolSizes[1].descriptorCount = this->m_swapChain_images.size();
-
-        VkDescriptorPoolCreateInfo local_poolInfo{};
-        local_poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        local_poolInfo.poolSizeCount = this->m_swapChain_images.size();
-        local_poolInfo.pPoolSizes = local_poolSizes.data();
-        local_poolInfo.maxSets = this->m_swapChain_images.size();
 
         if(vkCreateDescriptorSetLayout(this->m_device, &local_layout_createInfo, nullptr, &this->m_descriptorSet_Layout) != VK_SUCCESS) {
             ERR("Failed to create descriptor set layout!");
@@ -665,8 +638,8 @@ namespace deng
 
         VkPipelineShaderStageCreateInfo shaderStages[] = {local_vModule_createInfo, local_fModule_createinfo};
 
-        auto local_input_binding_desc = VertexInputDesc::getBindingDesc(this->m_statue);
-        auto local_input_attribute_desc = VertexInputDesc::getAttributeDesc();
+        auto local_input_binding_desc = ObjVertexData::getBindingDesc();
+        auto local_input_attribute_desc = ObjVertexData::getAttributeDesc();
 
         VkPipelineVertexInputStateCreateInfo local_vertexInput_createInfo{};
         local_vertexInput_createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -705,7 +678,7 @@ namespace deng
         local_rasterizer.depthClampEnable = VK_FALSE;
         local_rasterizer.rasterizerDiscardEnable = VK_FALSE;
         local_rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-        local_rasterizer.lineWidth = 0.1f;
+        local_rasterizer.lineWidth = 1.0f;
         local_rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
         local_rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         local_rasterizer.depthBiasEnable = VK_FALSE;
@@ -730,6 +703,9 @@ namespace deng
         local_pipelineLayout_createinfo.setLayoutCount = 1;
         local_pipelineLayout_createinfo.pSetLayouts = &this->m_descriptorSet_Layout;
         local_pipelineLayout_createinfo.pushConstantRangeCount = 0;
+
+        VkPipelineDynamicStateCreateInfo local_pipeline_dynamicState_createinfo{};
+        local_pipeline_dynamicState_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 
         if(vkCreatePipelineLayout(this->m_device, &local_pipelineLayout_createinfo, nullptr, &this->m_pipelineLayout) != VK_SUCCESS) {
             ERR("Failed to create pipeline layout!");
@@ -873,22 +849,22 @@ namespace deng
         this->makeBuffer(&local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_STAGING, nullptr);
         this->populateBufferMem(&local_size, obj.vertexData.data(), obj.buffers.staging_buffer, obj.buffers.staging_bufferMem);
 
-        this->makeBuffer(&local_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, obj, DENG_BUFFER_TYPE_VERTEX, nullptr);
+        this->makeBuffer(&local_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, obj, DENG_BUFFER_TYPE_VERTEX, nullptr);
         this->copyBufferToBuffer(obj.buffers.staging_buffer, obj.buffers.vertex_buffer, local_size);
 
         vkDestroyBuffer(this->m_device, obj.buffers.staging_buffer, nullptr);
         vkFreeMemory(this->m_device, obj.buffers.staging_bufferMem, nullptr);
 
-        local_size = sizeof(obj.vertexIndicesData.posIndices[0]) * obj.vertexIndicesData.posIndices.size();
+        // local_size = sizeof(obj.vertexIndicesData.posIndices[0]) * obj.vertexIndicesData.posIndices.size();
 
-        this->makeBuffer(&local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_STAGING, nullptr);
-        this->populateBufferMem(&local_size, obj.vertexIndicesData.posIndices.data(), obj.buffers.staging_buffer, obj.buffers.staging_bufferMem);
+        // this->makeBuffer(&local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_STAGING, nullptr);
+        // this->populateBufferMem(&local_size, obj.vertexIndicesData.posIndices.data(), obj.buffers.staging_buffer, obj.buffers.staging_bufferMem);
         
-        this->makeBuffer(&local_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, obj, DENG_BUFFER_TYPE_INDICES, nullptr);
-        this->copyBufferToBuffer(obj.buffers.staging_buffer, obj.buffers.index_buffer, local_size);
+        // this->makeBuffer(&local_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, obj, DENG_BUFFER_TYPE_INDICES, nullptr);
+        // this->copyBufferToBuffer(obj.buffers.staging_buffer, obj.buffers.index_buffer, local_size);
 
-        vkDestroyBuffer(this->m_device, obj.buffers.staging_buffer, nullptr);
-        vkFreeMemory(this->m_device, obj.buffers.staging_bufferMem, nullptr);
+        // vkDestroyBuffer(this->m_device, obj.buffers.staging_buffer, nullptr);
+        // vkFreeMemory(this->m_device, obj.buffers.staging_bufferMem, nullptr);
 
         local_size = sizeof(UniformBufferData);
 
@@ -902,14 +878,16 @@ namespace deng
     }
 
     void Renderer::initDescriptorPool() {
-        VkDescriptorPoolSize local_desc_poolSize{};
-        local_desc_poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        local_desc_poolSize.descriptorCount = static_cast<uint32_t>(this->m_swapChain_images.size());
+        std::array<VkDescriptorPoolSize, 2> local_desc_poolSizes{};
+        local_desc_poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        local_desc_poolSizes[0].descriptorCount = static_cast<uint32_t>(this->m_swapChain_images.size());
+        local_desc_poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        local_desc_poolSizes[1].descriptorCount = static_cast<uint32_t>(this->m_swapChain_images.size());
 
         VkDescriptorPoolCreateInfo local_desc_pool_createInfo{};
         local_desc_pool_createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        local_desc_pool_createInfo.poolSizeCount = 1;
-        local_desc_pool_createInfo.pPoolSizes = &local_desc_poolSize;
+        local_desc_pool_createInfo.poolSizeCount = local_desc_poolSizes.size();
+        local_desc_pool_createInfo.pPoolSizes = local_desc_poolSizes.data();
         local_desc_pool_createInfo.maxSets = static_cast<uint32_t>(this->m_swapChain_images.size());
 
         if(vkCreateDescriptorPool(this->m_device, &local_desc_pool_createInfo, nullptr, &this->m_descriptorPool) != VK_SUCCESS) {
@@ -977,7 +955,7 @@ namespace deng
         local_commandbuffer_allocinfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         local_commandbuffer_allocinfo.commandPool = this->m_commandPool;
         local_commandbuffer_allocinfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        local_commandbuffer_allocinfo.commandBufferCount = (uint32_t) this->m_commandBuffers.size();
+        local_commandbuffer_allocinfo.commandBufferCount = this->m_commandBuffers.size();
 
         if(vkAllocateCommandBuffers(this->m_device, &local_commandbuffer_allocinfo, this->m_commandBuffers.data())) {
             ERR("Failed to allocate command buffers!");
@@ -1005,21 +983,25 @@ namespace deng
             local_renderpass_begininfo.renderArea.offset = {0, 0};
             local_renderpass_begininfo.renderArea.extent = this->m_extent;
 
-            VkClearValue local_clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
-            local_renderpass_begininfo.clearValueCount = 1;
-            local_renderpass_begininfo.pClearValues = &local_clearColor;
+            std::array<VkClearValue, 2> local_clearValues;
+            local_clearValues[0].color = {0.0f, 0.0f, 0.0f, 0.0f};
+            local_clearValues[1].depthStencil = {1.0f, 0};
+
+            local_renderpass_begininfo.clearValueCount = local_clearValues.size();
+            local_renderpass_begininfo.pClearValues = local_clearValues.data();
 
             vkCmdBeginRenderPass(this->m_commandBuffers[i], &local_renderpass_begininfo, VK_SUBPASS_CONTENTS_INLINE);
                 vkCmdBindPipeline(this->m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipeline);
 
-                VkBuffer local_vertex_buffers[] = {this->m_statue.buffers.vertex_buffer};
+                VkBuffer local_vertex_buffers[] = {this->m_sample_object.buffers.vertex_buffer};
                 VkDeviceSize offsets[] = {0};
 
                 vkCmdBindVertexBuffers(this->m_commandBuffers[i], 0, 1, local_vertex_buffers, offsets);
-                vkCmdBindIndexBuffer(this->m_commandBuffers[i], this->m_statue.buffers.index_buffer, 0, VK_INDEX_TYPE_UINT32);
+                // vkCmdBindIndexBuffer(this->m_commandBuffers[i], this->m_sample_object.buffers.index_buffer, 0, VK_INDEX_TYPE_UINT32);
                 vkCmdBindDescriptorSets(this->m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipelineLayout, 0, 1, &this->m_descriptorSets[i], 0, nullptr);
 
-                vkCmdDrawIndexed(this->m_commandBuffers[i], static_cast<uint32_t>(this->m_statue.vertexIndicesData.posIndices.size()), 1, 0, 0, 0);
+                vkCmdDraw(this->m_commandBuffers[i], static_cast<uint32_t>(this->m_sample_object.vertexData.size()), 1, 0, 0);
+
             vkCmdEndRenderPass(this->m_commandBuffers[i]);
             LOG("Ended renderPass!");
 
@@ -1172,7 +1154,7 @@ namespace deng
             ERR("Error acquiring swap chain image!");
         }
 
-        this->updateUniformBufferData(imgIndex, this->m_statue);
+        this->updateUniformBufferData(imgIndex, this->m_sample_object);
 
         VkSubmitInfo local_submitInfo{};
         local_submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1215,7 +1197,7 @@ namespace deng
         LOG("Populating buffer memory!");
         void *data;
         vkMapMemory(this->m_device, bufferMem, 0, *size, 0, &data);
-        memcpy(data, srcData, static_cast<size_t>(*size));
+            memcpy(data, srcData, static_cast<size_t>(*size));
         vkUnmapMemory(this->m_device, bufferMem);
     }
 

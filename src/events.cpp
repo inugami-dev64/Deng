@@ -85,6 +85,7 @@ namespace deng {
     void Events::handleLogging() {
         FileManager fm;
         fm.writeToFile("matobject.log", "#entry point", DENG_WRITEMODE_REWRITE);
+        fm.writeToFile("rgbbitmap.log", "#entry point", DENG_WRITEMODE_REWRITE);
         fm.writeToFile("object.log", "#entry point", DENG_WRITEMODE_REWRITE);
 
         for(ObjVertexData &vertices : this->m_obj->vertexData) {
@@ -98,7 +99,6 @@ namespace deng {
             auto newVec = projMat * viewMat * modelMat * vertices.posVec;
             fm.writeToFile("matobject.log", ("{" + std::to_string(newVec.x) + "," + std::to_string(newVec.y) + "," + std::to_string(newVec.z) + "," + std::to_string(newVec.w) + "}"), DENG_WRITEMODE_FROM_END);
             fm.writeToFile("object.log", ("{" + std::to_string(vertices.posVec.x) + "," + std::to_string(vertices.posVec.y) + "," + std::to_string(vertices.posVec.z) + "}"), DENG_WRITEMODE_FROM_END);
-
         }        
     }
 
