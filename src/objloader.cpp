@@ -151,7 +151,7 @@ namespace deng {
         
         for(size_t i = 0; i < this->vertexCoordFacesVec.size(); i++) {
             obj.vertexData[i].posVec = this->vertexCoordVec[this->vertexCoordFacesVec[i]];
-            obj.vertexData[i].texVec = this->vertexTexCoordVec[this->vertexTexCoordFacesVec[i]];obj.vertexData[i].texVec = this->vertexTexCoordVec[this->vertexTexCoordFacesVec[i]];
+            obj.vertexData[i].texVec = {this->vertexTexCoordVec[this->vertexTexCoordFacesVec[i]].x, 1.0f - this->vertexTexCoordVec[this->vertexTexCoordFacesVec[i]].y};
         }
     }
 }

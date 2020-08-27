@@ -10,7 +10,7 @@ namespace deng
         this->m_camera = new Camera({0.01f, 0.01f, -0.01f, 0.0f}, 65.0f, this->m_nearPlane, this->m_farPlane, this->m_window);
         this->m_ev = new Events(this->m_window, this->m_camera, &this->m_sample_object);
 
-        this->initObjects(this->m_sample_object, "objects/obj1.obj", "textures/obj1.bmp", DENG_COORDINATE_MODE_DEFAULT);
+        this->initObjects(this->m_sample_object, "objects/box.obj", "textures/Texture.bmp", DENG_COORDINATE_MODE_DEFAULT);
         this->initInstance();
         this->initDebugMessenger();
         this->initWindowSurface();
@@ -877,7 +877,7 @@ namespace deng
         vkDestroyBuffer(this->m_device, buffers.staging_buffer, nullptr);
         vkFreeMemory(this->m_device, buffers.staging_bufferMem, nullptr);
 
-        VkImageViewCreateInfo local_viewInfo = this->getImageViewInfo(obj.textureData.textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+        VkImageViewCreateInfo local_viewInfo = this->getImageViewInfo(obj.textureData.textureImage, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 
         if(vkCreateImageView(this->m_device, &local_viewInfo, nullptr, &obj.textureData.textureImageView) != VK_SUCCESS) {
             ERR("Failed to create texture image view!");

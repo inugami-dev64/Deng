@@ -57,14 +57,12 @@ namespace deng {
             // without padding
             if(this->m_info_header.width % 4 == 0) {
                 textureFile.read((char*) this->pixelData.data(), this->m_info_header.width * this->m_info_header.height * (this->m_info_header.bit_count / 8));
-                this->m_file_header.file_size += static_cast<uint32_t>(this->pixelData.size());
             }
 
             // with padding
             else {
                 std::vector<uint8_t> padding_count_per_row(4 - (this->m_info_header.width * this->m_info_header.bit_count / 8) % 4);
                 for(int32_t hI = 0; hI < this->m_info_header.height; hI++) {
-                    
                     textureFile.read((char*) (this->pixelData.data() + (this->m_info_header.width * this->m_info_header.bit_count / 8) * hI), (this->m_info_header.width * this->m_info_header.bit_count / 8));
                     textureFile.read((char*) padding_count_per_row.data(), padding_count_per_row.size());
                 }
@@ -97,14 +95,24 @@ namespace deng {
         *texHeight = this->m_info_header.height;
         *texSize = this->m_info_header.width * this->m_info_header.height * 4;
 
-        FileManager fm;
-        fm.writeToFile("rgbbitmap.log", "#entry point", DENG_WRITEMODE_REWRITE);
-        fm.writeToFile("rgbbitmap.log", "width=" + std::to_string(this->m_info_header.width), DENG_WRITEMODE_FROM_END);
-        fm.writeToFile("rgbbitmap.log", "height=" + std::to_string(this->m_info_header.height), DENG_WRITEMODE_FROM_END);
-        for(size_t i = 0; i < this->pixelData.size(); i++) {
-            fm.writeToFile("rgbbitmap.log", "{" + std::to_string(this->pixelData[i]) + "}", DENG_WRITEMODE_FROM_END);
+        // checks if alpha channel is present and if not then create it
+        if(this->m_info_header.bit_count == 32) texPixelData = this->pixelData;
+        else {
+            for(uint32_t i = 1; i <= this->m_info_header.width * this->m_info_header.height; i++) {
+                texPixelData.push_back(this->pixelData[i * 3 - 3]);
+                texPixelData.push_back(this->pixelData[i * 3 - 2]);
+                texPixelData.push_back(this->pixelData[i * 3 - 1]);
+                texPixelData.push_back(255);
+            }
         }
-        texPixelData = this->pixelData;
+
+        // FileManager fm;
+        // fm.writeToFile("rgbbitmap.log", "#entry point", DENG_WRITEMODE_REWRITE);
+        // fm.writeToFile("rgbbitmap.log", "width=" + std::to_string(this->m_info_header.width), DENG_WRITEMODE_FROM_END);
+        // fm.writeToFile("rgbbitmap.log", "height=" + std::to_string(this->m_info_header.height), DENG_WRITEMODE_FROM_END);
+        // for(size_t i = 0; i < this->pixelData.size(); i++) {
+        //     fm.writeToFile("rgbbitmap.log", "{" + std::to_string(texPixelData[i]) + "}", DENG_WRITEMODE_FROM_END);
+        // }
     }
 
     TextureFormats getTexFileFormat(const std::string &texFilePath) {
