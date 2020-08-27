@@ -1,7 +1,7 @@
 #include "headers/renderer.h"
 
 namespace deng {
-    TextureLoader::TextureLoader(const std::string &fileName) {
+    TextureLoaderBMP::TextureLoaderBMP(const std::string &fileName) {
         std::ifstream textureFile{fileName.c_str(), std::fstream::binary};
         if(textureFile) {
             textureFile.read((char*) &this->m_file_header, (int) sizeof(this->m_file_header));
@@ -10,7 +10,7 @@ namespace deng {
                 return;
             }
             
-            textureFile.read((char*) &this->m_info_header, (int) sizeof(this->m_info_header));
+            textureFile.read((char*) &this->m_info_header, sizeof(this->m_info_header));
 
             if(this->m_info_header.bit_count == 32) {
                 if(this->m_info_header.size >= (sizeof(BMPInfoHeader) + sizeof(BMPColorHeader))) {
@@ -33,9 +33,16 @@ namespace deng {
                 this->m_info_header.size = sizeof(BMPInfoHeader) + sizeof(BMPColorHeader);
                 this->m_file_header.offset_data = sizeof(BMPFileHeader) + sizeof(BMPInfoHeader) + sizeof(BMPColorHeader);
             }
+
+            else if(this->m_info_header.bit_count == 24) {
+                LOG("Detected texture with 24bit format!");
+                this->m_info_header.size = sizeof(BMPInfoHeader);
+                this->m_file_header.offset_data = sizeof(BMPFileHeader) + sizeof(BMPInfoHeader);
+            }
+
             else {
                 ERRME("Detected image bit count of " + std::to_string(this->m_info_header.bit_count) + "bits !");
-                ERRME("Only 32bit bitmap images are allowed!");
+                ERRME("Only 24 or 32bit bitmap images are allowed!");
                 return;
             }
 
@@ -45,26 +52,24 @@ namespace deng {
                 return;
             }
 
-            this->pixelData.resize(this->m_info_header.width * this->m_info_header.height * 4);
+            this->pixelData.resize(this->m_info_header.width * this->m_info_header.height * this->m_info_header.bit_count / 8);
 
-            //without padding
+            // without padding
             if(this->m_info_header.width % 4 == 0) {
-                textureFile.read((char*) this->pixelData.data(), this->m_info_header.width * this->m_info_header.height * 4);
+                textureFile.read((char*) this->pixelData.data(), this->m_info_header.width * this->m_info_header.height * (this->m_info_header.bit_count / 8));
                 this->m_file_header.file_size += static_cast<uint32_t>(this->pixelData.size());
             }
 
-            //with padding
+            // with padding
             else {
-                // int32_t padding_count = this->m_info_header.width * 4;
-                // for(size_t hI = 1; hI <= this->m_info_header.height; hI++) {
-                //     for(size_t wI = 1; wI <= this->m_info_header.width - padding_count; wI++) {
-                //         textureFile.read((char*) this->pixelData.data(), 4);
-                //     }
-                //     textureFile.seekg(textureFile.tellg() + padding_count);
-                // }
+                std::vector<uint8_t> padding_count_per_row(4 - (this->m_info_header.width * this->m_info_header.bit_count / 8) % 4);
+                for(int32_t hI = 0; hI < this->m_info_header.height; hI++) {
+                    
+                    textureFile.read((char*) (this->pixelData.data() + (this->m_info_header.width * this->m_info_header.bit_count / 8) * hI), (this->m_info_header.width * this->m_info_header.bit_count / 8));
+                    textureFile.read((char*) padding_count_per_row.data(), padding_count_per_row.size());
+                }
 
-                ERRME("No padding supported!");
-                ERR("Please use image with following dimentional requirements fulfilled: w % 4 = 0 && h % 4 = 0!");
+                this->m_file_header.file_size += this->pixelData.size() * this->m_info_header.height * padding_count_per_row.size();
             }
         }
 
@@ -74,7 +79,7 @@ namespace deng {
         }
     }
 
-    bool TextureLoader::checkColorData() {
+    bool TextureLoaderBMP::checkColorData() {
         BMPColorHeader expected_color_header;
         if(expected_color_header.red_mask != this->m_color_header.red_mask ||
            expected_color_header.green_mask != this->m_color_header.green_mask ||
@@ -87,10 +92,26 @@ namespace deng {
         else return true;
     }
 
-    void TextureLoader::getTextureDetails(uint32_t *texWidth, uint32_t *texHeight, VkDeviceSize *texSize, std::vector<uint8_t> &texPixelData) {
+    void TextureLoaderBMP::getTextureDetails(uint32_t *texWidth, uint32_t *texHeight, VkDeviceSize *texSize, std::vector<uint8_t> &texPixelData) {
         *texWidth = this->m_info_header.width;
         *texHeight = this->m_info_header.height;
         *texSize = this->m_info_header.width * this->m_info_header.height * 4;
+
+        FileManager fm;
+        fm.writeToFile("rgbbitmap.log", "#entry point", DENG_WRITEMODE_REWRITE);
+        fm.writeToFile("rgbbitmap.log", "width=" + std::to_string(this->m_info_header.width), DENG_WRITEMODE_FROM_END);
+        fm.writeToFile("rgbbitmap.log", "height=" + std::to_string(this->m_info_header.height), DENG_WRITEMODE_FROM_END);
+        for(size_t i = 0; i < this->pixelData.size(); i++) {
+            fm.writeToFile("rgbbitmap.log", "{" + std::to_string(this->pixelData[i]) + "}", DENG_WRITEMODE_FROM_END);
+        }
         texPixelData = this->pixelData;
+    }
+
+    TextureFormats getTexFileFormat(const std::string &texFilePath) {
+        if(texFilePath.find(".bmp") == texFilePath.size() - 4) return DENG_TEXTURE_FORMAT_BMP;
+        else if(texFilePath.find(".tga") == texFilePath.size() - 4) return DENG_TEXTURE_FORMAT_TGA;
+        else if(texFilePath.find(".png") == texFilePath.size() - 4) return DENG_TEXTURE_FORMAT_PNG;
+        else if(texFilePath.find(".jpg") == texFilePath.size() - 4) return DENG_TEXTURE_FORMAT_JPG;
+        else return DENG_TEXTURE_FORMAT_UNKNOWN;
     }
 }

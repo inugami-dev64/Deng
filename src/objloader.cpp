@@ -142,25 +142,16 @@ namespace deng {
     void ObjLoader::getObjVerticesAndIndices(GameObject &obj) {
         obj.vertexData.resize(this->vertexCoordFacesVec.size());
 
-        obj.vertexIndicesData.texIndices.resize(this->vertexTexCoordFacesVec.size());
-        obj.vertexIndicesData.posIndices.resize(this->vertexCoordFacesVec.size());
-
         if(this->vertexCoordFacesVec.size() != this->vertexTexCoordFacesVec.size()) {
             ERR("Corrupted .obj file!");
         }
+
+        obj.vertexIndicesData.texIndices.resize(this->vertexTexCoordFacesVec.size());
+        obj.vertexIndicesData.posIndices.resize(this->vertexCoordFacesVec.size());
         
-
-        for(size_t i = 0; i < this->vertexCoordVec.size(); i++) {
+        for(size_t i = 0; i < this->vertexCoordFacesVec.size(); i++) {
             obj.vertexData[i].posVec = this->vertexCoordVec[this->vertexCoordFacesVec[i]];
-            obj.vertexData[i].texVec = this->vertexTexCoordVec[this->vertexTexCoordFacesVec[i]];
+            obj.vertexData[i].texVec = this->vertexTexCoordVec[this->vertexTexCoordFacesVec[i]];obj.vertexData[i].texVec = this->vertexTexCoordVec[this->vertexTexCoordFacesVec[i]];
         }
-
-        // for(size_t i = 0; i < this->vertexCoordFacesVec.size(); i++) {
-        //     obj.vertexIndicesData.posIndices[i] = this->vertexCoordFacesVec[i];
-        // }
-
-        // for(size_t i = 0; i < this->vertexTexCoordFacesVec.size(); i++) {
-        //     obj.vertexIndicesData.texIndices[i] = this->vertexTexCoordFacesVec[i];
-        // }
     }
 }

@@ -28,6 +28,12 @@ namespace deng {
         VkDeviceMemory index_bufferMem;
     };
 
+    struct DepthImageData {
+        VkImage depthImage;
+        VkDeviceMemory depthImageMem;
+        VkImageView depthImageView;
+    };
+
     struct ObjTextureData {
         uint32_t width;
         uint32_t height;
@@ -57,9 +63,7 @@ namespace deng {
         ObjVertexIndicesData vertexIndicesData;
         ObjRawTextureData rawTextureData;
         ObjTextureData textureData;
-        ModelMatrix modelMatrix;
-        
-        Buffers buffers;
+        ModelMatrix modelMatrix;        
     };
 }
 

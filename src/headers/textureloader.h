@@ -3,6 +3,14 @@
 #include "files.h"
 
 namespace deng {
+    enum TextureFormats {
+        DENG_TEXTURE_FORMAT_BMP = 0,
+        DENG_TEXTURE_FORMAT_TGA = 1,
+        DENG_TEXTURE_FORMAT_PNG = 2,
+        DENG_TEXTURE_FORMAT_JPG = 3,
+        DENG_TEXTURE_FORMAT_UNKNOWN = 4
+    };
+
     #pragma pack(1)
     struct BMPFileHeader {
         uint16_t file_type{0x4D42};
@@ -38,7 +46,7 @@ namespace deng {
 
     #pragma pack()
 
-    class TextureLoader {
+    class TextureLoaderBMP {
     private:
         BMPFileHeader m_file_header;
         BMPInfoHeader m_info_header;
@@ -49,9 +57,11 @@ namespace deng {
         bool checkColorData();
 
     public:
-        TextureLoader(const std::string &fileName);
+        TextureLoaderBMP(const std::string &fileName);
         void getTextureDetails(uint32_t *texWidth, uint32_t *texHeight, VkDeviceSize *texSize, std::vector<uint8_t> &texPixelData);
     };
+
+    TextureFormats getTexFileFormat(const std::string &texFilePath);
 }
 
 

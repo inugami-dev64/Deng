@@ -16,11 +16,16 @@
 
 namespace deng {
 
-    enum BufferMode {
+    enum BufferType {
         DENG_BUFFER_TYPE_STAGING = 0,
         DENG_BUFFER_TYPE_VERTEX = 1,
         DENG_BUFFER_TYPE_INDICES = 2,
         DENG_BUFFER_TYPE_UNIFORM = 3
+    };
+
+    enum ImageType {
+        DENG_IMAGE_TYPE_TEXTURE = 0,
+        DENG_IMAGE_TYPE_DEPTH = 1
     };
 
     class Renderer
@@ -81,8 +86,10 @@ namespace deng {
         QueueFamilies m_queueFamilies;
         Queues m_queues;
         FileManager fm;
+        Buffers buffers;
+        DepthImageData m_depthImage_data;
 
-        //game objects (currently just hardcoded, soon to be added from editor)
+        //game objects (currently just hardcoded, soon to be added from editor in form of objects vector)
         GameObject m_sample_object;
 
     private:
@@ -96,7 +103,7 @@ namespace deng {
         void initWindowSurface();
         void initSwapChainSettings();
         void initSwapChain();
-        VkImageViewCreateInfo getImageViewInfo(VkImage &image, const VkFormat &format);
+        VkImageViewCreateInfo getImageViewInfo(VkImage &image, const VkFormat &format, const VkImageAspectFlags &aspectFlags);
         void initImageView();
         VkShaderModule initShaderModule(const std::vector<char> &bin);
         void initRenderPass();
@@ -104,6 +111,7 @@ namespace deng {
         void initGraphicsPipeline();
         void initFrameBuffers();
         void initCommandPool();
+        void initDepthResources();
         void initTextureImage(GameObject &obj);
         void initTextureSampler(GameObject &obj);
         void initBuffers(GameObject &obj);
@@ -128,6 +136,7 @@ namespace deng {
         void deleteDescriptorSetLayout();
         void deleteVertexBuffer();
         void freeMemory();
+        void deleteDepthImageData();
         void deleteDebugMessenger();
         void deleteInstance();
         void deleteSurface();
@@ -135,8 +144,8 @@ namespace deng {
 
         void makeVertexBuffer();
         void makeFrame();
-        void makeBuffer(const VkDeviceSize *size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj, const BufferMode &type, size_t *bufferIndex);
-        void makeImage(GameObject &obj, const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties);
+        void makeBuffer(const VkDeviceSize *size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj, const BufferType &type, size_t *bufferIndex);
+        void makeImage(const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject *obj, const ImageType &imageMode);
 
         void populateBufferMem(const VkDeviceSize *size, const void *srcData, VkBuffer &buffer, VkDeviceMemory &bufferMem);
         void copyBufferToBuffer(VkBuffer &srcBuf, VkBuffer &dstBuf, const VkDeviceSize &size);

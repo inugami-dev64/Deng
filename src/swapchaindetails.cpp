@@ -19,6 +19,9 @@ namespace deng {
             this->presentModes.resize(presentModeCount);
             vkGetPhysicalDeviceSurfacePresentModesKHR(gpu, surface, &presentModeCount, this->presentModes.data());
         }
+        else {
+            ERR("No presentt modes available!");
+        }
     }
 
     VkSurfaceCapabilitiesKHR SwapChainDetails::getCapabilities() {

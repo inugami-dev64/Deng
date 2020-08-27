@@ -22,8 +22,9 @@ namespace deng
         this->initRenderPass();
         this->initDescriptorSetLayout();
         this->initGraphicsPipeline();
-        this->initFrameBuffers();
         this->initCommandPool();
+        this->initDepthResources();
+        this->initFrameBuffers();
         this->initTextureImage(this->m_sample_object); 
         this->initTextureSampler(this->m_sample_object);
         this->initBuffers(this->m_sample_object);
@@ -44,6 +45,7 @@ namespace deng
         this->deleteDescriptorSetLayout();
         this->deleteVertexBuffer();
         this->freeMemory();
+        this->deleteDepthImageData();
         this->deleteSemaphores();
         this->deleteCommandPool();
         this->deleteDevice();
@@ -132,12 +134,12 @@ namespace deng
     }
 
     void Renderer::freeMemory() {
-        vkFreeMemory(this->m_device, this->m_sample_object.buffers.vertex_bufferMem, nullptr);
+        vkFreeMemory(this->m_device, this->buffers.vertex_bufferMem, nullptr);
         // vkFreeMemory(this->m_device, this->m_sample_object.buffers.index_bufferMem, nullptr);
     }
 
     void Renderer::deleteVertexBuffer() {
-        vkDestroyBuffer(this->m_device, this->m_sample_object.buffers.vertex_buffer, nullptr);
+        vkDestroyBuffer(this->m_device, this->buffers.vertex_buffer, nullptr);
         // vkDestroyBuffer(this->m_device, this->m_sample_object.buffers.index_buffer, nullptr);
     }
 
@@ -152,18 +154,47 @@ namespace deng
         vkDestroyDescriptorSetLayout(this->m_device, this->m_descriptorSet_Layout, nullptr);
     }
 
+    void Renderer::deleteDepthImageData() {
+        vkDestroyImageView(this->m_device, this->m_depthImage_data.depthImageView, nullptr);
+        vkDestroyImage(this->m_device, this->m_depthImage_data.depthImage, nullptr);
+        vkFreeMemory(this->m_device, this->m_depthImage_data.depthImageMem, nullptr);
+    }
+
     void Renderer::initObjects(GameObject &obj, const std::string &objFilePath, const std::string &texFilePath, const CoordinateMode &coordinateMode) {
         ObjLoader obj_loader(objFilePath, coordinateMode);
         obj_loader.getObjVerticesAndIndices(obj);
 
-        // obj.vertexData = {{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f}},
-        //                   {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f}},
-        //                   {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f}},
-        //                   {{0.5f, 0.5f, 0.0f}, {1.0f, 1.0f}}};
-
-        TextureLoader tex_loader(texFilePath);
+        TextureFormats local_tex_format = getTexFileFormat(texFilePath);
         ObjRawTextureData texture_data;
-        tex_loader.getTextureDetails(texture_data.width, texture_data.height, texture_data.texSize, texture_data.texturePixelsData);
+
+        switch (local_tex_format)
+        {
+        case DENG_TEXTURE_FORMAT_BMP: {
+            TextureLoaderBMP local_tex_loader(texFilePath);
+            local_tex_loader.getTextureDetails(texture_data.width, texture_data.height, texture_data.texSize, texture_data.texturePixelsData);
+            break;
+        }
+
+        case DENG_TEXTURE_FORMAT_TGA: 
+            ERR(".tga textures are not yet supported!");
+            break;
+
+        case DENG_TEXTURE_FORMAT_PNG:
+            ERR(".png textures are not yet supported");
+            break;
+
+        case DENG_TEXTURE_FORMAT_JPG:
+            ERR(".jpg textures are not yet supported");
+            break;
+
+        case DENG_TEXTURE_FORMAT_UNKNOWN:
+            ERR("Unknown texture file format!");
+            break;
+        
+        default:
+            break;
+        }
+
         obj.rawTextureData = texture_data;
 
         obj.modelMatrix.setRotation(0, 0, 0);
@@ -430,7 +461,7 @@ namespace deng
         }
         
         if(!foundSuitableFormat) {
-            LOG("Didn't find suitable surface format! Using first format!");
+            ERRME("Didn't find suitable surface format! Using first format!");
             this->m_surface_format = this->m_device_swapChainDetails->getFormats()[0];
         }
 
@@ -444,7 +475,7 @@ namespace deng
         }
 
         if(!foundSuitablePresentMode) {
-            LOG("Didn't find suitable present mode! Using Vsync instead!");
+            ERRME("Didn't find suitable present mode! Using Vsync instead!");
             this->m_present_mode = VK_PRESENT_MODE_FIFO_KHR;
         }
 
@@ -505,14 +536,14 @@ namespace deng
         }
     }
 
-    VkImageViewCreateInfo Renderer::getImageViewInfo(VkImage &image, const VkFormat &format) {
+    VkImageViewCreateInfo Renderer::getImageViewInfo(VkImage &image, const VkFormat &format, const VkImageAspectFlags &aspectFlags) {
             VkImageViewCreateInfo local_createInfo{};
             local_createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
             local_createInfo.image = image;
             local_createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
             local_createInfo.format = format;
 
-            local_createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            local_createInfo.subresourceRange.aspectMask = aspectFlags;
             local_createInfo.subresourceRange.baseMipLevel = 0;
             local_createInfo.subresourceRange.levelCount = 1;
             local_createInfo.subresourceRange.baseArrayLayer = 0;
@@ -523,7 +554,7 @@ namespace deng
     void Renderer::initImageView() {
         this->m_swapChain_imageviews.resize(this->m_swapChain_images.size());
         for(uint32_t i = 0; i < this->m_swapChain_imageviews.size(); i++) {
-            VkImageViewCreateInfo local_createInfo = this->getImageViewInfo(this->m_swapChain_images[i], this->m_surface_format.format);
+            VkImageViewCreateInfo local_createInfo = this->getImageViewInfo(this->m_swapChain_images[i], this->m_surface_format.format, VK_IMAGE_ASPECT_COLOR_BIT);
             if(vkCreateImageView(this->m_device, &local_createInfo, nullptr, &this->m_swapChain_imageviews[i]) != VK_SUCCESS) {
                 ERR("Failed to create image views!");
             }
@@ -554,14 +585,29 @@ namespace deng
         local_colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         local_colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-        VkAttachmentReference local_colorAttachmentRef{};
-        local_colorAttachmentRef.attachment = 0;
-        local_colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        VkAttachmentDescription local_depthAttachment{};
+        local_depthAttachment.format = VK_FORMAT_D32_SFLOAT;
+        local_depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        local_depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        local_depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        local_depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        local_depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        local_depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        local_depthAttachment.finalLayout = VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference local_colorAttachment_ref{};
+        local_colorAttachment_ref.attachment = 0;
+        local_colorAttachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference local_depthAttachment_ref{};
+        local_depthAttachment_ref.attachment = 1;
+        local_depthAttachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
 
         VkSubpassDescription local_subpass_desc{};
         local_subpass_desc.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         local_subpass_desc.colorAttachmentCount = 1;
-        local_subpass_desc.pColorAttachments = &local_colorAttachmentRef;
+        local_subpass_desc.pColorAttachments = &local_colorAttachment_ref;
+        local_subpass_desc.pDepthStencilAttachment = &local_depthAttachment_ref;
 
         VkSubpassDependency local_subpass_dependency{};
         local_subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -571,11 +617,11 @@ namespace deng
         local_subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         local_subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-
+        std::array<VkAttachmentDescription, 2> local_attachments = {local_colorAttachment, local_depthAttachment};
         VkRenderPassCreateInfo local_renderPass_createInfo{};
         local_renderPass_createInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        local_renderPass_createInfo.attachmentCount = 1;
-        local_renderPass_createInfo.pAttachments = &local_colorAttachment;
+        local_renderPass_createInfo.attachmentCount = local_attachments.size();
+        local_renderPass_createInfo.pAttachments = local_attachments.data();
         local_renderPass_createInfo.subpassCount = 1;
         local_renderPass_createInfo.pSubpasses = &local_subpass_desc;
         local_renderPass_createInfo.dependencyCount = 1;
@@ -636,7 +682,7 @@ namespace deng
         local_fModule_createinfo.module = fragModule;
         local_fModule_createinfo.pName = "main";
 
-        VkPipelineShaderStageCreateInfo shaderStages[] = {local_vModule_createInfo, local_fModule_createinfo};
+        std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages = {local_vModule_createInfo, local_fModule_createinfo};
 
         auto local_input_binding_desc = ObjVertexData::getBindingDesc();
         auto local_input_attribute_desc = ObjVertexData::getAttributeDesc();
@@ -692,6 +738,14 @@ namespace deng
         local_colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
         local_colorBlendAttachment.blendEnable =  VK_FALSE;
 
+        VkPipelineDepthStencilStateCreateInfo local_depthStencil{};
+        local_depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        local_depthStencil.depthTestEnable = VK_TRUE;
+        local_depthStencil.depthWriteEnable = VK_TRUE;
+        local_depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        local_depthStencil.depthBoundsTestEnable = VK_FALSE;
+        local_depthStencil.stencilTestEnable = VK_FALSE;
+
         VkPipelineColorBlendStateCreateInfo local_colorblend_state_createinfo{};
         local_colorblend_state_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
         local_colorblend_state_createinfo.logicOpEnable = VK_FALSE;
@@ -713,23 +767,24 @@ namespace deng
 
         else {
             LOG("Pipeline layout created successfully!");
-            VkGraphicsPipelineCreateInfo pipelineInfo{};
-            pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-            pipelineInfo.stageCount = 2;
-            pipelineInfo.pStages = shaderStages;
-            pipelineInfo.pVertexInputState = &local_vertexInput_createInfo;
-            pipelineInfo.pInputAssemblyState = &local_inputAssembly_createInfo;
-            pipelineInfo.pViewportState = &local_viewport_state_createinfo;
-            pipelineInfo.pRasterizationState = &local_rasterizer;
-            pipelineInfo.pMultisampleState = &local_multisampling;
-            pipelineInfo.pColorBlendState = &local_colorblend_state_createinfo;
-            pipelineInfo.layout = this->m_pipelineLayout;
-            pipelineInfo.renderPass = this->m_renderPass;
-            pipelineInfo.subpass = 0;
-            pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;   
+            VkGraphicsPipelineCreateInfo local_pipelineInfo{};
+            local_pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+            local_pipelineInfo.stageCount = shaderStages.size();
+            local_pipelineInfo.pStages = shaderStages.data();
+            local_pipelineInfo.pVertexInputState = &local_vertexInput_createInfo;
+            local_pipelineInfo.pInputAssemblyState = &local_inputAssembly_createInfo;
+            local_pipelineInfo.pViewportState = &local_viewport_state_createinfo;
+            local_pipelineInfo.pRasterizationState = &local_rasterizer;
+            local_pipelineInfo.pMultisampleState = &local_multisampling;
+            local_pipelineInfo.pColorBlendState = &local_colorblend_state_createinfo;
+            local_pipelineInfo.pDepthStencilState = &local_depthStencil;
+            local_pipelineInfo.layout = this->m_pipelineLayout;
+            local_pipelineInfo.renderPass = this->m_renderPass;
+            local_pipelineInfo.subpass = 0;
+            local_pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;   
 
             LOG("Pipeline create info created!");
-            if(vkCreateGraphicsPipelines(this->m_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &this->m_pipeline) != VK_SUCCESS) {
+            if(vkCreateGraphicsPipelines(this->m_device, VK_NULL_HANDLE, 1, &local_pipelineInfo, nullptr, &this->m_pipeline) != VK_SUCCESS) {
                 ERR("Failed to create graphics pipeline!");
             }
 
@@ -747,13 +802,13 @@ namespace deng
         this->m_swapChain_frameBuffers.resize(this->m_swapChain_imageviews.size());
 
         for(size_t i = 0; i < this->m_swapChain_imageviews.size(); i++) {
-            VkImageView attachments[] = {this->m_swapChain_imageviews[i]};
+            std::array<VkImageView, 2> attachments = {this->m_swapChain_imageviews[i], this->m_depthImage_data.depthImageView};
 
             VkFramebufferCreateInfo local_framebuffer_createinfo{};
             local_framebuffer_createinfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
             local_framebuffer_createinfo.renderPass = this->m_renderPass;
-            local_framebuffer_createinfo.attachmentCount = sizeof(attachments)/sizeof(attachments[0]);
-            local_framebuffer_createinfo.pAttachments = attachments;
+            local_framebuffer_createinfo.attachmentCount = attachments.size();
+            local_framebuffer_createinfo.pAttachments = attachments.data();
             local_framebuffer_createinfo.width = this->m_extent.width;
             local_framebuffer_createinfo.height = this->m_extent.height;
             local_framebuffer_createinfo.layers = 1;
@@ -794,24 +849,35 @@ namespace deng
         ERR("Failed to find suitable memory type");
     }
 
+    void Renderer::initDepthResources() {
+        this->makeImage(VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, nullptr, DENG_IMAGE_TYPE_DEPTH);
+        
+        VkImageViewCreateInfo local_imgView_createinfo = this->getImageViewInfo(this->m_depthImage_data.depthImage, VK_FORMAT_D32_SFLOAT, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+        if(vkCreateImageView(this->m_device, &local_imgView_createinfo, nullptr, &this->m_depthImage_data.depthImageView) != VK_SUCCESS) {
+            ERR("Failed to create depth image view!");
+        }
+
+    }
+
     void Renderer::initTextureImage(GameObject &obj) {
         this->makeBuffer(obj.rawTextureData.texSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_STAGING, nullptr);
         LOG("Successfully created texture staging buffer!");
-        this->populateBufferMem(obj.rawTextureData.texSize, obj.rawTextureData.texturePixelsData.data(), obj.buffers.staging_buffer, obj.buffers.staging_bufferMem);
+        this->populateBufferMem(obj.rawTextureData.texSize, obj.rawTextureData.texturePixelsData.data(), buffers.staging_buffer, buffers.staging_bufferMem);
 
         obj.rawTextureData.cpyDims(obj.textureData);
         obj.rawTextureData.clear();
 
-        this->makeImage(obj, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        this->makeImage(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &obj, DENG_IMAGE_TYPE_TEXTURE);
 
         this->transitionImageLayout(obj.textureData.textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        this->copyBufferToImage(obj.buffers.staging_buffer, obj.textureData.textureImage, obj.textureData.width, obj.textureData.height);
+        this->copyBufferToImage(buffers.staging_buffer, obj.textureData.textureImage, obj.textureData.width, obj.textureData.height);
         this->transitionImageLayout(obj.textureData.textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-        vkDestroyBuffer(this->m_device, obj.buffers.staging_buffer, nullptr);
-        vkFreeMemory(this->m_device, obj.buffers.staging_bufferMem, nullptr);
+        vkDestroyBuffer(this->m_device, buffers.staging_buffer, nullptr);
+        vkFreeMemory(this->m_device, buffers.staging_bufferMem, nullptr);
 
-        VkImageViewCreateInfo local_viewInfo = this->getImageViewInfo(obj.textureData.textureImage, VK_FORMAT_R8G8B8A8_SRGB);
+        VkImageViewCreateInfo local_viewInfo = this->getImageViewInfo(obj.textureData.textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 
         if(vkCreateImageView(this->m_device, &local_viewInfo, nullptr, &obj.textureData.textureImageView) != VK_SUCCESS) {
             ERR("Failed to create texture image view!");
@@ -847,13 +913,13 @@ namespace deng
         VkDeviceSize local_size = sizeof(obj.vertexData[0]) * obj.vertexData.size();
 
         this->makeBuffer(&local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_STAGING, nullptr);
-        this->populateBufferMem(&local_size, obj.vertexData.data(), obj.buffers.staging_buffer, obj.buffers.staging_bufferMem);
+        this->populateBufferMem(&local_size, obj.vertexData.data(), buffers.staging_buffer, buffers.staging_bufferMem);
 
         this->makeBuffer(&local_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, obj, DENG_BUFFER_TYPE_VERTEX, nullptr);
-        this->copyBufferToBuffer(obj.buffers.staging_buffer, obj.buffers.vertex_buffer, local_size);
+        this->copyBufferToBuffer(buffers.staging_buffer, buffers.vertex_buffer, local_size);
 
-        vkDestroyBuffer(this->m_device, obj.buffers.staging_buffer, nullptr);
-        vkFreeMemory(this->m_device, obj.buffers.staging_bufferMem, nullptr);
+        vkDestroyBuffer(this->m_device, buffers.staging_buffer, nullptr);
+        vkFreeMemory(this->m_device, buffers.staging_bufferMem, nullptr);
 
         // local_size = sizeof(obj.vertexIndicesData.posIndices[0]) * obj.vertexIndicesData.posIndices.size();
 
@@ -993,7 +1059,7 @@ namespace deng
             vkCmdBeginRenderPass(this->m_commandBuffers[i], &local_renderpass_begininfo, VK_SUBPASS_CONTENTS_INLINE);
                 vkCmdBindPipeline(this->m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipeline);
 
-                VkBuffer local_vertex_buffers[] = {this->m_sample_object.buffers.vertex_buffer};
+                VkBuffer local_vertex_buffers[] = {this->buffers.vertex_buffer};
                 VkDeviceSize offsets[] = {0};
 
                 vkCmdBindVertexBuffers(this->m_commandBuffers[i], 0, 1, local_vertex_buffers, offsets);
@@ -1037,25 +1103,25 @@ namespace deng
 
     /* maker functions */
 
-    void Renderer::makeBuffer(const VkDeviceSize *size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj, const BufferMode &bufferType, size_t *bufferIndex) {
+    void Renderer::makeBuffer(const VkDeviceSize *size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject &obj, const BufferType &bufferType, size_t *bufferIndex) {
         VkBuffer *local_buffer;
         VkDeviceMemory *local_bufferMem;
 
         switch (bufferType)
         {
         case DENG_BUFFER_TYPE_STAGING:
-            local_buffer = &obj.buffers.staging_buffer;
-            local_bufferMem = &obj.buffers.staging_bufferMem;
+            local_buffer = &buffers.staging_buffer;
+            local_bufferMem = &buffers.staging_bufferMem;
             break;
         
         case DENG_BUFFER_TYPE_VERTEX:
-            local_buffer = &obj.buffers.vertex_buffer;
-            local_bufferMem = &obj.buffers.vertex_bufferMem;
+            local_buffer = &buffers.vertex_buffer;
+            local_bufferMem = &buffers.vertex_bufferMem;
             break;
 
         case DENG_BUFFER_TYPE_INDICES:
-            local_buffer = &obj.buffers.index_buffer;
-            local_bufferMem = &obj.buffers.index_bufferMem;
+            local_buffer = &buffers.index_buffer;
+            local_bufferMem = &buffers.index_bufferMem;
             break;
 
         case DENG_BUFFER_TYPE_UNIFORM:
@@ -1092,12 +1158,36 @@ namespace deng
         vkBindBufferMemory(this->m_device, *local_buffer, *local_bufferMem, 0);
     }
 
-    void Renderer::makeImage(GameObject &obj, const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties) {
+    void Renderer::makeImage(const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject *obj, const ImageType &imgType) {
+        uint32_t local_width, local_height;
+        VkImage *local_image;
+        VkDeviceMemory *local_imgMem;
+
+        switch (imgType)
+        {
+        case DENG_IMAGE_TYPE_TEXTURE:
+            local_width = obj->textureData.width;
+            local_height = obj->textureData.height;
+            local_image = &obj->textureData.textureImage;
+            local_imgMem = &obj->textureData.textureImageMem;
+            break;
+
+        case DENG_IMAGE_TYPE_DEPTH: 
+            local_width = this->m_extent.width;
+            local_height = this->m_extent.height;
+            local_image = &this->m_depthImage_data.depthImage;
+            local_imgMem = &this->m_depthImage_data.depthImageMem;
+            break;
+        
+        default:
+            break;
+        }
+        
         VkImageCreateInfo local_image_createInfo{};
         local_image_createInfo.sType  = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         local_image_createInfo.imageType = VK_IMAGE_TYPE_2D;
-        local_image_createInfo.extent.width = obj.textureData.width;
-        local_image_createInfo.extent.height = obj.textureData.height;
+        local_image_createInfo.extent.width = local_width;
+        local_image_createInfo.extent.height = local_height;
         local_image_createInfo.extent.depth = 1;
         local_image_createInfo.mipLevels = 1;
         local_image_createInfo.arrayLayers = 1;
@@ -1108,23 +1198,23 @@ namespace deng
         local_image_createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
         local_image_createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        if(vkCreateImage(this->m_device, &local_image_createInfo, nullptr, &obj.textureData.textureImage) != VK_SUCCESS) {
+        if(vkCreateImage(this->m_device, &local_image_createInfo, nullptr, local_image) != VK_SUCCESS) {
             ERR("Failed to create image!");
         }
 
         VkMemoryRequirements local_memReq;
-        vkGetImageMemoryRequirements(this->m_device, obj.textureData.textureImage, &local_memReq);
+        vkGetImageMemoryRequirements(this->m_device, *local_image, &local_memReq);
 
         VkMemoryAllocateInfo local_allocInfo{};
         local_allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         local_allocInfo.allocationSize = local_memReq.size;
         local_allocInfo.memoryTypeIndex = this->getMemType(local_memReq.memoryTypeBits, properties);
 
-        if(vkAllocateMemory(this->m_device, &local_allocInfo, nullptr, &obj.textureData.textureImageMem) != VK_SUCCESS) {
+        if(vkAllocateMemory(this->m_device, &local_allocInfo, nullptr, local_imgMem) != VK_SUCCESS) {
             ERR("Failed to allocate image memory!");
         }
 
-        vkBindImageMemory(this->m_device, obj.textureData.textureImage, obj.textureData.textureImageMem, 0);
+        vkBindImageMemory(this->m_device, *local_image, *local_imgMem, 0);
     }
 
     void Renderer::updateUniformBufferData(const uint32_t &currentImg, GameObject &obj) {
