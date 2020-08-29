@@ -11,6 +11,7 @@ namespace deng {
         DENG_TEXTURE_FORMAT_UNKNOWN = 4
     };
 
+    //bmp format
     #pragma pack(1)
     struct BMPFileHeader {
         uint16_t file_type{0x4D42};
@@ -51,13 +52,49 @@ namespace deng {
         BMPFileHeader m_file_header;
         BMPInfoHeader m_info_header;
         BMPColorHeader m_color_header;
-        std::vector<uint8_t> pixelData;
+        std::vector<std::vector<uint8_t>> pixelData;
 
     private:
         bool checkColorData();
 
     public:
         TextureLoaderBMP(const std::string &fileName);
+        void getTextureDetails(uint32_t *texWidth, uint32_t *texHeight, VkDeviceSize *texSize, std::vector<uint8_t> &texPixelData);
+    };
+
+    // tga format
+    #pragma pack(1)
+    struct TGATypeHeader {
+        uint8_t id_lenght{0};
+        uint8_t colormap_type{0};
+        uint8_t image_type{0};
+    };
+
+    struct TGAColorMapHeader {
+        uint16_t first_colormap_index{0};
+        uint16_t colormap_length{0};
+        uint8_t entity_size{0};
+    };
+
+    struct TGAInfoHeader {
+        uint16_t x_origin{0};
+        uint16_t y_origin{0};
+        uint16_t width{0};
+        uint16_t height{0};
+        uint8_t bit_count{0};
+        uint8_t image_descriptor{0};
+    };
+    #pragma pack()
+
+    class TextureLoaderTGA {
+    private:
+        TGATypeHeader m_type_header;
+        TGAColorMapHeader m_colormap_header;
+        TGAInfoHeader m_info_header;
+        std::vector<std::vector<uint8_t>> m_pixeldata;
+
+    public:
+        TextureLoaderTGA(const std::string &filename);
         void getTextureDetails(uint32_t *texWidth, uint32_t *texHeight, VkDeviceSize *texSize, std::vector<uint8_t> &texPixelData);
     };
 

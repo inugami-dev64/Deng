@@ -11,8 +11,8 @@ namespace deng {
 
     enum coordTypes {
         DENG_VERTEX_COORD = 0,
-        DENG_VERTEX_NORMAL_COORD = 1,
-        DENG_VERTEX_TEXTURE_COORD = 2
+        DENG_VERTEX_TEXTURE_COORD = 1,
+        DENG_VERTEX_NORMAL_COORD = 2
     };
 
     class ObjLoader {

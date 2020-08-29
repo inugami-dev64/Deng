@@ -10,7 +10,7 @@ namespace deng
         this->m_camera = new Camera({0.01f, 0.01f, -0.01f, 0.0f}, 65.0f, this->m_nearPlane, this->m_farPlane, this->m_window);
         this->m_ev = new Events(this->m_window, this->m_camera, &this->m_sample_object);
 
-        this->initObjects(this->m_sample_object, "objects/box.obj", "textures/Texture.bmp", DENG_COORDINATE_MODE_DEFAULT);
+        this->initObjects(this->m_sample_object, "objects/obj1.obj", "textures/obj1.tga", DENG_COORDINATE_MODE_DEFAULT);
         this->initInstance();
         this->initDebugMessenger();
         this->initWindowSurface();
@@ -167,6 +167,13 @@ namespace deng
         TextureFormats local_tex_format = getTexFileFormat(texFilePath);
         ObjRawTextureData texture_data;
 
+        // obj.vertexData = {{{0.5f, 0.5f, 0.0f}, {1.0f, 1.0f}},
+        //                   {{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f}},
+        //                   {{-0.5f, 0.5f, 0.0f}, {0.0f, 1.0f}},
+        //                   {{0.5f, -0.5f, 0.0f}, {1.0f, 0.0f}},
+        //                   {{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f}},
+        //                   {{0.5f, 0.5f, 0.0f}, {1.0f, 1.0f}}};
+
         switch (local_tex_format)
         {
         case DENG_TEXTURE_FORMAT_BMP: {
@@ -175,9 +182,11 @@ namespace deng
             break;
         }
 
-        case DENG_TEXTURE_FORMAT_TGA: 
-            ERR(".tga textures are not yet supported!");
+        case DENG_TEXTURE_FORMAT_TGA: {
+            TextureLoaderTGA local_tex_loader(texFilePath);
+            local_tex_loader.getTextureDetails(texture_data.width, texture_data.height, texture_data.texSize, texture_data.texturePixelsData);
             break;
+        }
 
         case DENG_TEXTURE_FORMAT_PNG:
             ERR(".png textures are not yet supported");
@@ -593,7 +602,7 @@ namespace deng
         local_depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         local_depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         local_depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        local_depthAttachment.finalLayout = VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL;
+        local_depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         VkAttachmentReference local_colorAttachment_ref{};
         local_colorAttachment_ref.attachment = 0;
@@ -601,7 +610,7 @@ namespace deng
 
         VkAttachmentReference local_depthAttachment_ref{};
         local_depthAttachment_ref.attachment = 1;
-        local_depthAttachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+        local_depthAttachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         VkSubpassDescription local_subpass_desc{};
         local_subpass_desc.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -727,7 +736,7 @@ namespace deng
         local_rasterizer.lineWidth = 1.0f;
         local_rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
         local_rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        local_rasterizer.depthBiasEnable = VK_FALSE;
+        local_rasterizer.depthBiasEnable = VK_TRUE;
 
         VkPipelineMultisampleStateCreateInfo local_multisampling{};
         local_multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -868,7 +877,7 @@ namespace deng
         obj.rawTextureData.cpyDims(obj.textureData);
         obj.rawTextureData.clear();
 
-        this->makeImage(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &obj, DENG_IMAGE_TYPE_TEXTURE);
+        this->makeImage(VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &obj, DENG_IMAGE_TYPE_TEXTURE);
 
         this->transitionImageLayout(obj.textureData.textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
         this->copyBufferToImage(buffers.staging_buffer, obj.textureData.textureImage, obj.textureData.width, obj.textureData.height);

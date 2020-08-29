@@ -33,7 +33,7 @@ namespace deng {
                 std::string y_str;
                 std::string z_str;
                 
-                for(size_t readIndex = firstCoordIndex; readIndex < (sizeof(buffer)/sizeof(buffer[0])); readIndex++) {
+                for(size_t readIndex = firstCoordIndex; readIndex < (sizeof(buffer)/sizeof(buffer[0])); readIndex++) {\
                     switch (coordinateType)
                     {
                     case DENG_X:
@@ -43,7 +43,9 @@ namespace deng {
 
                     case DENG_Y:
                         if(buffer[readIndex] != ' ') y_str += buffer[readIndex];
+                        else if(readIndex == (sizeof(buffer)/sizeof(buffer[0])) - 1) coordinateType = DENG_X;
                         else coordinateType++;
+                        
                         break;
                     
                     case DENG_Z:
@@ -108,17 +110,17 @@ namespace deng {
                         case DENG_VERTEX_COORD:
                             this->vertexCoordFacesVec.push_back(std::stoi(iStr) - 1);
                             iStr.clear();
-                            vertexTypeCount = DENG_VERTEX_NORMAL_COORD;
-                            break;
-
-                        case DENG_VERTEX_NORMAL_COORD:
-                            this->vertexNormCoordFacesVec.push_back(std::stoi(iStr) - 1);
-                            iStr.clear();
                             vertexTypeCount = DENG_VERTEX_TEXTURE_COORD;
                             break;
 
                         case DENG_VERTEX_TEXTURE_COORD:
                             this->vertexTexCoordFacesVec.push_back(std::stoi(iStr) - 1);
+                            iStr.clear();
+                            vertexTypeCount = DENG_VERTEX_NORMAL_COORD;
+                            break;
+
+                        case DENG_VERTEX_NORMAL_COORD:
+                            this->vertexNormCoordFacesVec.push_back(std::stoi(iStr) - 1);
                             iStr.clear();
                             vertexTypeCount = DENG_VERTEX_COORD;
                             break;
@@ -129,8 +131,8 @@ namespace deng {
                     }
 
                     if(lineIndex == (sizeof(buffer)/sizeof(buffer[0]) - 1)) {
-                        iStr += buffer[lineIndex];
-                        this->vertexTexCoordFacesVec.push_back(std::stoi(iStr) - 1);
+                        // iStr += buffer[lineIndex];
+                        this->vertexNormCoordFacesVec.push_back(std::stoi(iStr) - 1);
                         iStr.clear();
                         vertexTypeCount = DENG_VERTEX_COORD;
                     }
