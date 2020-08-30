@@ -1,7 +1,7 @@
 INCLUDEFLAGS += -I dependencies/src/
 
-LIBFLAGS += -L dependencies/lib -L dependencies/lib/debug
-LIBS = -lpthread -lX11 -ldl -lglfw3 -lvulkan -lVkLayer_utils
+LIBFLAGS += -L dependencies/lib #-L dependencies/lib/debug
+LIBS = -lpthread -lX11 -ldl -lglfw3 -lvulkan #-lVkLayer_utils
 LINKOBJS = main.o renderer.o queuemanager.o window.o swapchaindetails.o filemanager.o objectshandler.o objloader.o textureloader.o timer.o events.o camera.o dengmath.o
 LAYER = VK_LAYER_PATH=dependencies/explicit_layer.d
 

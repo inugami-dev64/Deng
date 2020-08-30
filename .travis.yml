@@ -5,4 +5,5 @@ language:
   - "c++"
 
 script:
-  - make run
+  - make
+  - ./deng
