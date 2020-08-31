@@ -1,16 +1,18 @@
 os:
   - "linux"
 
+before_install:
+  - sudo apt-get -y install make cmake
+
 addons:
   apt:
+    update: true
     sources:
       - ubuntu-toolchain-r-test
     packages:
       - g++-9
       - cmake
 env: COMPILER=g++-9
-install:
-  make cmake
 
 language:
   - "c++"
