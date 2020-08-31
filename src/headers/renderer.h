@@ -2,6 +2,9 @@
 #define RENDERER_H
 
 #include "objloader.h"
+
+/*  BEFORE EVERY GIT COMMIT SET DEBUG VALUE TO 0!!!     */
+
 #define DEBUG 0
 #define ERR(x) throw std::runtime_error(x)
 #define ERRME(x) std::cout << "\033[1;31m" << x << "\033[0m\n" 

@@ -71,22 +71,18 @@ namespace deng
 
     void Renderer::deleteInstance() {
         vkDestroyInstance(this->m_instance, nullptr);
-        this->m_instance = nullptr;
     }
 
     void Renderer::deleteDevice() {
         vkDestroyDevice(this->m_device, nullptr);
-        this->m_gpu = nullptr;
     }
 
     void Renderer::deleteSurface() {
         vkDestroySurfaceKHR(this->m_instance, this->m_surface, nullptr);
-        this->m_surface = nullptr;
     }
 
     void Renderer::deleteSwapChain() {
         vkDestroySwapchainKHR(this->m_device, this->m_swapChain, nullptr);
-        this->m_swapChain = nullptr;
 
         for(size_t i = 0; i < this->m_swapChain_images.size(); i++) {
             vkDestroyBuffer(this->m_device, this->m_uniform_buffers[i], nullptr);
@@ -126,7 +122,7 @@ namespace deng
     }
 
     void Renderer::deleteSemaphores() {
-        for(size_t i = 0; i < this->m_MAX_FRAMES_IN_FLIGHT; i++) {
+        for(int32_t i = 0; i < this->m_MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(this->m_device, this->m_imageAvailableSem_set[i], nullptr);
             vkDestroySemaphore(this->m_device, this->m_renderFinishedSem_set[i], nullptr);
             vkDestroyFence(this->m_device, this->m_flightFences[i], nullptr);
@@ -767,8 +763,8 @@ namespace deng
         local_pipelineLayout_createinfo.pSetLayouts = &this->m_descriptorSet_Layout;
         local_pipelineLayout_createinfo.pushConstantRangeCount = 0;
 
-        VkPipelineDynamicStateCreateInfo local_pipeline_dynamicState_createinfo{};
-        local_pipeline_dynamicState_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+        // VkPipelineDynamicStateCreateInfo local_pipeline_dynamicState_createinfo{};
+        // local_pipeline_dynamicState_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 
         if(vkCreatePipelineLayout(this->m_device, &local_pipelineLayout_createinfo, nullptr, &this->m_pipelineLayout) != VK_SUCCESS) {
             ERR("Failed to create pipeline layout!");
@@ -1098,7 +1094,7 @@ namespace deng
         local_fence_createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         local_fence_createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-        for(size_t i = 0; i < this->m_MAX_FRAMES_IN_FLIGHT; i++) {
+        for(int32_t i = 0; i < this->m_MAX_FRAMES_IN_FLIGHT; i++) {
             if(vkCreateSemaphore(this->m_device, &local_semaphore_info, nullptr, &this->m_imageAvailableSem_set[i]) != VK_SUCCESS ||
             vkCreateSemaphore(this->m_device, &local_semaphore_info, nullptr, &this->m_renderFinishedSem_set[i]) != VK_SUCCESS ||
             vkCreateFence(this->m_device, &local_fence_createInfo, nullptr, &this->m_flightFences[i])) {

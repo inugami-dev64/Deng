@@ -1,4 +1,6 @@
-.vscode
+.vscode/
+.stfolder/
+build/
 deng
 filemanager.o
 main.o
@@ -18,5 +20,4 @@ matobject.log
 object.log
 src/helloworld.cpp
 src/helloworld
-dependencies/lib/debug/libVkLayer_khronos_validation.so
-dependencies/lib/debug/libVkLayer_utils.a
+dependencies/lib/debug/

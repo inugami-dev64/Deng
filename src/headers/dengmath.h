@@ -182,11 +182,6 @@ namespace deng {
         float m_aspectRatio;
         float m_near;
         float m_far;
-        
-        float m_top;
-        float m_bottom;
-        float m_left;
-        float m_right;
 
     public:
         ProjectionMatrix(const float &FOV, const float &near,const float &far, const float &aspect_ratio);

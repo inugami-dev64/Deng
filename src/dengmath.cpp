@@ -7,7 +7,7 @@ namespace deng {
     }
 
     void getCirclePointCoords(const float &centre_x, const float &centre_y, const uint16_t &angle, const float &radius, float *out_x, float *out_y) {
-        if(out_x != nullptr) *out_x = radius * sin(degToRad(angle)) + centre_x;
+        if(out_x != nullptr) *out_x = radius * static_cast<float>(sin(degToRad(angle))) + centre_x;
         if(out_x != nullptr) *out_y = radius * cos(degToRad(angle)) + centre_y;
     }
 
@@ -17,17 +17,17 @@ namespace deng {
 
     void ModelMatrix::setRotation(const float &x_rot, const float &y_rot, const float &z_rot) {
         this->m_RxMat = {{1.0f, 0.0f, 0.0f, 0.0f},
-                       {0.0f, cos(degToRad(x_rot)), -(sin(degToRad(x_rot))), 0.0f},
-                       {0.0f, sin(degToRad(x_rot)), cos(degToRad(x_rot)), 0.0f}, 
+                       {0.0f, static_cast<float>(cos(degToRad(x_rot))), static_cast<float>(-sin(degToRad(x_rot))), 0.0f},
+                       {0.0f, static_cast<float>(sin(degToRad(x_rot))), static_cast<float>(cos(degToRad(x_rot))), 0.0f}, 
                        {0.0f, 0.0f, 0.0f, 1.0f}};
 
-        this->m_RyMat = {{cos(degToRad(y_rot)), 0.0f, sin(degToRad(y_rot)), 0.0f},
+        this->m_RyMat = {{static_cast<float>(cos(degToRad(y_rot))), 0.0f, static_cast<float>(sin(degToRad(y_rot))), 0.0f},
                        {0.0f, 1.0f, 0.0f, 0.0f},
-                       {-(sin(degToRad(y_rot))), 0.0f, cos(degToRad(y_rot)), 0.0f},
+                       {static_cast<float>(-sin(degToRad(y_rot))), 0.0f, static_cast<float>(cos(degToRad(y_rot))), 0.0f},
                        {0.0f, 0.0f, 0.0f, 1.0f}};
 
-        this->m_RzMat = {{cos(degToRad(z_rot)), -(sin(degToRad(z_rot))), 0.0f, 0.0f},
-                       {sin(degToRad(z_rot)), cos(degToRad(z_rot)), 0.0f, 0.0f},
+        this->m_RzMat = {{static_cast<float>(cos(degToRad(z_rot))), static_cast<float>(-sin(degToRad(z_rot))), 0.0f, 0.0f},
+                       {static_cast<float>(sin(degToRad(z_rot))), static_cast<float>(cos(degToRad(z_rot))), 0.0f, 0.0f},
                        {0.0f, 0.0f, 1.0f, 0.0f}, 
                        {0.0f, 0.0f, 0.0f, 1.0f}};
     }
@@ -67,7 +67,7 @@ namespace deng {
     }
 
     void ViewMatrix::addToPosition(const vec4<float> &movement_speed, const CoordinateType &movementType, const bool &substract) {
-        float movement_X, movement_Y, movement_Z;
+        float movement_X, movement_Z;
         switch (movementType)
         {
         case DENG_X:
@@ -115,17 +115,17 @@ namespace deng {
         this->z_rot = -this->z_rot;
 
         this->m_RxMat = {{1.0f, 0.0f, 0.0f, 0.0f},
-                       {0.0f, cos(degToRad(this->x_rot)), -(sin(degToRad(this->x_rot))), 0.0f},
-                       {0.0f, sin(degToRad(this->x_rot)), cos(degToRad(this->x_rot)), 0.0f}, 
+                       {0.0f, static_cast<float>(cos(degToRad(this->x_rot))), static_cast<float>(-sin(degToRad(this->x_rot))), 0.0f},
+                       {0.0f, static_cast<float>(sin(degToRad(this->x_rot))), static_cast<float>(cos(degToRad(this->x_rot))), 0.0f}, 
                        {0.0f, 0.0f, 0.0f, 1.0f}};
 
-        this->m_RyMat = {{cos(degToRad(this->y_rot)), 0.0f, sin(degToRad(this->y_rot)), 0.0f},
+        this->m_RyMat = {{static_cast<float>(cos(degToRad(this->y_rot))), 0.0f, static_cast<float>(sin(degToRad(this->y_rot))), 0.0f},
                        {0.0f, 1.0f, 0.0f, 0.0f},
-                       {-(sin(degToRad(this->y_rot))), 0.0f, cos(degToRad(this->y_rot)), 0.0f},
+                       {static_cast<float>(-sin(degToRad(this->y_rot))), 0.0f, static_cast<float>(cos(degToRad(this->y_rot))), 0.0f},
                        {0.0f, 0.0f, 0.0f, 1.0f}};
 
-        this->m_RzMat = {{cos(degToRad(this->z_rot)), -(sin(degToRad(this->z_rot))), 0.0f, 0.0f},
-                       {sin(degToRad(this->z_rot)), cos(degToRad(this->z_rot)), 0.0f, 0.0f},
+        this->m_RzMat = {{static_cast<float>(cos(degToRad(this->z_rot))), static_cast<float>(-sin(degToRad(this->z_rot))), 0.0f, 0.0f},
+                       {static_cast<float>(sin(degToRad(this->z_rot))), static_cast<float>(cos(degToRad(this->z_rot))), 0.0f, 0.0f},
                        {0.0f, 0.0f, 1.0f, 0.0f}, 
                        {0.0f, 0.0f, 0.0f, 1.0f}};
 
@@ -136,18 +136,12 @@ namespace deng {
         this->m_near = near;
         this->m_far = far;
         this->m_aspectRatio = aspect_ratio;
-
-        this->m_top = this->m_near * tan(degToRad(this->m_FOV/2));
-        this->m_bottom = -this->m_near * tan(degToRad(this->m_FOV/2));
-        this->m_right = this->m_near * tan(degToRad(this->m_FOV/2)) * this->m_aspectRatio;
-        this->m_left = -this->m_near * tan(degToRad(this->m_FOV/2)) * this->m_aspectRatio;
-
     }
 
     void ProjectionMatrix::getProjectionMatrix(mat4<float> *matrix) {
-        matrix->row1 = {this->m_aspectRatio * 1/tan(degToRad(this->m_FOV/2)), 0, 0, 0};
-        matrix->row2 = {0, 1/tan(degToRad(this->m_FOV/2)), 0, 0};
-        matrix->row3 = {0, 0, this->m_far / (m_far - m_near), 1};
+        matrix->row1 = {this->m_aspectRatio * static_cast<float>(1/tan(degToRad(this->m_FOV/2))), 0, 0, 0};
+        matrix->row2 = {0, static_cast<float>(1/tan(degToRad(this->m_FOV/2))), 0, 0};
+        matrix->row3 = {0, 0, this->m_far / (this->m_far - this->m_near), 1};
         matrix->row4 = {0, 0, -(this->m_far * this->m_near) / (this->m_far - this->m_near), 0};
         // matrix->row1 = {1, 0, 0, 0};
         // matrix->row2 = {0, 1, 0, 0};

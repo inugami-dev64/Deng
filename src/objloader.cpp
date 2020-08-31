@@ -62,20 +62,20 @@ namespace deng {
                     {
                     case DENG_VERTEX_COORD:
 
-                        if(this->reverseCoordinates) this->vertexCoordVec.push_back({-(::atof(x_str.c_str())), -(::atof(y_str.c_str())), -(::atof(z_str.c_str()))});    
-                        else this->vertexCoordVec.push_back({::atof(x_str.c_str()), ::atof(y_str.c_str()), ::atof(z_str.c_str())});
+                        if(this->reverseCoordinates) this->vertexCoordVec.push_back({-(std::stof(x_str.c_str())), -(std::stof(y_str.c_str())), -(std::stof(z_str.c_str()))});    
+                        else this->vertexCoordVec.push_back({std::stof(x_str.c_str()), std::stof(y_str.c_str()), std::stof(z_str.c_str())});
 
                         break;
 
                     case DENG_VERTEX_NORMAL_COORD:
-                        if(this->reverseCoordinates) this->vertexNormCoordVec.push_back({-(::atof(x_str.c_str())), -(::atof(y_str.c_str())), -(::atof(z_str.c_str()))});
-                        else this->vertexNormCoordVec.push_back({::atof(x_str.c_str()), ::atof(y_str.c_str()), ::atof(z_str.c_str())});
+                        if(this->reverseCoordinates) this->vertexNormCoordVec.push_back({-(std::stof(x_str.c_str())), -(std::stof(y_str.c_str())), -(std::stof(z_str.c_str()))});
+                        else this->vertexNormCoordVec.push_back({std::stof(x_str.c_str()), std::stof(y_str.c_str()), std::stof(z_str.c_str())});
                         
                         break;
 
                     case DENG_VERTEX_TEXTURE_COORD:
-                        if(this->reverseCoordinates) this->vertexTexCoordVec.push_back({-(::atof(x_str.c_str())), -(::atof(y_str.c_str()))});
-                        else this->vertexTexCoordVec.push_back({::atof(x_str.c_str()), ::atof(y_str.c_str())});
+                        if(this->reverseCoordinates) this->vertexTexCoordVec.push_back({-(std::stof(x_str.c_str())), -(std::stof(y_str.c_str()))});
+                        else this->vertexTexCoordVec.push_back({std::stof(x_str.c_str()), std::stof(y_str.c_str())});
 
                         break;
 

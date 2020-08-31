@@ -6,12 +6,17 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - g++-5
-env: COMPILER=g++-5
+      - g++-9
+      - cmake
+env: COMPILER=g++-9
+install:
+  make cmake
 
 language:
   - "c++"
 
 script:
+  - mkdir build
+  - cd build
+  - cmake ..
   - make
-  - ./deng

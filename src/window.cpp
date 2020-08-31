@@ -2,7 +2,7 @@
 
 namespace deng {
     Window::Window(const uint32_t &x, const uint32_t &y, const char *title) {
-        this->m_size = {(float) x, (float) y};
+        this->m_size = {x, y};
 
         glfwInit();
 
