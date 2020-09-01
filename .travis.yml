@@ -2,7 +2,7 @@ os:
   - "linux"
 
 before_install:
-  - sudo apt-get -y install make cmake
+  - sudo apt-get -y install make cmake xorg
 
 addons:
   apt:
