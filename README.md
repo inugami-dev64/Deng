@@ -25,8 +25,7 @@ It is currently in early development stage! <br>
 `$ cmake ..` <br>
 `$ make` <br>
 `$ cd deng` <br>
-`$ chmod +x run_debug.sh` <br>
-`$ ./run_debug` <br>
+`$ ./deng`
  
 #### In order to compile and run the engine in debug mode with Vulkan validation layers enabled <br>
 * Download Vulkan SDK (https://www.lunarg.com/vulkan-sdk/) <br>
@@ -38,7 +37,8 @@ It is currently in early development stage! <br>
 `$ cmake -DCMAKE_BUILD_TYPE=Debug ..` <br>
 `$ make` <br>
 `$ cd deng` <br>
-`$ ./deng` <br>
+`$ chmod +x run_debug.sh` <br>
+`$ ./run_debug.sh`
     
 Link to Liberty Statue model used as a example: https://free3d.com/3d-model/statue-of-liberty-73656.html <br> 
     

@@ -6,8 +6,8 @@ namespace deng
         //Required extensions vector initialisation
         this->m_req_extensions_name.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
-        this->m_window = &win;
-        this->m_camera = new Camera({0.01f, 0.01f, -0.01f, 0.0f}, 65.0f, this->m_nearPlane, this->m_farPlane, this->m_window);
+        this->m_window = &win; 
+        this->m_camera = new Camera({1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}, 65.0f, this->m_nearPlane, this->m_farPlane, this->m_window);
         this->m_ev = new Events(this->m_window, this->m_camera, &this->m_sample_object);
 
         this->initObjects(this->m_sample_object, "objects/obj1.obj", "textures/obj1.tga", DENG_COORDINATE_MODE_DEFAULT);
@@ -472,6 +472,38 @@ namespace deng
 
         bool foundSuitablePresentMode = false;
         for(const VkPresentModeKHR &presentFormat : this->m_device_swapChainDetails->getPresentModes()) {
+
+            // LOGGING
+            switch (presentFormat)
+            {
+            case VK_PRESENT_MODE_IMMEDIATE_KHR:
+                LOG("VK_PRESENT_MODE_IMMEDIATE_KHR is available!");
+                break;
+
+            case VK_PRESENT_MODE_MAILBOX_KHR:
+                LOG("VK_PRESENT_MODE_MAILBOX_KHR is available!");
+                break;
+
+            case VK_PRESENT_MODE_FIFO_KHR:
+                LOG("VK_PRESENT_MODE_FIFO_KHR is available!");
+                break;
+
+            case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
+                LOG("VK_PRESENT_MODE_FIFO_KHR is available!");
+                break;
+
+            case VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR:
+                LOG("VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR is available!");
+                break;
+
+            case VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR:
+                LOG("VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR is available!");
+                break;
+
+            default:
+                break;
+            }
+
             if(presentFormat == VK_PRESENT_MODE_MAILBOX_KHR) {
                 this->m_present_mode = presentFormat;
                 foundSuitablePresentMode = true;
@@ -480,8 +512,8 @@ namespace deng
         }
 
         if(!foundSuitablePresentMode) {
-            ERRME("Didn't find suitable present mode! Using Vsync instead!");
-            this->m_present_mode = VK_PRESENT_MODE_FIFO_KHR;
+            ERRME("Didn't find suitable present mode! Using immediate instead!");
+            this->m_present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
         }
 
         if(this->m_device_swapChainDetails->getCapabilities().currentExtent.width != UINT32_MAX && this->m_device_swapChainDetails->getCapabilities().currentExtent.height != UINT32_MAX) {

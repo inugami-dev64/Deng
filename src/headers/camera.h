@@ -3,15 +3,20 @@
 #define DENG_CAMERA_DEFAULT_Y 0
 #define DENG_CAMERA_DEFAULT_Z 1
 
+#define DENG_CAMERA_BASE_SPEED_X 0.0006
+#define DENG_CAMERA_BASE_SPEED_Y 0.0006
+#define DENG_CAMERA_BASE_SPEED_Z -0.0006
+
+#define DENG_MOUSE_BASE_SENSITIVITY_X 2.5
+#define DENG_MOUSE_BASE_SENSIVITY_Y 0.75
+
 namespace deng {
     class Camera
     {
     private:
-        Timer m_timer;
         Window *m_window;
-        float m_mouse_sens;
-        double m_mouse_xPos, m_mouse_yPos;
-
+        vec2<float> m_mouse_sens;
+        vec2<double> m_mouse_pos; // only reason it is double because glfwGetCursorPos() requires double
         vec4<float> m_movementSpeed;
         
         float m_draw_distance; // distance
@@ -29,7 +34,7 @@ namespace deng {
         ProjectionMatrix *proj_matrix;
 
     public:
-        Camera(const vec4<float> &movementSpeed, const float &FOV, const float &near,const float &far, Window *window);
+        Camera(const vec3<float> &cameraMovementSpeedMultiplier, const vec2<float> &mouseMovementSpeedMultiplier, const float &FOV, const float &near,const float &far, Window *window);
         ~Camera();
         void updateCursorPos();
         void setCameraViewRotation();

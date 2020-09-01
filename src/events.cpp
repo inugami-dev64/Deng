@@ -46,7 +46,7 @@ namespace deng {
 
     }
 
-    //Function for creating log about the object coordinates when multiplied with projection view and model matrices
+    //Function for creating log about the object coordinates when multiplied with projection view and model matrices (only works in debug mode!)
     //F10
     void Events::checkForObjLogRequest() {
         if(!DEBUG) return;

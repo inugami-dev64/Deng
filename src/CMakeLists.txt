@@ -28,11 +28,11 @@ add_executable(${PROJECT_NAME}
 
 if(UNIX)
     target_link_libraries(${PROJECT_NAME}
+        PRIVATE glfw3
+        PRIVATE vulkan
         PRIVATE pthread
         PRIVATE X11
         PRIVATE dl
-        PRIVATE vulkan
-        PRIVATE glfw3
     )
 
     if(CMAKE_BUILD_TYPE MATCHES Debug)
