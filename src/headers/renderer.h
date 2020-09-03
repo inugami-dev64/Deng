@@ -3,20 +3,6 @@
 
 #include "objloader.h"
 
-/*  BEFORE EVERY GIT COMMIT SET DEBUG VALUE TO 0!!!     */
-
-#define DEBUG 0
-#define ERR(x) throw std::runtime_error(x)
-#define ERRME(x) std::cout << "\033[1;31m" << x << "\033[0m\n" 
-
-#if DEBUG
-    #define LOG(x) std::cout << x << "\n"
-    const bool enable_validation_layers = true;
-#else
-    #define LOG(x)
-    const bool enable_validation_layers = false;
-#endif
-
 namespace deng {
 
     enum BufferType {
@@ -92,10 +78,15 @@ namespace deng {
         Buffers buffers;
         DepthImageData m_depthImage_data;
 
+        // config structs
+        EditorEnvironmentConf m_environment_conf;
+        EditorCameraConf m_camera_conf;
+
         //game objects (currently just hardcoded, soon to be added from editor in form of objects vector)
         GameObject m_sample_object;
 
     private:
+        void loadDataFromConf(const DengBool &loadCameraConf, const DengBool &loadEnvironmentConf);
         void initInstance();
         void initDebugMessenger();
         bool checkValidationLayerSupport();

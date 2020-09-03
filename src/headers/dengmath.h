@@ -16,11 +16,25 @@
 #include <iostream>
 #include <map>
 
+/*  BEFORE EVERY GIT COMMIT SET DEBUG VALUE TO 0!!!     */
+
+#define DEBUG 1
+#define ERR(x) throw std::runtime_error(x)
+#define ERRME(x) std::cout << "\033[1;31m" << x << "\033[0m\n" 
+
+#if DEBUG
+    #define LOG(x) std::cout << x << "\n"
+    const bool enable_validation_layers = true;
+#else
+    #define LOG(x)
+    const bool enable_validation_layers = false;
+#endif
+
 namespace deng {
 
     enum DengBool {
-        DENG_FALSE = 0,
-        DENG_TRUE = 1
+        DENG_FALSE = false,
+        DENG_TRUE = true
     };
 
     enum CoordinateType {

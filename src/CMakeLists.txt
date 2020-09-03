@@ -42,7 +42,7 @@ if(UNIX)
 
         message("Debug mode detected!")
 
-        file(APPEND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/run_debug.sh "!#/bin/bash\n")
+        file(APPEND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/run_debug.sh "#!/bin/bash\n")
         file(APPEND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/run_debug.sh "VK_LAYER_PATH=../../dependencies/explicit_layer.d ./deng")
     endif()
 
@@ -66,4 +66,6 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         ${CMAKE_SOURCE_DIR}/textures $<TARGET_FILE_DIR:${PROJECT_NAME}>/textures
     COMMAND ${CMAKE_COMMAND} -E copy_directory
        ${CMAKE_SOURCE_DIR}/shaders $<TARGET_FILE_DIR:${PROJECT_NAME}>/shaders
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/config $<TARGET_FILE_DIR:${PROJECT_NAME}>/config
 )

@@ -4,8 +4,8 @@ namespace deng {
     Camera::Camera(const vec3<float> &cameraMovementSpeedMultiplier, const vec2<float> &mouseMovementSpeedMultiplier, const float &FOV, const float &near,const float &far, Window *window) {
         this->m_mouse_pos.x = 0.0f;
         this->m_mouse_pos.y = 0.0f;
-        this->m_mouse_sens.x = DENG_MOUSE_BASE_SENSITIVITY_X * mouseMovementSpeedMultiplier.x;
-        this->m_mouse_sens.y = DENG_MOUSE_BASE_SENSIVITY_Y * mouseMovementSpeedMultiplier.y;
+        this->m_mouse_sens.x = DENG_MOUSE_BASE_SENSITIVITY_X * (1/mouseMovementSpeedMultiplier.x);
+        this->m_mouse_sens.y = DENG_MOUSE_BASE_SENSIVITY_Y * (1/mouseMovementSpeedMultiplier.y);
 
         this->m_window = window;
         this->m_isInit = DENG_TRUE;

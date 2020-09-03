@@ -6,14 +6,17 @@ namespace deng
         //Required extensions vector initialisation
         this->m_req_extensions_name.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
+        this->loadDataFromConf(DENG_TRUE, DENG_TRUE);
         this->m_window = &win; 
-        this->m_camera = new Camera({1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}, 65.0f, this->m_nearPlane, this->m_farPlane, this->m_window);
+        this->m_camera = new Camera({this->m_camera_conf.movement_x, this->m_camera_conf.movement_y, this->m_camera_conf.movement_z}, {this->m_camera_conf.mouse_movement_x, this->m_camera_conf.mouse_movement_y}, this->m_camera_conf.fov, this->m_nearPlane, this->m_farPlane, this->m_window);
         this->m_ev = new Events(this->m_window, this->m_camera, &this->m_sample_object);
 
         this->initObjects(this->m_sample_object, "objects/obj1.obj", "textures/obj1.tga", DENG_COORDINATE_MODE_DEFAULT);
         this->initInstance();
         this->initDebugMessenger();
+        LOG("seg test!");
         this->initWindowSurface();
+        LOG("seg test!");
         this->selectPhysicalDevice();
         this->initLogicalDevice();
         this->initSwapChainSettings();
@@ -154,6 +157,46 @@ namespace deng
         vkDestroyImageView(this->m_device, this->m_depthImage_data.depthImageView, nullptr);
         vkDestroyImage(this->m_device, this->m_depthImage_data.depthImage, nullptr);
         vkFreeMemory(this->m_device, this->m_depthImage_data.depthImageMem, nullptr);
+    }
+
+    void Renderer::loadDataFromConf(const DengBool &loadCameraConf, const DengBool &loadEnvironmentConf) {
+        if(loadCameraConf == DENG_TRUE) {
+            this->m_camera_conf.movement_x = fm.getConfVal<float>("movement_x", "config/engine_camera.conf");
+            LOG("movement_x: " + std::to_string(this->m_camera_conf.movement_x));
+            this->m_camera_conf.movement_y = fm.getConfVal<float>("movement_y", "config/engine_camera.conf");
+            LOG("movement_y: " + std::to_string(this->m_camera_conf.movement_y));
+            this->m_camera_conf.movement_z = fm.getConfVal<float>("movement_z", "config/engine_camera.conf");
+            LOG("movement_y: " + std::to_string(this->m_camera_conf.movement_z));
+
+            this->m_camera_conf.mouse_movement_x = fm.getConfVal<float>("mouse_movement_x", "config/engine_camera.conf");
+            LOG("mouse_movement_x: " + std::to_string(this->m_camera_conf.mouse_movement_x));
+            this->m_camera_conf.mouse_movement_y = fm.getConfVal<float>("mouse_movement_y", "config/engine_camera.conf");
+            LOG("mouse_movement_y: " + std::to_string(this->m_camera_conf.mouse_movement_y));
+            this->m_camera_conf.fov = fm.getConfVal<float>("fov", "config/engine_camera.conf");
+            LOG("fov: " + std::to_string(this->m_camera_conf.fov));
+        }
+        
+        if(loadEnvironmentConf == DENG_TRUE) {
+            this->m_environment_conf.environment_color_r = fm.getConfVal<float>("environment_color_r", "config/engine_editor_environment.conf");
+            LOG("environment_color_r: " + std::to_string(this->m_environment_conf.environment_color_r));
+            this->m_environment_conf.environment_color_g = fm.getConfVal<float>("environment_color_g", "config/engine_editor_environment.conf");
+            LOG("environment_color_g: " + std::to_string(this->m_environment_conf.environment_color_g));
+            this->m_environment_conf.environment_color_b = fm.getConfVal<float>("environment_color_b", "config/engine_editor_environment.conf");
+            LOG("environment_color_b: " + std::to_string(this->m_environment_conf.environment_color_b));
+
+            this->m_environment_conf.show_grid = static_cast<DengBool>(fm.getConfVal<bool>("show_grid", "config/engine_editor_environment.conf"));
+            LOG("show_grid: " + std::to_string(this->m_environment_conf.show_grid));
+            this->m_environment_conf.grid_height = fm.getConfVal<float>("grid_height", "config/engine_editor_environment.conf");
+            LOG("grid_height: " + std::to_string(this->m_environment_conf.grid_height));
+            this->m_environment_conf.grid_width = fm.getConfVal<float>("grid_width", "config/engine_editor_environment.conf");
+            LOG("grid_width: " + std::to_string(this->m_environment_conf.grid_width));
+            this->m_environment_conf.grid_line_color_r = fm.getConfVal<float>("grid_line_color_r", "config/engine_editor_environment.conf");
+            LOG("grid_line_color_r: " + std::to_string(this->m_environment_conf.grid_line_color_r));
+            this->m_environment_conf.grid_line_color_g = fm.getConfVal<float>("grid_line_color_g", "config/engine_editor_environment.conf");
+            LOG("grid_line_color_g: " + std::to_string(this->m_environment_conf.grid_line_color_g));
+            this->m_environment_conf.grid_line_color_b = fm.getConfVal<float>("grid_line_color_b", "config/engine_editor_environment.conf");
+            LOG("grid_line_color_b: " + std::to_string(this->m_environment_conf.grid_line_color_b));
+        }
     }
 
     void Renderer::initObjects(GameObject &obj, const std::string &objFilePath, const std::string &texFilePath, const CoordinateMode &coordinateMode) {
@@ -731,7 +774,6 @@ namespace deng
         local_vertexInput_createInfo.pVertexBindingDescriptions = &local_input_binding_desc;
         local_vertexInput_createInfo.pVertexAttributeDescriptions = local_input_attribute_desc.data();
 
-
         VkPipelineInputAssemblyStateCreateInfo local_inputAssembly_createInfo{};
         local_inputAssembly_createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         local_inputAssembly_createInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -740,8 +782,8 @@ namespace deng
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = (float) this->m_extent.width;
-        viewport.height = (float) this->m_extent.height;
+        viewport.width = static_cast<float>(this->m_extent.width);
+        viewport.height = static_cast<float>(this->m_extent.height);
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
@@ -756,15 +798,15 @@ namespace deng
         local_viewport_state_createinfo.scissorCount = 1;
         local_viewport_state_createinfo.pScissors = &scissor;
 
-        VkPipelineRasterizationStateCreateInfo local_rasterizer{};
-        local_rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        local_rasterizer.depthClampEnable = VK_FALSE;
-        local_rasterizer.rasterizerDiscardEnable = VK_FALSE;
-        local_rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-        local_rasterizer.lineWidth = 1.0f;
-        local_rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-        local_rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        local_rasterizer.depthBiasEnable = VK_TRUE;
+        VkPipelineRasterizationStateCreateInfo local_graphicspipeline_rasterizer{};
+        local_graphicspipeline_rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+        local_graphicspipeline_rasterizer.depthClampEnable = VK_FALSE;
+        local_graphicspipeline_rasterizer.rasterizerDiscardEnable = VK_FALSE;
+        local_graphicspipeline_rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+        local_graphicspipeline_rasterizer.lineWidth = 1.0f;
+        local_graphicspipeline_rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+        local_graphicspipeline_rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        local_graphicspipeline_rasterizer.depthBiasEnable = VK_TRUE;
 
         VkPipelineMultisampleStateCreateInfo local_multisampling{};
         local_multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -811,7 +853,7 @@ namespace deng
             local_pipelineInfo.pVertexInputState = &local_vertexInput_createInfo;
             local_pipelineInfo.pInputAssemblyState = &local_inputAssembly_createInfo;
             local_pipelineInfo.pViewportState = &local_viewport_state_createinfo;
-            local_pipelineInfo.pRasterizationState = &local_rasterizer;
+            local_pipelineInfo.pRasterizationState = &local_graphicspipeline_rasterizer;
             local_pipelineInfo.pMultisampleState = &local_multisampling;
             local_pipelineInfo.pColorBlendState = &local_colorblend_state_createinfo;
             local_pipelineInfo.pDepthStencilState = &local_depthStencil;
@@ -1087,7 +1129,7 @@ namespace deng
             local_renderpass_begininfo.renderArea.extent = this->m_extent;
 
             std::array<VkClearValue, 2> local_clearValues;
-            local_clearValues[0].color = {0.0f, 0.0f, 0.0f, 0.0f};
+            local_clearValues[0].color = {this->m_environment_conf.environment_color_r, this->m_environment_conf.environment_color_g, this->m_environment_conf.environment_color_b, 0.0f};
             local_clearValues[1].depthStencil = {1.0f, 0};
 
             local_renderpass_begininfo.clearValueCount = local_clearValues.size();
