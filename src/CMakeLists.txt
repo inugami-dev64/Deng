@@ -12,15 +12,14 @@ endif()
 
 add_executable(${PROJECT_NAME}
     camera.cpp
-    dengmath.cpp
+    dengcore.cpp
     events.cpp
     filemanager.cpp
     main.cpp
     objectshandler.cpp
     objloader.cpp
-    queuemanager.cpp
+    rendererutils.cpp
     renderer.cpp
-    swapchaindetails.cpp
     textureloader.cpp
     timer.cpp
     window.cpp

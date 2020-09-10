@@ -46,15 +46,6 @@ namespace deng {
 
     }
 
-    //Function for creating log about the object coordinates when multiplied with projection view and model matrices (only works in debug mode!)
-    //F10
-    void Events::checkForObjLogRequest() {
-        if(!DEBUG) return;
-        else if(glfwGetKey(this->m_window->getWindow(), GLFW_KEY_F10) == GLFW_PRESS) {
-            this->handleLogging();
-        }
-    }
-
     void Events::checkForInputModeChange() {
         switch (this->m_window->getInputMode())
         {
@@ -82,28 +73,7 @@ namespace deng {
         }
     }
 
-    void Events::handleLogging() {
-        FileManager fm;
-        fm.writeToFile("matobject.log", "#entry point", DENG_WRITEMODE_REWRITE);
-        fm.writeToFile("rgbbitmap.log", "#entry point", DENG_WRITEMODE_REWRITE);
-        fm.writeToFile("object.log", "#entry point", DENG_WRITEMODE_REWRITE);
-
-        for(ObjVertexData &vertices : this->m_obj->vertexData) {
-            mat4<float> projMat;
-            mat4<float> viewMat;
-            mat4<float> modelMat;
-            this->m_camera->proj_matrix->getProjectionMatrix(&projMat);
-            this->m_camera->view_matrix.getViewMatrix(&viewMat);
-            this->m_obj->modelMatrix.getModelMatrix(&modelMat);
-
-            auto newVec = projMat * viewMat * modelMat * vertices.posVec;
-            fm.writeToFile("matobject.log", ("{" + std::to_string(newVec.x) + "," + std::to_string(newVec.y) + "," + std::to_string(newVec.z) + "," + std::to_string(newVec.w) + "}"), DENG_WRITEMODE_FROM_END);
-            fm.writeToFile("object.log", ("{" + std::to_string(vertices.posVec.x) + "," + std::to_string(vertices.posVec.y) + "," + std::to_string(vertices.posVec.z) + "}"), DENG_WRITEMODE_FROM_END);
-        }        
-    }
-
     void Events::update() {
-        this->checkForObjLogRequest();
         this->checkForInputModeChange();
         
         if(this->m_timer.isTimePassed(1)) {

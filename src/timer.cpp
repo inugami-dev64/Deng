@@ -9,7 +9,7 @@ namespace deng {
 
     //These functions set new time point from epoch
     void Timer::setNewTimePoint() {
-        this->timePoint = this->getTime();
+        this->time_point = this->getTime();
     }
 
     Timer::Timer() {
@@ -18,7 +18,7 @@ namespace deng {
 
     //Function that returns true if certain amount of time has passed 
     bool Timer::isTimePassed(const int &ms) {
-        if(this->getTime() - this->timePoint >= ms) return true;
+        if(this->getTime() - this->time_point >= ms) return true;
         else return false; 
     }
 }

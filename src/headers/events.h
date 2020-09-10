@@ -1,7 +1,7 @@
-#include "objectshandler.h"
+#include "gridgenerator.h"
 
 namespace deng {
-    enum MovementEvents {
+    enum dengMovementEvents {
         DENG_MOVEMENT_NONE = -1,
         DENG_MOVEMENT_FORWARD = 0,
         DENG_MOVEMENT_BACKWARD = 1,
@@ -12,9 +12,9 @@ namespace deng {
     };
 
     struct Movements {
-        MovementEvents x;
-        MovementEvents y;
-        MovementEvents z;
+        dengMovementEvents x;
+        dengMovementEvents y;
+        dengMovementEvents z;
     };
 
     class Events
@@ -28,13 +28,11 @@ namespace deng {
 
     private:
         void getMovementType();
-        void checkForObjLogRequest();
         void checkForInputModeChange();
-        void handleLogging();
 
     public:
-        Events(Window *win, Camera *camera, GameObject *obj);
-        MovementEvents getMovement();
+        Events(Window *p_win, Camera *p_camera, GameObject *p_obj);
+        dengMovementEvents getMovement();
         void handleExit();
         void update();
     };

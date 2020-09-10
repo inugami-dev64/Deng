@@ -27,14 +27,14 @@ namespace deng {
         vec2<float> m_camera_max_centre_point_coord;
         vec2<float> m_camera_max_right_corner_coord;
 
-        DengBool m_isInit;
+        dengBool m_is_init;
 
     public:
         ViewMatrix view_matrix;
-        ProjectionMatrix *proj_matrix;
+        ProjectionMatrix *p_projection_matrix;
 
     public:
-        Camera(const vec3<float> &cameraMovementSpeedMultiplier, const vec2<float> &mouseMovementSpeedMultiplier, const float &FOV, const float &near,const float &far, Window *window);
+        Camera(const vec3<float> &camera_movement_speed_multiplier, const vec2<float> &mouse_movement_speed_multiplier, const float &FOV, const float &near, const float &far, Window *p_window);
         ~Camera();
         void updateCursorPos();
         void setCameraViewRotation();

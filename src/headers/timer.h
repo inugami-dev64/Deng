@@ -4,7 +4,7 @@ namespace deng {
     class Timer {
     private:
         long getTime();
-        long timePoint;
+        long time_point;
         
     public:
         void setNewTimePoint();

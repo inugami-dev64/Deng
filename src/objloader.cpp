@@ -1,14 +1,14 @@
 #include "headers/renderer.h"
 
 namespace deng {
-    ObjLoader::ObjLoader(const std::string &fileName, const CoordinateMode &coordinateMode) {
-        FileManager fm;
-        this->reverseCoordinates = coordinateMode;
-        std::vector<std::string> contents;
-        fm.getFileContents(fileName, nullptr, &contents);
+    ObjLoader::ObjLoader(const std::string &file_name, const dengCoordinateMode &coordinate_mode) {
+        FileManager local_fm;
+        this->reverse_coordinates = coordinate_mode;
+        std::vector<std::string> local_contents;
+        local_fm.getFileContents(file_name, nullptr, &local_contents);
         
-        this->getVerticesCoord(contents);
-        this->getVertexFaces(contents);
+        this->getVerticesCoord(local_contents);
+        this->getVertexFaces(local_contents);
     }
 
     void ObjLoader::getVerticesCoord(const std::vector<std::string> &fileContents) {
@@ -25,31 +25,31 @@ namespace deng {
 
             if(readCoords) {
 
-                char buffer[fileContents[i].size()];
-                strncpy(buffer, fileContents[i].c_str(), fileContents[i].size());
+                char local_buffer[fileContents[i].size()];
+                strncpy(local_buffer, fileContents[i].c_str(), fileContents[i].size());
 
                 uint32_t coordinateType = DENG_X;
                 std::string x_str;
                 std::string y_str;
                 std::string z_str;
                 
-                for(size_t readIndex = firstCoordIndex; readIndex < (sizeof(buffer)/sizeof(buffer[0])); readIndex++) {\
+                for(size_t readIndex = firstCoordIndex; readIndex < (sizeof(local_buffer)/sizeof(local_buffer[0])); readIndex++) {\
                     switch (coordinateType)
                     {
                     case DENG_X:
-                        if(buffer[readIndex] != ' ') x_str += buffer[readIndex];
+                        if(local_buffer[readIndex] != ' ') x_str += local_buffer[readIndex];
                         else coordinateType++;
                         break;
 
                     case DENG_Y:
-                        if(buffer[readIndex] != ' ') y_str += buffer[readIndex];
-                        else if(readIndex == (sizeof(buffer)/sizeof(buffer[0])) - 1) coordinateType = DENG_X;
+                        if(local_buffer[readIndex] != ' ') y_str += local_buffer[readIndex];
+                        else if(readIndex == (sizeof(local_buffer)/sizeof(local_buffer[0])) - 1) coordinateType = DENG_X;
                         else coordinateType++;
                         
                         break;
                     
                     case DENG_Z:
-                        z_str += buffer[readIndex]; 
+                        z_str += local_buffer[readIndex]; 
                         break;
 
                     default:
@@ -62,21 +62,21 @@ namespace deng {
                     {
                     case DENG_VERTEX_COORD:
 
-                        if(this->reverseCoordinates) this->vertexCoordVec.push_back({-(std::stof(x_str.c_str())), -(std::stof(y_str.c_str())), -(std::stof(z_str.c_str()))});    
-                        else this->vertexCoordVec.push_back({std::stof(x_str.c_str()), std::stof(y_str.c_str()), std::stof(z_str.c_str())});
+                        if(this->reverse_coordinates) this->vertex_coord_vector.push_back({-(std::stof(x_str.c_str())), -(std::stof(y_str.c_str())), -(std::stof(z_str.c_str()))});    
+                        else this->vertex_coord_vector.push_back({std::stof(x_str.c_str()), std::stof(y_str.c_str()), std::stof(z_str.c_str())});
+
+                        break;
+
+                    case DENG_VERTEX_TEXTURE_COORD:
+                        if(this->reverse_coordinates) this->vertex_texture_coord_vector.push_back({-(std::stof(x_str.c_str())), -(std::stof(y_str.c_str()))});
+                        else this->vertex_texture_coord_vector.push_back({std::stof(x_str.c_str()), std::stof(y_str.c_str())});
 
                         break;
 
                     case DENG_VERTEX_NORMAL_COORD:
-                        if(this->reverseCoordinates) this->vertexNormCoordVec.push_back({-(std::stof(x_str.c_str())), -(std::stof(y_str.c_str())), -(std::stof(z_str.c_str()))});
-                        else this->vertexNormCoordVec.push_back({std::stof(x_str.c_str()), std::stof(y_str.c_str()), std::stof(z_str.c_str())});
+                        if(this->reverse_coordinates) this->vertex_normal_coord_vector.push_back({-(std::stof(x_str.c_str())), -(std::stof(y_str.c_str())), -(std::stof(z_str.c_str()))});
+                        else this->vertex_normal_coord_vector.push_back({std::stof(x_str.c_str()), std::stof(y_str.c_str()), std::stof(z_str.c_str())});
                         
-                        break;
-
-                    case DENG_VERTEX_TEXTURE_COORD:
-                        if(this->reverseCoordinates) this->vertexTexCoordVec.push_back({-(std::stof(x_str.c_str())), -(std::stof(y_str.c_str()))});
-                        else this->vertexTexCoordVec.push_back({std::stof(x_str.c_str()), std::stof(y_str.c_str())});
-
                         break;
 
                     default:
@@ -91,13 +91,13 @@ namespace deng {
         }
     }
 
-    void ObjLoader::getVertexFaces(const std::vector<std::string> &objContents) {
-        for(size_t i = 0; i < objContents.size(); i++) {
+    void ObjLoader::getVertexFaces(const std::vector<std::string> &obj_contents) {
+        for(size_t i = 0; i < obj_contents.size(); i++) {
             
-            if(objContents[i].find("f ") == 0) {
-                char buffer[objContents[i].size()];
-                strncpy(buffer, objContents[i].c_str(), objContents[i].size());
-                coordTypes vertexTypeCount = DENG_VERTEX_COORD;
+            if(obj_contents[i].find("f ") == 0) {
+                char buffer[obj_contents[i].size()];
+                strncpy(buffer, obj_contents[i].c_str(), obj_contents[i].size());
+                dengCoordTypes local_vertex_type_count = DENG_VERTEX_COORD;
 
                 std::string iStr;
 
@@ -105,24 +105,24 @@ namespace deng {
                     
                     if(buffer[lineIndex] != '/' && buffer[lineIndex] != ' ') iStr += buffer[lineIndex];
                     else {
-                        switch (vertexTypeCount)
+                        switch (local_vertex_type_count)
                         {
                         case DENG_VERTEX_COORD:
-                            this->vertexCoordFacesVec.push_back(std::stoi(iStr) - 1);
+                            this->vertex_coord_faces_vector.push_back(std::stoi(iStr) - 1);
                             iStr.clear();
-                            vertexTypeCount = DENG_VERTEX_TEXTURE_COORD;
+                            local_vertex_type_count = DENG_VERTEX_TEXTURE_COORD;
                             break;
 
                         case DENG_VERTEX_TEXTURE_COORD:
-                            this->vertexTexCoordFacesVec.push_back(std::stoi(iStr) - 1);
+                            this->vertex_texture_coord_faces_vector.push_back(std::stoi(iStr) - 1);
                             iStr.clear();
-                            vertexTypeCount = DENG_VERTEX_NORMAL_COORD;
+                            local_vertex_type_count = DENG_VERTEX_NORMAL_COORD;
                             break;
 
                         case DENG_VERTEX_NORMAL_COORD:
-                            this->vertexNormCoordFacesVec.push_back(std::stoi(iStr) - 1);
+                            this->vertex_normal_coord_faces_vector.push_back(std::stoi(iStr) - 1);
                             iStr.clear();
-                            vertexTypeCount = DENG_VERTEX_COORD;
+                            local_vertex_type_count = DENG_VERTEX_COORD;
                             break;
                     
                         default:
@@ -132,9 +132,9 @@ namespace deng {
 
                     if(lineIndex == (sizeof(buffer)/sizeof(buffer[0]) - 1)) {
                         // iStr += buffer[lineIndex];
-                        this->vertexNormCoordFacesVec.push_back(std::stoi(iStr) - 1);
+                        this->vertex_normal_coord_faces_vector.push_back(std::stoi(iStr) - 1);
                         iStr.clear();
-                        vertexTypeCount = DENG_VERTEX_COORD;
+                        local_vertex_type_count = DENG_VERTEX_COORD;
                     }
                 }
             }
@@ -142,18 +142,19 @@ namespace deng {
     }
 
     void ObjLoader::getObjVerticesAndIndices(GameObject &obj) {
-        obj.vertexData.resize(this->vertexCoordFacesVec.size());
+        obj.vertex_data.resize(this->vertex_coord_faces_vector.size());
 
-        if(this->vertexCoordFacesVec.size() != this->vertexTexCoordFacesVec.size()) {
+        if(this->vertex_coord_faces_vector.size() != this->vertex_texture_coord_faces_vector.size()) {
             ERR("Corrupted .obj file!");
         }
 
-        obj.vertexIndicesData.texIndices.resize(this->vertexTexCoordFacesVec.size());
-        obj.vertexIndicesData.posIndices.resize(this->vertexCoordFacesVec.size());
+        obj.vertex_indices_data.texture_indices.resize(this->vertex_texture_coord_faces_vector.size());
+        obj.vertex_indices_data.position_indices.resize(this->vertex_coord_faces_vector.size());
         
-        for(size_t i = 0; i < this->vertexCoordFacesVec.size(); i++) {
-            obj.vertexData[i].posVec = this->vertexCoordVec[this->vertexCoordFacesVec[i]];
-            obj.vertexData[i].texVec = {this->vertexTexCoordVec[this->vertexTexCoordFacesVec[i]].x, 1.0f - this->vertexTexCoordVec[this->vertexTexCoordFacesVec[i]].y};
+        for(size_t i = 0; i < this->vertex_coord_faces_vector.size(); i++) {
+            obj.vertex_data[i].position_vec = this->vertex_coord_vector[this->vertex_coord_faces_vector[i]];
+            // obj.vertex_data[i].texture_vec = new vec2<float>();
+            obj.vertex_data[i].texture_vec = {this->vertex_texture_coord_vector[this->vertex_texture_coord_faces_vector[i]].first, 1.0f - this->vertex_texture_coord_vector[this->vertex_texture_coord_faces_vector[i]].second};
         }
     }
 }

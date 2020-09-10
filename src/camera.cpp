@@ -2,23 +2,23 @@
 
 namespace deng {
     Camera::Camera(const vec3<float> &cameraMovementSpeedMultiplier, const vec2<float> &mouseMovementSpeedMultiplier, const float &FOV, const float &near,const float &far, Window *window) {
-        this->m_mouse_pos.x = 0.0f;
-        this->m_mouse_pos.y = 0.0f;
-        this->m_mouse_sens.x = DENG_MOUSE_BASE_SENSITIVITY_X * (1/mouseMovementSpeedMultiplier.x);
-        this->m_mouse_sens.y = DENG_MOUSE_BASE_SENSIVITY_Y * (1/mouseMovementSpeedMultiplier.y);
+        this->m_mouse_pos.first = 0.0f;
+        this->m_mouse_pos.second = 0.0f;
+        this->m_mouse_sens.first = DENG_MOUSE_BASE_SENSITIVITY_X * (1/mouseMovementSpeedMultiplier.first);
+        this->m_mouse_sens.second = DENG_MOUSE_BASE_SENSIVITY_Y * (1/mouseMovementSpeedMultiplier.second);
 
         this->m_window = window;
-        this->m_isInit = DENG_TRUE;
-        this->proj_matrix = new ProjectionMatrix(FOV, near, far,(float) (this->m_window->getSize().x / this->m_window->getSize().y));
+        this->m_is_init = DENG_TRUE;
+        this->p_projection_matrix = new ProjectionMatrix(FOV, near, far,(float) (this->m_window->getSize().first / this->m_window->getSize().second));
 
-        this->m_movementSpeed.x = DENG_CAMERA_BASE_SPEED_X * cameraMovementSpeedMultiplier.x;
-        this->m_movementSpeed.y = DENG_CAMERA_BASE_SPEED_Y * cameraMovementSpeedMultiplier.y;
-        this->m_movementSpeed.z = DENG_CAMERA_BASE_SPEED_Z * cameraMovementSpeedMultiplier.z;
-        this->m_movementSpeed.w = 0.0f;
+        this->m_movementSpeed.first = DENG_CAMERA_BASE_SPEED_X * cameraMovementSpeedMultiplier.first;
+        this->m_movementSpeed.second = DENG_CAMERA_BASE_SPEED_Y * cameraMovementSpeedMultiplier.second;
+        this->m_movementSpeed.third = DENG_CAMERA_BASE_SPEED_Z * cameraMovementSpeedMultiplier.third;
+        this->m_movementSpeed.fourth = 0.0f;
     }
 
     Camera::~Camera() {
-        delete this->proj_matrix;
+        delete this->p_projection_matrix;
     }
 
     void Camera::moveF() {
@@ -46,36 +46,36 @@ namespace deng {
     }
 
     void Camera::setCameraViewRotation() {
-        if(this->m_isInit == DENG_TRUE) {
-            this->m_mouse_pos.x = 0.0f;
-            this->m_mouse_pos.y = 0.0f;
-            glfwSetCursorPos(this->m_window->getWindow(), this->m_mouse_pos.x, this->m_mouse_pos.y);
-            this->m_isInit = DENG_FALSE;
+        if(this->m_is_init == DENG_TRUE) {
+            this->m_mouse_pos.first = 0.0f;
+            this->m_mouse_pos.second = 0.0f;
+            glfwSetCursorPos(this->m_window->getWindow(), this->m_mouse_pos.first, this->m_mouse_pos.second);
+            this->m_is_init = DENG_FALSE;
         }
 
-        if(this->m_mouse_pos.y > this->m_mouse_sens.y) {
-            this->m_mouse_pos.y = this->m_mouse_sens.y;
-            glfwSetCursorPos(this->m_window->getWindow(), this->m_mouse_pos.x * this->m_window->getSize().x, this->m_mouse_sens.y * this->m_window->getSize().y);
+        if(this->m_mouse_pos.second > this->m_mouse_sens.second) {
+            this->m_mouse_pos.second = this->m_mouse_sens.second;
+            glfwSetCursorPos(this->m_window->getWindow(), this->m_mouse_pos.first * this->m_window->getSize().first, this->m_mouse_sens.second * this->m_window->getSize().second);
         }
-        else if(this->m_mouse_pos.y < -this->m_mouse_sens.y) {
-            this->m_mouse_pos.y = -this->m_mouse_sens.y;
-            glfwSetCursorPos(this->m_window->getWindow(), this->m_mouse_pos.x * this->m_window->getSize().x, -this->m_mouse_sens.y * this->m_window->getSize().y);
+        else if(this->m_mouse_pos.second < -this->m_mouse_sens.second) {
+            this->m_mouse_pos.second = -this->m_mouse_sens.second;
+            glfwSetCursorPos(this->m_window->getWindow(), this->m_mouse_pos.first * this->m_window->getSize().first, -this->m_mouse_sens.second * this->m_window->getSize().second);
         }
 
-        if(this->m_mouse_pos.x >= this->m_mouse_sens.x || this->m_mouse_pos.x <= -this->m_mouse_sens.x) {
-            this->m_mouse_pos.x = 0.0f;
-            glfwSetCursorPos(this->m_window->getWindow(), this->m_mouse_pos.x, this->m_mouse_pos.y * this->m_window->getSize().y);
+        if(this->m_mouse_pos.first >= this->m_mouse_sens.first || this->m_mouse_pos.first <= -this->m_mouse_sens.first) {
+            this->m_mouse_pos.first = 0.0f;
+            glfwSetCursorPos(this->m_window->getWindow(), this->m_mouse_pos.first, this->m_mouse_pos.second * this->m_window->getSize().second);
         }
-        
+
         this->view_matrix.setTransformationMatrix();
-        this->view_matrix.setRotation(getFractionNumerator(this->m_mouse_pos.y, this->m_mouse_sens.y, -90.0f), getFractionNumerator(this->m_mouse_pos.x, this->m_mouse_sens.x, 360.0f));
+        this->view_matrix.setRotation(getFractionNumerator(this->m_mouse_pos.second, this->m_mouse_sens.second, -90.0f), getFractionNumerator(this->m_mouse_pos.first, this->m_mouse_sens.first, 360.0f));
 
         // LOG("Mouse x_pos: " + std::to_string(this->m_mouse_pos.x) + "/Mouse y_pos: " + std::to_string(this->m_mouse_pos.y));
     }
 
     void Camera::updateCursorPos() {
-        glfwGetCursorPos(this->m_window->getWindow(), &this->m_mouse_pos.x, &this->m_mouse_pos.y);
-        this->m_mouse_pos.x /= this->m_window->getSize().x;
-        this->m_mouse_pos.y /= this->m_window->getSize().y;
+        glfwGetCursorPos(this->m_window->getWindow(), &this->m_mouse_pos.first, &this->m_mouse_pos.second);
+        this->m_mouse_pos.first /= this->m_window->getSize().first;
+        this->m_mouse_pos.second /= this->m_window->getSize().second;
     }
 }

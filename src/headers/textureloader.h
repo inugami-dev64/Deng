@@ -1,6 +1,6 @@
 #ifndef TEXTURELOADER_H
 #define TEXTURELOADER_H
-#include "files.h"
+#include "rendererutils.h"
 
 namespace deng {
     enum TextureFormats {
@@ -52,14 +52,14 @@ namespace deng {
         BMPFileHeader m_file_header;
         BMPInfoHeader m_info_header;
         BMPColorHeader m_color_header;
-        std::vector<std::vector<uint8_t>> pixelData;
+        std::vector<std::vector<uint8_t>> pixel_data;
 
     private:
         bool checkColorData();
 
     public:
-        TextureLoaderBMP(const std::string &fileName);
-        void getTextureDetails(uint32_t *texWidth, uint32_t *texHeight, VkDeviceSize *texSize, std::vector<uint8_t> &texPixelData);
+        TextureLoaderBMP(const std::string &file_name);
+        void getTextureDetails(uint32_t *p_texture_width, uint32_t *p_texture_height, VkDeviceSize *texture_size, std::vector<uint8_t> &texture_pixel_data);
     };
 
     // tga format
@@ -94,11 +94,11 @@ namespace deng {
         std::vector<std::vector<uint8_t>> m_pixeldata;
 
     public:
-        TextureLoaderTGA(const std::string &filename);
-        void getTextureDetails(uint32_t *texWidth, uint32_t *texHeight, VkDeviceSize *texSize, std::vector<uint8_t> &texPixelData);
+        TextureLoaderTGA(const std::string &file_name);
+        void getTextureDetails(uint32_t *p_texture_width, uint32_t *p_texture_height, VkDeviceSize *p_texture_size, std::vector<uint8_t> &texture_pixel_data);
     };
 
-    TextureFormats getTexFileFormat(const std::string &texFilePath);
+    TextureFormats getTexFileFormat(const std::string &texture_filepath);
 }
 
 

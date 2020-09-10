@@ -3,67 +3,85 @@
 #include "camera.h"
 
 namespace deng {
-
-    struct ObjVertexData {
-        vec3<float> posVec;
-        vec2<float> texVec;
-
-        static VkVertexInputBindingDescription getBindingDesc();
-        static std::array<VkVertexInputAttributeDescription, 2> getAttributeDesc();
+    enum dengPipelineType {
+        DENG_PIPELINE_TYPE_OBJECT_BASED = 0,
+        DENG_PIPELINE_TYPE_SPECIFIED = 1
     };
 
-    struct ObjVertexIndicesData {
-        std::vector<uint32_t> posIndices;
-        std::vector<uint32_t> texIndices;
+    struct ObjVertexData {
+        vec3<float> position_vec;
+        vec2<float> texture_vec;
+    };
+
+    struct SpecifiedVertexData {
+        vec3<float> position_vec;
+        vec3<float> color_vec;
+    };
+
+    struct VertexIndicesData {
+        std::vector<uint32_t> position_indices;
+        std::vector<uint32_t> texture_indices;
     };
 
     struct Buffers {
         VkBuffer vertex_buffer;
-        VkDeviceMemory vertex_bufferMem;
+        VkDeviceMemory vertex_buffer_memory;
 
         VkBuffer staging_buffer;
-        VkDeviceMemory staging_bufferMem;
+        VkDeviceMemory staging_buffer_memory;
 
         VkBuffer index_buffer;
-        VkDeviceMemory index_bufferMem;
+        VkDeviceMemory index_buffer_memory;
+
+        std::vector<VkBuffer> uniform_buffers;
+        std::vector<VkDeviceMemory> uniform_buffers_memory;
+
+        VkBuffer grid_buffer;
+        VkDeviceMemory grid_buffer_memory;
     };
 
     struct DepthImageData {
-        VkImage depthImage;
-        VkDeviceMemory depthImageMem;
-        VkImageView depthImageView;
+        VkImage depthimage;
+        VkDeviceMemory depthimage_memory;
+        VkImageView depthimage_view;
     };
 
     struct ObjTextureData {
         uint32_t width;
         uint32_t height;
 
-        VkImage textureImage;
-        VkDeviceMemory textureImageMem;
-        VkImageView textureImageView;
-        VkSampler textureSampler;
+        VkImage texture_image;
+        VkDeviceMemory texture_image_memory;
+        VkImageView texture_image_view;
+        VkSampler texture_sampler;
     };
 
     struct ObjRawTextureData {
-        std::vector<uint8_t> texturePixelsData;
+        std::vector<uint8_t> texture_pixels_data;
 
-        uint32_t *width;
-        uint32_t *height;
-        VkDeviceSize *texSize;
+        uint32_t *p_width;
+        uint32_t *p_height;
+        VkDeviceSize *p_texture_size;
         ObjRawTextureData();
 
     public:
-        void cpyDims(ObjTextureData &texData);
+        void cpyDims(ObjTextureData &texture_Data);
         void clear();
     };
 
     struct GameObject {
         vec3<float> origin;
-        std::vector<ObjVertexData> vertexData;
-        ObjVertexIndicesData vertexIndicesData;
-        ObjRawTextureData rawTextureData;
-        ObjTextureData textureData;
-        ModelMatrix modelMatrix;        
+        std::vector<ObjVertexData> vertex_data;
+        VertexIndicesData vertex_indices_data;
+        ObjRawTextureData raw_texture_data;
+        ObjTextureData texture_data;
+        ModelMatrix model_matrix;        
+    };
+
+    struct SpecialObject {
+        vec3<float> origin;
+        std::vector<SpecifiedVertexData> vertex_data;
+        ModelMatrix model_matrix;
     };
 }
 

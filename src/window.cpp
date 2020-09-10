@@ -9,16 +9,16 @@ namespace deng {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-        this->m_gameWindow = glfwCreateWindow(this->m_size.x, this->m_size.y, title, nullptr, nullptr);
+        this->m_game_window = glfwCreateWindow(this->m_size.first, this->m_size.second, title, nullptr, nullptr);
     }
 
     Window::~Window() {
-        glfwDestroyWindow(this->m_gameWindow);
+        glfwDestroyWindow(this->m_game_window);
         glfwTerminate();
     }
 
     GLFWwindow *Window::getWindow() {
-        return this->m_gameWindow;
+        return this->m_game_window;
     }
 
     const char *Window::getTitle() {
@@ -29,26 +29,26 @@ namespace deng {
         return this->m_size;
     }
 
-    InputMode Window::getInputMode() {
-        return this->m_inputMode;
+    dengInputMode Window::getInputMode() {
+        return this->m_input_mode;
     }
 
-    void Window::setInputMode(const InputMode &newInputMode) {
-        switch (newInputMode)
+    void Window::setInputMode(const dengInputMode &new_input_mode) {
+        switch (new_input_mode)
         {
         case DENG_INPUT_MOVEMENT:
-            glfwSetInputMode(this->m_gameWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            glfwSetInputMode(this->m_game_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             break;
 
         case DENG_INPUT_NONMOVEMENT:
-            glfwSetInputMode(this->m_gameWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            glfwSetInputMode(this->m_game_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             break;
         
         default:
             break;
         }
 
-         this->m_inputMode = newInputMode;
+        this->m_input_mode = new_input_mode;
     }
 
 }

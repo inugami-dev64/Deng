@@ -1,20 +1,20 @@
 #include "headers/renderer.h"
 
 namespace deng {
-    TextureLoaderBMP::TextureLoaderBMP(const std::string &fileName) {
-        std::ifstream textureFile{fileName.c_str(), std::fstream::binary};
-        if(textureFile) {
-            textureFile.read((char*) &this->m_file_header, sizeof(this->m_file_header));
+    TextureLoaderBMP::TextureLoaderBMP(const std::string &file_name) {
+        std::ifstream texture_file{file_name.c_str(), std::fstream::binary};
+        if(texture_file) {
+            texture_file.read((char*) &this->m_file_header, sizeof(this->m_file_header));
             if(this->m_file_header.file_type != 0x4D42) {
                 ERRME("Unrecognised texture file format!"); 
                 return;
             }
             
-            textureFile.read((char*) &this->m_info_header, sizeof(this->m_info_header));
+            texture_file.read((char*) &this->m_info_header, sizeof(this->m_info_header));
 
             if(this->m_info_header.bit_count == 32) {
                 if(this->m_info_header.size >= (sizeof(BMPInfoHeader) + sizeof(BMPColorHeader))) {
-                    textureFile.read((char*) &this->m_color_header, sizeof(this->m_color_header));
+                    texture_file.read((char*) &this->m_color_header, sizeof(this->m_color_header));
                     if(!this->checkColorData()) { 
                         ERRME("Unexpected color mask format or color space type!");
                         return;
@@ -27,7 +27,7 @@ namespace deng {
                 }
             }
 
-            textureFile.seekg(this->m_file_header.offset_data, textureFile.beg);
+            texture_file.seekg(this->m_file_header.offset_data, texture_file.beg);
 
             if(this->m_info_header.bit_count == 32) {
                 this->m_info_header.size = sizeof(BMPInfoHeader) + sizeof(BMPColorHeader);
@@ -52,13 +52,13 @@ namespace deng {
                 return;
             }
 
-            this->pixelData.resize(this->m_info_header.height);
+            this->pixel_data.resize(this->m_info_header.height);
 
             // without padding
             if(this->m_info_header.width * this->m_info_header.bit_count / 8 % 4 == 0) {
                 for(int32_t hI = 0; hI < this->m_info_header.height; hI++) {
-                    this->pixelData[hI].resize(this->m_info_header.width * this->m_info_header.bit_count / 8);
-                    textureFile.read((char*) this->pixelData[hI].data(), this->m_info_header.width * this->m_info_header.bit_count / 8);
+                    this->pixel_data[hI].resize(this->m_info_header.width * this->m_info_header.bit_count / 8);
+                    texture_file.read((char*) this->pixel_data[hI].data(), this->m_info_header.width * this->m_info_header.bit_count / 8);
                 }
             }
 
@@ -66,52 +66,52 @@ namespace deng {
             else {
                 std::vector<uint8_t> padding_count_per_row(4 - (this->m_info_header.width * this->m_info_header.bit_count / 8) % 4);
                 for(int32_t hI = 0; hI < this->m_info_header.height; hI++) {
-                    this->pixelData[hI].resize(this->m_info_header.width * this->m_info_header.bit_count / 8);
-                    textureFile.read((char*) this->pixelData[hI].data(), this->m_info_header.width * this->m_info_header.bit_count / 8);
-                    textureFile.read((char*) padding_count_per_row.data(), padding_count_per_row.size());
+                    this->pixel_data[hI].resize(this->m_info_header.width * this->m_info_header.bit_count / 8);
+                    texture_file.read((char*) this->pixel_data[hI].data(), this->m_info_header.width * this->m_info_header.bit_count / 8);
+                    texture_file.read((char*) padding_count_per_row.data(), padding_count_per_row.size());
                 }
             }
         }
 
         else {
             ERRME("Couldn't read texture file!");
-            ERRME("File \"" + std::string(fileName) + "\" does not exist!");
+            ERRME("File \"" + file_name + "\" does not exist!");
         }
     }
 
     bool TextureLoaderBMP::checkColorData() {
         BMPColorHeader expected_color_header;
         if(expected_color_header.red_mask != this->m_color_header.red_mask ||
-           expected_color_header.green_mask != this->m_color_header.green_mask ||
-           expected_color_header.blue_mask != this->m_color_header.blue_mask ||
-           expected_color_header.alpha_mask != this->m_color_header.alpha_mask ||
-           expected_color_header.color_space_type != this->m_color_header.color_space_type) {
-               return false;
-           }
+            expected_color_header.green_mask != this->m_color_header.green_mask ||
+            expected_color_header.blue_mask != this->m_color_header.blue_mask ||
+            expected_color_header.alpha_mask != this->m_color_header.alpha_mask ||
+            expected_color_header.color_space_type != this->m_color_header.color_space_type) {
+                return false;
+            }
 
         else return true;
     }
 
-    void TextureLoaderBMP::getTextureDetails(uint32_t *texWidth, uint32_t *texHeight, VkDeviceSize *texSize, std::vector<uint8_t> &texPixelData) {
-        *texWidth = this->m_info_header.width;
-        *texHeight = this->m_info_header.height;
-        *texSize = this->m_info_header.width * this->m_info_header.height * 4;
+    void TextureLoaderBMP::getTextureDetails(uint32_t *texture_width, uint32_t *texture_height, VkDeviceSize *texture_size, std::vector<uint8_t> &texture_pixel_data) {
+        *texture_width = this->m_info_header.width;
+        *texture_height = this->m_info_header.height;
+        *texture_size = this->m_info_header.width * this->m_info_header.height * 4;
 
-        texPixelData.resize(*texSize);
+        texture_pixel_data.resize(*texture_size);
         // checks if alpha channel is present and if not then create it
         if(this->m_info_header.bit_count == 32) {
             // rearrangement of pixel data from bottom - right to top - right format 
             for(int32_t hI = this->m_info_header.height - 1, i = 0; hI >= 0; hI--) 
-                for(int32_t wI = 0; wI < this->m_info_header.width * 4; wI++, i++) texPixelData[i] = this->pixelData[hI][wI];
+                for(int32_t wI = 0; wI < this->m_info_header.width * 4; wI++, i++) texture_pixel_data[i] = this->pixel_data[hI][wI];
         }
 
         else if(this->m_info_header.bit_count == 24) {
             for(int32_t hI = this->m_info_header.height - 1, i = 0; hI >= 0; hI--) {
                 for(int32_t wI = 0; wI < this->m_info_header.width * 3; wI += 3, i += 4) {
-                    texPixelData[i] = this->pixelData[hI][wI];
-                    texPixelData[i + 1] = this->pixelData[hI][wI + 1];
-                    texPixelData[i + 2] = this->pixelData[hI][wI + 2];
-                    texPixelData[i + 3] = 255;
+                    texture_pixel_data[i] = this->pixel_data[hI][wI];
+                    texture_pixel_data[i + 1] = this->pixel_data[hI][wI + 1];
+                    texture_pixel_data[i + 2] = this->pixel_data[hI][wI + 2];
+                    texture_pixel_data[i + 3] = 255;
                 }
             }
         }
@@ -127,10 +127,10 @@ namespace deng {
 
 
     //tga format
-    TextureLoaderTGA::TextureLoaderTGA(const std::string &fileName) {
-        std::ifstream textureFile(fileName.c_str(), std::fstream::binary);
-        if(textureFile) {
-            textureFile.read((char*) &this->m_type_header, sizeof(this->m_type_header));
+    TextureLoaderTGA::TextureLoaderTGA(const std::string &file_name) {
+        std::ifstream texture_file(file_name.c_str(), std::fstream::binary);
+        if(texture_file) {
+            texture_file.read((char*) &this->m_type_header, sizeof(this->m_type_header));
             
             switch (this->m_type_header.image_type)
             {
@@ -168,14 +168,14 @@ namespace deng {
                 break;
             }
 
-            textureFile.read((char*) &this->m_colormap_header, sizeof(this->m_colormap_header));
-            textureFile.read((char*) &this->m_info_header, sizeof(this->m_info_header));
+            texture_file.read((char*) &this->m_colormap_header, sizeof(this->m_colormap_header));
+            texture_file.read((char*) &this->m_info_header, sizeof(this->m_info_header));
             this->m_pixeldata.resize(this->m_info_header.height);
 
             if(this->m_info_header.bit_count == 32 || this->m_info_header.bit_count == 24) {
                 for(uint32_t hI = 0; hI < this->m_info_header.height; hI++) {
                     this->m_pixeldata[hI].resize(this->m_info_header.width * this->m_info_header.bit_count / 8);
-                    textureFile.read((char*) this->m_pixeldata[hI].data(), this->m_info_header.width * this->m_info_header.bit_count / 8);
+                    texture_file.read((char*) this->m_pixeldata[hI].data(), this->m_info_header.width * this->m_info_header.bit_count / 8);
                 }                
             }
 
@@ -187,7 +187,7 @@ namespace deng {
 
         else {
             ERRME("Couldn't read texture file!");
-            ERRME("File \"" + std::string(fileName) + "\" does not exist!");
+            ERRME("File \"" + file_name + "\" does not exist!");
         }
     }
 

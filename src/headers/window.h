@@ -5,7 +5,7 @@
 
 namespace deng
 {   
-    enum InputMode {
+    enum dengInputMode {
         DENG_INPUT_NONMOVEMENT = 1,
         DENG_INPUT_MOVEMENT = 2
     };
@@ -13,19 +13,19 @@ namespace deng
     class Window
     {
     private:
-        GLFWwindow *m_gameWindow;
+        GLFWwindow *m_game_window;
         const char *m_title;
         vec2<uint32_t> m_size;
-        InputMode m_inputMode;
+        dengInputMode m_input_mode;
 
     public:
         Window(const uint32_t &x, const uint32_t &y, const char *title);
         ~Window();
         GLFWwindow *getWindow();
         const char *getTitle();
-        InputMode getInputMode();
+        dengInputMode getInputMode();
         vec2<uint32_t> getSize();
-        void setInputMode(const InputMode &newInputMode);
+        void setInputMode(const dengInputMode &new_input_mode);
     };
 }
 

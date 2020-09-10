@@ -1,37 +1,37 @@
 #ifndef FILES_H
 #define FILES_H
 
-#include "swapchaindetails.h"
+#include "events.h"
 
 namespace deng {
 
-    enum writeModes {
+    enum dengWriteModes {
         DENG_WRITEMODE_REWRITE = 0,
         DENG_WRITEMODE_FROM_END = 1
     };
 
     class FileManager {
     private:
-        std::ifstream *fileIn;
-        std::ofstream *fileOut;
+        std::ifstream *p_file_in;
+        std::ofstream *p_file_out;
 
     public:
-        void getFileContents(const std::string &file_name, std::vector<char> *charOutputVector, std::vector<std::string> *stringOutputVector);
-        void writeToFile(const std::string &fileName, const std::string &lineContents, const uint32_t &writeMode);
+        void getFileContents(const std::string &file_name, std::vector<char> *p_char_output_vector, std::vector<std::string> *p_string_output_vector);
+        void writeToFile(const std::string &file_name, const std::string &line_contents, const uint32_t &write_mode);
 
         template<typename T>
-        T getConfVal(const std::string &conf, const std::string &fileName) {
-            std::vector<std::string> fileContents;
-            this->getFileContents(fileName, nullptr, &fileContents);
-            int32_t lineIndex = 0;
+        T getConfVal(const std::string &conf, const std::string &file_name) {
+            std::vector<std::string> file_contents;
+            this->getFileContents(file_name, nullptr, &file_contents);
+            int32_t line_index = 0;
 
-            for(std::string &line : fileContents) {
+            for(std::string &line : file_contents) {
                 if(line.find(conf) == 0) {
-                    std::string valStr;
+                    std::string value_str;
                     int8_t index;
 
                     if(static_cast<int>(line.find("#")) == -1 && static_cast<int>(line.find("=")) == -1) {
-                        ERR(DENG_CONF_PARSING_ERROR_MSG(fileName) + DENG_GENERAL_PARSING_ERROR_LINE_MSG(std::to_string(lineIndex)));
+                        ERR(DENG_CONF_PARSING_ERROR_MSG(file_name) + DENG_GENERAL_PARSING_ERROR_LINE_MSG(std::to_string(line_index)));
                     }
 
                     else {
@@ -39,26 +39,26 @@ namespace deng {
                         while(line[index] == ' ' || line[index] == '"') index++;
 
                         for(; index < line.size() && line[index] != ' ' && line[index] != '#' && line[index] != '"'; index++) {
-                            valStr += line[index];
+                            value_str += line[index];
                         }
                     }
 
                     T i;
-                    LOG("ValStr: \"" + valStr + "\"");
+                    LOG("ValStr: \"" + value_str + "\"");
                     if(typeid(i).name() == typeid(bool).name()) {
-                        if(valStr == "true") return true;
-                        else if(valStr == "false") return false; 
+                        if(value_str == "true") return true;
+                        else if(value_str == "false") return false; 
                     }
 
                     else if(typeid(i).name() == typeid(float).name()) {
-                        return std::stof(valStr);
+                        return std::stof(value_str);
                     }
 
                     else if(typeid(i).name() == typeid(int).name()) {
-                        return std::stoi(valStr);
+                        return std::stoi(value_str);
                     }                       
                 }
-                lineIndex++;
+                line_index++;
             }
             T i;
             return i;
@@ -70,7 +70,7 @@ namespace deng {
         float environment_color_g;
         float environment_color_b;
 
-        DengBool show_grid;
+        dengBool show_grid;
         float grid_height;
         float grid_width;
         
