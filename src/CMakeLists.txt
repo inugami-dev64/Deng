@@ -20,6 +20,7 @@ add_executable(${PROJECT_NAME}
     objloader.cpp
     rendererutils.cpp
     renderer.cpp
+    gridgenerator.cpp
     textureloader.cpp
     timer.cpp
     window.cpp
@@ -64,7 +65,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/textures $<TARGET_FILE_DIR:${PROJECT_NAME}>/textures
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-       ${CMAKE_SOURCE_DIR}/shaders $<TARGET_FILE_DIR:${PROJECT_NAME}>/shaders
+        ${CMAKE_SOURCE_DIR}/shaders $<TARGET_FILE_DIR:${PROJECT_NAME}>/shaders
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/config $<TARGET_FILE_DIR:${PROJECT_NAME}>/config
 )

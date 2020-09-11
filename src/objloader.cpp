@@ -148,12 +148,11 @@ namespace deng {
             ERR("Corrupted .obj file!");
         }
 
-        obj.vertex_indices_data.texture_indices.resize(this->vertex_texture_coord_faces_vector.size());
-        obj.vertex_indices_data.position_indices.resize(this->vertex_coord_faces_vector.size());
+        // obj.vertex_indices_data.texture_indices.resize(this->vertex_texture_coord_faces_vector.size());
+        // obj.vertex_indices_data.position_indices.resize(this->vertex_coord_faces_vector.size());
         
         for(size_t i = 0; i < this->vertex_coord_faces_vector.size(); i++) {
-            obj.vertex_data[i].position_vec = this->vertex_coord_vector[this->vertex_coord_faces_vector[i]];
-            // obj.vertex_data[i].texture_vec = new vec2<float>();
+            obj.vertex_data[i].position_vec = {this->vertex_coord_vector[this->vertex_coord_faces_vector[i]].first + obj.origin.first, this->vertex_coord_vector[this->vertex_coord_faces_vector[i]].second + obj.origin.second, this->vertex_coord_vector[this->vertex_coord_faces_vector[i]].third + obj.origin.third};
             obj.vertex_data[i].texture_vec = {this->vertex_texture_coord_vector[this->vertex_texture_coord_faces_vector[i]].first, 1.0f - this->vertex_texture_coord_vector[this->vertex_texture_coord_faces_vector[i]].second};
         }
     }

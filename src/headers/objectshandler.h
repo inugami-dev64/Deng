@@ -18,26 +18,21 @@ namespace deng {
         vec3<float> color_vec;
     };
 
-    struct VertexIndicesData {
-        std::vector<uint32_t> position_indices;
-        std::vector<uint32_t> texture_indices;
-    };
-
     struct Buffers {
-        VkBuffer vertex_buffer;
-        VkDeviceMemory vertex_buffer_memory;
+        VkBuffer vertex_buffer{};
+        VkDeviceMemory vertex_buffer_memory{};
 
-        VkBuffer staging_buffer;
-        VkDeviceMemory staging_buffer_memory;
+        VkBuffer grid_buffer{};
+        VkDeviceMemory grid_buffer_memory{};
 
-        VkBuffer index_buffer;
-        VkDeviceMemory index_buffer_memory;
+        VkBuffer staging_buffer{};
+        VkDeviceMemory staging_buffer_memory{};
 
-        std::vector<VkBuffer> uniform_buffers;
-        std::vector<VkDeviceMemory> uniform_buffers_memory;
+        VkBuffer index_buffer{};
+        VkDeviceMemory index_buffer_memory{};
 
-        VkBuffer grid_buffer;
-        VkDeviceMemory grid_buffer_memory;
+        std::vector<VkBuffer> uniform_buffers{};
+        std::vector<VkDeviceMemory> uniform_buffers_memory{};
     };
 
     struct DepthImageData {
@@ -72,15 +67,15 @@ namespace deng {
     struct GameObject {
         vec3<float> origin;
         std::vector<ObjVertexData> vertex_data;
-        VertexIndicesData vertex_indices_data;
         ObjRawTextureData raw_texture_data;
         ObjTextureData texture_data;
         ModelMatrix model_matrix;        
     };
 
-    struct SpecialObject {
+    struct SpecifiedObject {
         vec3<float> origin;
         std::vector<SpecifiedVertexData> vertex_data;
+        // std::vector<uint32_t> *p_index_data;
         ModelMatrix model_matrix;
     };
 }

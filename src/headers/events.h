@@ -23,17 +23,31 @@ namespace deng {
         Timer m_timer;
         Camera *m_camera;
         Window *m_window;
-        GameObject *m_obj;
         Movements m_movements;
+
+        #if DEBUG
+            SpecifiedObject *m_grid;
+        #endif
 
     private:
         void getMovementType();
         void checkForInputModeChange();
+        dengBool isKeyPressed(const int &key);
+        void isMouseKeysPressed(dengBool *lmb_click, dengBool *mmb_click, dengBool *rmb_click);
+
+        #if DEBUG
+            void handleGridCoordinateLogging(const int32_t &log_key, const std::string &file_name);
+        #endif
+        
 
     public:
-        Events(Window *p_win, Camera *p_camera, GameObject *p_obj);
+        Events(Window *p_win, Camera *p_camera);
         dengMovementEvents getMovement();
         void handleExit();
         void update();
+
+        #if DEBUG
+            void setGrid(SpecifiedObject *grid);
+        #endif
     };
 }

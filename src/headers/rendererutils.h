@@ -51,7 +51,7 @@ namespace deng {
         VkShaderModule getShaderModule(std::vector<char> &shader_bins);
 
         VkVertexInputBindingDescription getBindingDesc();
-        std::vector<VkVertexInputAttributeDescription> getAttributeDesc(const dengPipelineType &pipeline_type);
+        std::vector<VkVertexInputAttributeDescription> getAttributeDesc();
         
     public:
         PipelineCreator(const dengPipelineType &pipeline_type, VkDevice *device, FileManager *filemanager, VkExtent2D *extent, VkRenderPass *renderpass);

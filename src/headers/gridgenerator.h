@@ -1,6 +1,7 @@
 #include "objectshandler.h"
 
 namespace deng {
+
     class GridManager {
     private:
         float m_max_vertex_buffer_distance;
@@ -10,13 +11,14 @@ namespace deng {
         float m_grid_color_r;
         float m_grid_color_g;
         float m_grid_color_b;
-        float m_grid_color_a;
-        std::vector<SpecifiedVertexData> m_vertices;
-        std::vector<uint32_t> m_indices;
+
+        SpecifiedObject m_grid;
 
     public:
-        GridManager(const float &max_distance, const float &grid_height, const float &grid_width, const float &color_r, const float &color_g, const float &color_b, const float &color_a);
-        void updateVertices(vec3<float> camera_position);
-        void generateVertices(vec3<float> camera_position);
+        GridManager(const float &max_distance, const float &grid_height, const float &grid_width, const float &color_r, const float &color_g, const float &color_b);
+        ~GridManager();
+        void updateVertices(vec4<float> camera_position);
+        void generateVertices(vec4<float> camera_position);
+        SpecifiedObject *getGridObject();
     };
 }

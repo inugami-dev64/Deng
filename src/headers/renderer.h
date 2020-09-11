@@ -26,8 +26,8 @@ namespace deng {
     class Renderer
     {   
     private:
-        const float m_nearPlane = 0.1f;
-        const float m_farPlane = 10.0f;
+        const float m_near_plane = 0.1f;
+        const float m_far_plane = 10.0f;
 
         const char *m_p_validation_layer = "VK_LAYER_KHRONOS_validation";
 
@@ -76,6 +76,7 @@ namespace deng {
         Queues m_queues;
         FileManager m_fm;
         DepthImageData m_depthimage_data;
+        GridManager *m_p_grid_manager;
 
         // config structs
         EditorEnvironmentConf m_environment_conf;
@@ -83,7 +84,7 @@ namespace deng {
 
         //game objects (currently just hardcoded, soon to be added from editor in form of objects vector)
         GameObject m_sample_object;
-        SpecialObject m_grid;
+        SpecifiedObject m_grid;
 
     private:
         void loadDataFromConf(const dengBool &load_camera_conf, const dengBool &load_environment_conf);
@@ -112,9 +113,11 @@ namespace deng {
         void initTextureBuffer();
         uint32_t getMemType(const uint32_t &type_filter, const VkMemoryPropertyFlags &properties);
         void initCommandPool();
-        void initCommandBufferFromSwapChain();
+        void initCommandBuffers();
         void initSemaphores();
+        
         void initObjects(GameObject &obj, const std::string &obj_source_filepath, const std::string &tex_source_filepath, const dengCoordinateMode &coordinate_mode);
+        void initGrid();
 
         void deleteTextureImage(GameObject &obj);
         void deleteCommandBuffers();

@@ -8,10 +8,17 @@ namespace deng
 
         this->loadDataFromConf(DENG_TRUE, DENG_TRUE);
         this->m_p_window = &win; 
-        this->m_p_camera = new Camera({this->m_camera_conf.movement_x, this->m_camera_conf.movement_y, this->m_camera_conf.movement_z}, {this->m_camera_conf.mouse_movement_x, this->m_camera_conf.mouse_movement_y}, this->m_camera_conf.fov, this->m_nearPlane, this->m_farPlane, this->m_p_window);
-        this->m_p_ev = new Events(this->m_p_window, this->m_p_camera, &this->m_sample_object);
+        // this->m_p_grid_manager = new GridManager(this->m_far_plane, this->m_environment_conf.grid_height, this->m_environment_conf.grid_width, this->m_environment_conf.environment_color_r, this->m_environment_conf.environment_color_g, this->m_environment_conf.environment_color_b);
+        this->m_p_camera = new Camera({this->m_camera_conf.movement_x, this->m_camera_conf.movement_y, this->m_camera_conf.movement_z}, {this->m_camera_conf.mouse_movement_x, this->m_camera_conf.mouse_movement_y}, this->m_camera_conf.fov, this->m_near_plane, this->m_far_plane, this->m_p_window);
+        this->m_p_ev = new Events(this->m_p_window, this->m_p_camera);
 
         this->initObjects(this->m_sample_object, "objects/obj1.obj", "textures/obj1.tga", DENG_COORDINATE_MODE_DEFAULT);
+        // this->initGrid();
+
+        // #if DEBUG
+        //     this->m_p_ev->setGrid(this->m_grid);
+        // #endif
+
         this->initInstance();
         this->initDebugMessenger();
         this->initWindowSurface();
@@ -30,7 +37,7 @@ namespace deng
         this->initBuffers(this->m_sample_object);
         this->initDescriptorPool();
         this->initDescriptorSets(this->m_sample_object);
-        this->initCommandBufferFromSwapChain();
+        this->initCommandBuffers();
         this->initSemaphores();
     }
 
@@ -52,6 +59,7 @@ namespace deng
         this->deleteDebugMessenger();
         this->deleteInstance();
         
+        // delete this->m_p_grid_manager;
         delete this->m_p_ev;
         delete this->m_p_camera;
         delete this->m_p_device_swapchain_details;
@@ -179,23 +187,17 @@ namespace deng
     }
 
     void Renderer::initObjects(GameObject &obj, const std::string &obj_filepath, const std::string &texture_filepath, const dengCoordinateMode &coordinate_mode) {
-        // ObjLoader obj_loader(obj_filepath, coordinate_mode);
-        // obj_loader.getObjVerticesAndIndices(obj);
+        ObjLoader obj_loader(obj_filepath, coordinate_mode);
+        obj.origin = {1.5f, 0.0f, 0.5f};
+        obj_loader.getObjVerticesAndIndices(obj);
 
         TextureFormats local_tex_format = getTexFileFormat(texture_filepath);
         ObjRawTextureData texture_data;
 
-        this->m_grid.vertex_data = {{{0.0f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-                                    {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+        this->m_grid.vertex_data = {{{0.0f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+                                    {{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
                                     {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}};
-                                    
-        this->m_grid.model_matrix.setRotation(0, 0, 0);
-        this->m_grid.model_matrix.setScale(1, 1, 1);
-        this->m_grid.model_matrix.setTransformation(0, 0, 0);
 
-        obj.vertex_data = {{{0.0f, -0.5f, 0.0f}, {1.0f, 1.0f}},
-                                    {{0.5f, 0.5f, 0.0f}, {1.0f, 0.0f}},
-                                    {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f}}};
 
         switch (local_tex_format)
         {
@@ -245,10 +247,11 @@ namespace deng
         VkApplicationInfo local_appInfo{};
         local_appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         local_appInfo.pApplicationName = this->m_p_window->getTitle();
-        local_appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 3);
+        local_appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
         local_appInfo.pEngineName = "Deng";
         local_appInfo.engineVersion = VK_MAKE_VERSION(0, 1, 0);
         local_appInfo.apiVersion = VK_API_VERSION_1_0;
+        LOG("seg test!");
 
         //initialise create info
         VkInstanceCreateInfo local_instance_createInfo{}; 
@@ -256,6 +259,7 @@ namespace deng
         local_instance_createInfo.pApplicationInfo = &local_appInfo;
 
         //get count of required extensions
+        LOG("seg test!");
         std::vector<const char*> local_extensions = this->getRequiredExtensions();
         local_instance_createInfo.enabledExtensionCount = local_extensions.size();
         local_instance_createInfo.ppEnabledExtensionNames = local_extensions.data();
@@ -287,12 +291,15 @@ namespace deng
         }
 
         else LOG("Successfully created an instance");
+        LOG("seg test 2!");
     }
 
     std::vector<const char*> Renderer::getRequiredExtensions() {
         uint32_t glfwExtensionCount = 0;
         const char **glfwExtensions;
+        LOG("before glfwGetRequiredInstanceExtensions");
         glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+        LOG("seg test!");
 
         std::vector<const char*> local_extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
@@ -709,8 +716,8 @@ namespace deng
         PipelineCreator local_main_pipeline_creator(this->m_pipeline_data.first.pipeline_type, &this->m_device, &this->m_fm, &this->m_extent, &this->m_renderpass);
         PipelineCreator local_grid_pipeline_creator(this->m_pipeline_data.second.pipeline_type, &this->m_device, &this->m_fm, &this->m_extent, &this->m_renderpass);
 
-        VkGraphicsPipelineCreateInfo local_main_pipeline_createinfo = local_main_pipeline_creator.getGraphicsPipeline("shaders/bin/main_vert.spv", "shaders/bin/main_frag.spv", "main", VK_POLYGON_MODE_FILL, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, this->m_pipeline_data.first.pipeline_layout, 0);
-        VkGraphicsPipelineCreateInfo local_grid_pipeline_createinfo = local_grid_pipeline_creator.getGraphicsPipeline("shaders/bin/grid_vert.spv", "shaders/bin/grid_frag.spv", "main", VK_POLYGON_MODE_FILL, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, this->m_pipeline_data.second.pipeline_layout, 0);
+        VkGraphicsPipelineCreateInfo local_main_pipeline_createinfo = local_main_pipeline_creator.getGraphicsPipeline("shaders/bin/main_vert.spv", "shaders/bin/main_frag.spv", "main", VK_POLYGON_MODE_FILL, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, this->m_pipeline_data.first.pipeline_layout, 0);
+        VkGraphicsPipelineCreateInfo local_grid_pipeline_createinfo = local_grid_pipeline_creator.getGraphicsPipeline("shaders/bin/grid_vert.spv", "shaders/bin/grid_frag.spv", "main", VK_POLYGON_MODE_LINE, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, this->m_pipeline_data.second.pipeline_layout, 0);
         std::array<VkGraphicsPipelineCreateInfo, 2> local_pipeline_createinfos = {local_main_pipeline_createinfo, local_grid_pipeline_createinfo};
         LOG("Pipeline createinfos created!");
 
@@ -781,9 +788,9 @@ namespace deng
     void Renderer::initDepthResources() {
         this->makeImage(VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, nullptr, DENG_IMAGE_TYPE_DEPTH);
         
-        VkImageViewCreateInfo local_imgView_createinfo = this->getImageViewInfo(this->m_depthimage_data.depthimage, VK_FORMAT_D32_SFLOAT, VK_IMAGE_ASPECT_DEPTH_BIT);
+        VkImageViewCreateInfo local_imgage_view_createinfo = this->getImageViewInfo(this->m_depthimage_data.depthimage, VK_FORMAT_D32_SFLOAT, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-        if(vkCreateImageView(this->m_device, &local_imgView_createinfo, nullptr, &this->m_depthimage_data.depthimage_view) != VK_SUCCESS) {
+        if(vkCreateImageView(this->m_device, &local_imgage_view_createinfo, nullptr, &this->m_depthimage_data.depthimage_view) != VK_SUCCESS) {
             ERR("Failed to create depth image view!");
         }
 
@@ -845,12 +852,12 @@ namespace deng
         this->populateBufferMem(&local_size, obj.vertex_data.data(), this->m_buffers.staging_buffer, this->m_buffers.staging_buffer_memory);
 
         this->makeBuffer(&local_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, DENG_BUFFER_TYPE_VERTEX, nullptr);
-        this->copyBufferToBuffer(m_buffers.staging_buffer, m_buffers.vertex_buffer, local_size);
+        this->copyBufferToBuffer(this->m_buffers.staging_buffer, this->m_buffers.vertex_buffer, local_size);
 
         vkDestroyBuffer(this->m_device, m_buffers.staging_buffer, nullptr);
         vkFreeMemory(this->m_device, m_buffers.staging_buffer_memory, nullptr);
 
-        
+        LOG("Grid buffer size: " + std::to_string(this->m_grid.vertex_data.size()));
         local_size = sizeof(this->m_grid.vertex_data[0]) * this->m_grid.vertex_data.size();
 
         this->makeBuffer(&local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, DENG_BUFFER_TYPE_STAGING, nullptr);
@@ -986,7 +993,7 @@ namespace deng
         }
     }
 
-    void Renderer::initCommandBufferFromSwapChain() {
+    void Renderer::initCommandBuffers() {
         LOG("Framebuffer size: " + std::to_string(this->m_swapchain_framebuffers.size()));
 
         this->m_commandbuffers.resize(this->m_swapchain_framebuffers.size());
@@ -1041,11 +1048,13 @@ namespace deng
                 vkCmdBindDescriptorSets(this->m_commandbuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipeline_data.first.pipeline_layout, 0, 1, &this->m_pipeline_data.first.descriptor_sets[i], 0, nullptr);
                 vkCmdDraw(this->m_commandbuffers[i], static_cast<uint32_t>(this->m_sample_object.vertex_data.size()), 1, 0, 0);
 
-                vkCmdBindPipeline(this->m_commandbuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipeline_data.second.pipeline);
-                
-                vkCmdBindVertexBuffers(this->m_commandbuffers[i], 0, 1, &this->m_buffers.grid_buffer, offsets);
-                vkCmdBindDescriptorSets(this->m_commandbuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipeline_data.second.pipeline_layout, 0, 1, &this->m_pipeline_data.second.descriptor_sets[i], 0, nullptr);
-                vkCmdDraw(this->m_commandbuffers[i], static_cast<uint32_t>(this->m_grid.vertex_data.size()), 1, 0, 0);
+                if(this->m_environment_conf.show_grid == DENG_TRUE) {
+                    vkCmdBindPipeline(this->m_commandbuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipeline_data.second.pipeline);
+                    
+                    vkCmdBindVertexBuffers(this->m_commandbuffers[i], 0, 1, &this->m_buffers.grid_buffer, offsets);
+                    vkCmdBindDescriptorSets(this->m_commandbuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipeline_data.second.pipeline_layout, 0, 1, &this->m_pipeline_data.second.descriptor_sets[i], 0, nullptr);
+                    vkCmdDraw(this->m_commandbuffers[i], static_cast<uint32_t>(this->m_grid.vertex_data.size()), 1, 0, 0);
+                }
 
             vkCmdEndRenderPass(this->m_commandbuffers[i]);
             LOG("Ended renderPass!");
@@ -1143,18 +1152,18 @@ namespace deng
         switch (buffer_type)
         {
         case DENG_BUFFER_TYPE_STAGING:
-            p_local_buffer = &m_buffers.staging_buffer;
-            p_local_buffer_memory = &m_buffers.staging_buffer_memory;
+            p_local_buffer = &this->m_buffers.staging_buffer;
+            p_local_buffer_memory = &this->m_buffers.staging_buffer_memory;
             break;
         
         case DENG_BUFFER_TYPE_VERTEX:
-            p_local_buffer = &m_buffers.vertex_buffer;
-            p_local_buffer_memory = &m_buffers.vertex_buffer_memory;
+            p_local_buffer = &this->m_buffers.vertex_buffer;
+            p_local_buffer_memory = &this->m_buffers.vertex_buffer_memory;
             break;
 
         case DENG_BUFFER_TYPE_INDICES:
-            p_local_buffer = &m_buffers.index_buffer;
-            p_local_buffer_memory = &m_buffers.index_buffer_memory;
+            p_local_buffer = &this->m_buffers.index_buffer;
+            p_local_buffer_memory = &this->m_buffers.index_buffer_memory;
             break;
 
         case DENG_BUFFER_TYPE_UNIFORM:
@@ -1165,6 +1174,7 @@ namespace deng
         case DENG_BUFFER_TYPE_GRID:
             p_local_buffer = &this->m_buffers.grid_buffer;
             p_local_buffer_memory = &this->m_buffers.grid_buffer_memory;
+            break;
 
         default:
             break;

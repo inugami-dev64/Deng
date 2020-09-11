@@ -71,17 +71,18 @@ namespace deng {
     VkVertexInputBindingDescription PipelineCreator::getBindingDesc() {
         VkVertexInputBindingDescription local_input_binding_desc{};
         local_input_binding_desc.binding = 0;
-        local_input_binding_desc.stride = sizeof(ObjVertexData);
+        if(this->m_pipeline_type == DENG_PIPELINE_TYPE_OBJECT_BASED) local_input_binding_desc.stride = sizeof(ObjVertexData);
+        else if(this->m_pipeline_type == DENG_PIPELINE_TYPE_SPECIFIED) local_input_binding_desc.stride = sizeof(SpecifiedVertexData);
         local_input_binding_desc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
         return local_input_binding_desc;
     } 
 
-    std::vector<VkVertexInputAttributeDescription> PipelineCreator::getAttributeDesc(const dengPipelineType &pipeline_type) {
+    std::vector<VkVertexInputAttributeDescription> PipelineCreator::getAttributeDesc() {
         std::vector<VkVertexInputAttributeDescription> local_input_attr_desc{};
         local_input_attr_desc.resize(2);
 
-        if(pipeline_type == DENG_PIPELINE_TYPE_OBJECT_BASED) {
+        if(this->m_pipeline_type == DENG_PIPELINE_TYPE_OBJECT_BASED) {
             local_input_attr_desc[0].binding = 0;
             local_input_attr_desc[0].location = 0;
             local_input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -93,7 +94,7 @@ namespace deng {
             local_input_attr_desc[1].offset = offsetof(ObjVertexData, texture_vec);
         }
 
-        else if(pipeline_type == DENG_PIPELINE_TYPE_SPECIFIED) {
+        else if(this->m_pipeline_type == DENG_PIPELINE_TYPE_SPECIFIED) {
             local_input_attr_desc[0].binding = 0;
             local_input_attr_desc[0].location = 0;
             local_input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -133,7 +134,7 @@ namespace deng {
         this->m_shader_stage_createinfos = {local_vertex_shader_stage_createinfo, local_frag_shader_stage_createinfo};
 
         this->m_input_binding_descriptor = this->getBindingDesc();
-        this->m_input_attribute_descriptor = this->getAttributeDesc(this->m_pipeline_type);
+        this->m_input_attribute_descriptor = this->getAttributeDesc();
 
         this->m_vertex_input_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         this->m_vertex_input_createinfo.vertexBindingDescriptionCount = 1;
