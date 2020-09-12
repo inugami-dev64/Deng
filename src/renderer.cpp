@@ -247,11 +247,10 @@ namespace deng
         VkApplicationInfo local_appInfo{};
         local_appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         local_appInfo.pApplicationName = this->m_p_window->getTitle();
-        local_appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+        local_appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 3);
         local_appInfo.pEngineName = "Deng";
         local_appInfo.engineVersion = VK_MAKE_VERSION(0, 1, 0);
         local_appInfo.apiVersion = VK_API_VERSION_1_0;
-        LOG("seg test!");
 
         //initialise create info
         VkInstanceCreateInfo local_instance_createInfo{}; 
@@ -259,7 +258,6 @@ namespace deng
         local_instance_createInfo.pApplicationInfo = &local_appInfo;
 
         //get count of required extensions
-        LOG("seg test!");
         std::vector<const char*> local_extensions = this->getRequiredExtensions();
         local_instance_createInfo.enabledExtensionCount = local_extensions.size();
         local_instance_createInfo.ppEnabledExtensionNames = local_extensions.data();
@@ -285,7 +283,7 @@ namespace deng
             local_instance_createInfo.enabledLayerCount = 0;
             local_instance_createInfo.pNext = nullptr;
         }
-
+        LOG("seg test!");
         if(vkCreateInstance(&local_instance_createInfo, nullptr, &this->m_instance) != VK_SUCCESS) {
             ERR("Failed to create an instance!");
         }
@@ -410,6 +408,9 @@ namespace deng
         vkGetPhysicalDeviceFeatures(device, &local_device_features);
 
         if(this->m_gpu_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) score += 1000;
+        
+        if(local_device_features.fillModeNonSolid == true) score += 1000;
+
         score += this->m_gpu_properties.limits.maxImageDimension2D;
         score += this->m_gpu_properties.limits.maxImageDimension3D;
         score += this->m_gpu_properties.limits.maxMemoryAllocationCount;
@@ -717,7 +718,7 @@ namespace deng
         PipelineCreator local_grid_pipeline_creator(this->m_pipeline_data.second.pipeline_type, &this->m_device, &this->m_fm, &this->m_extent, &this->m_renderpass);
 
         VkGraphicsPipelineCreateInfo local_main_pipeline_createinfo = local_main_pipeline_creator.getGraphicsPipeline("shaders/bin/main_vert.spv", "shaders/bin/main_frag.spv", "main", VK_POLYGON_MODE_FILL, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, this->m_pipeline_data.first.pipeline_layout, 0);
-        VkGraphicsPipelineCreateInfo local_grid_pipeline_createinfo = local_grid_pipeline_creator.getGraphicsPipeline("shaders/bin/grid_vert.spv", "shaders/bin/grid_frag.spv", "main", VK_POLYGON_MODE_LINE, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, this->m_pipeline_data.second.pipeline_layout, 0);
+        VkGraphicsPipelineCreateInfo local_grid_pipeline_createinfo = local_grid_pipeline_creator.getGraphicsPipeline("shaders/bin/grid_vert.spv", "shaders/bin/grid_frag.spv", "main", VK_POLYGON_MODE_FILL, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, this->m_pipeline_data.second.pipeline_layout, 0);
         std::array<VkGraphicsPipelineCreateInfo, 2> local_pipeline_createinfos = {local_main_pipeline_createinfo, local_grid_pipeline_createinfo};
         LOG("Pipeline createinfos created!");
 

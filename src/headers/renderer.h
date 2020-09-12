@@ -3,8 +3,7 @@
 
 #include "objloader.h"
 
-namespace deng {
-
+namespace deng { 
     enum dengPipelines {
         DENG_PIPELINE_MAIN = 0,
         DENG_PIPELINE_GRID = 1

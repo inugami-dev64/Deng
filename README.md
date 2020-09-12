@@ -41,9 +41,6 @@ It is currently in early development stage! <br>
 `$ ./run_debug.sh`
     
 Link to Liberty Statue model used as a example: https://free3d.com/3d-model/statue-of-liberty-73656.html <br> 
-    
-PS! I haven't managed yet to successfully compile and run this program on windows! <br>
-
  
 
  

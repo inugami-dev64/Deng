@@ -165,6 +165,8 @@ namespace deng {
         this->m_rasterization_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         this->m_rasterization_createinfo.depthClampEnable = VK_FALSE;
         this->m_rasterization_createinfo.rasterizerDiscardEnable = VK_FALSE;
+
+        
         this->m_rasterization_createinfo.polygonMode = polygon_mode;
         this->m_rasterization_createinfo.lineWidth = 1.0f;
         this->m_rasterization_createinfo.cullMode = VK_CULL_MODE_BACK_BIT;
