@@ -66,7 +66,7 @@ namespace deng {
         this->m_camera_position = new_position;
     }
 
-    void ViewMatrix::addToPosition(const vec4<float> &movement_speed, const dengCoordinateType &movement_type, const bool &substract) {
+    void ViewMatrix::addToPosition(const vec4<float> &movement_speed, const dengCoordinateAxisType &movement_type, const bool &substract) {
         float movement_X, movement_Z;
         switch (movement_type)
         {
@@ -92,6 +92,8 @@ namespace deng {
         default:
             break;
         }
+
+        LOG("x: " + std::to_string(this->m_camera_position.first) + "/y: " + std::to_string(this->m_camera_position.second) + "/z: " + std::to_string(this->m_camera_position.third));
     }
 
     void ViewMatrix::getViewMatrix(mat4<float> *view) {
@@ -115,19 +117,19 @@ namespace deng {
         this->z_rot = static_cast<float>(-sin(degToRad(y_rot)) * x_rot);
 
         this->m_rot_x_mat = {{1.0f, 0.0f, 0.0f, 0.0f},
-                       {0.0f, static_cast<float>(cos(degToRad(this->x_rot))), static_cast<float>(-sin(degToRad(this->x_rot))), 0.0f},
-                       {0.0f, static_cast<float>(sin(degToRad(this->x_rot))), static_cast<float>(cos(degToRad(this->x_rot))), 0.0f}, 
-                       {0.0f, 0.0f, 0.0f, 1.0f}};
+                            {0.0f, static_cast<float>(cos(degToRad(this->x_rot))), static_cast<float>(-sin(degToRad(this->x_rot))), 0.0f},
+                            {0.0f, static_cast<float>(sin(degToRad(this->x_rot))), static_cast<float>(cos(degToRad(this->x_rot))), 0.0f}, 
+                            {0.0f, 0.0f, 0.0f, 1.0f}};
 
         this->m_rot_y_mat = {{static_cast<float>(cos(degToRad(this->y_rot))), 0.0f, static_cast<float>(sin(degToRad(this->y_rot))), 0.0f},
-                       {0.0f, 1.0f, 0.0f, 0.0f},
-                       {static_cast<float>(-sin(degToRad(this->y_rot))), 0.0f, static_cast<float>(cos(degToRad(this->y_rot))), 0.0f},
-                       {0.0f, 0.0f, 0.0f, 1.0f}};
+                            {0.0f, 1.0f, 0.0f, 0.0f},
+                            {static_cast<float>(-sin(degToRad(this->y_rot))), 0.0f, static_cast<float>(cos(degToRad(this->y_rot))), 0.0f},
+                            {0.0f, 0.0f, 0.0f, 1.0f}};
 
         this->m_rot_z_mat = {{static_cast<float>(cos(degToRad(this->z_rot))), static_cast<float>(-sin(degToRad(this->z_rot))), 0.0f, 0.0f},
-                       {static_cast<float>(sin(degToRad(this->z_rot))), static_cast<float>(cos(degToRad(this->z_rot))), 0.0f, 0.0f},
-                       {0.0f, 0.0f, 1.0f, 0.0f}, 
-                       {0.0f, 0.0f, 0.0f, 1.0f}};
+                            {static_cast<float>(sin(degToRad(this->z_rot))), static_cast<float>(cos(degToRad(this->z_rot))), 0.0f, 0.0f},
+                            {0.0f, 0.0f, 1.0f, 0.0f}, 
+                            {0.0f, 0.0f, 0.0f, 1.0f}};
 
     }
 

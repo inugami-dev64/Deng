@@ -1,7 +1,7 @@
 #include "window.h"
-#define DENG_CAMERA_DEFAULT_X 0
-#define DENG_CAMERA_DEFAULT_Y 0
-#define DENG_CAMERA_DEFAULT_Z 1
+#define DENG_CAMERA_DEFAULT_X 0.0f
+#define DENG_CAMERA_DEFAULT_Y 0.8f
+#define DENG_CAMERA_DEFAULT_Z 1.0f
 
 #define DENG_CAMERA_BASE_SPEED_X 0.0007
 #define DENG_CAMERA_BASE_SPEED_Y 0.0007
@@ -14,9 +14,9 @@ namespace deng {
     class Camera
     {
     private:
-        Window *m_window;
+        Window *m_p_window;
         vec2<float> m_mouse_sens;
-        vec2<double> m_mouse_pos; // only reason it is double because glfwGetCursorPos() requires double
+        vec2<double> m_mouse_pos; // only reason it is double because glfwGetCursorPos() double parametre
         vec4<float> m_movementSpeed;
         
         float m_draw_distance; // distance
@@ -38,6 +38,10 @@ namespace deng {
         ~Camera();
         void updateCursorPos();
         void setCameraViewRotation();
+
+        void setMousePosition(vec2<float> &mouse_pos);
+        void getMousePosition(vec2<float> *mouse_pos);
+
         void moveF();
         void moveB();
         void moveR();

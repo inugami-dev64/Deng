@@ -19,7 +19,7 @@
 
 /*  BEFORE EVERY GIT COMMIT SET DEBUG VALUE TO 0!!!     */
 
-#define DEBUG 0
+#define DEBUG 1
 #define ERR(x) throw std::runtime_error(x)
 #define ERRME(x) std::cout << "\033[1;31m" << x << "\033[0m\n" 
 
@@ -44,7 +44,7 @@ namespace deng {
         DENG_TRUE = 1
     };
 
-    enum dengCoordinateType {
+    enum dengCoordinateAxisType {
         DENG_X = 0,
         DENG_Y = 1,
         DENG_Z = 2
@@ -299,7 +299,7 @@ namespace deng {
     public:
         ViewMatrix();
         void setCameraPosition(const vec4<float> &camera_pos);
-        void addToPosition(const vec4<float> &movement_speed, const dengCoordinateType &movement_type, const bool &substract);
+        void addToPosition(const vec4<float> &movement_speed, const dengCoordinateAxisType &movement_type, const bool &substract);
 
         void setRotation(const float &x_rot, const float &y_rot);
         void setTransformationMatrix();

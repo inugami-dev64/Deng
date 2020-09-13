@@ -75,7 +75,7 @@ namespace deng {
     struct SpecifiedObject {
         vec3<float> origin;
         std::vector<SpecifiedVertexData> vertex_data;
-        // std::vector<uint32_t> *p_index_data;
+        std::vector<uint32_t> *p_index_data;
         ModelMatrix model_matrix;
     };
 }

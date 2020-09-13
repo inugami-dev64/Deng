@@ -9,7 +9,7 @@ namespace deng {
         DENG_COORDINATE_MODE_REVERSE = 1
     };
 
-    enum dengCoordTypes {
+    enum dengCoordinateType {
         DENG_VERTEX_COORD = 0,
         DENG_VERTEX_TEXTURE_COORD = 1,
         DENG_VERTEX_NORMAL_COORD = 2

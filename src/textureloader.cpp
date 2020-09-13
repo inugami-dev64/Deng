@@ -233,7 +233,7 @@ namespace deng {
         }
     }
 
-    TextureFormats getTexFileFormat(const std::string &texFilePath) {
+    dengTextureFormat getTexFileFormat(const std::string &texFilePath) {
         if(texFilePath.find(".bmp") == texFilePath.size() - 4) return DENG_TEXTURE_FORMAT_BMP;
         else if(texFilePath.find(".tga") == texFilePath.size() - 4) return DENG_TEXTURE_FORMAT_TGA;
         else if(texFilePath.find(".png") == texFilePath.size() - 4) return DENG_TEXTURE_FORMAT_PNG;

@@ -3,7 +3,7 @@
 #include "rendererutils.h"
 
 namespace deng {
-    enum TextureFormats {
+    enum dengTextureFormat {
         DENG_TEXTURE_FORMAT_BMP = 0,
         DENG_TEXTURE_FORMAT_TGA = 1,
         DENG_TEXTURE_FORMAT_PNG = 2,
@@ -98,7 +98,7 @@ namespace deng {
         void getTextureDetails(uint32_t *p_texture_width, uint32_t *p_texture_height, VkDeviceSize *p_texture_size, std::vector<uint8_t> &texture_pixel_data);
     };
 
-    TextureFormats getTexFileFormat(const std::string &texture_filepath);
+    dengTextureFormat getTexFileFormat(const std::string &texture_filepath);
 }
 
 

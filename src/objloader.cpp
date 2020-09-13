@@ -97,7 +97,7 @@ namespace deng {
             if(obj_contents[i].find("f ") == 0) {
                 char buffer[obj_contents[i].size()];
                 strncpy(buffer, obj_contents[i].c_str(), obj_contents[i].size());
-                dengCoordTypes local_vertex_type_count = DENG_VERTEX_COORD;
+                dengCoordinateType local_vertex_type_count = DENG_VERTEX_COORD;
 
                 std::string iStr;
 

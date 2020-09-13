@@ -7,17 +7,18 @@ namespace deng
         this->m_required_extensions_name.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
         this->loadDataFromConf(DENG_TRUE, DENG_TRUE);
-        this->m_p_window = &win; 
-        // this->m_p_grid_manager = new GridManager(this->m_far_plane, this->m_environment_conf.grid_height, this->m_environment_conf.grid_width, this->m_environment_conf.environment_color_r, this->m_environment_conf.environment_color_g, this->m_environment_conf.environment_color_b);
+        this->m_p_window = &win;
+
+        this->m_p_grid_manager = new GridManager(&this->m_grid, this->m_far_plane + 5, &this->m_environment_conf.grid_height, &this->m_environment_conf.grid_width, &this->m_environment_conf.grid_line_color_r, &this->m_environment_conf.grid_line_color_g, &this->m_environment_conf.grid_line_color_b);
         this->m_p_camera = new Camera({this->m_camera_conf.movement_x, this->m_camera_conf.movement_y, this->m_camera_conf.movement_z}, {this->m_camera_conf.mouse_movement_x, this->m_camera_conf.mouse_movement_y}, this->m_camera_conf.fov, this->m_near_plane, this->m_far_plane, this->m_p_window);
         this->m_p_ev = new Events(this->m_p_window, this->m_p_camera);
 
         this->initObjects(this->m_sample_object, "objects/obj1.obj", "textures/obj1.tga", DENG_COORDINATE_MODE_DEFAULT);
-        // this->initGrid();
+        this->initGrid();
 
-        // #if DEBUG
-        //     this->m_p_ev->setGrid(this->m_grid);
-        // #endif
+        #if DEBUG
+            this->m_p_ev->setGrid(&this->m_grid);
+        #endif
 
         this->initInstance();
         this->initDebugMessenger();
@@ -59,14 +60,14 @@ namespace deng
         this->deleteDebugMessenger();
         this->deleteInstance();
         
-        // delete this->m_p_grid_manager;
+        delete this->m_p_grid_manager;
         delete this->m_p_ev;
         delete this->m_p_camera;
         delete this->m_p_device_swapchain_details;
     }
 
     void Renderer::deleteCommandBuffers() {
-        vkFreeCommandBuffers(this->m_device, this->m_commandpool, this->m_commandbuffers.size(), this->m_commandbuffers.data());
+        vkFreeCommandBuffers(this->m_device, this->m_commandpool, static_cast<uint32_t>(this->m_commandbuffers.size()), this->m_commandbuffers.data());
     }
 
     void Renderer::deleteDebugMessenger() {
@@ -98,6 +99,7 @@ namespace deng
 
         vkDestroyDescriptorPool(this->m_device, this->m_pipeline_data.first.descriptor_pool, nullptr);
         vkDestroyDescriptorPool(this->m_device, this->m_pipeline_data.second.descriptor_pool, nullptr);
+        vkDestroyDescriptorPool(this->m_device, this->m_pipeline_data.third.descriptor_pool, nullptr);
     }
 
     void Renderer::deleteImageViews() {
@@ -117,9 +119,11 @@ namespace deng
     void Renderer::deletePipelines() {
         vkDestroyPipeline(this->m_device, this->m_pipeline_data.first.pipeline, nullptr);
         vkDestroyPipeline(this->m_device, this->m_pipeline_data.second.pipeline, nullptr);
+        vkDestroyPipeline(this->m_device, this->m_pipeline_data.third.pipeline, nullptr);
 
         vkDestroyPipelineLayout(this->m_device, this->m_pipeline_data.first.pipeline_layout, nullptr);
         vkDestroyPipelineLayout(this->m_device, this->m_pipeline_data.second.pipeline_layout, nullptr);
+        vkDestroyPipelineLayout(this->m_device, this->m_pipeline_data.third.pipeline_layout, nullptr);
     }
 
     void Renderer::deleteFrameBuffers() {
@@ -153,6 +157,7 @@ namespace deng
     void Renderer::deleteDescriptorSetLayout() {
         vkDestroyDescriptorSetLayout(this->m_device, this->m_pipeline_data.first.descriptor_set_layout, nullptr);
         vkDestroyDescriptorSetLayout(this->m_device, this->m_pipeline_data.second.descriptor_set_layout, nullptr);
+        vkDestroyDescriptorSetLayout(this->m_device, this->m_pipeline_data.third.descriptor_set_layout, nullptr);
     }
 
     void Renderer::deleteDepthImageData() {
@@ -188,15 +193,15 @@ namespace deng
 
     void Renderer::initObjects(GameObject &obj, const std::string &obj_filepath, const std::string &texture_filepath, const dengCoordinateMode &coordinate_mode) {
         ObjLoader obj_loader(obj_filepath, coordinate_mode);
-        obj.origin = {1.5f, 0.0f, 0.5f};
+        obj.origin = {0.0f, 0.6f, 0.0f};
         obj_loader.getObjVerticesAndIndices(obj);
 
-        TextureFormats local_tex_format = getTexFileFormat(texture_filepath);
+        dengTextureFormat local_tex_format = getTexFileFormat(texture_filepath);
         ObjRawTextureData texture_data;
 
-        this->m_grid.vertex_data = {{{0.0f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-                                    {{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-                                    {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}};
+        // this->m_grid.vertex_data = {{{-10.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+        //                             {{10.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+        //                             {{-10.0f, 0.0f, -0.0001f}, {1.0f, 0.0f, 0.0f}}};
 
 
         switch (local_tex_format)
@@ -234,6 +239,10 @@ namespace deng
         obj.model_matrix.setRotation(0, 0, 0);
         obj.model_matrix.setScale(1, 1, 1);
         obj.model_matrix.setTransformation(0, 0, 0);
+    }
+
+    void Renderer::initGrid() {
+        this->m_p_grid_manager->generateVertices(this->m_p_camera->view_matrix.getPosition());
     }
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT *p_callback_data, void *p_user_data) {
@@ -706,22 +715,28 @@ namespace deng
     void Renderer::initGraphicsPipelines() {
         this->m_pipeline_data.first.pipeline_type = DENG_PIPELINE_TYPE_OBJECT_BASED;
         this->m_pipeline_data.second.pipeline_type = DENG_PIPELINE_TYPE_SPECIFIED;
+        this->m_pipeline_data.third.pipeline_type = DENG_PIPELINE_TYPE_SPECIFIED;
 
         this->makeDescriptorSetLayout(this->m_pipeline_data.first.pipeline_type, &this->m_pipeline_data.first.descriptor_set_layout);
         this->makeDescriptorSetLayout(this->m_pipeline_data.second.pipeline_type, &this->m_pipeline_data.second.descriptor_set_layout);
+        this->makeDescriptorSetLayout(this->m_pipeline_data.third.pipeline_type, &this->m_pipeline_data.third.descriptor_set_layout);
 
         this->m_pipeline_data.first.pipeline_layout = this->makePipelineLayouts(this->m_pipeline_data.first.descriptor_set_layout);
         this->m_pipeline_data.second.pipeline_layout = this->makePipelineLayouts(this->m_pipeline_data.second.descriptor_set_layout);
+        this->m_pipeline_data.third.pipeline_layout = this->makePipelineLayouts(this->m_pipeline_data.third.descriptor_set_layout);
 
         PipelineCreator local_main_pipeline_creator(this->m_pipeline_data.first.pipeline_type, &this->m_device, &this->m_fm, &this->m_extent, &this->m_renderpass);
         PipelineCreator local_grid_pipeline_creator(this->m_pipeline_data.second.pipeline_type, &this->m_device, &this->m_fm, &this->m_extent, &this->m_renderpass);
+        PipelineCreator local_reverse_grid_pipeline_creator(this->m_pipeline_data.third.pipeline_type, &this->m_device, &this->m_fm, &this->m_extent, &this->m_renderpass);
 
-        VkGraphicsPipelineCreateInfo local_main_pipeline_createinfo = local_main_pipeline_creator.getGraphicsPipeline("shaders/bin/main_vert.spv", "shaders/bin/main_frag.spv", "main", VK_POLYGON_MODE_FILL, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, this->m_pipeline_data.first.pipeline_layout, 0);
+        VkGraphicsPipelineCreateInfo local_main_pipeline_createinfo = local_main_pipeline_creator.getGraphicsPipeline("shaders/bin/main_vert.spv", "shaders/bin/main_frag.spv", "main", VK_POLYGON_MODE_FILL, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, this->m_pipeline_data.first.pipeline_layout, 0);
         VkGraphicsPipelineCreateInfo local_grid_pipeline_createinfo = local_grid_pipeline_creator.getGraphicsPipeline("shaders/bin/grid_vert.spv", "shaders/bin/grid_frag.spv", "main", VK_POLYGON_MODE_LINE, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, this->m_pipeline_data.second.pipeline_layout, 0);
-        std::array<VkGraphicsPipelineCreateInfo, 2> local_pipeline_createinfos = {local_main_pipeline_createinfo, local_grid_pipeline_createinfo};
+        VkGraphicsPipelineCreateInfo local_reverse_grid_pipeline_createinfo = local_reverse_grid_pipeline_creator.getGraphicsPipeline("shaders/bin/grid_vert.spv", "shaders/bin/grid_frag.spv", "main", VK_POLYGON_MODE_LINE, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, this->m_pipeline_data.third.pipeline_layout, 0);
+        std::array<VkGraphicsPipelineCreateInfo, 3> local_pipeline_createinfos = {local_main_pipeline_createinfo, local_grid_pipeline_createinfo, local_reverse_grid_pipeline_createinfo};
+
         LOG("Pipeline createinfos created!");
 
-        std::array<VkPipeline, 2> local_pipelines;
+        std::array<VkPipeline, 3> local_pipelines;
         if(vkCreateGraphicsPipelines(this->m_device, VK_NULL_HANDLE, static_cast<uint32_t>(local_pipeline_createinfos.size()), local_pipeline_createinfos.data(), nullptr, local_pipelines.data()) != VK_SUCCESS) {
             ERR("Failed to create graphics pipelines!");
         }
@@ -729,6 +744,7 @@ namespace deng
         else {
             this->m_pipeline_data.first.pipeline = local_pipelines[0];
             this->m_pipeline_data.second.pipeline = local_pipelines[1];
+            this->m_pipeline_data.third.pipeline = local_pipelines[2];
             LOG("Graphics pipelines created successfully!");
         }
     }
@@ -1004,7 +1020,6 @@ namespace deng
         local_commandbuffer_allocation_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         local_commandbuffer_allocation_info.commandBufferCount = static_cast<uint32_t>(this->m_commandbuffers.size());
 
-        LOG("Seg test!");
         if(vkAllocateCommandBuffers(this->m_device, &local_commandbuffer_allocation_info, this->m_commandbuffers.data())) {
             ERR("Failed to allocate command buffers!");
         }
@@ -1050,9 +1065,12 @@ namespace deng
 
                 if(this->m_environment_conf.show_grid == DENG_TRUE) {
                     vkCmdBindPipeline(this->m_commandbuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipeline_data.second.pipeline);
-                    
+
                     vkCmdBindVertexBuffers(this->m_commandbuffers[i], 0, 1, &this->m_buffers.grid_buffer, offsets);
                     vkCmdBindDescriptorSets(this->m_commandbuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipeline_data.second.pipeline_layout, 0, 1, &this->m_pipeline_data.second.descriptor_sets[i], 0, nullptr);
+                    vkCmdDraw(this->m_commandbuffers[i], static_cast<uint32_t>(this->m_grid.vertex_data.size()), 1, 0, 0);
+
+                    vkCmdBindPipeline(this->m_commandbuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipeline_data.third.pipeline);
                     vkCmdDraw(this->m_commandbuffers[i], static_cast<uint32_t>(this->m_grid.vertex_data.size()), 1, 0, 0);
                 }
 
@@ -1305,7 +1323,12 @@ namespace deng
         local_submitinfo.pWaitDstStageMask = local_wait_stages;
         
         local_submitinfo.commandBufferCount = 1;
-        local_submitinfo.pCommandBuffers = &this->m_commandbuffers[image_index];
+        
+        // if(this->m_p_camera->view_matrix.getPosition().second >= 0.0f)
+            local_submitinfo.pCommandBuffers = &this->m_commandbuffers[image_index];
+
+        // else if(this->m_p_camera->view_matrix.getPosition().second < 0.0f) 
+            // local_submitinfo.pCommandBuffers = &this->m_commandbuffers.second[image_index];
 
         local_submitinfo.signalSemaphoreCount = 1;
         local_submitinfo.pSignalSemaphores = local_signalSemaphores;

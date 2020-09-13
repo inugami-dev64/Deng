@@ -7,9 +7,9 @@ namespace deng {
         this->m_mouse_sens.first = DENG_MOUSE_BASE_SENSITIVITY_X * (1/mouseMovementSpeedMultiplier.first);
         this->m_mouse_sens.second = DENG_MOUSE_BASE_SENSIVITY_Y * (1/mouseMovementSpeedMultiplier.second);
 
-        this->m_window = window;
+        this->m_p_window = window;
         this->m_is_init = DENG_TRUE;
-        this->p_projection_matrix = new ProjectionMatrix(FOV, near, far,(float) (this->m_window->getSize().first / this->m_window->getSize().second));
+        this->p_projection_matrix = new ProjectionMatrix(FOV, near, far,(float) (this->m_p_window->getSize().first / this->m_p_window->getSize().second));
 
         this->m_movementSpeed.first = DENG_CAMERA_BASE_SPEED_X * cameraMovementSpeedMultiplier.first;
         this->m_movementSpeed.second = DENG_CAMERA_BASE_SPEED_Y * cameraMovementSpeedMultiplier.second;
@@ -49,22 +49,22 @@ namespace deng {
         if(this->m_is_init == DENG_TRUE) {
             this->m_mouse_pos.first = 0.0f;
             this->m_mouse_pos.second = 0.0f;
-            glfwSetCursorPos(this->m_window->getWindow(), this->m_mouse_pos.first, this->m_mouse_pos.second);
+            glfwSetCursorPos(this->m_p_window->getWindow(), this->m_mouse_pos.first, this->m_mouse_pos.second);
             this->m_is_init = DENG_FALSE;
         }
 
         if(this->m_mouse_pos.second > this->m_mouse_sens.second) {
             this->m_mouse_pos.second = this->m_mouse_sens.second;
-            glfwSetCursorPos(this->m_window->getWindow(), this->m_mouse_pos.first * this->m_window->getSize().first, this->m_mouse_sens.second * this->m_window->getSize().second);
+            glfwSetCursorPos(this->m_p_window->getWindow(), this->m_mouse_pos.first * this->m_p_window->getSize().first, this->m_mouse_sens.second * this->m_p_window->getSize().second);
         }
         else if(this->m_mouse_pos.second < -this->m_mouse_sens.second) {
             this->m_mouse_pos.second = -this->m_mouse_sens.second;
-            glfwSetCursorPos(this->m_window->getWindow(), this->m_mouse_pos.first * this->m_window->getSize().first, -this->m_mouse_sens.second * this->m_window->getSize().second);
+            glfwSetCursorPos(this->m_p_window->getWindow(), this->m_mouse_pos.first * this->m_p_window->getSize().first, -this->m_mouse_sens.second * this->m_p_window->getSize().second);
         }
 
         if(this->m_mouse_pos.first >= this->m_mouse_sens.first || this->m_mouse_pos.first <= -this->m_mouse_sens.first) {
             this->m_mouse_pos.first = 0.0f;
-            glfwSetCursorPos(this->m_window->getWindow(), this->m_mouse_pos.first, this->m_mouse_pos.second * this->m_window->getSize().second);
+            glfwSetCursorPos(this->m_p_window->getWindow(), this->m_mouse_pos.first * this->m_p_window->getSize().second, this->m_mouse_pos.second * this->m_p_window->getSize().second);
         }
 
         this->view_matrix.setTransformationMatrix();
@@ -73,9 +73,22 @@ namespace deng {
         // LOG("Mouse x_pos: " + std::to_string(this->m_mouse_pos.x) + "/Mouse y_pos: " + std::to_string(this->m_mouse_pos.y));
     }
 
+    void Camera::setMousePosition(vec2<float> &mouse_position) {
+        this->m_mouse_pos.first = mouse_position.first;
+        this->m_mouse_pos.second = mouse_position.second;
+        glfwSetCursorPos(this->m_p_window->getWindow(), this->m_mouse_pos.first * this->m_p_window->getSize().first, this->m_mouse_pos.second * this->m_p_window->getSize().second);
+    }
+
+    void Camera::getMousePosition(vec2<float> *mouse_position) {
+        if(mouse_position != nullptr) {
+            mouse_position->first = static_cast<float>(this->m_mouse_pos.first);
+            mouse_position->second = static_cast<float>(this->m_mouse_pos.second);
+        }
+    }
+
     void Camera::updateCursorPos() {
-        glfwGetCursorPos(this->m_window->getWindow(), &this->m_mouse_pos.first, &this->m_mouse_pos.second);
-        this->m_mouse_pos.first /= this->m_window->getSize().first;
-        this->m_mouse_pos.second /= this->m_window->getSize().second;
+        glfwGetCursorPos(this->m_p_window->getWindow(), &this->m_mouse_pos.first, &this->m_mouse_pos.second);
+        this->m_mouse_pos.first /= this->m_p_window->getSize().first;
+        this->m_mouse_pos.second /= this->m_p_window->getSize().second;
     }
 }

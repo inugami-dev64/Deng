@@ -1,7 +1,10 @@
 #include "gridgenerator.h"
 
+#define DENG_INPUT_MODE_CHANGE_INTERVAL 200
+#define DENG_MOVEMENT_INTERVAL 1
+
 namespace deng {
-    enum dengMovementEvents {
+    enum dengMovementEvent {
         DENG_MOVEMENT_NONE = -1,
         DENG_MOVEMENT_FORWARD = 0,
         DENG_MOVEMENT_BACKWARD = 1,
@@ -11,19 +14,17 @@ namespace deng {
         DENG_MOVEMENT_DOWNWARD = 5
     };
 
-    struct Movements {
-        dengMovementEvents x;
-        dengMovementEvents y;
-        dengMovementEvents z;
-    };
-
     class Events
     {
     private:
-        Timer m_timer;
-        Camera *m_camera;
-        Window *m_window;
-        Movements m_movements;
+        Timer m_movement_timer;
+        Timer m_input_mode_change_timer;
+
+        Camera *m_p_camera;
+        Window *m_p_window;
+        vec3<dengMovementEvent> m_movements;
+        vec2<float> m_frozen_mouse_position;
+        
 
         #if DEBUG
             SpecifiedObject *m_grid;
@@ -32,7 +33,7 @@ namespace deng {
     private:
         void getMovementType();
         void checkForInputModeChange();
-        dengBool isKeyPressed(const int &key);
+        dengBool isKeyPressed(const int &key, const dengBool &isRepeated, dengBool *isReleased);
         void isMouseKeysPressed(dengBool *lmb_click, dengBool *mmb_click, dengBool *rmb_click);
 
         #if DEBUG
@@ -42,7 +43,7 @@ namespace deng {
 
     public:
         Events(Window *p_win, Camera *p_camera);
-        dengMovementEvents getMovement();
+        dengMovementEvent getMovement();
         void handleExit();
         void update();
 

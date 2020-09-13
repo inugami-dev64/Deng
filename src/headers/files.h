@@ -5,7 +5,7 @@
 
 namespace deng {
 
-    enum dengWriteModes {
+    enum dengWriteMode {
         DENG_WRITEMODE_REWRITE = 0,
         DENG_WRITEMODE_FROM_END = 1
     };
@@ -44,7 +44,6 @@ namespace deng {
                     }
 
                     T i;
-                    LOG("ValStr: \"" + value_str + "\"");
                     if(typeid(i).name() == typeid(bool).name()) {
                         if(value_str == "true") return true;
                         else if(value_str == "false") return false; 

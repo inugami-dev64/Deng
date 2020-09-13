@@ -5,7 +5,7 @@
 
 namespace deng {
 
-    enum dengPipelines {
+    enum dengPipelineName {
         DENG_PIPELINE_MAIN = 0,
         DENG_PIPELINE_GRID = 1
     };
@@ -27,13 +27,13 @@ namespace deng {
     {   
     private:
         const float m_near_plane = 0.1f;
-        const float m_far_plane = 10.0f;
+        const float m_far_plane = 25.0f;
 
         const char *m_p_validation_layer = "VK_LAYER_KHRONOS_validation";
 
         const int m_MAX_FRAMES_IN_FLIGHT = 2; 
         size_t m_current_frame = 0;
-        vec2<PipelineData> m_pipeline_data;
+        vec3<PipelineData> m_pipeline_data;
 
         VkInstance m_instance;
         VkDebugUtilsMessengerEXT m_debug_messenger;

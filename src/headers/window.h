@@ -6,8 +6,8 @@
 namespace deng
 {   
     enum dengInputMode {
-        DENG_INPUT_NONMOVEMENT = 1,
-        DENG_INPUT_MOVEMENT = 2
+        DENG_INPUT_NONMOVEMENT = 0,
+        DENG_INPUT_MOVEMENT = 1
     };
 
     class Window
