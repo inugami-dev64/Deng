@@ -5,9 +5,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/deng)
 
 if(UNIX)
     link_directories(../dependencies/lib/unix)
-    link_directories(../dependencies/lib/debug)
 elseif(WIN32)
     link_directories(../dependencies/lib/windows)
+endif()
+
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    link_directories(../dependencies/lib/debug)
 endif()
 
 add_executable(${PROJECT_NAME}
@@ -37,7 +40,7 @@ if(UNIX)
 
     if(CMAKE_BUILD_TYPE MATCHES Debug)
         target_link_libraries(${PROJECT_NAME} 
-            PRIVATE -lVkLayer_utils
+            PRIVATE VkLayer_utils
         )
 
         message("Debug mode detected!")
@@ -48,13 +51,20 @@ if(UNIX)
 
 elseif(WIN32)
     target_link_libraries(${PROJECT_NAME}
+        PRIVATE glfw3dll
+        PRIVATE opengl32
         PRIVATE vulkan-1
-        PRIVATE glfw3
     )
+
+    if(CMAKE_BUILD_TYPE MATCHES Debug) 
+        target_link_libraries(${PROJECT_NAME}
+            PRIVATE VkLayer_utils
+        )
+    endif()
 
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
-            ../${CMAKE_SOURCE_DIR}/dependencies/lib/windows/glfw3.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
+            ${CMAKE_SOURCE_DIR}/dependencies/lib/windows/glfw3.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
 
 endif()

@@ -19,7 +19,7 @@
 
 /*  BEFORE EVERY GIT COMMIT SET DEBUG VALUE TO 0!!!     */
 
-#define DEBUG 1
+#define DEBUG 0
 #define ERR(x) throw std::runtime_error(x)
 #define ERRME(x) std::cout << "\033[1;31m" << x << "\033[0m\n" 
 
@@ -31,9 +31,8 @@
     const bool enable_validation_layers = false;
 #endif
 
-// this is quite a mess
 namespace deng {
-    
+
     enum dengSpecialObjectDrawMode {
         DENG_SPECIAL_OBJECT_VERTEX_DRAW_LINEAR = 0,
         DENG_SPECIAL_OBJECT_VERTEX_DRAW_INDEXED = 1
