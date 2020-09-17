@@ -14,19 +14,25 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 
 add_executable(${PROJECT_NAME}
-    camera.cpp
-    dengcore.cpp
-    events.cpp
-    filemanager.cpp
+    core/camera.cpp
+    core/renderer.cpp
+    core/rendererutils.cpp
+    core/window.cpp
+
+    maths/dengmath.cpp
+    maths/events.cpp
+    maths/objectshandler.cpp
+
+    utilities/filemanager.cpp
+    utilities/gridgenerator.cpp
+    utilities/objloader.cpp
+    utilities/textureloader.cpp
+    utilities/timer.cpp
+
+    dengui/dengui.cpp
+    dengui/sprites.cpp
+
     main.cpp
-    objectshandler.cpp
-    objloader.cpp
-    rendererutils.cpp
-    renderer.cpp
-    gridgenerator.cpp
-    textureloader.cpp
-    timer.cpp
-    window.cpp
 )
 
 if(UNIX)

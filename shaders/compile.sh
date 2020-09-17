@@ -1,6 +1,9 @@
 #!/bin/bash
 
-glslc src/main_shader.vert -o bin/main_vert.spv
-glslc src/main_shader.frag -o bin/main_frag.spv
-glslc src/grid_shader.vert -o bin/grid_vert.spv
-glslc src/grid_shader.frag -o bin/grid_frag.spv
+glslc src/deng/object_shader.vert -o bin/deng/object_vert.spv
+glslc src/deng/object_shader.frag -o bin/deng/object_frag.spv
+glslc src/deng/specified_shader.vert -o bin//deng/specified_vert.spv
+glslc src/deng/specified_shader.frag -o bin/deng/specified_frag.spv
+
+glslc src/dengui/ui_shader.vert -o bin/dengui/ui_vert.spv
+glslc src/dengui/ui_shader.frag -o bin/dengui/ui_frag.spv

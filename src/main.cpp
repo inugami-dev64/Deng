@@ -1,4 +1,4 @@
-#include "headers/renderer.h"
+#include "core/dengcore.h"
 
 int main() {
     deng::Window window(1650, 1280, "Game!");
