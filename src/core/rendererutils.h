@@ -3,13 +3,10 @@
 
 namespace deng {
 
-    class HardwareSpecs {
-    private:
-        dengBool getExtensionSupport(const VkPhysicalDevice &gpu, const char *p_extension_name);
-
-    public:
-        uint32_t getMemoryType(const VkPhysicalDevice &gpu, const uint32_t &type_filter, const VkMemoryPropertyFlags &properties);
-        uint32_t getDeviceScore(const VkPhysicalDevice &device, std::vector<const char*> &extenstions);
+    struct HardwareSpecs {
+        static dengBool getExtensionSupport(const VkPhysicalDevice &gpu, const char *p_extension_name);
+        static uint32_t getMemoryType(const VkPhysicalDevice &gpu, const uint32_t &type_filter, const VkMemoryPropertyFlags &properties);
+        static uint32_t getDeviceScore(const VkPhysicalDevice &device, std::vector<const char*> &extenstions);
     };
 
     class QueueFamilies {

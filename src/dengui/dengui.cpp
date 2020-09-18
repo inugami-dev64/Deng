@@ -2,17 +2,19 @@
 
 namespace dengUI {
 
-    Window::Window(WindowInfo &p_windowinfo) {
-        this->m_windowinfo = p_windowinfo;
+    Window::Window(WindowInfo &windowinfo, BufferInfo &bufferinfo) {
+        this->m_windowinfo = windowinfo;
+        this->m_bufferinfo = bufferinfo;
+
         this->createMainWindow();   
         this->createBuffers();
     }
 
     Window::~Window() {
-        vkDestroyBuffer(*this->m_windowinfo.p_device, *this->m_windowinfo.p_vertices_buffer, nullptr);
-        vkDestroyBuffer(*this->m_windowinfo.p_device, *this->m_windowinfo.p_indices_buffer, nullptr);
-        vkFreeMemory(*this->m_windowinfo.p_device, *this->m_windowinfo.p_vertices_buffer_memory, nullptr);
-        vkFreeMemory(*this->m_windowinfo.p_device, *this->m_windowinfo.p_indices_buffer_memory, nullptr);
+        vkDestroyBuffer(*this->m_windowinfo.p_device, *this->m_bufferinfo.p_vertices_buffer, nullptr);
+        vkDestroyBuffer(*this->m_windowinfo.p_device, *this->m_bufferinfo.p_indices_buffer, nullptr);
+        vkFreeMemory(*this->m_windowinfo.p_device, *this->m_bufferinfo.p_vertices_buffer_memory, nullptr);
+        vkFreeMemory(*this->m_windowinfo.p_device, *this->m_bufferinfo.p_indices_buffer_memory, nullptr);
         delete this->m_p_main_rectangle;
     }
 
@@ -26,80 +28,39 @@ namespace dengUI {
 
         this->m_p_main_rectangle = new RectangleSprite(&local_rectangle_spriteinfo);
         this->m_p_main_rectangle->getVertices(&this->m_vertices_data, &this->m_indices_data);
-        LOG("Seg test!");
+        // this->m_vertices_data = {{{-0.5f, -0.5f}, {0.5f, 0.0f, 0.0f, 0.2f}},
+        //                          {{0.5f, -0.5f}, {0.5f, 0.0f, 0.0f, 0.2f}},
+        //                          {{0.5f, 0.5f}, {0.5f, 0.0f, 0.0f, 0.2f}},
+        //                          {{-0.5f, 0.5f}, {0.5f, 0.0f, 0.0f, 0.2f}}};
+
+        // this->m_indices_data = {0, 1, 2, 2, 3, 0};
     }
 
     void Window::createBuffers() {
-        LOG("Creating buffers for window!");
-        VkBufferCreateInfo local_vertices_buffer_createinfo{};
-        local_vertices_buffer_createinfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        local_vertices_buffer_createinfo.size = static_cast<VkDeviceSize>(this->m_vertices_data.size());
-        local_vertices_buffer_createinfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-        local_vertices_buffer_createinfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        VkDeviceSize local_size = static_cast<VkDeviceSize>(sizeof(this->m_vertices_data[0]) * this->m_vertices_data.size());
 
-        VkBufferCreateInfo local_indices_buffer_createinfo{};
-        local_indices_buffer_createinfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        local_indices_buffer_createinfo.size = static_cast<VkDeviceSize>(this->m_indices_data.size());
-        local_indices_buffer_createinfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-        local_indices_buffer_createinfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        LOG("seg test!");
-        if(vkCreateBuffer(*this->m_windowinfo.p_device, &local_vertices_buffer_createinfo, nullptr, this->m_windowinfo.p_vertices_buffer) != VK_SUCCESS) {
-            ERR("Failed to create ui vertices' buffer!");
-        }
+        // vertices buffer
+        this->m_bufferinfo.p_buffer_create_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_staging_buffer_memory, nullptr);
+        this->m_bufferinfo.p_buffer_memory_populate_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, this->m_vertices_data.data(), this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_staging_buffer_memory);
 
-        if(vkCreateBuffer(*this->m_windowinfo.p_device, &local_indices_buffer_createinfo, nullptr, this->m_windowinfo.p_indices_buffer) != VK_SUCCESS) {
-            ERR("Failed to create ui indices buffer!");
-        }
-        
-        VkMemoryRequirements local_vertices_memory_requirements;
-        vkGetBufferMemoryRequirements(*this->m_windowinfo.p_device, *this->m_windowinfo.p_vertices_buffer, &local_vertices_memory_requirements);
+        this->m_bufferinfo.p_buffer_create_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, this->m_bufferinfo.p_vertices_buffer, this->m_bufferinfo.p_vertices_buffer_memory, nullptr);
+        this->m_bufferinfo.p_buffer_copy_func(this->m_windowinfo.p_device, this->m_bufferinfo.p_commandpool, this->m_bufferinfo.p_graphics_queue, this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_vertices_buffer, &local_size);
 
-        VkMemoryRequirements local_indices_memory_requirements;
-        vkGetBufferMemoryRequirements(*this->m_windowinfo.p_device, *this->m_windowinfo.p_indices_buffer, &local_indices_memory_requirements);
+        vkDestroyBuffer(*this->m_windowinfo.p_device, *this->m_bufferinfo.p_staging_buffer, nullptr);
+        vkFreeMemory(*this->m_windowinfo.p_device, *this->m_bufferinfo.p_staging_buffer_memory, nullptr);
 
-        deng::HardwareSpecs local_hardware_specs;
+        // indices buffer
+        local_size = static_cast<VkDeviceSize>(sizeof(this->m_indices_data[0]) * this->m_indices_data.size());
 
-        VkMemoryAllocateInfo local_vertices_memory_allocinfo{};
-        local_vertices_memory_allocinfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        local_vertices_memory_allocinfo.allocationSize = local_vertices_memory_requirements.size;
-        local_vertices_memory_allocinfo.memoryTypeIndex = local_hardware_specs.getMemoryType(*this->m_windowinfo.p_gpu, local_vertices_memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        this->m_bufferinfo.p_buffer_create_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_staging_buffer_memory, nullptr);
+        this->m_bufferinfo.p_buffer_memory_populate_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, this->m_indices_data.data(), this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_staging_buffer_memory);
 
-        VkMemoryAllocateInfo local_indices_memory_allocinfo{};
-        local_indices_memory_allocinfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        local_indices_memory_allocinfo.allocationSize = local_vertices_memory_requirements.size;
-        local_vertices_memory_requirements.memoryTypeBits = local_hardware_specs.getMemoryType(*this->m_windowinfo.p_gpu, local_indices_memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        this->m_bufferinfo.p_buffer_create_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, this->m_bufferinfo.p_indices_buffer, this->m_bufferinfo.p_indices_buffer_memory, nullptr);
+        this->m_bufferinfo.p_buffer_copy_func(this->m_windowinfo.p_device, this->m_bufferinfo.p_commandpool, this->m_bufferinfo.p_graphics_queue, this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_indices_buffer, &local_size);
 
-        if(vkAllocateMemory(*this->m_windowinfo.p_device, &local_vertices_memory_allocinfo, nullptr, this->m_windowinfo.p_vertices_buffer_memory) != VK_SUCCESS) {
-            ERR("Failed to allocate memory for window vertices buffer!");
-        }
+        vkDestroyBuffer(*this->m_windowinfo.p_device, *this->m_bufferinfo.p_staging_buffer, nullptr);
+        vkFreeMemory(*this->m_windowinfo.p_device, *this->m_bufferinfo.p_staging_buffer_memory, nullptr);
 
-        if(vkAllocateMemory(*this->m_windowinfo.p_device, &local_indices_memory_allocinfo, nullptr, this->m_windowinfo.p_indices_buffer_memory) != VK_SUCCESS) {
-            ERR("Failed to allocate memory for window indices buffer!");
-        }
-
-        // this->m_vertices_data = {{{-0.5, -0.5, 0.0}, {0.1, 0.0, 0.0, 1.0}},
-        //                           {{0.5, -0.5, 0.0}, {0.1, 0.0, 0.0, 1.0}},
-        //                           {{0.5, 0.5, 0.0}, {0.1, 0.0, 0.0, 1.0}},
-        //                           {{-0.5, 0.5, 0.0}, {0.1, 0.0, 0.0, 1.0}}};
-
-        // this->m_indices_data = {0, 1, 2, 2, 3, 0};
-
-        vkBindBufferMemory(*this->m_windowinfo.p_device, *this->m_windowinfo.p_vertices_buffer, *this->m_windowinfo.p_vertices_buffer_memory, 0);
-        vkBindBufferMemory(*this->m_windowinfo.p_device, *this->m_windowinfo.p_indices_buffer, *this->m_windowinfo.p_indices_buffer_memory, 0);
-
-        void *local_data;
-        vkMapMemory(*this->m_windowinfo.p_device, *this->m_windowinfo.p_vertices_buffer_memory, 0, static_cast<VkDeviceSize>(this->m_vertices_data.size()), 0, &local_data);
-            memcpy(local_data, this->m_vertices_data.data(), this->m_vertices_data.size());
-        vkUnmapMemory(*this->m_windowinfo.p_device, *this->m_windowinfo.p_vertices_buffer_memory);
-
-        local_data = nullptr;
-
-        vkMapMemory(*this->m_windowinfo.p_device, *this->m_windowinfo.p_indices_buffer_memory, 0, static_cast<VkDeviceSize>(this->m_indices_data.size()), 0, &local_data);
-            memcpy(local_data, this->m_indices_data.data(), this->m_indices_data.size());
-        vkUnmapMemory(*this->m_windowinfo.p_device, *this->m_windowinfo.p_indices_buffer_memory);
-    }
-
-    uint32_t Window::getVerticesCount() {
-        return static_cast<uint32_t>(this->m_indices_data.size());
+        *this->m_bufferinfo.p_indices_size = static_cast<uint32_t>(this->m_indices_data.size());
     }
 }

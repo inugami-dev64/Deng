@@ -7,21 +7,17 @@ namespace dengUI {
         if(p_sprite_info != nullptr) {
             vertices_data.resize(4);
             
-            vertices_data[0].position_vec.first = p_sprite_info->position.first - (((p_sprite_info->origin.first * 0.5) + 0.5) * p_sprite_info->size.first);
-            vertices_data[0].position_vec.second = p_sprite_info->position.second - (((p_sprite_info->origin.second * 0.5) + 0.5) * p_sprite_info->size.second);
-            vertices_data[0].position_vec.third = 0.0f;
+            vertices_data[0].position_vec.first = p_sprite_info->position.first - (p_sprite_info->origin.first * p_sprite_info->size.first);
+            vertices_data[0].position_vec.second = p_sprite_info->position.second - (p_sprite_info->origin.second * p_sprite_info->size.second);
 
-            vertices_data[1].position_vec.first = p_sprite_info->position.first + (1 - (((p_sprite_info->origin.first * 0.5) + 0.5) * p_sprite_info->size.first));
-            vertices_data[1].position_vec.second = p_sprite_info->position.second - (((p_sprite_info->origin.second * 0.5) + 0.5) * p_sprite_info->size.second);
-            vertices_data[1].position_vec.third = 0.0f;
+            vertices_data[1].position_vec.first = p_sprite_info->position.first + (p_sprite_info->size.first - (p_sprite_info->origin.first * p_sprite_info->size.first));
+            vertices_data[1].position_vec.second = p_sprite_info->position.second - (p_sprite_info->origin.second * p_sprite_info->size.second);
 
-            vertices_data[2].position_vec.first = p_sprite_info->position.first + (1 - (((p_sprite_info->origin.first * 0.5) + 0.5) * p_sprite_info->size.first));
-            vertices_data[2].position_vec.second = p_sprite_info->position.second + (1 - (((p_sprite_info->origin.second * 0.5) + 0.5) * p_sprite_info->size.second));
-            vertices_data[2].position_vec.third = 0.0f;
+            vertices_data[2].position_vec.first = p_sprite_info->position.first + (p_sprite_info->size.first - (p_sprite_info->origin.first * p_sprite_info->size.first));
+            vertices_data[2].position_vec.second = p_sprite_info->position.second + (p_sprite_info->size.second - (p_sprite_info->origin.second * p_sprite_info->size.second));
 
-            vertices_data[3].position_vec.first = p_sprite_info->position.first - (((p_sprite_info->origin.first * 0.5) + 0.5) * p_sprite_info->size.first);
-            vertices_data[3].position_vec.second = p_sprite_info->position.second + (1 - (((p_sprite_info->origin.second * 0.5) + 0.5) * p_sprite_info->size.second));
-            vertices_data[3].position_vec.third = 0.0f;
+            vertices_data[3].position_vec.first = p_sprite_info->position.first - (p_sprite_info->origin.first * p_sprite_info->size.first);
+            vertices_data[3].position_vec.second = p_sprite_info->position.second + (p_sprite_info->size.second - (p_sprite_info->origin.second * p_sprite_info->size.second));
 
             for(size_t i = 0; i < vertices_data.size(); i++) 
                 vertices_data[i].color_vec = {p_sprite_info->color.first, p_sprite_info->color.second, p_sprite_info->color.third, p_sprite_info->color.fourth};

@@ -57,7 +57,7 @@ namespace deng {
         if(!local_device_features.samplerAnisotropy) return 0;
 
         for(const char* extenstion_name : required_extenstions) {
-            if(this->getExtensionSupport(gpu, extenstion_name) != DENG_TRUE) {
+            if(HardwareSpecs::getExtensionSupport(gpu, extenstion_name) != DENG_TRUE) {
                 LOG("Required extension: " + std::string(extenstion_name) + " is not supported!");
                 return 0;
             }
@@ -136,9 +136,24 @@ namespace deng {
     VkVertexInputBindingDescription PipelineCreator::getBindingDesc() {
         VkVertexInputBindingDescription local_input_binding_desc{};
         local_input_binding_desc.binding = 0;
-        if(this->m_p_pipeline_data->pipeline_type == DENG_PIPELINE_TYPE_OBJECT_BASED) local_input_binding_desc.stride = sizeof(ObjVertexData);
-        else if(this->m_p_pipeline_data->pipeline_type == DENG_PIPELINE_TYPE_SPECIFIED) local_input_binding_desc.stride = sizeof(SpecifiedVertexData);
-        local_input_binding_desc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        switch (this->m_p_pipeline_data->pipeline_type)
+        {
+        case DENG_PIPELINE_TYPE_OBJECT_BASED:
+            local_input_binding_desc.stride = sizeof(ObjVertexData);
+            break;
+        
+        case DENG_PIPELINE_TYPE_SPECIFIED:
+            local_input_binding_desc.stride = sizeof(SpecifiedVertexData);
+            break;
+
+        case DENG_PIPELINE_TYPE_UI:
+            local_input_binding_desc.stride = sizeof(dengUI::UIVerticesData);
+            break;
+        
+        default:
+            break;
+        }
 
         return local_input_binding_desc;
     } 
@@ -147,7 +162,9 @@ namespace deng {
         std::vector<VkVertexInputAttributeDescription> local_input_attr_desc{};
         local_input_attr_desc.resize(2);
 
-        if(this->m_p_pipeline_data->pipeline_type == DENG_PIPELINE_TYPE_OBJECT_BASED) {
+        switch (this->m_p_pipeline_data->pipeline_type)
+        {
+        case DENG_PIPELINE_TYPE_OBJECT_BASED:
             local_input_attr_desc[0].binding = 0;
             local_input_attr_desc[0].location = 0;
             local_input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -157,9 +174,9 @@ namespace deng {
             local_input_attr_desc[1].location = 1;
             local_input_attr_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
             local_input_attr_desc[1].offset = offsetof(ObjVertexData, texture_vec);
-        }
+            break;
 
-        else if(this->m_p_pipeline_data->pipeline_type == DENG_PIPELINE_TYPE_SPECIFIED) {
+        case DENG_PIPELINE_TYPE_SPECIFIED:
             local_input_attr_desc[0].binding = 0;
             local_input_attr_desc[0].location = 0;
             local_input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -169,6 +186,22 @@ namespace deng {
             local_input_attr_desc[1].location = 1;
             local_input_attr_desc[1].format = VK_FORMAT_R32G32B32_SFLOAT;
             local_input_attr_desc[1].offset = offsetof(SpecifiedVertexData, color_vec);
+            break;
+
+        case DENG_PIPELINE_TYPE_UI:
+            local_input_attr_desc[0].binding = 0;
+            local_input_attr_desc[0].location = 0;
+            local_input_attr_desc[0].format = VK_FORMAT_R32G32_SFLOAT;
+            local_input_attr_desc[0].offset = offsetof(dengUI::UIVerticesData, position_vec);
+            
+            local_input_attr_desc[1].binding = 0;
+            local_input_attr_desc[1].location = 1;
+            local_input_attr_desc[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            local_input_attr_desc[1].offset = offsetof(dengUI::UIVerticesData, color_vec);
+            break;
+        
+        default:
+            break;
         }
 
         return local_input_attr_desc;
@@ -232,7 +265,6 @@ namespace deng {
         this->m_rasterization_createinfo.depthClampEnable = VK_FALSE;
         this->m_rasterization_createinfo.rasterizerDiscardEnable = VK_FALSE;
 
-        
         this->m_rasterization_createinfo.polygonMode = polygon_mode;
         this->m_rasterization_createinfo.lineWidth = 1.0f;
         this->m_rasterization_createinfo.cullMode = VK_CULL_MODE_BACK_BIT;

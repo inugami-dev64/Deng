@@ -2,7 +2,7 @@
 #define RENDERER_H
 
 namespace deng {
-    
+
     class Renderer
     {   
     private:
@@ -54,8 +54,6 @@ namespace deng {
 
         std::vector<VkCommandBuffer> m_commandbuffers;
 
-        HardwareSpecs m_hardware_specs;
-
         Buffers m_buffers;
 
         SwapChainDetails *m_p_device_swapchain_details;
@@ -78,6 +76,9 @@ namespace deng {
         GameObject m_sample_object;
         SpecifiedObject m_grid;
         dengUI::Window *m_p_dengui_window;
+        
+        // std::vector<dengUI::UIVerticesData> m_dengui_window_vertices;
+        // std::vector<uint16_t> m_dengui_window_indices;
 
     private:
         void loadDataFromConf(const dengBool &load_camera_conf, const dengBool &load_environment_conf, const dengBool &load_dengUI_conf);
@@ -91,7 +92,6 @@ namespace deng {
         void initSwapChain();
         VkImageViewCreateInfo getImageViewInfo(VkImage &image, const VkFormat &format, const VkImageAspectFlags &aspect_flags);
         void initImageView();
-        VkShaderModule initShaderModule(const std::vector<char> &bin);
         void initRenderPass();
         void initDescriptorSetLayouts();
         void initPipelineLayouts();
@@ -129,25 +129,27 @@ namespace deng {
         void deleteSurface();
         void deleteDevice();
 
-        void makeVertexBuffer();
+        /* frame update */
         void makeFrame();
-        void makeBuffer(const VkDeviceSize *p_size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, const dengBufferType &type, size_t *p_buffer_index);
+        void updateUniformBufferData(const uint32_t &current_image, GameObject &obj);
+
+        /* VkImage related functions */
         void makeImage(const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject *p_obj, const ImageType &image_mode);
-
-        void populateBufferMem(const VkDeviceSize *p_size, const void *p_src_data, VkBuffer &buffer, VkDeviceMemory &buffer_memory);
-        void copyBufferToBuffer(VkBuffer &src_buffer, VkBuffer &dst_buffer, const VkDeviceSize &size);
-
         void transitionImageLayout(VkImage &image, const VkFormat &format, const VkImageLayout &old_layout, const VkImageLayout &new_layout); 
         void copyBufferToImage(VkBuffer &src_buffer, VkImage &dst_image, const uint32_t &width, const uint32_t &height);
+        
+        /* VkBuffer related functions */
+        static void makeBuffer(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, VkBuffer *p_buffer, VkDeviceMemory *p_buffer_memory, size_t *p_buffer_index);
+        static void populateBufferMem(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const void *p_src_data, VkBuffer *p_buffer, VkDeviceMemory *p_buffer_memory);
+        static void copyBufferToBuffer(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkBuffer *p_dst_buffer, VkDeviceSize *p_size);
 
-        void beginCommandBufferSingleCommand(VkCommandBuffer &commandbuffer);
-        void endCommandBufferSingleCommand(VkCommandBuffer &commandbuffer);
-
-        void updateUniformBufferData(const uint32_t &current_image, GameObject &obj);
+        /* single commandbuffer command recorder function */
+        static void beginCommandBufferSingleCommand(VkDevice *device, VkCommandPool *commandpool, VkCommandBuffer &commandbuffer);
+        static void endCommandBufferSingleCommand(VkDevice *device, VkQueue *graphics_queue, VkCommandPool *commandpool, VkCommandBuffer &commandBuffer);
 
         VkResult makeDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT  *p_messenger_createinfo);
         std::vector<const char*> getRequiredExtensions();
-
+        static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT *p_callback_data, void *p_user_data);
 
     public:
         void run();

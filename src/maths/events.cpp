@@ -7,7 +7,7 @@ namespace deng {
     }
 
     // logging debug functions 
-    #if DEBUG
+    #if GENERIC_DEBUG
         void Events::setGrid(SpecifiedObject *grid) {
             this->m_grid = grid;
         }
@@ -126,7 +126,11 @@ namespace deng {
             this->m_p_camera->setCameraViewRotation();
 
             if(this->m_input_mode_change_timer.isTimePassed(DENG_INPUT_MODE_CHANGE_INTERVAL) && this->isKeyPressed(GLFW_KEY_ESCAPE, DENG_FALSE, nullptr)) {
-                LOG("frozen_mouse_position x:" + std::to_string(this->m_frozen_mouse_position.first) + "/" + std::to_string(this->m_frozen_mouse_position.second));
+
+                #if CAMERA_MOUSE_DEBUG
+                    LOG("frozen_mouse_position x:" + std::to_string(this->m_frozen_mouse_position.first) + "/" + std::to_string(this->m_frozen_mouse_position.second));
+                #endif
+                
                 this->m_p_window->setInputMode(DENG_INPUT_NONMOVEMENT);
                 this->m_input_mode_change_timer.setNewTimePoint();
                 this->m_p_camera->getMousePosition(&this->m_frozen_mouse_position);
@@ -149,7 +153,7 @@ namespace deng {
     void Events::update() {
         this->checkForInputModeChange();
 
-        #if DEBUG
+        #if GENERIC_DEBUG
             this->handleGridCoordinateLogging(GLFW_KEY_F12, "grid_coord.log");
         #endif
         

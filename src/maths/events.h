@@ -16,7 +16,7 @@ namespace deng {
         vec2<float> m_frozen_mouse_position;
         
 
-        #if DEBUG
+        #if GENERIC_DEBUG
             SpecifiedObject *m_grid;
         #endif
 
@@ -26,7 +26,7 @@ namespace deng {
         dengBool isKeyPressed(const int &key, const dengBool &isRepeated, dengBool *isReleased);
         void isMouseKeysPressed(dengBool *lmb_click, dengBool *mmb_click, dengBool *rmb_click);
 
-        #if DEBUG
+        #if GENERIC_DEBUG
             void handleGridCoordinateLogging(const int32_t &log_key, const std::string &file_name);
         #endif
         
@@ -37,7 +37,7 @@ namespace deng {
         void handleExit();
         void update();
 
-        #if DEBUG
+        #if GENERIC_DEBUG
             void setGrid(SpecifiedObject *grid);
         #endif
     };

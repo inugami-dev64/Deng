@@ -1,7 +1,7 @@
 namespace dengUI {
 
     struct UIVerticesData {
-        deng::vec3<float> position_vec;
+        deng::vec2<float> position_vec;
         deng::vec4<float> color_vec;
     };
 

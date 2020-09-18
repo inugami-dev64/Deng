@@ -93,7 +93,9 @@ namespace deng {
             break;
         }
 
-        LOG("x: " + std::to_string(this->m_camera_position.first) + "/y: " + std::to_string(this->m_camera_position.second) + "/z: " + std::to_string(this->m_camera_position.third));
+        #if CAMERA_LOCATION_DEBUG
+            LOG("x: " + std::to_string(this->m_camera_position.first) + "/y: " + std::to_string(this->m_camera_position.second) + "/z: " + std::to_string(this->m_camera_position.third));
+        #endif
     }
 
     void ViewMatrix::getViewMatrix(mat4<float> *view) {
