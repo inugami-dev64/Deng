@@ -23,7 +23,7 @@
     `$ chmod +x run_debug.sh` <br>
     `$ ./run_debug.sh` <br><br>
 
-### Build with validtation layers and debug mode disabled
+### Build with validation layers and debug mode disabled
 * Build the program using cmake: <br>
     `$ cd Deng` <br>
     `$ mkdir build` <br>

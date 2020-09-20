@@ -1,19 +1,27 @@
-#include "../core/dengcore.h"
+#include "../core/deng_core.h"
 
 namespace deng {
-
+    
+    // generic math functions
     float degToRad(const float &deg) {
         return (float) deg/180 * PI;
     }
 
-    void getCirclePointCoords(const float &centre_x, const float &centre_y, const uint16_t &angle, const float &radius, float *out_x, float *out_y) {
-        if(out_x != nullptr) *out_x = radius * static_cast<float>(sin(degToRad(angle))) + centre_x;
-        if(out_x != nullptr) *out_y = radius * static_cast<float>(cos(degToRad(angle))) + centre_y;
+    vec2<float> getCartesianCoordsPoint(const vec2<float> &centre_position, const uint16_t &angle, const float &distance, const dengBool &inverted_y_axis) {
+        vec2<float> local_coords;
+        local_coords.first = (sin(degToRad(angle)) * distance) + centre_position.first;
+        if(!inverted_y_axis) local_coords.second = (cos(degToRad(angle)) * distance) + centre_position.second;
+        else local_coords.second = -(cos(degToRad(angle)) * distance) + centre_position.second;
+
+        return local_coords; 
     }
 
     float getFractionNumerator(const float &value_numerator, const float &value_denominator, const float &equivalent_denominator) {
         return (value_numerator * equivalent_denominator) / value_denominator;
     }
+
+    //indexing algorithms
+
 
     void ModelMatrix::setRotation(const float &x_rot, const float &y_rot, const float &z_rot) {
         this->m_rot_x_mat = {{1.0f, 0.0f, 0.0f, 0.0f},
@@ -67,27 +75,29 @@ namespace deng {
     }
 
     void ViewMatrix::addToPosition(const vec4<float> &movement_speed, const dengCoordinateAxisType &movement_type, const bool &substract) {
-        float movement_X, movement_Z;
+
         switch (movement_type)
         {
-        case DENG_X:
-            getCirclePointCoords(0.0f, 0.0f, (this->y_rot + 90), movement_speed.first, &movement_X, &movement_Z);
+        case DENG_X: {
+            vec2<float> local_movement = getCartesianCoordsPoint({0.0f, 0.0f}, (this->y_rot + 90), movement_speed.first, DENG_FALSE);
 
-            if(substract) this->m_camera_position.first -= movement_X, this->m_camera_position.third -= movement_Z;
-            else this->m_camera_position.first += movement_X, this->m_camera_position.third += movement_Z;
+            if(substract) this->m_camera_position.first -= local_movement.first, this->m_camera_position.third -= local_movement.second ;
+            else this->m_camera_position.first += local_movement.first, this->m_camera_position.third += local_movement.second;
             break;
+        }
 
         case DENG_Y:
             if(substract) this->m_camera_position.second -= movement_speed.second;
             else this->m_camera_position.second += movement_speed.second;
             break;
 
-        case DENG_Z:
-            getCirclePointCoords(0.0f, 0.0f, this->y_rot, movement_speed.third, &movement_X, &movement_Z);
+        case DENG_Z: {
+            vec2<float> local_movement = getCartesianCoordsPoint({0.0f, 0.0f}, this->y_rot, movement_speed.third, DENG_FALSE);
             
-            if(substract) this->m_camera_position.first -= movement_X, this->m_camera_position.third -= movement_Z;
-            else this->m_camera_position.first += movement_X, this->m_camera_position.third += movement_Z;
+            if(substract) this->m_camera_position.first -= local_movement.first, this->m_camera_position.third -= local_movement.second;
+            else this->m_camera_position.first += local_movement.first, this->m_camera_position.third += local_movement.second;
             break;
+        }
         
         default:
             break;

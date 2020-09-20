@@ -1,3 +1,5 @@
+#ifndef GRID_GENERATOR_H
+#define GRID_GENERATOR_H
 
 #define DENG_GRID_TRIANGLE_THICKNESS -0.0001
 namespace deng {
@@ -30,3 +32,5 @@ namespace deng {
         void generateIndices();
     };
 }
+
+#endif

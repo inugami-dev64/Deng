@@ -1,4 +1,4 @@
-#include "../core/dengcore.h"
+#include "../core/deng_core.h"
 
 namespace deng {
     GridManager::GridManager(SpecifiedObject *grid, const float &max_distance, float *p_grid_height, float *p_grid_width, float *p_color_r, float *p_color_g, float *p_color_b) {

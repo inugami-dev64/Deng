@@ -1,5 +1,5 @@
-#ifndef TEXTURELOADER_H
-#define TEXTURELOADER_H
+#ifndef TEXTURE_LOADER_H
+#define TEXTURE_LOADER_H
 
 namespace deng {
 
@@ -92,7 +92,5 @@ namespace deng {
 
     dengTextureFormat getTexFileFormat(const std::string &texture_filepath);
 }
-
-
 
 #endif

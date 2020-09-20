@@ -134,7 +134,7 @@ namespace deng {
         void updateUniformBufferData(const uint32_t &current_image, GameObject &obj);
 
         /* VkImage related functions */
-        void makeImage(const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject *p_obj, const ImageType &image_mode);
+        void makeImage(const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject *p_obj, const dengImageType &image_type);
         void transitionImageLayout(VkImage &image, const VkFormat &format, const VkImageLayout &old_layout, const VkImageLayout &new_layout); 
         void copyBufferToImage(VkBuffer &src_buffer, VkImage &dst_image, const uint32_t &width, const uint32_t &height);
         

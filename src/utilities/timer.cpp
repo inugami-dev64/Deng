@@ -1,4 +1,4 @@
-#include "../core/dengcore.h"
+#include "../core/deng_core.h"
 
 namespace deng {
     long Timer::getTime() {

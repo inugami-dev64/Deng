@@ -1,4 +1,4 @@
-#include "../core/dengcore.h"
+#include "../core/deng_core.h"
 
 namespace deng {
     ObjLoader::ObjLoader(const std::string &file_name, const dengCoordinateMode &coordinate_mode) {

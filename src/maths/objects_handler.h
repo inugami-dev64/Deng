@@ -1,5 +1,5 @@
-#ifndef OBJECTSHANDLER_H
-#define OBJECTSHANDLER_H
+#ifndef OBJECTS_HANDLER_H
+#define OBJECTS_HANDLER_H
 
 namespace deng {
     
@@ -11,6 +11,11 @@ namespace deng {
     struct SpecifiedVertexData {
         vec3<float> position_vec;
         vec3<float> color_vec;
+    };
+
+    struct UIVerticesData {
+        deng::vec3<float> position_vec;
+        deng::vec4<float> color_vec;
     };
 
     struct Buffers {

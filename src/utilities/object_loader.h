@@ -1,5 +1,5 @@
-#ifndef OBJLOADER_H
-#define OBJLOADER_H
+#ifndef OBJECT_LOADER_H
+#define OBJECT_LOADER_H
 
 namespace deng {
     

@@ -1,6 +1,7 @@
-#include "../core/dengcore.h"
+#include "../core/deng_core.h"
 
 namespace deng {
+
     ObjRawTextureData::ObjRawTextureData() {
         this->p_width = new uint32_t;
         this->p_height = new uint32_t;
@@ -8,7 +9,7 @@ namespace deng {
     }
 
     void ObjRawTextureData::cpyDims(ObjTextureData &texData) {
-        texData.width = *this->p_width;
+        texData.width = *this->p_width; 
         texData.height = *this->p_height; 
     }
 

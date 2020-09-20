@@ -1,5 +1,6 @@
-#ifndef DENGMATH_H
-#define DENGMATH_H
+#ifndef DENG_MATH_H
+#define DENG_MATH_H
+
 #define PI 3.1415926
 
 namespace deng {
@@ -11,10 +12,10 @@ namespace deng {
             return static_cast<size_t>(2);
         }
 
-        T *getVectorElement(const int &i) {
+        T *getVectorElement(const size_t &i) {
             T *local_current_element;
             if(i < this->size())
-                local_current_element = *this->first + i;
+                local_current_element = &this->first + i;
 
             else 
                 ERR("index is out of vector bounds");
@@ -48,10 +49,10 @@ namespace deng {
             return static_cast<size_t>(3);
         }
 
-        T *getVectorElement(const int &i) {
+        T *getVectorElement(const size_t &i) {
             T *local_current_element;
             if(i < this->size())
-                local_current_element = *this->first + i;
+                local_current_element = &this->first + i;
 
             else 
                 ERR("index is out of vector bounds");
@@ -85,10 +86,10 @@ namespace deng {
             return static_cast<size_t>(4);
         }
 
-        T *getVectorElement(const int &i) {
+        T *getVectorElement(const size_t &i) {
             T *local_current_element;
             if(i < this->size())
-                local_current_element = *this->first + i;
+                local_current_element = &this->first + i;
 
             else 
                 ERR("index is out of vector bounds");
@@ -113,12 +114,6 @@ namespace deng {
 
             return local_vec4;
         }
-    };
-    
-    template<typename T>
-    
-    class DengIterator {
-
     };
 
     template<typename T>
@@ -178,11 +173,6 @@ namespace deng {
             return newVec;
         }
     };
-
-    // generic math functions
-    float degToRad(const float &deg);
-    void getCirclePointCoords(const float &centre_x, const float &centre_y, const uint16_t &angle, const float &radius, float *out_x, float *out_y);
-    float getFractionNumerator(const float &value_numerator, const float &value_denominator, const float &equivalent_denominator);
 
     class ModelMatrix {
     private:
@@ -246,6 +236,11 @@ namespace deng {
         mat4<float> view;
         mat4<float> projection;
     };
+
+    // generic math functions
+    float degToRad(const float &deg);
+    vec2<float> getCartesianCoordsPoint(const vec2<float> &centre, const uint16_t &angle, const float &distance, const dengBool &inverted_y_axis);
+    float getFractionNumerator(const float &value_numerator, const float &value_denominator, const float &equivalent_denominator);
 }
 
 #endif

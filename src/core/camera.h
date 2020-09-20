@@ -1,3 +1,6 @@
+#ifndef CAMERA_H
+#define CAMERA_H
+
 #define DENG_CAMERA_DEFAULT_X 0.0f
 #define DENG_CAMERA_DEFAULT_Y 0.8f
 #define DENG_CAMERA_DEFAULT_Z 1.0f
@@ -52,3 +55,5 @@ namespace deng {
     };
     
 }
+
+#endif

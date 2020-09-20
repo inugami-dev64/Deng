@@ -1,3 +1,5 @@
+#ifndef EVENTS_H
+#define EVENTS_H
 
 #define DENG_INPUT_MODE_CHANGE_INTERVAL 200
 #define DENG_MOVEMENT_INTERVAL 1
@@ -42,3 +44,5 @@ namespace deng {
         #endif
     };
 }
+
+#endif

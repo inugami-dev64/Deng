@@ -16,21 +16,22 @@ endif()
 add_executable(${PROJECT_NAME}
     core/camera.cpp
     core/renderer.cpp
-    core/rendererutils.cpp
+    core/renderer_utils.cpp
     core/window.cpp
 
-    maths/dengmath.cpp
+    maths/deng_math.cpp
     maths/events.cpp
-    maths/objectshandler.cpp
+    maths/objects_handler.cpp
 
-    utilities/filemanager.cpp
-    utilities/gridgenerator.cpp
-    utilities/objloader.cpp
-    utilities/textureloader.cpp
+    utilities/file_manager.cpp
+    utilities/grid_generator.cpp
+    utilities/object_loader.cpp
+    utilities/texture_loader.cpp
     utilities/timer.cpp
 
-    dengui/dengui.cpp
-    dengui/sprites.cpp
+    dengui/dengui_window.cpp
+    dengui/dengui_events.cpp
+    dengui/dengui_sprites.cpp
 
     main.cpp
 )

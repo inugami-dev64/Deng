@@ -1,4 +1,4 @@
-#include "dengcore.h"
+#include "deng_core.h"
 
 namespace deng {
     
@@ -148,7 +148,7 @@ namespace deng {
             break;
 
         case DENG_PIPELINE_TYPE_UI:
-            local_input_binding_desc.stride = sizeof(dengUI::UIVerticesData);
+            local_input_binding_desc.stride = sizeof(UIVerticesData);
             break;
         
         default:
@@ -191,13 +191,13 @@ namespace deng {
         case DENG_PIPELINE_TYPE_UI:
             local_input_attr_desc[0].binding = 0;
             local_input_attr_desc[0].location = 0;
-            local_input_attr_desc[0].format = VK_FORMAT_R32G32_SFLOAT;
-            local_input_attr_desc[0].offset = offsetof(dengUI::UIVerticesData, position_vec);
+            local_input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+            local_input_attr_desc[0].offset = offsetof(UIVerticesData, position_vec);
             
             local_input_attr_desc[1].binding = 0;
             local_input_attr_desc[1].location = 1;
             local_input_attr_desc[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-            local_input_attr_desc[1].offset = offsetof(dengUI::UIVerticesData, color_vec);
+            local_input_attr_desc[1].offset = offsetof(UIVerticesData, color_vec);
             break;
         
         default:

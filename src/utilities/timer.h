@@ -1,3 +1,6 @@
+#ifndef TIMER_H
+#define TIMER_H
+
 namespace deng {
     
     class Timer {
@@ -12,3 +15,5 @@ namespace deng {
         Timer();
     };
 }
+
+#endif

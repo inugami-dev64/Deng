@@ -1,6 +1,9 @@
+#ifndef DENG_CORE_H
+#define DENG_CORE_H
+
 /*  BEFORE EVERY GIT COMMIT SET GENERIC_DEBUG VALUE TO 0!!!     */
 
-#define GENERIC_DEBUG 0
+#define GENERIC_DEBUG 1
 
 /*  please do not enable these at the same time, 
     otherwise you won't be able to debug anything */
@@ -66,7 +69,7 @@ enum dengCoordinateType {
     DENG_VERTEX_NORMAL_COORD = 2
 };
 
-enum ImageType {
+enum dengImageType {
     DENG_IMAGE_TYPE_TEXTURE = 0,
     DENG_IMAGE_TYPE_DEPTH = 1
 };
@@ -82,6 +85,11 @@ enum dengTextureFormat {
 enum dengInputMode {
     DENG_INPUT_NONMOVEMENT = 0,
     DENG_INPUT_MOVEMENT = 1
+};
+
+enum dengTriangleMode {
+    DENG_TRIANGLE_MODE_BOTTOM_LEFT = 0,
+    DENG_TRIANGLE_MODE_TOP_RIGHT = 1
 };
 
 #include <vulkan/vulkan.h>
@@ -103,17 +111,19 @@ typedef void(*BufferCreateFunc)(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkD
 typedef void(*BufferMemoryPopulateFunc)(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const void *p_src_data, VkBuffer *p_buffer, VkDeviceMemory *p_buffer_memory);
 typedef void(*BufferCopyFunc)(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkBuffer *p_dst_buffer, VkDeviceSize *p_size);
 
-#include "../maths/dengmath.h"
+#include "../maths/deng_math.h"
 #include "../scripting/parsing.h"
 #include "../utilities/timer.h"
 #include "window.h"
 #include "camera.h"
-#include "../maths/objectshandler.h"
-#include "../utilities/gridgenerator.h"
+#include "../maths/objects_handler.h"
+#include "../utilities/grid_generator.h"
 #include "../maths/events.h"
 #include "../utilities/files.h"
-#include "rendererutils.h"
-#include "../utilities/textureloader.h"
-#include "../utilities/objloader.h"
-#include "../dengui/dengui.h"
+#include "renderer_utils.h"
+#include "../utilities/texture_loader.h"
+#include "../utilities/object_loader.h"
+#include "../dengui/dengui_core.h"
 #include "renderer.h"
+
+#endif

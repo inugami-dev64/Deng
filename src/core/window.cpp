@@ -1,4 +1,4 @@
-#include "dengcore.h"
+#include "deng_core.h"
 
 namespace deng {
     Window::Window(const uint32_t &x, const uint32_t &y, const char *title) {

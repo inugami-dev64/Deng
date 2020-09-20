@@ -87,6 +87,18 @@ namespace deng {
         float dengui_window_color_g;
         float dengui_window_color_b;
         float dengui_window_color_a;
+
+        float dengui_border_thickness;
+        float dengui_titlebar_height;
+        float dengui_border_color_r;
+        float dengui_border_color_g;
+        float dengui_border_color_b;
+        float dengui_border_color_a;
+
+        float dengui_minimizing_triangle_color_r;
+        float dengui_minimizing_triangle_color_g;
+        float dengui_minimizing_triangle_color_b;
+        float dengui_minimizing_triangle_color_a;
     };
 }
 

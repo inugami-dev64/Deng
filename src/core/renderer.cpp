@@ -1,4 +1,4 @@
-#include "dengcore.h"
+#include "deng_core.h"
 
 namespace deng
 {
@@ -99,6 +99,18 @@ namespace deng
             this->m_dengui_conf.dengui_window_color_g = this->m_fm.getConfVal<float>("dengui_window_color_g", "config/dengui.conf");
             this->m_dengui_conf.dengui_window_color_b = this->m_fm.getConfVal<float>("dengui_window_color_b", "config/dengui.conf");
             this->m_dengui_conf.dengui_window_color_a = this->m_fm.getConfVal<float>("dengui_window_color_a", "config/dengui.conf");
+
+            this->m_dengui_conf.dengui_border_thickness = this->m_fm.getConfVal<float>("dengui_border_thickness", "config/dengui.conf");
+            this->m_dengui_conf.dengui_titlebar_height = this->m_fm.getConfVal<float>("dengui_titlebar_height", "config/dengui.conf");
+            this->m_dengui_conf.dengui_border_color_r = this->m_fm.getConfVal<float>("dengui_border_color_r", "config/dengui.conf");
+            this->m_dengui_conf.dengui_border_color_g = this->m_fm.getConfVal<float>("dengui_border_color_g", "config/dengui.conf");
+            this->m_dengui_conf.dengui_border_color_b = this->m_fm.getConfVal<float>("dengui_border_color_b", "config/dengui.conf");
+            this->m_dengui_conf.dengui_border_color_a = this->m_fm.getConfVal<float>("dengui_border_color_a", "config/dengui.conf");
+
+            this->m_dengui_conf.dengui_minimizing_triangle_color_r = this->m_fm.getConfVal<float>("dengui_minimizing_triangle_color_r", "config/dengui.conf");
+            this->m_dengui_conf.dengui_minimizing_triangle_color_g = this->m_fm.getConfVal<float>("dengui_minimizing_triangle_color_g", "config/dengui.conf");
+            this->m_dengui_conf.dengui_minimizing_triangle_color_b = this->m_fm.getConfVal<float>("dengui_minimizing_triangle_color_b", "config/dengui.conf");
+            this->m_dengui_conf.dengui_minimizing_triangle_color_b = this->m_fm.getConfVal<float>("dengui_minimizing_triangle_color_a", "config/dengui.conf");
         }
     }
 
@@ -596,6 +608,12 @@ namespace deng
         local_window_info.p_device = &this->m_device;
         local_window_info.p_file_manager = &this->m_fm;
 
+        dengUI::WindowBorderInfo local_border_info{};
+        local_border_info.border_color = {this->m_dengui_conf.dengui_border_color_r, this->m_dengui_conf.dengui_border_color_g, this->m_dengui_conf.dengui_border_color_b, this->m_dengui_conf.dengui_border_color_a};
+        local_border_info.minimizing_triangle_color = {this->m_dengui_conf.dengui_minimizing_triangle_color_r, this->m_dengui_conf.dengui_minimizing_triangle_color_g, this->m_dengui_conf.dengui_minimizing_triangle_color_b, this->m_dengui_conf.dengui_minimizing_triangle_color_a};
+        local_border_info.thickness = this->m_dengui_conf.dengui_border_thickness;
+        local_border_info.titlebar_height = this->m_dengui_conf.dengui_titlebar_height;
+
         dengUI::BufferInfo local_bufferinfo{};
         local_bufferinfo.p_buffer_create_func = Renderer::makeBuffer;
         local_bufferinfo.p_buffer_memory_populate_func = Renderer::populateBufferMem;
@@ -610,7 +628,7 @@ namespace deng
         local_bufferinfo.p_indices_buffer = &this->m_buffers.window_index_buffer;
         local_bufferinfo.p_indices_buffer_memory = &this->m_buffers.window_index_buffer_memory;
 
-        this->m_p_dengui_window = new dengUI::Window(local_window_info, local_bufferinfo);
+        this->m_p_dengui_window = new dengUI::Window(local_window_info, local_border_info, local_bufferinfo);
     }
 
     void Renderer::initGraphicsPipelines() {
@@ -773,17 +791,19 @@ namespace deng
         vkDestroyBuffer(this->m_device, m_buffers.staging_buffer, nullptr);
         vkFreeMemory(this->m_device, m_buffers.staging_buffer_memory, nullptr);
 
-        // grid buffer
-        local_size = sizeof(this->m_grid.vertex_data[0]) * this->m_grid.vertex_data.size();
+        if(this->m_environment_conf.show_grid == DENG_TRUE) {
+            // grid buffer
+            local_size = sizeof(this->m_grid.vertex_data[0]) * this->m_grid.vertex_data.size();
 
-        this->makeBuffer(&this->m_device, &this->m_gpu, &local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &this->m_buffers.staging_buffer, &this->m_buffers.staging_buffer_memory, nullptr);
-        this->populateBufferMem(&this->m_device, &this->m_gpu, &local_size, this->m_grid.vertex_data.data(), &this->m_buffers.staging_buffer, &this->m_buffers.staging_buffer_memory);
+            this->makeBuffer(&this->m_device, &this->m_gpu, &local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &this->m_buffers.staging_buffer, &this->m_buffers.staging_buffer_memory, nullptr);
+            this->populateBufferMem(&this->m_device, &this->m_gpu, &local_size, this->m_grid.vertex_data.data(), &this->m_buffers.staging_buffer, &this->m_buffers.staging_buffer_memory);
 
-        this->makeBuffer(&this->m_device, &this->m_gpu, &local_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &this->m_buffers.grid_buffer, &this->m_buffers.grid_buffer_memory, nullptr);
-        this->copyBufferToBuffer(&this->m_device, &this->m_commandpool, &this->m_queues.graphics_queue, &this->m_buffers.staging_buffer, &this->m_buffers.grid_buffer, &local_size);
+            this->makeBuffer(&this->m_device, &this->m_gpu, &local_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &this->m_buffers.grid_buffer, &this->m_buffers.grid_buffer_memory, nullptr);
+            this->copyBufferToBuffer(&this->m_device, &this->m_commandpool, &this->m_queues.graphics_queue, &this->m_buffers.staging_buffer, &this->m_buffers.grid_buffer, &local_size);
 
-        vkDestroyBuffer(this->m_device, this->m_buffers.staging_buffer, nullptr);
-        vkFreeMemory(this->m_device, this->m_buffers.staging_buffer_memory, nullptr);
+            vkDestroyBuffer(this->m_device, this->m_buffers.staging_buffer, nullptr);
+            vkFreeMemory(this->m_device, this->m_buffers.staging_buffer_memory, nullptr);
+        }
 
         // local_size = sizeof(obj.vertexIndicesData.posIndices[0]) * obj.vertexIndicesData.posIndices.size();
 
@@ -1123,12 +1143,12 @@ namespace deng
     }
 
     /* VkImage related functions */
-    void Renderer::makeImage(const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject *p_obj, const ImageType &imgType) {
+    void Renderer::makeImage(const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject *p_obj, const dengImageType &image_type) {
         uint32_t local_width, local_height;
         VkImage *p_local_image;
         VkDeviceMemory *p_local_image_memory;
 
-        switch (imgType)
+        switch (image_type)
         {
         case DENG_IMAGE_TYPE_TEXTURE:
             local_width = p_obj->texture_data.width;

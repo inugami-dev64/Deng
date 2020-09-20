@@ -1,5 +1,5 @@
-#ifndef RENDERERUTILS_H
-#define RENDERERUTILS_H
+#ifndef RENDERER_UTILS_H
+#define RENDERER_UTILS_H
 
 namespace deng {
 
