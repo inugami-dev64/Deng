@@ -3,7 +3,7 @@
 
 /*  BEFORE EVERY GIT COMMIT SET GENERIC_DEBUG VALUE TO 0!!!     */
 
-#define GENERIC_DEBUG 1
+#define GENERIC_DEBUG 0
 
 /*  please do not enable these at the same time, 
     otherwise you won't be able to debug anything */
