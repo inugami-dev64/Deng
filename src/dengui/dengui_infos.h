@@ -2,6 +2,39 @@
 #define DENGUI_INFOS_H
 
 namespace dengUI {
+
+    struct WindowObject {
+        deng::vec2<size_t> vertices_bounds;
+        deng::vec2<size_t> indices_bounds;
+        dengUIWindowLayerSequenceId sequence_id;
+        const char *description;
+        dengBool is_clickable;
+
+        dengBool is_drawn;
+        dengBool is_clicked;
+        void *p_click_handler_struct;
+        void(*p_buffer_update_handle_func)();
+    };
+
+    struct ClickInfo {
+        std::vector<deng::UIVerticesData> *p_vertices_data;
+        std::vector<uint16_t> *p_indices_data;
+
+        dengBool *p_is_clicked;
+        deng::vec2<size_t> vertices_bounds;
+        deng::vec2<size_t> indices_bounds;
+        const char *description;
+    };
+
+    struct SpriteInfo {
+        std::vector<deng::UIVerticesData> *p_vertices_data;
+        std::vector<uint16_t> *p_indices_data;
+
+        deng::vec2<size_t> vertices_bounds;
+        deng::vec2<size_t> indices_bounds;
+        WindowObject *p_window_object;
+    };
+
     struct WindowInfo {
         deng::vec2<float> size;
         deng::vec2<float> origin;
@@ -42,8 +75,8 @@ namespace dengUI {
         VkQueue *p_graphics_queue;
 
         BufferCreateFunc p_buffer_create_func;
-        BufferMemoryPopulateFunc p_buffer_memory_populate_func;
         BufferCopyFunc p_buffer_copy_func;
+        BufferMemoryPopulateFunc p_buffer_memory_populate_func;
     };
 
     struct RectangleInfo {

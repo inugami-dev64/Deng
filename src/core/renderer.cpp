@@ -16,7 +16,7 @@ namespace deng
         this->initObjects(this->m_sample_object, "objects/obj1.obj", "textures/obj1.tga", DENG_COORDINATE_MODE_DEFAULT);
         this->initGrid();
 
-        #if DEBUG
+        #if GENERIC_DEBUG
             this->m_p_ev->setGrid(&this->m_grid);
         #endif
 
@@ -607,6 +607,7 @@ namespace deng
         local_window_info.p_gpu = &this->m_gpu;
         local_window_info.p_device = &this->m_device;
         local_window_info.p_file_manager = &this->m_fm;
+        local_window_info.p_window = this->m_p_window;
 
         dengUI::WindowBorderInfo local_border_info{};
         local_border_info.border_color = {this->m_dengui_conf.dengui_border_color_r, this->m_dengui_conf.dengui_border_color_g, this->m_dengui_conf.dengui_border_color_b, this->m_dengui_conf.dengui_border_color_a};
@@ -1511,6 +1512,7 @@ namespace deng
         while(!glfwWindowShouldClose(this->m_p_window->getWindow())) {
             glfwPollEvents();
             this->m_p_ev->update();
+            this->m_p_dengui_window->update();
             this->makeFrame();
         }
         vkDeviceWaitIdle(this->m_device);

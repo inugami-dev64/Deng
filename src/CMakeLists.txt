@@ -30,8 +30,10 @@ add_executable(${PROJECT_NAME}
     utilities/timer.cpp
 
     dengui/dengui_window.cpp
+    dengui/dengui_pixel_collision.cpp
     dengui/dengui_events.cpp
     dengui/dengui_sprites.cpp
+    dengui/dengui_event_handles.cpp
 
     main.cpp
 )

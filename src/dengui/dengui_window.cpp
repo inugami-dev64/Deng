@@ -6,9 +6,20 @@ namespace dengUI {
         this->m_windowinfo = windowinfo;
         this->m_borderinfo = borderinfo;
         this->m_bufferinfo = bufferinfo;
-        this->m_p_events = new Events(this->m_windowinfo.p_window, &this->m_vertices_data, &this->m_indices_data);
 
-        this->createBaseWindow();   
+        this->m_clickinfo.p_vertices_data = &this->m_vertices_data;
+        this->m_clickinfo.p_indices_data = &this->m_indices_data;
+
+        this->createBaseWindow();
+        this->sortClickableObjects();
+        
+        this->m_p_collision = new PixelCollision(this->m_windowinfo.p_window, &this->m_vertices_data, &this->m_indices_data);
+        this->m_p_events = new Events(this->m_windowinfo.p_window, this->m_p_collision, &this->m_vertices_data, &this->m_indices_data);
+
+        for(size_t i = 0; i < this->m_p_clickable_objects.size(); i++) {
+            this->m_p_collision->setupPixelRangesFromVertices(&this->m_p_clickable_objects[i]->vertices_bounds, &this->m_p_clickable_objects[i]->indices_bounds, this->m_p_clickable_objects[i]->description);
+        }
+        
         this->createBuffers();
     }
 
@@ -19,6 +30,7 @@ namespace dengUI {
         vkFreeMemory(*this->m_windowinfo.p_device, *this->m_bufferinfo.p_indices_buffer_memory, nullptr);
         
         delete this->m_p_events;
+        delete this->m_p_collision;
     }
 
     void Window::createBaseWindow() {
@@ -42,6 +54,8 @@ namespace dengUI {
         local_rectangle_info.sequence_id = DENGUI_WINDOW_LAYER_TYPE_MAIN_WINDOW;
 
         this->m_window_objects_info[0].description = "main window";
+        this->m_window_objects_info[0].is_clickable = DENG_FALSE;
+        this->m_window_objects_info[0].is_drawn = DENG_TRUE;
         
         ShapeVerticesDataCreator::getRectangleVertices(&local_rectangle_info, &this->m_window_objects_info[0]);
         LOG("Successfully initialised dengui window main rectangle vertices!");
@@ -56,7 +70,10 @@ namespace dengUI {
         local_rectangle_info.p_color = &this->m_windowinfo.color;
         local_rectangle_info.p_vertices = &local_rectangle_vertices;
         local_triangle_info.sequence_id = DENGUI_WINDOW_LAYER_TYPE_MAIN_WINDOW;
+
         this->m_window_objects_info[1].description = "titlebar";
+        this->m_window_objects_info[1].is_clickable = DENG_FALSE;
+        this->m_window_objects_info[1].is_drawn = DENG_TRUE;
 
         ShapeVerticesDataCreator::getRectangleVertices(&local_rectangle_info, &this->m_window_objects_info[1]);
 
@@ -74,6 +91,8 @@ namespace dengUI {
         local_rectangle_info.sequence_id = DENGUI_WINDOW_LAYER_TYPE_BORDERS_AND_TITLEBAR;
 
         this->m_window_objects_info[2].description = "titlebar borders";
+        this->m_window_objects_info[2].is_clickable = DENG_FALSE;
+        this->m_window_objects_info[2].is_drawn = DENG_TRUE;
 
         ShapeVerticesDataCreator::getRectangleVertices(&local_rectangle_info, &this->m_window_objects_info[2]);
 
@@ -87,6 +106,8 @@ namespace dengUI {
         local_rectangle_info.p_color = &this->m_borderinfo.border_color;
 
         this->m_window_objects_info[3].description = "window borders";
+        this->m_window_objects_info[3].is_clickable = DENG_FALSE;
+        this->m_window_objects_info[3].is_drawn = DENG_TRUE;
 
         ShapeVerticesDataCreator::getRectangleVertices(&local_rectangle_info, &this->m_window_objects_info[3]);
         LOG("Successfully initialised dengui window border border vertices!");
@@ -96,6 +117,10 @@ namespace dengUI {
         local_triangle_vertices.second = {local_triangle_vertices.first.first + (this->m_borderinfo.titlebar_height - this->m_borderinfo.thickness - DENGUI_MINIMIZE_TRIANGLE_OFFSET), local_triangle_vertices.first.second};
         local_triangle_vertices.third = {(local_triangle_vertices.first.first + local_triangle_vertices.second.first) / 2, this->m_vertices_data[this->m_window_objects_info[1].vertices_bounds.first].position_vec.second + (this->m_borderinfo.titlebar_height - DENGUI_MINIMIZE_TRIANGLE_OFFSET)};
 
+        // local_triangle_vertices.first.second += (local_triangle_vertices.third.second - local_triangle_vertices.second.second);
+        // local_triangle_vertices.third.second -= (local_triangle_vertices.third.second - local_triangle_vertices.second.second);
+        // local_triangle_vertices.second.second == local_triangle_vertices.first.second;
+
         local_triangle_info.p_vertices = &local_triangle_vertices;
         local_triangle_info.p_color = &this->m_borderinfo.minimizing_triangle_color;
         local_triangle_info.p_vertices_data = &this->m_vertices_data;
@@ -104,7 +129,7 @@ namespace dengUI {
 
         this->m_window_objects_info[4].description = "minimizing triangle";
         this->m_window_objects_info[4].is_clickable = DENG_TRUE;
-        this->m_window_objects_info[4].p_click_handler_func = &Events::minimizeWindow;
+        this->m_window_objects_info[4].is_drawn = DENG_TRUE;
 
         ShapeVerticesDataCreator::getTriangleVertices(&local_triangle_info, &this->m_window_objects_info[4]);
     }
@@ -135,5 +160,35 @@ namespace dengUI {
         vkFreeMemory(*this->m_windowinfo.p_device, *this->m_bufferinfo.p_staging_buffer_memory, nullptr);
 
         *this->m_bufferinfo.p_indices_size = static_cast<uint32_t>(this->m_indices_data.size());
+    }
+
+    // void Window::updateBuffers() {
+    //     VkDeviceSize local_size = static_cast<VkDeviceSize>(sizeof(this->m_vertices_data[0]) * this->m_vertices_data.size());
+        
+    //     this->m_bufferinfo.p_buffer_create_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_staging_buffer_memory, nullptr);
+        
+    // }
+
+    void Window::sortClickableObjects() {
+        for(size_t i = 0; i < this->m_window_objects_info.size(); i++) {
+            if(this->m_window_objects_info[i].is_clickable == DENG_TRUE)
+                this->m_p_clickable_objects.push_back(&this->m_window_objects_info[i]);
+        }
+    }
+
+    void Window::getClickableObjects(std::vector<WindowObject*> *p_clickable_objects) {
+        p_clickable_objects->clear();
+        p_clickable_objects = &this->m_p_clickable_objects;
+    }
+
+    void Window::update() {
+        for(size_t i = 0; i < this->m_p_clickable_objects.size(); i++) {
+            this->m_clickinfo.vertices_bounds = this->m_p_clickable_objects[i]->vertices_bounds;
+            this->m_clickinfo.indices_bounds = this->m_p_clickable_objects[i]->indices_bounds;
+            this->m_clickinfo.p_is_clicked = &this->m_p_clickable_objects[i]->is_clicked;
+            this->m_clickinfo.description = this->m_p_clickable_objects[i]->description;
+
+            this->m_p_events->checkForClicks(&this->m_clickinfo);
+        }
     }
 }

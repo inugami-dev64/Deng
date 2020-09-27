@@ -15,10 +15,27 @@ namespace dengUI {
         DENGUI_WINDOW_LAYER_TYPE_BORDERS_AND_TITLEBAR = 2,
         DENGUI_WINDOW_LAYER_TYPE_BUTTON = 3
     };
+
+    enum dengUIWindowObjectShape {
+        DENGUI_WINDOW_OBJECT_SHAPE_TRIANGLE = 0,
+        DENGUI_WINDOW_OBJECT_SHAPE_RECTANGLE = 1
+    };
+
+    enum dengUIPixelBoundariesMode {
+        DENGUI_PIXEL_BOUNDARIES_MODE_MINIMUM = 0,
+        DENGUI_PIXEL_BOUNDARIES_MODE_MAXIMUM = 1
+    };
+
+    enum dengUIWindowSizeMode {
+        DENGUI_WINDOW_SIZE_MODE_MAXIMISED = 0,
+        DENGUI_WINDOW_SIZE_MODE_MINIMIZED = 1
+    };
 }
 
 #include "dengui_infos.h"
+#include "dengui_pixel_collision.h"
 #include "dengui_events.h"
+#include "dengui_event_handles.h"
 #include "dengui_sprites.h"
 #include "dengui_window.h"
 

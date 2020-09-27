@@ -1,9 +1,10 @@
 #ifndef DENG_MATH_H
 #define DENG_MATH_H
 
-#define PI 3.1415926
+#define PI 3.1415926f
 
 namespace deng {
+    // continue making function that calculates right-angled triangle's hypothenuse from adjacent catheti
 
     template<typename T>
     struct vec2 {
@@ -32,7 +33,7 @@ namespace deng {
             return local_vec2;
         }
 
-        vec2<T> operator-(const vec2<T> &vector) {
+        vec2<T> operator-(vec2<T> vector) {
             vec2<T> local_vec2;
             if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(uint8_t).name() || typeid(T).name() == typeid(uint16_t).name() || typeid(T).name() == typeid(uint32_t).name() || typeid(T).name() == typeid(uint64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
                 local_vec2 = {(first - vector.first), (second - vector.second)};
@@ -238,9 +239,167 @@ namespace deng {
     };
 
     // generic math functions
-    float degToRad(const float &deg);
-    vec2<float> getCartesianCoordsPoint(const vec2<float> &centre, const uint16_t &angle, const float &distance, const dengBool &inverted_y_axis);
-    float getFractionNumerator(const float &value_numerator, const float &value_denominator, const float &equivalent_denominator);
+    struct Math {
+        static float degToRad(const float &deg);
+        static float radToDeg(const float &rad);
+        static vec2<float> getCartesianCoordsPoint(const vec2<float> &centre, const int16_t &angle, const float &distance, const dengBool &inverted_y_axis);
+        static float getFractionNumerator(const float &value_numerator, const float &value_denominator, const float &equivalent_denominator);
+        static float getVectorLengthFromBounds(vec2<deng::vec2<float>> vector_bounds);
+        static float getTriangleAnglesFromEdges(const vec3<float> &triangle_edges, const dengTriangleAngleType &triangle_angle_type);
+        static float getVector2DRotation(vec2<vec2<float>> vector_bounds);
+    };
+
+    // data sorting algorithms 
+    struct HandleData {
+        template<typename T>
+        static T getSmallestElement(std::vector<T> *p_elements_vector);
+        template<typename T>
+        static T getLargestElement(std::vector<T> *p_elements_vector);
+
+        template<typename T>
+        static void sortInGrowingOrder(std::vector<T> *p_elements_vector);
+        template<typename T>
+        static void sortInDecliningOrder(std::vector<T> *p_elements_vector);
+
+        template<typename T>
+        static void sortVectorInGrowingOrder(std::vector<T> *p_elements_vector, dengCoordinateAxisType coord_axis_type);
+        template<typename T>
+        static void sortVectorInDecliningOrder(std::vector<T> *p_elements_vector, dengCoordinateAxisType coord_axis_type);
+    };
+
+    template<typename T>
+    T HandleData::getSmallestElement(std::vector<T> *p_elements_vector) {
+        T local_smallest_element = (*p_elements_vector)[0];
+        for(size_t i = 0; i < p_elements_vector->size(); i++)
+            if(local_smallest_element > (*p_elements_vector)[i]) local_smallest_element = (*p_elements_vector)[i];
+    
+        return local_smallest_element;
+    }
+
+    template<typename T>
+    T HandleData::getLargestElement(std::vector<T> *p_elements_vector) {
+        T local_largest_element = (*p_elements_vector)[0];
+        for(size_t i = 0; i < p_elements_vector->size(); i++)
+            if(local_largest_element < (*p_elements_vector)[i]) local_largest_element = (*p_elements_vector)[i];
+    
+        return local_largest_element;
+    }
+
+    template<typename T>
+    void HandleData::sortInGrowingOrder(std::vector<T> *p_elements_vector) {
+        vec2<T> local_sorting_buffer;
+
+        for(size_t i = 0; i < p_elements_vector->size() - 1; i++) {
+            if((*p_elements_vector)[i] > (*p_elements_vector)[i + 1]) {
+                local_sorting_buffer.second = (*p_elements_vector)[i];
+                local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+
+                (*p_elements_vector)[i] = local_sorting_buffer.first;
+                (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+            }
+        }
+    }
+
+    template<typename T>
+    void HandleData::sortInDecliningOrder(std::vector<T> *p_elements_vector) {
+        vec2<T> local_sorting_buffer;
+
+        for(size_t i = 0; i < p_elements_vector->size() - 1; i++) {
+            if((*p_elements_vector)[i] < (*p_elements_vector)[i + 1]) {
+                local_sorting_buffer.second = (*p_elements_vector)[i];
+                local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+
+                (*p_elements_vector)[i] = local_sorting_buffer.first;
+                (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+            }
+        }
+    }
+
+    template<typename T>
+    void HandleData::sortVectorInGrowingOrder(std::vector<T> *p_elements_vector, dengCoordinateAxisType coord_axis_type) {
+        vec2<T> local_sorting_buffer;
+
+        for(size_t i = 0; i < p_elements_vector->size() - 1; i++) {
+            switch (coord_axis_type)
+            {
+            case DENG_X:
+                if((*p_elements_vector)[i].position_vec.first > (*p_elements_vector)[i + 1].position_vec.first) {
+                    local_sorting_buffer.second = (*p_elements_vector)[i];
+                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+
+                    (*p_elements_vector)[i] = local_sorting_buffer.first;
+                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                }
+                break;
+
+            case DENG_Y:
+                if((*p_elements_vector)[i].position_vec.second > (*p_elements_vector)[i + 1].position_vec.second) {
+                    local_sorting_buffer.second = (*p_elements_vector)[i];
+                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+
+                    (*p_elements_vector)[i] = local_sorting_buffer.first;
+                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                }
+                break;
+
+            case DENG_Z:
+                if((*p_elements_vector)[i].position_vec.third > (*p_elements_vector)[i + 1].position_vec.third) {
+                    local_sorting_buffer.second = (*p_elements_vector)[i];
+                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+
+                    (*p_elements_vector)[i] = local_sorting_buffer.first;
+                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                }
+                break;
+            
+            default:
+                break;
+            }
+        }
+    }
+
+    template<typename T>
+    void HandleData::sortVectorInDecliningOrder(std::vector<T> *p_elements_vector, dengCoordinateAxisType coord_axis_type) {
+        vec2<T> local_sorting_buffer;
+
+        for(size_t i = 0; i < p_elements_vector->size() - 1; i++) {
+            switch (coord_axis_type)
+            {
+            case DENG_X:
+                if((*p_elements_vector)[i].position_vec.first < (*p_elements_vector)[i + 1].position_vec.first) {
+                    local_sorting_buffer.second = (*p_elements_vector)[i];
+                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+
+                    (*p_elements_vector)[i] = local_sorting_buffer.first;
+                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                }
+                break;
+
+            case DENG_Y:
+                if((*p_elements_vector)[i].position_vec.second < (*p_elements_vector)[i + 1].position_vec.second) {
+                    local_sorting_buffer.second = (*p_elements_vector)[i];
+                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+
+                    (*p_elements_vector)[i] = local_sorting_buffer.first;
+                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                }
+                break;
+
+            case DENG_Z:
+                if((*p_elements_vector)[i].position_vec.third < (*p_elements_vector)[i + 1].position_vec.third) {
+                    local_sorting_buffer.second = (*p_elements_vector)[i];
+                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+
+                    (*p_elements_vector)[i] = local_sorting_buffer.first;
+                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                }
+                break;
+            
+            default:
+                break;
+            }
+        }
+    }
 }
 
 #endif

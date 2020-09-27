@@ -3,7 +3,7 @@
 
 /*  BEFORE EVERY GIT COMMIT SET GENERIC_DEBUG VALUE TO 0!!!     */
 
-#define GENERIC_DEBUG 0
+#define GENERIC_DEBUG 1
 
 /*  please do not enable these at the same time, 
     otherwise you won't be able to debug anything */
@@ -87,10 +87,13 @@ enum dengInputMode {
     DENG_INPUT_MOVEMENT = 1
 };
 
-enum dengTriangleMode {
-    DENG_TRIANGLE_MODE_BOTTOM_LEFT = 0,
-    DENG_TRIANGLE_MODE_TOP_RIGHT = 1
+enum dengTriangleAngleType {
+    DENG_TRIANGLE_ANGLE_ALPHA = 0,
+    DENG_TRIANGLE_ANGLE_BETA = 1,
+    DENG_TRIANGLE_ANGLE_GAMMA = 2
 };
+
+
 
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>

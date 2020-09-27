@@ -3,6 +3,8 @@
 namespace deng {
     Window::Window(const uint32_t &x, const uint32_t &y, const char *title) {
         this->m_size = {x, y};
+        this->m_pixel_size = {2.0 / static_cast<double>(this->m_size.first), 2.0 / static_cast<double>(this->m_size.second)};
+        LOG("Pixel size: " + std::to_string(this->m_pixel_size.first) + "/" + std::to_string(this->m_pixel_size.second));
 
         glfwInit();
 
@@ -51,4 +53,7 @@ namespace deng {
         this->m_input_mode = new_input_mode;
     }
 
+    vec2<double> Window::getPixelSize() {
+        return this->m_pixel_size;
+    }
 }
