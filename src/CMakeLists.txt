@@ -35,7 +35,7 @@ add_executable(${PROJECT_NAME}
     dengui/dengui_sprites.cpp
     dengui/dengui_event_handles.cpp
 
-    main.cpp
+    main/main.cpp
 )
 
 if(UNIX)

@@ -4,7 +4,6 @@
 #define PI 3.1415926f
 
 namespace deng {
-    // continue making function that calculates right-angled triangle's hypothenuse from adjacent catheti
 
     template<typename T>
     struct vec2 {
@@ -265,6 +264,10 @@ namespace deng {
         static void sortVectorInGrowingOrder(std::vector<T> *p_elements_vector, dengCoordinateAxisType coord_axis_type);
         template<typename T>
         static void sortVectorInDecliningOrder(std::vector<T> *p_elements_vector, dengCoordinateAxisType coord_axis_type);
+
+        // in order to use this function the class used in std::vector must have const char *description as a public class variable
+        template<typename T>
+        static T *findElementByDescription(std::vector<T> *p_vector, const size_t &size, const char *description);
     };
 
     template<typename T>
@@ -399,6 +402,16 @@ namespace deng {
                 break;
             }
         }
+    }
+
+    template<typename T>
+    T *HandleData::findElementByDescription(std::vector<T> *p_elements, const size_t &size, const char *description) {
+        for(size_t i = 0; i < p_elements->size(); i++) {
+            if((*p_elements)[i].description == description) {
+                return &p_elements->at(i);
+            } 
+        }
+        return &p_elements->at(0);
     }
 }
 

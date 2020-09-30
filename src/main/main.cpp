@@ -1,4 +1,4 @@
-#include "core/deng_core.h"
+#include "../core/deng_core.h"
 
 int main() {
     deng::Window window(1600, 1200, "Game!");

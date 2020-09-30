@@ -10,12 +10,13 @@ namespace dengUI {
         WindowInfo m_windowinfo;
         WindowBorderInfo m_borderinfo;
         BufferInfo m_bufferinfo;
-        std::vector<WindowObject> m_window_objects_info;
+        std::vector<WindowObject> m_window_objects;
         std::vector<WindowObject*> m_p_clickable_objects;
         ClickInfo m_clickinfo;
         
         PixelCollision *m_p_collision;
         Events *m_p_events;
+        WindowObjectHandleList *m_p_handler_list;
 
     private: 
         void createBaseWindow();

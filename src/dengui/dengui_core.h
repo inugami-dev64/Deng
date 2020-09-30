@@ -30,6 +30,11 @@ namespace dengUI {
         DENGUI_WINDOW_SIZE_MODE_MAXIMISED = 0,
         DENGUI_WINDOW_SIZE_MODE_MINIMIZED = 1
     };
+
+    enum dengUIWindowObjectHandlePtrUsage {
+        DENGUI_WINDOW_OBJECT_HANDLE_PTR_USAGE_CALL = 0,
+        DENGUI_WINDOW_OBJECT_HANDLE_PTR_USAGE_SET_CALLER = 1
+    };
 }
 
 #include "dengui_infos.h"

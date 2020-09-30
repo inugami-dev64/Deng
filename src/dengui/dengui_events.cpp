@@ -27,7 +27,7 @@ namespace dengUI {
                 {
                 case GLFW_PRESS: {
                     if(!(*p_clickinfo->p_is_clicked)) {
-                        LOG("Clicked on triangle!");
+                        LOG("Click detected!");
                         *p_clickinfo->p_is_clicked = DENG_TRUE;
                     }
                     break;

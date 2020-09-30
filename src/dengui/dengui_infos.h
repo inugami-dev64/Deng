@@ -2,6 +2,7 @@
 #define DENGUI_INFOS_H
 
 namespace dengUI {
+    
 
     struct WindowObject {
         deng::vec2<size_t> vertices_bounds;
@@ -10,10 +11,10 @@ namespace dengUI {
         const char *description;
         dengBool is_clickable;
 
+        uint16_t handle_id;
         dengBool is_drawn;
         dengBool is_clicked;
-        void *p_click_handler_struct;
-        void(*p_buffer_update_handle_func)();
+        void *p_click_handler_object;
     };
 
     struct ClickInfo {
@@ -24,15 +25,6 @@ namespace dengUI {
         deng::vec2<size_t> vertices_bounds;
         deng::vec2<size_t> indices_bounds;
         const char *description;
-    };
-
-    struct SpriteInfo {
-        std::vector<deng::UIVerticesData> *p_vertices_data;
-        std::vector<uint16_t> *p_indices_data;
-
-        deng::vec2<size_t> vertices_bounds;
-        deng::vec2<size_t> indices_bounds;
-        WindowObject *p_window_object;
     };
 
     struct WindowInfo {
