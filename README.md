@@ -1,6 +1,6 @@
-# DimentionalENG (Deng)
+# DENG
 
-Deng is a cross platform game engine based on vulkan! <br> 
+DENG is a cross platform game engine based on vulkan! <br> 
 It is currently in early development stage! <br>
 <br>
 
