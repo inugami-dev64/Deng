@@ -9,7 +9,7 @@ namespace dengUI {
         WindowObject *m_p_main_window;
         WindowObject *m_p_main_window_borders;
 
-        std::vector<deng::UIVerticesData> *m_p_vertices_data;
+        std::vector<dengUtils::UIVerticesData> *m_p_vertices_data;
         std::vector<uint16_t> *m_p_indices_data;
 
         dengUIWindowSizeMode m_window_size_mode;
@@ -19,7 +19,7 @@ namespace dengUI {
         void verifyVertices();
 
     public:
-        MinimiseHandle(std::vector<WindowObject> *p_window_objects, std::vector<deng::UIVerticesData> *p_vertices_data, std::vector<uint16_t> *p_indices_data);
+        MinimiseHandle(std::vector<WindowObject> *p_window_objects, std::vector<dengUtils::UIVerticesData> *p_vertices_data, std::vector<uint16_t> *p_indices_data);
         void onClick();
     };
 
@@ -27,7 +27,7 @@ namespace dengUI {
     private:
         std::vector<WindowObject> *m_p_window_objects;
         std::vector<WindowObject*> *m_p_clickable_objects;
-        std::vector<deng::UIVerticesData> *m_p_vertices_data;
+        std::vector<dengUtils::UIVerticesData> *m_p_vertices_data;
         std::vector<uint16_t> *m_p_indices_data;
         
         // add all click handles here
@@ -38,7 +38,7 @@ namespace dengUI {
         void setupMinimiseHandle();
 
     public:
-        WindowObjectHandleList(std::vector<WindowObject> *p_window_objects, std::vector<WindowObject*> *p_clickable_objects, std::vector<deng::UIVerticesData> *p_vertices_data, std::vector<uint16_t> *p_indices_data);
+        WindowObjectHandleList(std::vector<WindowObject> *p_window_objects, std::vector<WindowObject*> *p_clickable_objects, std::vector<dengUtils::UIVerticesData> *p_vertices_data, std::vector<uint16_t> *p_indices_data);
         ~WindowObjectHandleList();
         void callClickHandler(const uint32_t &handle_id);
 

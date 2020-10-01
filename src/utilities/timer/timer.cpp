@@ -1,6 +1,6 @@
-#include "../core/deng_core.h"
+#include "../../core/deng_core.h"
 
-namespace deng {
+namespace dengUtils {
     long Timer::getTime() {
         std::chrono::system_clock::time_point tp = std::chrono::system_clock::now();
         std::chrono::system_clock::duration dtn = tp.time_since_epoch();

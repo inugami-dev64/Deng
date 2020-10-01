@@ -1,7 +1,7 @@
-#include "../core/deng_core.h"
+#include "../../core/deng_core.h"
 
-namespace deng {
-    GridManager::GridManager(SpecifiedObject *grid, const float &max_distance, float *p_grid_height, float *p_grid_width, float *p_color_r, float *p_color_g, float *p_color_b) {
+namespace dengUtils {
+    GridManager::GridManager(dengUtils::SpecifiedObject *grid, const float &max_distance, float *p_grid_height, float *p_grid_width, float *p_color_r, float *p_color_g, float *p_color_b) {
         this->m_grid = grid;
         this->m_max_vertex_buffer_distance = max_distance;
         this->m_p_grid_height = p_grid_height;
@@ -17,8 +17,8 @@ namespace deng {
         delete this->m_grid->p_index_data;
     }
 
-    vec2<float*> GridManager::getOrdereredVertexDataElements(const uint32_t index, const dengCoordinateAxisType &axis) {
-        vec2<float*> local_elements;
+    dengMath::vec2<float*> GridManager::getOrdereredVertexDataElements(const uint32_t index, const dengCoordinateAxisType &axis) {
+        dengMath::vec2<float*> local_elements;
         if(axis == DENG_X) {
             local_elements.first = &this->m_grid->vertex_data[index].position_vec.third;
             local_elements.second = &this->m_grid->vertex_data[index].position_vec.first;
@@ -32,9 +32,9 @@ namespace deng {
         return local_elements;
     }
 
-    void GridManager::generateAxisLineVertices(vec2<int32_t> &min_vertices, vec2<int32_t> &max_vertices, const dengCoordinateAxisType &axis, int32_t &index) {
+    void GridManager::generateAxisLineVertices(dengMath::vec2<int32_t> &min_vertices, dengMath::vec2<int32_t> &max_vertices, const dengCoordinateAxisType &axis, int32_t &index) {
         // first is min and second is max
-        vec2<int32_t*> local_vertices;
+        dengMath::vec2<int32_t*> local_vertices;
 
         float *local_grid_dimention_size;
 
@@ -104,13 +104,13 @@ namespace deng {
     }
 
     /* vertices only need to be updated when the camera has moved */
-    void GridManager::generateVertices(vec4<float> camera_position) {
+    void GridManager::generateVertices(dengMath::vec4<float> camera_position) {
         // first represents x-axis and second represents z-axis
-        vec2<int32_t> local_min_vertices; 
+        dengMath::vec2<int32_t> local_min_vertices; 
         local_min_vertices.first = static_cast<int32_t>(-this->m_max_vertex_buffer_distance / *this->m_p_grid_width);
         local_min_vertices.second = static_cast<int32_t>(-this->m_max_vertex_buffer_distance / *this->m_p_grid_height);
 
-        vec2<int32_t> local_max_vertices;
+        dengMath::vec2<int32_t> local_max_vertices;
         local_max_vertices.first = static_cast<int32_t>(this->m_max_vertex_buffer_distance / *this->m_p_grid_width);
         local_max_vertices.second = static_cast<int32_t>(this->m_max_vertex_buffer_distance / *this->m_p_grid_height);
         this->m_grid->vertex_data.resize(((abs(local_min_vertices.first) + abs(local_max_vertices.first)) * 3) + ((abs(local_min_vertices.second) + abs(local_max_vertices.second)) * 3) );

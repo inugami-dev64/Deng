@@ -3,7 +3,7 @@
 
 /*  BEFORE EVERY GIT COMMIT SET GENERIC_DEBUG VALUE TO 0!!!     */
 
-#define GENERIC_DEBUG 1
+#define GENERIC_DEBUG 0
 
 /*  please do not enable these at the same time, 
     otherwise you won't be able to debug anything */
@@ -52,6 +52,22 @@ enum dengWriteMode {
     DENG_WRITEMODE_FROM_END = 1
 };
 
+enum dengFolderContentsReadMode {
+    DENG_FOLDER_CONTENTS_READ_MODE_FILES_ONLY = 0,
+    DENG_FOLDER_CONTENTS_READ_MODE_FOLDERS_ONLY = 1,
+    DENG_FOLDER_CONTENTS_READ_MODE_FILES_AND_FOLDERS = 2
+};
+
+enum dengFolderContentsSortingMode {
+    DENG_FOLDER_CONTENTS_SORT_STYLE_DONT_CARE = -1,
+    DENG_FOLDER_CONTENTS_SORT_STYLE_ALL_ALPHABETICAL = 0,
+    DENG_FOLDER_CONTENTS_SORT_STYLE_ALPHABETICAL_FOLDERS_FIRST = 1,
+    DENG_FOLDER_CONTENTS_SORT_STYLE_ALPHABETICAL_FILES_FIRST = 2,
+    DENG_FOLDER_CONTENTS_SORT_STYLE_ALL_REVERSE_ALPHABETICAL = 3,
+    DENG_FOLDER_CONTENTS_SORT_STYLE_REVERSE_ALPHABETICAL_FOLDERS_FIRST = 4,
+    DENG_FOLDER_CONTENTS_SORT_STYLE_REVERSE_ALPHABETICAL_FILES_FIRST = 5
+};
+
 enum dengPipelineType {
     DENG_PIPELINE_TYPE_OBJECT_BASED = 0,
     DENG_PIPELINE_TYPE_SPECIFIED = 1,
@@ -94,6 +110,12 @@ enum dengTriangleAngleType {
 };
 
 
+// external dependencies
+#ifdef _WIN32
+    #include <WIN32_dirent/dirent.h>
+#else 
+    #include <dirent.h>
+#endif
 
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
@@ -114,19 +136,20 @@ typedef void(*BufferCreateFunc)(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkD
 typedef void(*BufferMemoryPopulateFunc)(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const void *p_src_data, VkBuffer *p_buffer, VkDeviceMemory *p_buffer_memory);
 typedef void(*BufferCopyFunc)(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkBuffer *p_dst_buffer, VkDeviceSize *p_size);
 
+// local dependencies
 #include "../maths/deng_math.h"
 #include "../scripting/parsing.h"
-#include "../utilities/timer.h"
+#include "../utilities/timer/timer.h"
 #include "window.h"
 #include "camera.h"
-#include "../maths/objects_handler.h"
-#include "../utilities/grid_generator.h"
+#include "../utilities/data_handler/objects_handler.h"
+#include "../utilities/map/grid_generator.h"
 #include "../maths/events.h"
-#include "../utilities/files.h"
+#include "../utilities/data_handler/files.h"
 #include "renderer_utils.h"
-#include "../utilities/texture_loader.h"
-#include "../utilities/object_loader.h"
-#include "../dengui/dengui_core.h"
+#include "../utilities/assets_handler/texture_loader.h"
+#include "../utilities/assets_handler/object_loader.h"
+#include "../dengui/core/dengui_core.h"
 #include "renderer.h"
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef TIMER_H
 #define TIMER_H
 
-namespace deng {
+namespace dengUtils {
     
     class Timer {
     private:

@@ -1,7 +1,7 @@
-#include "../core/deng_core.h"
+#include "../../core/deng_core.h"
 
 namespace dengUI {
-    WindowObjectHandleList::WindowObjectHandleList(std::vector<WindowObject> *p_window_objects, std::vector<WindowObject*> *p_clickable_objects, std::vector<deng::UIVerticesData> *p_vertices_data, std::vector<uint16_t> *p_indices_data) {
+    WindowObjectHandleList::WindowObjectHandleList(std::vector<WindowObject> *p_window_objects, std::vector<WindowObject*> *p_clickable_objects, std::vector<dengUtils::UIVerticesData> *p_vertices_data, std::vector<uint16_t> *p_indices_data) {
         this->m_p_window_objects = p_window_objects;
         this->m_p_clickable_objects = p_clickable_objects;
         this->m_p_vertices_data = p_vertices_data;
@@ -32,11 +32,11 @@ namespace dengUI {
         }
     }
 
-
-    MinimiseHandle::MinimiseHandle(std::vector<WindowObject> *p_window_objects, std::vector<deng::UIVerticesData> *p_vertices_data, std::vector<uint16_t> *p_indices_data) {
-        this->m_p_minimise_triangle = deng::HandleData::findElementByDescription(p_window_objects, p_window_objects->size(), "minimising triangle");
-        this->m_p_main_window = deng::HandleData::findElementByDescription(p_window_objects, p_window_objects->size(), "main window");
-        this->m_p_main_window_borders = deng::HandleData::findElementByDescription(p_window_objects, p_window_objects->size(), "window borders");
+    // minimise triangle handle
+    MinimiseHandle::MinimiseHandle(std::vector<WindowObject> *p_window_objects, std::vector<dengUtils::UIVerticesData> *p_vertices_data, std::vector<uint16_t> *p_indices_data) {
+        this->m_p_minimise_triangle = &p_window_objects->at(4);
+        this->m_p_main_window = &p_window_objects->at(0);
+        this->m_p_main_window_borders = &p_window_objects->at(3);
         
         this->m_p_vertices_data = p_vertices_data;
         this->m_p_indices_data = p_indices_data;
@@ -46,30 +46,30 @@ namespace dengUI {
     }
 
     void MinimiseHandle::verifyVertices() {
-        this->m_verified == DENG_TRUE;
+        this->m_verified = DENG_TRUE;
 
         if(this->m_p_minimise_triangle->vertices_bounds.second - this->m_p_minimise_triangle->vertices_bounds.first != 3) {
             ERRME("Failed to verify dengui minimise triangle vertices in minimise handler!");
             ERRME("The reqired amount of vertices is 3, but given is " + std::to_string(this->m_p_minimise_triangle->vertices_bounds.second - this->m_p_minimise_triangle->vertices_bounds.first) + "!");
-            this->m_verified == DENG_FALSE;
+            this->m_verified = DENG_FALSE;
         }
 
         if(this->m_p_main_window->vertices_bounds.second - this->m_p_main_window->vertices_bounds.first != 4) {
             ERRME("Failed to verify dengui window vertices in minimise handler!");
-            ERRME("The reqired amount of vertices is 3, but given is " + std::to_string(this->m_p_main_window->vertices_bounds.second - this->m_p_main_window->vertices_bounds.first) + "!");
-            this->m_verified == DENG_FALSE;
+            ERRME("The reqired amount of vertices is 4, but given is " + std::to_string(this->m_p_main_window->vertices_bounds.second - this->m_p_main_window->vertices_bounds.first) + "!");
+            this->m_verified = DENG_FALSE;
         }
 
         if(this->m_p_main_window_borders->vertices_bounds.second - this->m_p_main_window_borders->vertices_bounds.first != 8) {
             ERRME("Failed to verify dengui window border vertices in minimise handler!");
-            ERRME("The reqired amount of vertices is 3, but given is " + std::to_string(this->m_p_main_window_borders->vertices_bounds.second - this->m_p_main_window_borders->vertices_bounds.first) + "!");
-            this->m_verified == DENG_FALSE;
+            ERRME("The reqired amount of vertices is 8, but given is " + std::to_string(this->m_p_main_window_borders->vertices_bounds.second - this->m_p_main_window_borders->vertices_bounds.first) + "!");
+            this->m_verified = DENG_FALSE;
         }
     }
 
     void MinimiseHandle::onClick() {
-        if(this->m_verified) {
-            deng::vec3<deng::UIVerticesData> local_original_vertices;
+        if(this->m_verified == DENG_TRUE) {
+            dengMath::vec3<dengUtils::UIVerticesData> local_original_vertices;
             local_original_vertices.first = (*this->m_p_vertices_data)[this->m_p_minimise_triangle->vertices_bounds.first];
             local_original_vertices.second = (*this->m_p_vertices_data)[this->m_p_minimise_triangle->vertices_bounds.first + 1];
             local_original_vertices.third = (*this->m_p_vertices_data)[this->m_p_minimise_triangle->vertices_bounds.first + 2];
@@ -77,6 +77,7 @@ namespace dengUI {
             switch (this->m_window_size_mode)
             {
             case DENGUI_WINDOW_SIZE_MODE_MAXIMISED:
+                LOG("Window is maximised!");
                 (*this->m_p_vertices_data)[this->m_p_minimise_triangle->vertices_bounds.first].position_vec.first = local_original_vertices.third.position_vec.first;
                 (*this->m_p_vertices_data)[this->m_p_minimise_triangle->vertices_bounds.first + 1].position_vec.second = local_original_vertices.third.position_vec.second;
                 (*this->m_p_vertices_data)[this->m_p_minimise_triangle->vertices_bounds.first + 2].position_vec.first = local_original_vertices.first.position_vec.first;
@@ -87,6 +88,7 @@ namespace dengUI {
                 break;
 
             case DENGUI_WINDOW_SIZE_MODE_MINIMIZED:
+                LOG("Window is minimised!");
                 (*this->m_p_vertices_data)[this->m_p_minimise_triangle->vertices_bounds.first].position_vec.first = local_original_vertices.third.position_vec.first;
                 (*this->m_p_vertices_data)[this->m_p_minimise_triangle->vertices_bounds.first + 1].position_vec.second = local_original_vertices.first.position_vec.second;
                 (*this->m_p_vertices_data)[this->m_p_minimise_triangle->vertices_bounds.first + 2].position_vec.first = local_original_vertices.first.position_vec.first;
@@ -99,6 +101,8 @@ namespace dengUI {
             default:
                 break;
             }
+
+            
         }
     }
 }

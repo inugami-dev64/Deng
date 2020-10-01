@@ -1,17 +1,17 @@
-#include "../core/deng_core.h"
+#include "../../core/deng_core.h"
 
 namespace dengUI {
 
-    PixelCollision::PixelCollision(deng::Window *p_window, std::vector<deng::UIVerticesData> *p_vertices_data, std::vector<uint16_t> *p_indices_data) {
+    PixelCollision::PixelCollision(deng::Window *p_window, std::vector<dengUtils::UIVerticesData> *p_vertices_data, std::vector<uint16_t> *p_indices_data) {
         this->m_p_window = p_window;
         this->m_p_vertices_data = p_vertices_data;
         this->m_p_indices_data = p_indices_data;
         this->m_objects_pixel_data.resize(0);
     }
 
-    void PixelCollision::getRowPixelBoundaries(const size_t &vertical_index, deng::vec2<deng::vec2<double>> &boundaries, const char *p_description) {
+    void PixelCollision::getRowPixelBoundaries(const size_t &vertical_index, dengMath::vec2<dengMath::vec2<double>> &boundaries, const char *p_description) {
         size_t local_pixel_group_index;
-        deng::vec2<deng::vec2<double>> local_sorting_buffer;
+        dengMath::vec2<dengMath::vec2<double>> local_sorting_buffer;
 
         for(size_t i = 0; i < this->m_objects_pixel_data.size(); i++) 
             if(this->m_objects_pixel_data[i].object_description == p_description) local_pixel_group_index = i;
@@ -70,14 +70,14 @@ namespace dengUI {
         }
     }
 
-    void PixelCollision::setupPixelRangesFromVertices(deng::vec2<size_t> *vertices_bounds, deng::vec2<size_t> *indices_bounds, const char *p_object_description) {
+    void PixelCollision::setupPixelRangesFromVertices(dengMath::vec2<size_t> *vertices_bounds, dengMath::vec2<size_t> *indices_bounds, const char *p_object_description) {
         this->m_objects_pixel_data.resize(this->m_objects_pixel_data.size() + 1);
         size_t local_obj_pix_size = this->m_objects_pixel_data.size() - 1;
 
         LOG("m_objects_pixel_data size: " + std::to_string(this->m_objects_pixel_data.size()));
         this->m_objects_pixel_data[this->m_objects_pixel_data.size() - 1].object_description = p_object_description;
         
-        std::vector<deng::UIVerticesData> local_object_vertices;
+        std::vector<dengUtils::UIVerticesData> local_object_vertices;
         local_object_vertices.resize(vertices_bounds->second - vertices_bounds->first);
 
         LOG("vertices bounds: " + std::to_string(vertices_bounds->first) + "-" + std::to_string(vertices_bounds->second));
@@ -93,14 +93,14 @@ namespace dengUI {
         for(size_t i = indices_bounds->first, local_i = 0; i < indices_bounds->second; i++, local_i++)
             local_object_indices[local_i] = (*this->m_p_indices_data)[i];
         
-        uint16_t local_smallest_index = deng::HandleData::getSmallestElement<uint16_t>(&local_object_indices);
+        uint16_t local_smallest_index = dengMath::HandleData::getSmallestElement<uint16_t>(&local_object_indices);
         for(size_t i = 0; i < local_object_indices.size(); i++) {
             local_object_indices[i] -= local_smallest_index;
             LOG("new local object index: " + std::to_string(local_object_indices[i]));
         }
 
-        deng::vec3<deng::vec2<float>> local_triangle_vertices;
-        deng::vec3<deng::vec2<float>> local_triangle_vectors;
+        dengMath::vec3<dengMath::vec2<float>> local_triangle_vertices;
+        dengMath::vec3<dengMath::vec2<float>> local_triangle_vectors;
 
         for(size_t i = 0; i <= local_object_indices.size() - 3; i += 3) {
             local_triangle_vertices.first =  {local_object_vertices[local_object_indices[i]].position_vec.first, local_object_vertices[local_object_indices[i]].position_vec.second};
@@ -116,7 +116,7 @@ namespace dengUI {
             }
 
             for(double i = static_cast<double>(local_triangle_vertices.first.first); round((i + 1.0) / this->m_p_window->getPixelSize().first) < round(static_cast<double>(local_triangle_vertices.second.first + 1) / this->m_p_window->getPixelSize().first); i += this->m_p_window->getPixelSize().first) {
-                deng::vec2<double> local_new_pixel_coords;
+                dengMath::vec2<double> local_new_pixel_coords;
                 local_new_pixel_coords.first = round((i + 1.0) / this->m_p_window->getPixelSize().first);
 
                 if(local_triangle_vectors.first.second < 0)
@@ -129,7 +129,7 @@ namespace dengUI {
 
             if(local_triangle_vertices.second.first <= local_triangle_vertices.third.first) {
                 for(double i = static_cast<double>(local_triangle_vertices.second.first); round((i + 1.0) / this->m_p_window->getPixelSize().first) < round(static_cast<double>(local_triangle_vertices.third.first + 1) / this->m_p_window->getPixelSize().first); i += this->m_p_window->getPixelSize().first) {
-                    deng::vec2<double> local_new_pixel_coords;
+                    dengMath::vec2<double> local_new_pixel_coords;
                     local_new_pixel_coords.first = round((i + 1.0) / this->m_p_window->getPixelSize().first);
 
                     if(local_triangle_vectors.second.second < 0)
@@ -144,7 +144,7 @@ namespace dengUI {
 
             else if(local_triangle_vertices.second.first > local_triangle_vertices.third.first) {
                 for(double i = static_cast<double>(local_triangle_vertices.second.first); round((i + 1.0) / this->m_p_window->getPixelSize().first) > round(static_cast<double>(local_triangle_vertices.third.first + 1) / this->m_p_window->getPixelSize().first); i -= this->m_p_window->getPixelSize().first) {
-                    deng::vec2<double> local_new_pixel_coords;
+                    dengMath::vec2<double> local_new_pixel_coords;
                     local_new_pixel_coords.first = round((i + 1.0) / this->m_p_window->getPixelSize().first);
 
                     if(local_triangle_vectors.second.second < 0)
@@ -158,7 +158,7 @@ namespace dengUI {
             }
 
             for(double i = static_cast<double>(local_triangle_vertices.third.first); round((i + 1.0) / this->m_p_window->getPixelSize().first) > round(static_cast<double>(local_triangle_vertices.first.first + 1) / this->m_p_window->getPixelSize().first); i -= this->m_p_window->getPixelSize().first) {
-                deng::vec2<double> local_new_pixel_coords;
+                dengMath::vec2<double> local_new_pixel_coords;
                 local_new_pixel_coords.first = round((i + 1.0) / this->m_p_window->getPixelSize().first);
 
                 if(local_triangle_vectors.third.second < 0)
@@ -170,7 +170,7 @@ namespace dengUI {
                 this->m_objects_pixel_data[this->m_objects_pixel_data.size() - 1].pixels_data.push_back(local_new_pixel_coords);
             }
 
-            for(deng::vec2<double> &pixel_data : this->m_objects_pixel_data[this->m_objects_pixel_data.size() - 1].pixels_data) {
+            for(dengMath::vec2<double> &pixel_data : this->m_objects_pixel_data[this->m_objects_pixel_data.size() - 1].pixels_data) {
                 LOG("Pixel coords: " + std::to_string(pixel_data.first) + "/" + std::to_string(pixel_data.second));
             }
 
@@ -181,7 +181,7 @@ namespace dengUI {
         }
     }
 
-    dengBool PixelCollision::isCollided(const char *p_object_description, const deng::vec2<size_t> &colliding_pixel) {
+    dengBool PixelCollision::isCollided(const char *p_object_description, const dengMath::vec2<size_t> &colliding_pixel) {
         if(colliding_pixel.first >= 0 && colliding_pixel.second >= 0) {
             size_t local_pixel_group_index = 0;
             while (this->m_objects_pixel_data[local_pixel_group_index].object_description != p_object_description && local_pixel_group_index < this->m_objects_pixel_data.size()) local_pixel_group_index++;

@@ -1,6 +1,6 @@
 #include "../core/deng_core.h"
 
-namespace deng {
+namespace dengMath {
 
     // generic math functions
     float Math::degToRad(const float &deg) {
@@ -24,12 +24,12 @@ namespace deng {
         return (value_numerator * equivalent_denominator) / value_denominator;
     }
 
-    float Math::getVectorLengthFromBounds(deng::vec2<deng::vec2<float>> vector_bounds) {
+    float Math::getVectorLengthFromBounds(vec2<vec2<float>> vector_bounds) {
         vec2<float> local_vector_coordinates = vector_bounds.second - vector_bounds.first;
         return static_cast<float>(sqrt(pow(local_vector_coordinates.first, 2) + pow(local_vector_coordinates.second, 2)));
     }
 
-    float Math::getTriangleAnglesFromEdges(const deng::vec3<float> &triangle_edges, const dengTriangleAngleType &triangle_angle_type) {
+    float Math::getTriangleAnglesFromEdges(const vec3<float> &triangle_edges, const dengTriangleAngleType &triangle_angle_type) {
         switch (triangle_angle_type)
         {
         case DENG_TRIANGLE_ANGLE_ALPHA:

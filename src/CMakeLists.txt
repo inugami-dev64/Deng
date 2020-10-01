@@ -21,19 +21,19 @@ add_executable(${PROJECT_NAME}
 
     maths/deng_math.cpp
     maths/events.cpp
-    maths/objects_handler.cpp
 
-    utilities/file_manager.cpp
-    utilities/grid_generator.cpp
-    utilities/object_loader.cpp
-    utilities/texture_loader.cpp
-    utilities/timer.cpp
+    utilities/data_handler/objects_handler.cpp
+    utilities/data_handler/file_manager.cpp
+    utilities/map/grid_generator.cpp
+    utilities/assets_handler/object_loader.cpp
+    utilities/assets_handler/texture_loader.cpp
+    utilities/timer/timer.cpp
 
-    dengui/dengui_window.cpp
-    dengui/dengui_pixel_collision.cpp
-    dengui/dengui_events.cpp
-    dengui/dengui_sprites.cpp
-    dengui/dengui_event_handles.cpp
+    dengui/core/dengui_window.cpp
+    dengui/pixel_perfect_collision/dengui_pixel_collision.cpp
+    dengui/events/dengui_events.cpp
+    dengui/core/dengui_sprites.cpp
+    dengui/events/dengui_event_handles.cpp
 
     main/main.cpp
 )

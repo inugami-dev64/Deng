@@ -1,7 +1,7 @@
 #include "deng_core.h"
 
 namespace deng {
-    Camera::Camera(const vec3<float> &cameraMovementSpeedMultiplier, const vec2<float> &mouseMovementSpeedMultiplier, const float &FOV, const float &near,const float &far, Window *window) {
+    Camera::Camera(const dengMath::vec3<float> &cameraMovementSpeedMultiplier, const dengMath::vec2<float> &mouseMovementSpeedMultiplier, const float &FOV, const float &near,const float &far, Window *window) {
         this->m_mouse_pos.first = 0.0f;
         this->m_mouse_pos.second = 0.0f;
         this->m_mouse_sens.first = DENG_MOUSE_BASE_SENSITIVITY_X * (1/mouseMovementSpeedMultiplier.first);
@@ -9,7 +9,7 @@ namespace deng {
 
         this->m_p_window = window;
         this->m_is_init = DENG_TRUE;
-        this->p_projection_matrix = new ProjectionMatrix(FOV, near, far,(float) (this->m_p_window->getSize().first / this->m_p_window->getSize().second));
+        this->p_projection_matrix = new dengMath::ProjectionMatrix(FOV, near, far, static_cast<float>(this->m_p_window->getSize().first / this->m_p_window->getSize().second));
 
         this->m_movementSpeed.first = DENG_CAMERA_BASE_SPEED_X * cameraMovementSpeedMultiplier.first;
         this->m_movementSpeed.second = DENG_CAMERA_BASE_SPEED_Y * cameraMovementSpeedMultiplier.second;
@@ -68,20 +68,20 @@ namespace deng {
         }
 
         this->view_matrix.setTransformationMatrix();
-        this->view_matrix.setRotation(Math::getFractionNumerator(this->m_mouse_pos.second, this->m_mouse_sens.second, -90.0f), Math::getFractionNumerator(this->m_mouse_pos.first, this->m_mouse_sens.first, 360.0f));
+        this->view_matrix.setRotation(dengMath::Math::getFractionNumerator(this->m_mouse_pos.second, this->m_mouse_sens.second, -90.0f), dengMath::Math::getFractionNumerator(this->m_mouse_pos.first, this->m_mouse_sens.first, 360.0f));
 
         #if CAMERA_MOUSE_DEBUG
             LOG("Mouse x_pos: " + std::to_string(this->m_mouse_pos.first) + "/Mouse y_pos: " + std::to_string(this->m_mouse_pos.second));
         #endif
     }
 
-    void Camera::setMousePosition(vec2<float> &mouse_position) {
+    void Camera::setMousePosition(dengMath::vec2<float> &mouse_position) {
         this->m_mouse_pos.first = mouse_position.first;
         this->m_mouse_pos.second = mouse_position.second;
         glfwSetCursorPos(this->m_p_window->getWindow(), this->m_mouse_pos.first * this->m_p_window->getSize().first, this->m_mouse_pos.second * this->m_p_window->getSize().second);
     }
 
-    void Camera::getMousePosition(vec2<float> *mouse_position) {
+    void Camera::getMousePosition(dengMath::vec2<float> *mouse_position) {
         if(mouse_position != nullptr) {
             mouse_position->first = static_cast<float>(this->m_mouse_pos.first);
             mouse_position->second = static_cast<float>(this->m_mouse_pos.second);

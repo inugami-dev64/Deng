@@ -3,7 +3,7 @@
 
 #define PI 3.1415926f
 
-namespace deng {
+namespace dengMath {
 
     template<typename T>
     struct vec2 {
@@ -243,7 +243,7 @@ namespace deng {
         static float radToDeg(const float &rad);
         static vec2<float> getCartesianCoordsPoint(const vec2<float> &centre, const int16_t &angle, const float &distance, const dengBool &inverted_y_axis);
         static float getFractionNumerator(const float &value_numerator, const float &value_denominator, const float &equivalent_denominator);
-        static float getVectorLengthFromBounds(vec2<deng::vec2<float>> vector_bounds);
+        static float getVectorLengthFromBounds(vec2<vec2<float>> vector_bounds);
         static float getTriangleAnglesFromEdges(const vec3<float> &triangle_edges, const dengTriangleAngleType &triangle_angle_type);
         static float getVector2DRotation(vec2<vec2<float>> vector_bounds);
     };
@@ -267,7 +267,7 @@ namespace deng {
 
         // in order to use this function the class used in std::vector must have const char *description as a public class variable
         template<typename T>
-        static T *findElementByDescription(std::vector<T> *p_vector, const size_t &size, const char *description);
+        static T *findElementByDescription(std::vector<T> *p_vector, const char *description);
     };
 
     template<typename T>
@@ -405,8 +405,9 @@ namespace deng {
     }
 
     template<typename T>
-    T *HandleData::findElementByDescription(std::vector<T> *p_elements, const size_t &size, const char *description) {
+    T *HandleData::findElementByDescription(std::vector<T> *p_elements, const char *description) {
         for(size_t i = 0; i < p_elements->size(); i++) {
+            LOG("findElementByDescription description is: " + std::string((*p_elements)[i].description));
             if((*p_elements)[i].description == description) {
                 return &p_elements->at(i);
             } 

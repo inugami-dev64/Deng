@@ -1,23 +1,23 @@
 #include "../core/deng_core.h"
 
-namespace deng {
-    Events::Events(Window *p_win, Camera *p_camera) {
+namespace dengMath {
+    Events::Events(deng::Window *p_win, deng::Camera *p_camera) {
         this->m_p_camera = p_camera;
         this->m_p_window = p_win;
     }
 
     // logging debug functions 
     #if GENERIC_DEBUG
-        void Events::setGrid(SpecifiedObject *grid) {
+        void Events::setGrid(dengUtils::SpecifiedObject *grid) {
             this->m_grid = grid;
         }
 
         void Events::handleGridCoordinateLogging(const int32_t &log_key, const std::string &file_name) {
             if(this->isKeyPressed(log_key, DENG_FALSE, nullptr)) {
-                FileManager fm;
+                dengUtils::FileManager fm;
                 fm.writeToFile(file_name, "#entry point", DENG_WRITEMODE_REWRITE);
 
-                for(SpecifiedVertexData &vertex_data : this->m_grid->vertex_data) {
+                for(dengUtils::SpecifiedVertexData &vertex_data : this->m_grid->vertex_data) {
                     fm.writeToFile(file_name, "{" + std::to_string(vertex_data.position_vec.first) + ";" + std::to_string(vertex_data.position_vec.second) + ";" + std::to_string(vertex_data.position_vec.third) + "}", DENG_WRITEMODE_FROM_END);
                 }
             }

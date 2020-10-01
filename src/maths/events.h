@@ -4,22 +4,22 @@
 #define DENG_INPUT_MODE_CHANGE_INTERVAL 200
 #define DENG_MOVEMENT_INTERVAL 1
 
-namespace deng {
+namespace dengMath {
     
     class Events
     {
     private:
-        Timer m_movement_timer;
-        Timer m_input_mode_change_timer;
+        dengUtils::Timer m_movement_timer;
+        dengUtils::Timer m_input_mode_change_timer;
 
-        Camera *m_p_camera;
-        Window *m_p_window;
+        deng::Camera *m_p_camera;
+        deng::Window *m_p_window;
         vec3<dengMovementEvent> m_movements;
         vec2<float> m_frozen_mouse_position;
         
 
         #if GENERIC_DEBUG
-            SpecifiedObject *m_grid;
+            dengUtils::SpecifiedObject *m_grid;
         #endif
 
     private:
@@ -34,13 +34,13 @@ namespace deng {
         
 
     public:
-        Events(Window *p_win, Camera *p_camera);
+        Events(deng::Window *p_win, deng::Camera *p_camera);
         dengMovementEvent getMovement();
         void handleExit();
         void update();
 
         #if GENERIC_DEBUG
-            void setGrid(SpecifiedObject *grid);
+            void setGrid(dengUtils::SpecifiedObject *grid);
         #endif
     };
 }

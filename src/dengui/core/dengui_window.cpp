@@ -1,4 +1,4 @@
-#include "../core/deng_core.h"
+#include "../../core/deng_core.h"
 
 namespace dengUI {
 
@@ -7,11 +7,14 @@ namespace dengUI {
         this->m_borderinfo = borderinfo;
         this->m_bufferinfo = bufferinfo;
 
-        this->m_clickinfo.p_vertices_data = &this->m_vertices_data;
-        this->m_clickinfo.p_indices_data = &this->m_indices_data;
-
         this->createBaseWindow();
         this->sortClickableObjects();
+
+        this->m_clickinfo.p_vertices_data = &this->m_vertices_data;
+        this->m_clickinfo.p_indices_data = &this->m_indices_data;
+        this->m_clickinfo.p_window_objects = &this->m_window_objects;
+        this->m_clickinfo.p_windowinfo = &this->m_windowinfo;
+        this->m_clickinfo.p_bufferinfo = &this->m_bufferinfo;
         
         this->m_p_collision = new PixelCollision(this->m_windowinfo.p_window, &this->m_vertices_data, &this->m_indices_data);
         this->m_p_events = new Events(this->m_windowinfo.p_window, this->m_p_collision, &this->m_vertices_data, &this->m_indices_data);
@@ -37,8 +40,8 @@ namespace dengUI {
 
     void Window::createBaseWindow() {
         this->m_window_objects.resize(5);
-        deng::vec4<deng::vec2<float>> local_rectangle_vertices;
-        deng::vec3<deng::vec2<float>> local_triangle_vertices;
+        dengMath::vec4<dengMath::vec2<float>> local_rectangle_vertices;
+        dengMath::vec3<dengMath::vec2<float>> local_triangle_vertices;
         RectangleInfo local_rectangle_info{};
         TriangleInfo local_triangle_info{};
 
@@ -60,6 +63,7 @@ namespace dengUI {
         this->m_window_objects[0].is_drawn = DENG_TRUE;
         
         ShapeVerticesDataCreator::getRectangleVertices(&local_rectangle_info, &this->m_window_objects[0]);
+        LOG("Dengui main window vertices count is: " + std::to_string(this->m_window_objects[0].vertices_bounds.second - this->m_window_objects[0].vertices_bounds.first));
         LOG("Successfully initialised dengui window main rectangle vertices!");
 
         // window borders and titlebar
@@ -110,18 +114,15 @@ namespace dengUI {
         this->m_window_objects[3].description = "window borders";
         this->m_window_objects[3].is_clickable = DENG_FALSE;
         this->m_window_objects[3].is_drawn = DENG_TRUE;
-
+        
         ShapeVerticesDataCreator::getRectangleVertices(&local_rectangle_info, &this->m_window_objects[3]);
+        LOG("Dengui window border vertices count is: " + std::to_string(this->m_window_objects[3].vertices_bounds.second - this->m_window_objects[3].vertices_bounds.first));
         LOG("Successfully initialised dengui window border border vertices!");
 
             // minimizing triangle
         local_triangle_vertices.first = {this->m_vertices_data[this->m_window_objects[1].vertices_bounds.first].position_vec.first + this->m_borderinfo.thickness + DENGUI_MINIMIZE_TRIANGLE_OFFSET, this->m_vertices_data[this->m_window_objects[1].vertices_bounds.first].position_vec.second + this->m_borderinfo.thickness + DENGUI_MINIMIZE_TRIANGLE_OFFSET};
         local_triangle_vertices.second = {local_triangle_vertices.first.first + (this->m_borderinfo.titlebar_height - this->m_borderinfo.thickness - DENGUI_MINIMIZE_TRIANGLE_OFFSET), local_triangle_vertices.first.second};
         local_triangle_vertices.third = {(local_triangle_vertices.first.first + local_triangle_vertices.second.first) / 2, this->m_vertices_data[this->m_window_objects[1].vertices_bounds.first].position_vec.second + (this->m_borderinfo.titlebar_height - DENGUI_MINIMIZE_TRIANGLE_OFFSET)};
-
-        // local_triangle_vertices.first.second += (local_triangle_vertices.third.second - local_triangle_vertices.second.second);
-        // local_triangle_vertices.third.second -= (local_triangle_vertices.third.second - local_triangle_vertices.second.second);
-        // local_triangle_vertices.second.second == local_triangle_vertices.first.second;
 
         local_triangle_info.p_vertices = &local_triangle_vertices;
         local_triangle_info.p_color = &this->m_borderinfo.minimizing_triangle_color;
@@ -135,17 +136,31 @@ namespace dengUI {
         this->m_window_objects[4].is_clickable = DENG_TRUE;
         this->m_window_objects[4].handle_id = 0;
         this->m_window_objects[4].is_drawn = DENG_TRUE;
-        // this->m_window_objects_info[4].p_click_handler_struct = ;
 
         ShapeVerticesDataCreator::getTriangleVertices(&local_triangle_info, &this->m_window_objects[4]);
+        LOG("Dengui minimise triangle vertices count is: " + std::to_string(this->m_window_objects[4].vertices_bounds.second - this->m_window_objects[4].vertices_bounds.first));
     }
 
     void Window::createBuffers() {
+        std::vector<dengUtils::UIVerticesData> local_vertices_data = this->m_vertices_data;
+        std::vector<uint16_t> local_indices_data = this->m_indices_data;
+        
+        for(size_t i = 0; i < this->m_window_objects.size(); i++) {
+            
+            if(!this->m_window_objects[i].is_drawn) {
+                for(size_t remove_index = this->m_window_objects[i].vertices_bounds.first; remove_index < this->m_window_objects[i].vertices_bounds.second; remove_index++) 
+                    local_vertices_data.erase(local_vertices_data.begin() + remove_index);
+
+                for(size_t remove_index = this->m_window_objects[i].indices_bounds.first; remove_index < this->m_window_objects[i].indices_bounds.second; remove_index++) 
+                    local_indices_data.erase(local_indices_data.begin() + remove_index);
+            }
+        }
+
         VkDeviceSize local_size = static_cast<VkDeviceSize>(sizeof(this->m_vertices_data[0]) * this->m_vertices_data.size());
 
         // vertices buffer
         this->m_bufferinfo.p_buffer_create_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_staging_buffer_memory, nullptr);
-        this->m_bufferinfo.p_buffer_memory_populate_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, this->m_vertices_data.data(), this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_staging_buffer_memory);
+        this->m_bufferinfo.p_buffer_memory_populate_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, local_vertices_data.data(), this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_staging_buffer_memory);
 
         this->m_bufferinfo.p_buffer_create_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, this->m_bufferinfo.p_vertices_buffer, this->m_bufferinfo.p_vertices_buffer_memory, nullptr);
         this->m_bufferinfo.p_buffer_copy_func(this->m_windowinfo.p_device, this->m_bufferinfo.p_commandpool, this->m_bufferinfo.p_graphics_queue, this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_vertices_buffer, &local_size);
@@ -157,7 +172,7 @@ namespace dengUI {
         local_size = static_cast<VkDeviceSize>(sizeof(this->m_indices_data[0]) * this->m_indices_data.size());
 
         this->m_bufferinfo.p_buffer_create_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_staging_buffer_memory, nullptr);
-        this->m_bufferinfo.p_buffer_memory_populate_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, this->m_indices_data.data(), this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_staging_buffer_memory);
+        this->m_bufferinfo.p_buffer_memory_populate_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, local_indices_data.data(), this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_staging_buffer_memory);
 
         this->m_bufferinfo.p_buffer_create_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, this->m_bufferinfo.p_indices_buffer, this->m_bufferinfo.p_indices_buffer_memory, nullptr);
         this->m_bufferinfo.p_buffer_copy_func(this->m_windowinfo.p_device, this->m_bufferinfo.p_commandpool, this->m_bufferinfo.p_graphics_queue, this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_indices_buffer, &local_size);
@@ -167,13 +182,6 @@ namespace dengUI {
 
         *this->m_bufferinfo.p_indices_size = static_cast<uint32_t>(this->m_indices_data.size());
     }
-
-    // void Window::updateBuffers() {
-    //     VkDeviceSize local_size = static_cast<VkDeviceSize>(sizeof(this->m_vertices_data[0]) * this->m_vertices_data.size());
-        
-    //     this->m_bufferinfo.p_buffer_create_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_staging_buffer_memory, nullptr);
-        
-    // }
 
     void Window::sortClickableObjects() {
         for(size_t i = 0; i < this->m_window_objects.size(); i++) {
@@ -193,11 +201,9 @@ namespace dengUI {
             this->m_clickinfo.indices_bounds = this->m_p_clickable_objects[i]->indices_bounds;
             this->m_clickinfo.p_is_clicked = &this->m_p_clickable_objects[i]->is_clicked;
             this->m_clickinfo.description = this->m_p_clickable_objects[i]->description;
+            this->m_clickinfo.handle_id = this->m_p_clickable_objects[i]->handle_id;
 
-            this->m_p_events->checkForClicks(&this->m_clickinfo);
-            
-            if(*this->m_clickinfo.p_is_clicked)
-                this->m_p_handler_list->callClickHandler(this->m_p_clickable_objects[i]->handle_id);
+            this->m_p_events->checkForClicks(&this->m_clickinfo, this->m_p_handler_list);
         }
     }
 }

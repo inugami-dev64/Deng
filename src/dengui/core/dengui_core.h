@@ -1,8 +1,8 @@
 #ifndef DENGUI_CORE_H
 #define DENGUI_CORE_H
 
-#define DENGUI_WINDOW_LAYER_MULTIPLIER static_cast<float>(0.001)
-#define DENGUI_MINIMIZE_TRIANGLE_OFFSET static_cast<float>(0.01)
+#define DENGUI_WINDOW_LAYER_MULTIPLIER 0.001f
+#define DENGUI_MINIMIZE_TRIANGLE_OFFSET 0.01f
 
 namespace dengUI {
     enum dengUINonFilledBorderOffsetMode {
@@ -37,10 +37,11 @@ namespace dengUI {
     };
 }
 
+#include "../css_engine/css_engine_core.h"
 #include "dengui_infos.h"
-#include "dengui_pixel_collision.h"
-#include "dengui_events.h"
-#include "dengui_event_handles.h"
+#include "../pixel_perfect_collision/dengui_pixel_collision.h"
+#include "../events/dengui_event_handles.h"
+#include "../events/dengui_events.h"
 #include "dengui_sprites.h"
 #include "dengui_window.h"
 

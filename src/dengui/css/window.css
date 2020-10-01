@@ -1,0 +1,19 @@
+title {
+    height: 10px;
+    border-width: 2px;
+    border-color: black;
+}
+
+body {
+    height: 500px;
+    width: 500px;
+    background-color: #00FFFF;
+    border-color: black;
+    border-width: 2px;
+}
+
+.minimise_triangle {
+    margin-left: 2px;
+    margin-top: 2px;
+}
+

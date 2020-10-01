@@ -44,7 +44,7 @@ namespace deng {
     private:
         PipelineData *m_p_pipeline_data;
         VkDevice *m_p_device;
-        FileManager *m_p_fm;
+        dengUtils::FileManager *m_p_fm;
         VkExtent2D *m_p_extent;
         VkRenderPass *m_p_renderpass;
 
@@ -71,7 +71,7 @@ namespace deng {
         std::vector<VkVertexInputAttributeDescription> getAttributeDesc();
         
     public:
-        PipelineCreator(PipelineData *p_pipeline_data, VkDevice *device, FileManager *filemanager, VkExtent2D *extent, VkRenderPass *renderpass);
+        PipelineCreator(PipelineData *p_pipeline_data, VkDevice *device, dengUtils::FileManager *filemanager, VkExtent2D *extent, VkRenderPass *renderpass);
         ~PipelineCreator();
         VkGraphicsPipelineCreateInfo getGraphicsPipelineInfo(const std::string &vert_shader, const std::string &frag_shader, const char *p_shader_module_name,
         const VkPolygonMode &polygon_mode, const VkFrontFace &front_face, const VkPrimitiveTopology &primitive_topology, const dengBool &add_depth_stencil, const dengBool &add_color_blend, const uint32_t &subpass_index);

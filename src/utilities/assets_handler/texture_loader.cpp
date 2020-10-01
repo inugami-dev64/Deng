@@ -1,6 +1,6 @@
-#include "../core/deng_core.h"
+#include "../../core/deng_core.h"
 
-namespace deng {
+namespace dengUtils {
     TextureLoaderBMP::TextureLoaderBMP(const std::string &file_name) {
         std::ifstream texture_file{file_name.c_str(), std::fstream::binary};
         if(texture_file) {

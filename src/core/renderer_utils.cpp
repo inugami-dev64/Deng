@@ -112,7 +112,7 @@ namespace deng {
     }
 
 
-    PipelineCreator::PipelineCreator(PipelineData *p_pipeline_data, VkDevice *device, FileManager *filemanager, VkExtent2D *extent, VkRenderPass *renderpass) {
+    PipelineCreator::PipelineCreator(PipelineData *p_pipeline_data, VkDevice *device, dengUtils::FileManager *filemanager, VkExtent2D *extent, VkRenderPass *renderpass) {
         this->m_p_pipeline_data = p_pipeline_data;
         this->m_p_device = device;
         this->m_p_fm = filemanager;
@@ -140,15 +140,15 @@ namespace deng {
         switch (this->m_p_pipeline_data->pipeline_type)
         {
         case DENG_PIPELINE_TYPE_OBJECT_BASED:
-            local_input_binding_desc.stride = sizeof(ObjVertexData);
+            local_input_binding_desc.stride = sizeof(dengUtils::ObjVertexData);
             break;
         
         case DENG_PIPELINE_TYPE_SPECIFIED:
-            local_input_binding_desc.stride = sizeof(SpecifiedVertexData);
+            local_input_binding_desc.stride = sizeof(dengUtils::SpecifiedVertexData);
             break;
 
         case DENG_PIPELINE_TYPE_UI:
-            local_input_binding_desc.stride = sizeof(UIVerticesData);
+            local_input_binding_desc.stride = sizeof(dengUtils::UIVerticesData);
             break;
         
         default:
@@ -168,36 +168,36 @@ namespace deng {
             local_input_attr_desc[0].binding = 0;
             local_input_attr_desc[0].location = 0;
             local_input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-            local_input_attr_desc[0].offset = offsetof(ObjVertexData, position_vec);
+            local_input_attr_desc[0].offset = offsetof(dengUtils::ObjVertexData, position_vec);
 
             local_input_attr_desc[1].binding = 0;
             local_input_attr_desc[1].location = 1;
             local_input_attr_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
-            local_input_attr_desc[1].offset = offsetof(ObjVertexData, texture_vec);
+            local_input_attr_desc[1].offset = offsetof(dengUtils::ObjVertexData, texture_vec);
             break;
 
         case DENG_PIPELINE_TYPE_SPECIFIED:
             local_input_attr_desc[0].binding = 0;
             local_input_attr_desc[0].location = 0;
             local_input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-            local_input_attr_desc[0].offset = offsetof(SpecifiedVertexData, position_vec);
+            local_input_attr_desc[0].offset = offsetof(dengUtils::SpecifiedVertexData, position_vec);
 
             local_input_attr_desc[1].binding = 0;
             local_input_attr_desc[1].location = 1;
             local_input_attr_desc[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-            local_input_attr_desc[1].offset = offsetof(SpecifiedVertexData, color_vec);
+            local_input_attr_desc[1].offset = offsetof(dengUtils::SpecifiedVertexData, color_vec);
             break;
 
         case DENG_PIPELINE_TYPE_UI:
             local_input_attr_desc[0].binding = 0;
             local_input_attr_desc[0].location = 0;
             local_input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-            local_input_attr_desc[0].offset = offsetof(UIVerticesData, position_vec);
+            local_input_attr_desc[0].offset = offsetof(dengUtils::UIVerticesData, position_vec);
             
             local_input_attr_desc[1].binding = 0;
             local_input_attr_desc[1].location = 1;
             local_input_attr_desc[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-            local_input_attr_desc[1].offset = offsetof(UIVerticesData, color_vec);
+            local_input_attr_desc[1].offset = offsetof(dengUtils::UIVerticesData, color_vec);
             break;
         
         default:

@@ -5,7 +5,7 @@ namespace dengUI {
     
     class Window {
     private:
-        std::vector<deng::UIVerticesData> m_vertices_data;
+        std::vector<dengUtils::UIVerticesData> m_vertices_data;
         std::vector<uint16_t> m_indices_data;
         WindowInfo m_windowinfo;
         WindowBorderInfo m_borderinfo;
@@ -21,7 +21,6 @@ namespace dengUI {
     private: 
         void createBaseWindow();
         void createBuffers();
-        void updateBuffers();
         void sortClickableObjects();
 
     public:

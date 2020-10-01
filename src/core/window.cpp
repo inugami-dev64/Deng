@@ -27,7 +27,7 @@ namespace deng {
         return this->m_title;
     }
 
-    vec2<uint32_t> Window::getSize() {
+    dengMath::vec2<uint32_t> Window::getSize() {
         return this->m_size;
     }
 
@@ -53,7 +53,7 @@ namespace deng {
         this->m_input_mode = new_input_mode;
     }
 
-    vec2<double> Window::getPixelSize() {
+    dengMath::vec2<double> Window::getPixelSize() {
         return this->m_pixel_size;
     }
 }

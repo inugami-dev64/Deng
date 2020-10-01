@@ -1,6 +1,6 @@
-#include "../core/deng_core.h"
+#include "../../core/deng_core.h"
 
-namespace deng {
+namespace dengUtils {
     ObjLoader::ObjLoader(const std::string &file_name, const dengCoordinateMode &coordinate_mode) {
         FileManager local_fm;
         this->reverse_coordinates = coordinate_mode;

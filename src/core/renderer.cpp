@@ -9,9 +9,9 @@ namespace deng
         this->loadDataFromConf(DENG_TRUE, DENG_TRUE, DENG_TRUE);
         this->m_p_window = &win;
 
-        this->m_p_grid_manager = new GridManager(&this->m_grid, this->m_far_plane + 5, &this->m_environment_conf.grid_height, &this->m_environment_conf.grid_width, &this->m_environment_conf.grid_line_color_r, &this->m_environment_conf.grid_line_color_g, &this->m_environment_conf.grid_line_color_b);
+        this->m_p_grid_manager = new dengUtils::GridManager(&this->m_grid, this->m_far_plane + 5, &this->m_environment_conf.grid_height, &this->m_environment_conf.grid_width, &this->m_environment_conf.grid_line_color_r, &this->m_environment_conf.grid_line_color_g, &this->m_environment_conf.grid_line_color_b);
         this->m_p_camera = new Camera({this->m_camera_conf.movement_x, this->m_camera_conf.movement_y, this->m_camera_conf.movement_z}, {this->m_camera_conf.mouse_movement_x, this->m_camera_conf.mouse_movement_y}, this->m_camera_conf.fov, this->m_near_plane, this->m_far_plane, this->m_p_window);
-        this->m_p_ev = new Events(this->m_p_window, this->m_p_camera);
+        this->m_p_ev = new dengMath::Events(this->m_p_window, this->m_p_camera);
 
         this->initObjects(this->m_sample_object, "objects/obj1.obj", "textures/obj1.tga", DENG_COORDINATE_MODE_DEFAULT);
         this->initGrid();
@@ -114,24 +114,24 @@ namespace deng
         }
     }
 
-    void Renderer::initObjects(GameObject &obj, const std::string &obj_filepath, const std::string &texture_filepath, const dengCoordinateMode &coordinate_mode) {
-        ObjLoader obj_loader(obj_filepath, coordinate_mode);
+    void Renderer::initObjects(dengUtils::GameObject &obj, const std::string &obj_filepath, const std::string &texture_filepath, const dengCoordinateMode &coordinate_mode) {
+        dengUtils::ObjLoader obj_loader(obj_filepath, coordinate_mode);
         obj.origin = {0.0f, 0.6f, 0.0f};
         obj_loader.getObjVerticesAndIndices(obj);
 
-        dengTextureFormat local_tex_format = getTexFileFormat(texture_filepath);
-        ObjRawTextureData texture_data;
+        dengTextureFormat local_tex_format = dengUtils::getTexFileFormat(texture_filepath);
+        dengUtils::ObjRawTextureData texture_data;
 
         switch (local_tex_format)
         {
         case DENG_TEXTURE_FORMAT_BMP: {
-            TextureLoaderBMP local_tex_loader(texture_filepath);
+            dengUtils::TextureLoaderBMP local_tex_loader(texture_filepath);
             local_tex_loader.getTextureDetails(texture_data.p_width, texture_data.p_height, texture_data.p_texture_size, texture_data.texture_pixels_data);
             break;
         }
 
         case DENG_TEXTURE_FORMAT_TGA: {
-            TextureLoaderTGA local_tex_loader(texture_filepath);
+            dengUtils::TextureLoaderTGA local_tex_loader(texture_filepath);
             local_tex_loader.getTextureDetails(texture_data.p_width, texture_data.p_height, texture_data.p_texture_size, texture_data.texture_pixels_data);
             break;
         }
@@ -161,6 +161,7 @@ namespace deng
 
     void Renderer::initGrid() {
         this->m_p_grid_manager->generateVertices(this->m_p_camera->view_matrix.getPosition());
+        LOG("seg test!");
     }
 
     void Renderer::initInstance() {
@@ -729,7 +730,7 @@ namespace deng
         }
     }
 
-    void Renderer::initTextureImage(GameObject &obj) {
+    void Renderer::initTextureImage(dengUtils::GameObject &obj) {
         Renderer::makeBuffer(&this->m_device, &this->m_gpu, obj.raw_texture_data.p_texture_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &this->m_buffers.staging_buffer, &this->m_buffers.staging_buffer_memory, nullptr);
         this->populateBufferMem(&this->m_device, &this->m_gpu, obj.raw_texture_data.p_texture_size, obj.raw_texture_data.texture_pixels_data.data(), &this->m_buffers.staging_buffer, &this->m_buffers.staging_buffer_memory);
         LOG("Successfully created texture staging buffer!");
@@ -753,7 +754,7 @@ namespace deng
         }
     }
 
-    void Renderer::initTextureSampler(GameObject &obj) {
+    void Renderer::initTextureSampler(dengUtils::GameObject &obj) {
         VkSamplerCreateInfo local_samplerInfo{};
         local_samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         local_samplerInfo.magFilter = VK_FILTER_LINEAR;
@@ -778,7 +779,7 @@ namespace deng
 
     }
 
-    void Renderer::initBuffers(GameObject &obj) {
+    void Renderer::initBuffers(dengUtils::GameObject &obj) {
         // main object buffer
         LOG("Initialising main buffer!");
         VkDeviceSize local_size = sizeof(obj.vertex_data[0]) * obj.vertex_data.size();
@@ -817,7 +818,7 @@ namespace deng
         // vkDestroyBuffer(this->m_device, obj.buffers.staging_buffer, nullptr);
         // vkFreeMemory(this->m_device, obj.buffers.staging_bufferMem, nullptr);
 
-        local_size = sizeof(UniformBufferData);
+        local_size = sizeof(dengMath::UniformBufferData);
 
         this->m_buffers.uniform_buffers.resize(this->m_swapchain_images.size());
         this->m_buffers.uniform_buffers_memory.resize(this->m_swapchain_images.size());
@@ -915,7 +916,7 @@ namespace deng
                 VkDescriptorBufferInfo local_bufferinfo{};
                 local_bufferinfo.buffer = this->m_buffers.uniform_buffers[i];
                 local_bufferinfo.offset = 0;
-                local_bufferinfo.range = sizeof(UniformBufferData);
+                local_bufferinfo.range = sizeof(dengMath::UniformBufferData);
 
                 std::vector<VkWriteDescriptorSet> local_description_writes{};
                 switch (i)
@@ -1129,22 +1130,22 @@ namespace deng
         this->m_current_frame = (m_current_frame + 1) % this->m_MAX_FRAMES_IN_FLIGHT;
     }
 
-    void Renderer::updateUniformBufferData(const uint32_t &current_image, GameObject &obj) {
-        UniformBufferData ubo;
-        obj.model_matrix.getModelMatrix(&ubo.model);
+    void Renderer::updateUniformBufferData(const uint32_t &current_image, dengUtils::GameObject &obj) {
+        dengMath::UniformBufferData local_ubo;
+        obj.model_matrix.getModelMatrix(&local_ubo.model);
         
-        this->m_p_camera->view_matrix.getViewMatrix(&ubo.view);
-        this->m_p_camera->p_projection_matrix->getProjectionMatrix(&ubo.projection);
+        this->m_p_camera->view_matrix.getViewMatrix(&local_ubo.view);
+        this->m_p_camera->p_projection_matrix->getProjectionMatrix(&local_ubo.projection);
 
         void *data;
-        vkMapMemory(this->m_device, this->m_buffers.uniform_buffers_memory[current_image], 0, sizeof(ubo), 0, &data);
-            memcpy(data, &ubo, sizeof(ubo));
+        vkMapMemory(this->m_device, this->m_buffers.uniform_buffers_memory[current_image], 0, sizeof(local_ubo), 0, &data);
+            memcpy(data, &local_ubo, sizeof(local_ubo));
         vkUnmapMemory(this->m_device, this->m_buffers.uniform_buffers_memory[current_image]);
 
     }
 
     /* VkImage related functions */
-    void Renderer::makeImage(const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, GameObject *p_obj, const dengImageType &image_type) {
+    void Renderer::makeImage(const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, dengUtils::GameObject *p_obj, const dengImageType &image_type) {
         uint32_t local_width, local_height;
         VkImage *p_local_image;
         VkDeviceMemory *p_local_image_memory;
@@ -1451,7 +1452,7 @@ namespace deng
         vkDestroyDescriptorPool(this->m_device, this->m_descriptor_pool_sets.second.second, nullptr);
     }
 
-    void Renderer::deleteTextureImage(GameObject &obj) {
+    void Renderer::deleteTextureImage(dengUtils::GameObject &obj) {
         vkDestroySampler(this->m_device, obj.texture_data.texture_sampler, nullptr);
         vkDestroyImageView(this->m_device, obj.texture_data.texture_image_view, nullptr);
         vkDestroyImage(this->m_device, obj.texture_data.texture_image, nullptr);

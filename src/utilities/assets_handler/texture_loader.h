@@ -1,7 +1,7 @@
 #ifndef TEXTURE_LOADER_H
 #define TEXTURE_LOADER_H
 
-namespace deng {
+namespace dengUtils {
 
     //bmp format
     #pragma pack(1)

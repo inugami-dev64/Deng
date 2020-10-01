@@ -1,21 +1,21 @@
 #ifndef OBJECTS_HANDLER_H
 #define OBJECTS_HANDLER_H
 
-namespace deng {
+namespace dengUtils {
     
     struct ObjVertexData {
-        vec3<float> position_vec;
-        vec2<float> texture_vec;
+        dengMath::vec3<float> position_vec;
+        dengMath::vec2<float> texture_vec;
     };
 
     struct SpecifiedVertexData {
-        vec3<float> position_vec;
-        vec3<float> color_vec;
+        dengMath::vec3<float> position_vec;
+        dengMath::vec3<float> color_vec;
     };
 
     struct UIVerticesData {
-        deng::vec3<float> position_vec;
-        deng::vec4<float> color_vec;
+        dengMath::vec3<float> position_vec;
+        dengMath::vec4<float> color_vec;
     };
 
     struct Buffers {
@@ -68,18 +68,18 @@ namespace deng {
     };
 
     struct GameObject {
-        vec3<float> origin;
+        dengMath::vec3<float> origin;
         std::vector<ObjVertexData> vertex_data;
         ObjRawTextureData raw_texture_data;
         ObjTextureData texture_data;
-        ModelMatrix model_matrix;        
+        dengMath::ModelMatrix model_matrix;        
     };
 
     struct SpecifiedObject {
-        vec3<float> origin;
+        dengMath::vec3<float> origin;
         std::vector<SpecifiedVertexData> vertex_data;
         std::vector<uint32_t> *p_index_data;
-        ModelMatrix model_matrix;
+        dengMath::ModelMatrix model_matrix;
     };
 }
 

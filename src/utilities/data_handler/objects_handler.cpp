@@ -1,6 +1,6 @@
-#include "../core/deng_core.h"
+#include "../../core/deng_core.h"
 
-namespace deng {
+namespace dengUtils {
 
     ObjRawTextureData::ObjRawTextureData() {
         this->p_width = new uint32_t;
