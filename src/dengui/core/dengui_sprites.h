@@ -4,8 +4,8 @@
 namespace dengUI {
 
     struct ShapeVerticesDataCreator {
-        static void getRectangleVertices(RectangleInfo *p_rectangle_info, WindowObject *p_window_object);
-        static void getTriangleVertices(TriangleInfo *p_triangle_info, WindowObject *p_window_objects);
+        static void createRectangle(WindowInfo *p_windowinfo, RectangleInfo **pp_rectangle_info, BorderInfo *p_border_info, const dengUIBorderDrawMode &border_draw_mode, const int &sequence_id);
+        static void createTriangle(WindowInfo *p_windowsinfo, TriangleInfo **pp_triangle_info, BorderInfo *p_border_info, const dengUIBorderDrawMode &border_draw_mode, const int sequence_id);
     };
 }  
 

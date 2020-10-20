@@ -2,60 +2,103 @@
 #define CSS_DATA_MANAGER_H
 
 namespace dengCSS {
+    struct CSSDataHeader {
+        std::array<std::string, DENG_CSS_SUPPORTED_PROPERTIES_COUNT> properties_data;
+    };
+
     struct CSSGeneralBorderInfo {
-        uint16_t border_width;
+        double border_width;
         dengMath::vec3<float> border_color;
     };
 
     struct CSSSpecifiedBorderInfo {
-        uint16_t border_left_width;
+        double border_left_width;
         dengMath::vec3<float> border_left_color;
 
-        uint16_t border_top_width;
+        double border_top_width;
         dengMath::vec3<float> border_top_color;
 
-        uint16_t border_right_width;
+        double border_right_width;
         dengMath::vec3<float> border_right_color;
 
-        uint16_t border_bottom_width;
+        double border_bottom_width;
         dengMath::vec3<float> border_bottom_color;
     };
 
-    struct CSSTitleData {
-        uint16_t height;
-        CSSGeneralBorderInfo *p_general_border_info = nullptr;
-        CSSSpecifiedBorderInfo *p_specified_border_info = nullptr;
+    struct CSSMargindata {
+        double margin_top, margin_right, margin_bottom, margin_left;
+    };
+
+    struct CSSHeadData {
+        double height;
+        dengMath::vec3<float> background_color;
+        CSSGeneralBorderInfo *p_general_border_info = NULL;
+        CSSSpecifiedBorderInfo *p_specified_border_info = NULL;
+
+        ~CSSHeadData() {
+            if(this->p_general_border_info != NULL) delete this->p_general_border_info;
+            if(this->p_specified_border_info != NULL) delete this->p_specified_border_info;
+        }
     };
 
     struct CSSBodyData {
-        uint16_t height;
-        uint16_t width;
-        CSSGeneralBorderInfo *p_general_border_info = nullptr;
-        CSSSpecifiedBorderInfo *p_specified_border_info = nullptr;
+        double height;
+        double width;
+        dengMath::vec3<float> background_color;
+        CSSGeneralBorderInfo *p_general_border_info = NULL;
+        CSSSpecifiedBorderInfo *p_specified_border_info = NULL;
+
+        ~CSSBodyData() {
+            if(this->p_general_border_info != NULL) delete this->p_general_border_info;
+            if(this->p_specified_border_info != NULL) delete this->p_specified_border_info;
+        }
     };
 
-    struct CSSMinimiseTriangleData {
-        uint16_t margin_left;
-        uint16_t margin_top;
+    struct CSSGenericObjectData {
+        dengMath::vec3<float> background_color = {0.0f, 0.0f, 0.0f};
+        CSSGeneralBorderInfo *p_general_border_info = NULL;
+        CSSSpecifiedBorderInfo *p_specified_border_info = NULL;
+        double font_size;
+        dengCSSFontWeight font_weight;
+        
+        double height, width;
+        CSSMargindata margin_data;
+
+        ~CSSGenericObjectData() {
+            if(this->p_general_border_info != nullptr) delete this->p_general_border_info;
+            if(this->p_specified_border_info != nullptr) delete this->p_specified_border_info;
+        }
     };
 
     class CSSDataHandler {
     private:
         dengUtils::FileManager m_filemanager;
-        CSSTitleData m_title_data;
+        deng::Window *m_p_window;
+        CSSHeadData m_head_data;
         CSSBodyData m_body_data;
-        CSSMinimiseTriangleData m_minimise_triangle_data;
+        CSSGenericObjectData *m_p_generic_object_data = nullptr;
+        std::vector<std::string> m_css_files;
 
     private:
-        dengBool verifyTitleData(std::vector<std::vector<std::string>> *p_css_files_data);
-        void getTitleData(std::vector<std::vector<std::string>> *p_css_files_data);
-        dengBool verifyBodyData(std::vector<std::vector<std::string>> *p_css_files_data);
-        void getBodyData(std::vector<std::vector<std::string>> *p_css_files_data);
-        dengBool verifyMinimiseTriangleData(std::vector<std::vector<std::string>> *p_css_files_data);
-        void getMinimiseTriangleData(std::vector<std::vector<std::string>> *p_css_files_data);
+        CSSGeneralBorderInfo handleBorderData(std::string &property_values);
+        dengMath::vec3<float> handleGeneralColor(std::string &str_color);
+        double handleGeneralSize(const std::string &size, const dengCoordinateAxisType &deng_css_size_type, const dengMath::vec2<double> &block_size);
+        dengCSSFontWeight handleFontWeight(const std::string &str_weight);
+
+        dengBool populateDataHeader(const std::string &css_file_name, const std::string &css_class_name, CSSDataHeader *p_data_header);
+        void populateBorderValueData(CSSDataHeader *p_data_header, CSSGeneralBorderInfo **pp_general_border_info, CSSSpecifiedBorderInfo **pp_specified_border_info, const dengMath::vec2<double> &block_size);
+        void populateMarginData(CSSDataHeader *p_data_header, CSSMargindata *p_margin_data, const dengMath::vec2<double> &block_size);
 
     public: 
-        CSSDataHandler();
+        void readClassData(const std::string &class_name, const dengCSSClassReadMode &class_read_mode, const dengMath::vec2<double> &block_size);
+        void getHeadData(CSSHeadData **pp_titlebar_data);
+        void getBodyData(CSSBodyData **pp_body_data);
+        void getGenericObjectData(CSSGenericObjectData **pp_generic_object_data);
+
+        CSSDataHandler(deng::Window *p_window, const std::string &css_file_path);
+        ~CSSDataHandler() {
+            if(this->m_p_generic_object_data != nullptr) delete this->m_p_generic_object_data;
+        }
     };
 };
 

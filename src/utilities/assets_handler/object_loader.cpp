@@ -28,7 +28,7 @@ namespace dengUtils {
                 char local_buffer[fileContents[i].size()];
                 strncpy(local_buffer, fileContents[i].c_str(), fileContents[i].size());
 
-                uint32_t coordinateType = DENG_X;
+                uint32_t coordinateType = DENG_COORD_AXIS_X;
                 std::string x_str;
                 std::string y_str;
                 std::string z_str;
@@ -36,19 +36,19 @@ namespace dengUtils {
                 for(size_t readIndex = firstCoordIndex; readIndex < (sizeof(local_buffer)/sizeof(local_buffer[0])); readIndex++) {\
                     switch (coordinateType)
                     {
-                    case DENG_X:
+                    case DENG_COORD_AXIS_X:
                         if(local_buffer[readIndex] != ' ') x_str += local_buffer[readIndex];
                         else coordinateType++;
                         break;
 
-                    case DENG_Y:
+                    case DENG_COORD_AXIS_Y:
                         if(local_buffer[readIndex] != ' ') y_str += local_buffer[readIndex];
-                        else if(readIndex == (sizeof(local_buffer)/sizeof(local_buffer[0])) - 1) coordinateType = DENG_X;
+                        else if(readIndex == (sizeof(local_buffer)/sizeof(local_buffer[0])) - 1) coordinateType = DENG_COORD_AXIS_X;
                         else coordinateType++;
                         
                         break;
                     
-                    case DENG_Z:
+                    case DENG_COORD_AXIS_Z:
                         z_str += local_buffer[readIndex]; 
                         break;
 

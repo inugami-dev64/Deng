@@ -208,7 +208,7 @@ namespace deng {
     }
 
     VkGraphicsPipelineCreateInfo PipelineCreator::getGraphicsPipelineInfo(const std::string &vert_shader, const std::string &frag_shader, const char *p_shader_module_name,
-    const VkPolygonMode &polygon_mode, const VkFrontFace &front_face, const VkPrimitiveTopology &primitive_topology, const dengBool &add_depth_stencil, const dengBool &add_color_blend, const uint32_t &subpass_index) {
+    const VkPolygonMode &polygon_mode, const VkCullModeFlagBits &cull_mode, const VkFrontFace &front_face, const VkPrimitiveTopology &primitive_topology, const dengBool &add_depth_stencil, const dengBool &add_color_blend, const uint32_t &subpass_index) {
         
         std::vector<char> vert_shader_binary_vector;
         std::vector<char> frag_shader_binary_vector;
@@ -267,9 +267,11 @@ namespace deng {
 
         this->m_rasterization_createinfo.polygonMode = polygon_mode;
         this->m_rasterization_createinfo.lineWidth = 1.0f;
-        this->m_rasterization_createinfo.cullMode = VK_CULL_MODE_BACK_BIT;
-        this->m_rasterization_createinfo.frontFace = front_face;
-        this->m_rasterization_createinfo.depthBiasEnable = VK_TRUE;
+        this->m_rasterization_createinfo.cullMode = cull_mode;
+        if(cull_mode != VK_CULL_MODE_NONE) {
+            this->m_rasterization_createinfo.frontFace = front_face;
+            this->m_rasterization_createinfo.depthBiasEnable = VK_TRUE;
+        }
 
         this->m_multisample_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         this->m_multisample_createinfo.sampleShadingEnable = VK_FALSE;

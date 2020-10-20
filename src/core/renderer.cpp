@@ -598,23 +598,14 @@ namespace deng
 
     void Renderer::initDengUI() {
         dengUI::WindowInfo local_window_info{};
-        local_window_info.color = {this->m_dengui_conf.dengui_window_color_r, this->m_dengui_conf.dengui_window_color_g, this->m_dengui_conf.dengui_window_color_b, this->m_dengui_conf.dengui_window_color_a};
-        local_window_info.size = {1.0f, 1.0f};
         local_window_info.position = {0.0f, 0.0f};
-        local_window_info.origin = {0.5, 0.5f};
-        local_window_info.window_name = "Test Window";
+        local_window_info.origin = {0.0f, 0.0f};
         local_window_info.vert_shader_path = "shaders/bin/dengui/ui_vert.spv";
         local_window_info.frag_shader_path = "shaders/bin/dengui/ui_frag.spv";
         local_window_info.p_gpu = &this->m_gpu;
         local_window_info.p_device = &this->m_device;
         local_window_info.p_file_manager = &this->m_fm;
         local_window_info.p_window = this->m_p_window;
-
-        dengUI::WindowBorderInfo local_border_info{};
-        local_border_info.border_color = {this->m_dengui_conf.dengui_border_color_r, this->m_dengui_conf.dengui_border_color_g, this->m_dengui_conf.dengui_border_color_b, this->m_dengui_conf.dengui_border_color_a};
-        local_border_info.minimizing_triangle_color = {this->m_dengui_conf.dengui_minimizing_triangle_color_r, this->m_dengui_conf.dengui_minimizing_triangle_color_g, this->m_dengui_conf.dengui_minimizing_triangle_color_b, this->m_dengui_conf.dengui_minimizing_triangle_color_a};
-        local_border_info.thickness = this->m_dengui_conf.dengui_border_thickness;
-        local_border_info.titlebar_height = this->m_dengui_conf.dengui_titlebar_height;
 
         dengUI::BufferInfo local_bufferinfo{};
         local_bufferinfo.p_buffer_create_func = Renderer::makeBuffer;
@@ -630,7 +621,8 @@ namespace deng
         local_bufferinfo.p_indices_buffer = &this->m_buffers.window_index_buffer;
         local_bufferinfo.p_indices_buffer_memory = &this->m_buffers.window_index_buffer_memory;
 
-        this->m_p_dengui_window = new dengUI::Window(local_window_info, local_border_info, local_bufferinfo);
+        this->m_p_dengui_window = new dengUI::Window(local_window_info, local_bufferinfo);
+        LOG("seg test");
     }
 
     void Renderer::initGraphicsPipelines() {
@@ -671,10 +663,10 @@ namespace deng
         PipelineCreator local_reverse_grid_pipeline_creator(&this->m_pipelines[2], &this->m_device, &this->m_fm, &this->m_extent, &this->m_renderpass);
         PipelineCreator local_ui_pipeline_creator(&this->m_pipelines[3], &this->m_device, &this->m_fm, &this->m_extent, &this->m_renderpass);
 
-        VkGraphicsPipelineCreateInfo local_main_pipeline_createinfo = local_main_pipeline_creator.getGraphicsPipelineInfo("shaders/bin/deng/object_vert.spv", "shaders/bin/deng/object_frag.spv", "main", VK_POLYGON_MODE_FILL, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, 0);
-        VkGraphicsPipelineCreateInfo local_grid_pipeline_createinfo = local_grid_pipeline_creator.getGraphicsPipelineInfo("shaders/bin/deng/specified_vert.spv", "shaders/bin/deng/specified_frag.spv", "main", VK_POLYGON_MODE_LINE, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, 0);
-        VkGraphicsPipelineCreateInfo local_reverse_grid_pipeline_createinfo = local_reverse_grid_pipeline_creator.getGraphicsPipelineInfo("shaders/bin/deng/specified_vert.spv", "shaders/bin/deng/specified_frag.spv", "main", VK_POLYGON_MODE_LINE, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, 0);
-        VkGraphicsPipelineCreateInfo local_ui_pipeline_createinfo = local_ui_pipeline_creator.getGraphicsPipelineInfo("shaders/bin/dengui/ui_vert.spv", "shaders/bin/dengui/ui_frag.spv", "main", VK_POLYGON_MODE_FILL, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, 0);
+        VkGraphicsPipelineCreateInfo local_main_pipeline_createinfo = local_main_pipeline_creator.getGraphicsPipelineInfo("shaders/bin/deng/object_vert.spv", "shaders/bin/deng/object_frag.spv", "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, 0);
+        VkGraphicsPipelineCreateInfo local_grid_pipeline_createinfo = local_grid_pipeline_creator.getGraphicsPipelineInfo("shaders/bin/deng/specified_vert.spv", "shaders/bin/deng/specified_frag.spv", "main", VK_POLYGON_MODE_LINE, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, 0);
+        VkGraphicsPipelineCreateInfo local_reverse_grid_pipeline_createinfo = local_reverse_grid_pipeline_creator.getGraphicsPipelineInfo("shaders/bin/deng/specified_vert.spv", "shaders/bin/deng/specified_frag.spv", "main", VK_POLYGON_MODE_LINE, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, 0);
+        VkGraphicsPipelineCreateInfo local_ui_pipeline_createinfo = local_ui_pipeline_creator.getGraphicsPipelineInfo("shaders/bin/dengui/ui_vert.spv", "shaders/bin/dengui/ui_frag.spv", "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, 0);
 
         std::array<VkGraphicsPipelineCreateInfo, 4> local_pipeline_createinfos = {local_main_pipeline_createinfo, local_grid_pipeline_createinfo, local_reverse_grid_pipeline_createinfo, local_ui_pipeline_createinfo};
 

@@ -3,18 +3,43 @@
 
 namespace dengUI {
     
+    struct BaseWindowVertices {
+        std::vector<dengUtils::UIVerticesData> window_main_vertices;
+        std::vector<uint16_t> window_main_indices;
+        
+        std::vector<dengUtils::UIVerticesData> window_head_vertices;
+        std::vector<uint16_t> window_head_indices;
 
-    struct WindowObject {
-        dengMath::vec2<size_t> vertices_bounds;
-        dengMath::vec2<size_t> indices_bounds;
-        dengUIWindowLayerSequenceId sequence_id;
-        const char *description;
+        std::vector<dengUtils::UIVerticesData> window_minimise_triangle_vertices;
+        std::vector<uint16_t> window_minimise_triangle_indices;
+    };
+
+    struct WindowAssets {
+        dengUIWindowAssetType window_asset_type;
         dengBool is_clickable;
+    };
 
-        uint16_t handle_id;
-        dengBool is_drawn;
-        dengBool is_clicked;
-        void *p_click_handler_object;
+    struct BorderInfo {
+        dengCSS::CSSGeneralBorderInfo *p_css_general_border_info;
+        dengCSS::CSSSpecifiedBorderInfo *p_css_specified_border_info;
+    };
+
+    struct RectangleInfo {
+        std::vector<dengUtils::UIVerticesData> *p_vertices;
+        std::vector<uint16_t> *p_indices;
+
+        dengMath::vec2<float> rectangle_size;
+        dengMath::vec3<float> rectangle_color;
+    };
+
+    struct TriangleInfo {
+        std::vector<dengUtils::UIVerticesData> *p_vertices;
+        std::vector<uint16_t> *p_indices;
+        dengMath::vec3<float> triangle_color;
+
+        dengMath::vec2<float> surround_rectangle_size;
+        dengMath::vec3<uint16_t> point_collision_with_edge_indices;
+        dengMath::vec3<float> triangle_point_edge_rel_coords;
     };
 
     struct BufferInfo {
@@ -38,10 +63,8 @@ namespace dengUI {
     };
 
     struct WindowInfo {
-        dengMath::vec2<float> size;
         dengMath::vec2<float> origin;
         dengMath::vec2<float> position;
-        dengMath::vec4<float> color;
 
         VkDevice *p_device;
         VkPhysicalDevice *p_gpu;
@@ -50,7 +73,7 @@ namespace dengUI {
         std::string vert_shader_path;
         std::string frag_shader_path;
 
-        const char *window_name;
+        const char *window_title;
         dengUtils::FileManager *p_file_manager;
     };
 
@@ -59,7 +82,6 @@ namespace dengUI {
 
         std::vector<dengUtils::UIVerticesData> *p_vertices_data;
         std::vector<uint16_t> *p_indices_data;
-        std::vector<WindowObject> *p_window_objects;
         BufferInfo *p_bufferinfo;
 
         uint16_t handle_id;
@@ -68,37 +90,6 @@ namespace dengUI {
         dengMath::vec2<size_t> indices_bounds;
         const char *description;
     };
-
-    struct WindowBorderInfo {
-        float thickness;
-        float titlebar_height;
-        dengMath::vec4<float> border_color;
-        dengMath::vec4<float> minimizing_triangle_color;
-    };
-
-    struct RectangleInfo {
-        dengMath::vec4<dengMath::vec2<float>> *p_vertices;
-        dengMath::vec4<float> *p_color;
-        std::vector<dengUtils::UIVerticesData> *p_vertices_data;
-        std::vector<uint16_t> *p_indices_data;
-        
-        dengBool enable_fill;
-        dengUINonFilledBorderOffsetMode border_offset_mode;
-        float border_thickness;
-
-        dengUIWindowLayerSequenceId sequence_id;
-    };
-
-    struct TriangleInfo {
-        dengMath::vec3<dengMath::vec2<float>> *p_vertices;
-        dengMath::vec4<float> *p_color;
-
-        std::vector<dengUtils::UIVerticesData> *p_vertices_data;
-        std::vector<uint16_t> *p_indices_data;
-
-        dengUIWindowLayerSequenceId sequence_id;
-    };
-    
-};
+}
 
 #endif

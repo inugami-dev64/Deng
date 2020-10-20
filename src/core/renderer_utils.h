@@ -74,7 +74,7 @@ namespace deng {
         PipelineCreator(PipelineData *p_pipeline_data, VkDevice *device, dengUtils::FileManager *filemanager, VkExtent2D *extent, VkRenderPass *renderpass);
         ~PipelineCreator();
         VkGraphicsPipelineCreateInfo getGraphicsPipelineInfo(const std::string &vert_shader, const std::string &frag_shader, const char *p_shader_module_name,
-        const VkPolygonMode &polygon_mode, const VkFrontFace &front_face, const VkPrimitiveTopology &primitive_topology, const dengBool &add_depth_stencil, const dengBool &add_color_blend, const uint32_t &subpass_index);
+        const VkPolygonMode &polygon_mode, const VkCullModeFlagBits &cull_mode, const VkFrontFace &front_face, const VkPrimitiveTopology &primitive_topology, const dengBool &add_depth_stencil, const dengBool &add_color_blend, const uint32_t &subpass_index);
 
     };
 

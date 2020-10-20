@@ -7,7 +7,7 @@ namespace dengUtils {
     class GridManager {
     private:
         float m_max_vertex_buffer_distance;
-        float *m_p_grid_height;
+        float *m_p_grid_lenght;
         float *m_p_grid_width;
 
         float *m_p_grid_color_r;

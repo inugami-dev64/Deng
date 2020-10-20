@@ -7,3 +7,5 @@ object.log
 src/helloworld.cpp
 src/helloworld
 dependencies/lib/debug/
+deng_webpage/
+main_workspace.code-workspace

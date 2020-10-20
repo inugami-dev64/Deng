@@ -6,10 +6,10 @@
 namespace dengMath {
 
     template<typename T>
-    struct vec2 {
-        T first, second;
+    struct vec4 {
+        T first, second, third, fourth;
         size_t size() {
-            return static_cast<size_t>(2);
+            return static_cast<size_t>(4);
         }
 
         T *getVectorElement(const size_t &i) {
@@ -23,22 +23,44 @@ namespace dengMath {
             return local_current_element;
         }
 
-        vec2<T> operator+(const vec2<T> &vector) {
-            vec2<T> local_vec2;
-            if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(uint8_t).name() || typeid(T).name() == typeid(uint16_t).name() || typeid(T).name() == typeid(uint32_t).name() || typeid(T).name() == typeid(uint64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
-                local_vec2 = {(first + vector.first), (second + vector.second)};
-            }
-
-            return local_vec2;
+        void add(const T &element, const size_t &index) {
+            *this->getVectorElement(index) = element;
         }
 
-        vec2<T> operator-(vec2<T> vector) {
-            vec2<T> local_vec2;
+        template<typename EndCast>
+        vec4<EndCast> vecCast() {
+            vec4<EndCast> local_end_cast;
+            local_end_cast.first = static_cast<EndCast>(this->first);
+            local_end_cast.second = static_cast<EndCast>(this->second);
+            local_end_cast.third = static_cast<EndCast>(this->third);
+            local_end_cast.fourth = static_cast<EndCast>(this->fourth);
+            return local_end_cast;
+        }
+
+        vec4<T> operator+(const vec4<T> &vector) {
+            vec4<T> local_vec4;
             if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(uint8_t).name() || typeid(T).name() == typeid(uint16_t).name() || typeid(T).name() == typeid(uint32_t).name() || typeid(T).name() == typeid(uint64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
-                local_vec2 = {(first - vector.first), (second - vector.second)};
+                local_vec4 = {(first + vector.first), (second + vector.second), (third + vector.third), (fourth + vector.fourth)};
             }
-            
-            return local_vec2;
+
+            return local_vec4;
+        }
+
+        vec4<T> operator-(const vec4<T> &vector) {
+            vec4<T> local_vec4;
+            if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(uint8_t).name() || typeid(T).name() == typeid(uint16_t).name() || typeid(T).name() == typeid(uint32_t).name() || typeid(T).name() == typeid(uint64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
+                local_vec4 = {(first - vector.first), (second - vector.second), (third - vector.third), (fourth - vector.fourth)};
+            }
+
+            return local_vec4;
+        }
+
+        dengBool operator<(vec4<T> vector) {
+            return static_cast<dengBool>(first < vector.first && second < vector.second && third < vector.third && fourth < vector.fourth);
+        }
+
+        dengBool operator>(vec4<T> vector) {
+            return static_cast<dengBool>(first > vector.first && second > vector.second && third > vector.third && fourth > vector.fourth);
         }
     };
 
@@ -60,6 +82,19 @@ namespace dengMath {
             return local_current_element;
         }
 
+        void add(const T &element, const size_t &index) {
+            *this->getVectorElement(index) = element;
+        }
+
+        template<typename EndCast>
+        vec3<EndCast> vecCast() {
+            vec3<EndCast> local_end_cast;
+            local_end_cast.first = static_cast<EndCast>(this->first);
+            local_end_cast.second = static_cast<EndCast>(this->second);
+            local_end_cast.third = static_cast<EndCast>(this->third);
+            return local_end_cast;
+        }
+
         vec3<T> operator+(const vec3<T> &vector) {
             vec3<T> local_vec3;
             if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(uint8_t).name() || typeid(T).name() == typeid(uint16_t).name() || typeid(T).name() == typeid(uint32_t).name() || typeid(T).name() == typeid(uint64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
@@ -77,13 +112,27 @@ namespace dengMath {
 
             return local_vec3;
         }
+
+        vec4<T> operator>>(vec4<T> vector) {
+            vector = {first, second, third, vector.fourth};
+            return vector;
+        }
+
+        dengBool operator<(vec3<T> vector) {
+            return static_cast<dengBool>(first < vector.first && second < vector.second && third < vector.third);
+        }
+
+        dengBool operator>(vec3<T> vector) {
+            return static_cast<dengBool>(first > vector.first && second > vector.second && third > vector.third);
+        }
+
     };
-    
+
     template<typename T>
-    struct vec4 {
-        T first, second, third, fourth;
+    struct vec2 {
+        T first, second;
         size_t size() {
-            return static_cast<size_t>(4);
+            return static_cast<size_t>(2);
         }
 
         T *getVectorElement(const size_t &i) {
@@ -97,22 +146,52 @@ namespace dengMath {
             return local_current_element;
         }
 
-        vec4<T> operator+(const vec4<T> &vector) {
-            vec4<T> local_vec4;
-            if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(uint8_t).name() || typeid(T).name() == typeid(uint16_t).name() || typeid(T).name() == typeid(uint32_t).name() || typeid(T).name() == typeid(uint64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
-                local_vec4 = {(first + vector.first), (second + vector.second), (third + vector.third), (fourth + vector.fourth)};
-            }
-
-            return local_vec4;
+        void add(const T &element, const size_t &index) {
+            *this->getVectorElement(index) = element;
         }
 
-        vec4<T> operator-(const vec4<T> &vector) {
-            vec4<T> local_vec4;
+        template<typename EndCast>
+        vec2<EndCast> vecCast() {
+            vec2<EndCast> local_end_cast;
+            local_end_cast.first = static_cast<EndCast>(this->first);
+            local_end_cast.second = static_cast<EndCast>(this->second);
+            return local_end_cast;
+        }
+
+        vec2<T> operator+(const vec2<T> &vector) {
+            vec2<T> local_vec2;
             if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(uint8_t).name() || typeid(T).name() == typeid(uint16_t).name() || typeid(T).name() == typeid(uint32_t).name() || typeid(T).name() == typeid(uint64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
-                local_vec4 = {(first - vector.first), (second - vector.second), (third - vector.third), (fourth - vector.fourth)};
+                local_vec2 = {(first + vector.first), (second + vector.second)};
             }
 
-            return local_vec4;
+            return local_vec2;
+        }
+
+        vec2<T> operator-(vec2<T> vector) {
+            vec2<T> local_vec2;
+            if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(uint8_t).name() || typeid(T).name() == typeid(uint16_t).name() || typeid(T).name() == typeid(uint32_t).name() || typeid(T).name() == typeid(uint64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
+                local_vec2 = {(first - vector.first), (second - vector.second)};
+            }
+            
+            return local_vec2;
+        }
+        
+        vec3<T> operator>>(vec3<T> vector) {
+            vector = {first, second, vector.third};
+            return vector;
+        }
+
+        vec4<T> operator>>(vec4<T> vector) {
+            vector = {first, second, vector.third, vector.fourth};
+            return vector;
+        }
+
+        dengBool operator<(vec2<T> vector) {
+            return static_cast<dengBool>(first < vector.first && second < vector.second);
+        }
+
+        dengBool operator>(vec2<T> vector) {
+            return static_cast<dengBool>(first > vector.first && second > vector.second);
         }
     };
 
@@ -162,7 +241,7 @@ namespace dengMath {
             return newMat;
         }
 
-            // theoretically this operation would be impossible, because of the lenght of vector but in our case we can just add w value of 1.0f to the end
+        // theoretically this operation would be impossible, because of the length of vector but in our case we can just add w value of 1.0f to the end
         vec4<T> operator*(const vec3<T> vector) {
             vec4<T> newVec;
             newVec.first = {(row1.first * vector.first) + (row1.second * vector.second) + (row1.third * vector.third) + row1.fourth};
@@ -239,8 +318,7 @@ namespace dengMath {
 
     // generic math functions
     struct Math {
-        static float degToRad(const float &deg);
-        static float radToDeg(const float &rad);
+        static double exp(double base, int exp);
         static vec2<float> getCartesianCoordsPoint(const vec2<float> &centre, const int16_t &angle, const float &distance, const dengBool &inverted_y_axis);
         static float getFractionNumerator(const float &value_numerator, const float &value_denominator, const float &equivalent_denominator);
         static float getVectorLengthFromBounds(vec2<vec2<float>> vector_bounds);
@@ -248,7 +326,43 @@ namespace dengMath {
         static float getVector2DRotation(vec2<vec2<float>> vector_bounds);
     };
 
-    // data sorting algorithms 
+    struct Conversion {
+        static float degToRad(const float &deg);
+        static float radToDeg(const float &rad);
+        static double vector2DSizeToPixelSize(const float &vec_size, const vec2<uint32_t> &window_size, const dengCoordinateAxisType &axis_type);
+        static float pixelSizeToVector2DSize(const double &pixel_size, const vec2<uint32_t> &window_size, const dengCoordinateAxisType &axis_type);
+
+        std::unordered_map<char, int> hex_definitions;
+        
+        Conversion() {
+            this->hex_definitions['0'] = 0;
+            this->hex_definitions['1'] = 1;
+            this->hex_definitions['2'] = 2;
+            this->hex_definitions['3'] = 3;
+            this->hex_definitions['4'] = 4;
+            this->hex_definitions['5'] = 5;
+            this->hex_definitions['6'] = 6;
+            this->hex_definitions['7'] = 7;
+            this->hex_definitions['8'] = 8;
+            this->hex_definitions['9'] = 9;
+            this->hex_definitions['a'] = 10;
+            this->hex_definitions['A'] = 10;
+            this->hex_definitions['b'] = 11;
+            this->hex_definitions['B'] = 11;
+            this->hex_definitions['c'] = 12;
+            this->hex_definitions['C'] = 12;
+            this->hex_definitions['d'] = 13;
+            this->hex_definitions['D'] = 13;
+            this->hex_definitions['e'] = 14;
+            this->hex_definitions['E'] = 14;
+            this->hex_definitions['f'] = 15;
+            this->hex_definitions['F'] = 15;
+        }
+
+        uint32_t hexToDec(const std::string &hex_value);
+    };
+
+    // data handling algorithms 
     struct HandleData {
         template<typename T>
         static T getSmallestElement(std::vector<T> *p_elements_vector);
@@ -268,6 +382,7 @@ namespace dengMath {
         // in order to use this function the class used in std::vector must have const char *description as a public class variable
         template<typename T>
         static T *findElementByDescription(std::vector<T> *p_vector, const char *description);
+
     };
 
     template<typename T>
@@ -325,7 +440,7 @@ namespace dengMath {
         for(size_t i = 0; i < p_elements_vector->size() - 1; i++) {
             switch (coord_axis_type)
             {
-            case DENG_X:
+            case DENG_COORD_AXIS_X:
                 if((*p_elements_vector)[i].position_vec.first > (*p_elements_vector)[i + 1].position_vec.first) {
                     local_sorting_buffer.second = (*p_elements_vector)[i];
                     local_sorting_buffer.first = (*p_elements_vector)[i + 1];
@@ -335,7 +450,7 @@ namespace dengMath {
                 }
                 break;
 
-            case DENG_Y:
+            case DENG_COORD_AXIS_Y:
                 if((*p_elements_vector)[i].position_vec.second > (*p_elements_vector)[i + 1].position_vec.second) {
                     local_sorting_buffer.second = (*p_elements_vector)[i];
                     local_sorting_buffer.first = (*p_elements_vector)[i + 1];
@@ -345,7 +460,7 @@ namespace dengMath {
                 }
                 break;
 
-            case DENG_Z:
+            case DENG_COORD_AXIS_Z:
                 if((*p_elements_vector)[i].position_vec.third > (*p_elements_vector)[i + 1].position_vec.third) {
                     local_sorting_buffer.second = (*p_elements_vector)[i];
                     local_sorting_buffer.first = (*p_elements_vector)[i + 1];
@@ -368,7 +483,7 @@ namespace dengMath {
         for(size_t i = 0; i < p_elements_vector->size() - 1; i++) {
             switch (coord_axis_type)
             {
-            case DENG_X:
+            case DENG_COORD_AXIS_X:
                 if((*p_elements_vector)[i].position_vec.first < (*p_elements_vector)[i + 1].position_vec.first) {
                     local_sorting_buffer.second = (*p_elements_vector)[i];
                     local_sorting_buffer.first = (*p_elements_vector)[i + 1];
@@ -378,7 +493,7 @@ namespace dengMath {
                 }
                 break;
 
-            case DENG_Y:
+            case DENG_COORD_AXIS_Y:
                 if((*p_elements_vector)[i].position_vec.second < (*p_elements_vector)[i + 1].position_vec.second) {
                     local_sorting_buffer.second = (*p_elements_vector)[i];
                     local_sorting_buffer.first = (*p_elements_vector)[i + 1];
@@ -388,7 +503,7 @@ namespace dengMath {
                 }
                 break;
 
-            case DENG_Z:
+            case DENG_COORD_AXIS_Z:
                 if((*p_elements_vector)[i].position_vec.third < (*p_elements_vector)[i + 1].position_vec.third) {
                     local_sorting_buffer.second = (*p_elements_vector)[i];
                     local_sorting_buffer.first = (*p_elements_vector)[i + 1];

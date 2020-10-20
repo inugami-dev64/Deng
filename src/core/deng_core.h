@@ -3,7 +3,7 @@
 
 /*  BEFORE EVERY GIT COMMIT SET GENERIC_DEBUG VALUE TO 0!!!     */
 
-#define GENERIC_DEBUG 0
+#define GENERIC_DEBUG 1
 
 /*  please do not enable these at the same time, 
     otherwise you won't be able to debug anything */
@@ -15,9 +15,11 @@
 
 #if GENERIC_DEBUG
     #define LOG(x) std::cout << "\033[1;34m" << x << "\033[0m\n"
+    #define ERRMEDB(x) std::cout << "\033[1;31m" << x << "\033[0m\n";
     const bool enable_validation_layers = true;
 #else
     #define LOG(x)
+    #define ERRMEDB(x)
     const bool enable_validation_layers = false;
 #endif
 
@@ -32,9 +34,10 @@ enum dengBool {
 };
 
 enum dengCoordinateAxisType {
-    DENG_X = 0,
-    DENG_Y = 1,
-    DENG_Z = 2
+    DENG_COORD_AXIS_UNDEFINED = -1,
+    DENG_COORD_AXIS_X = 0,
+    DENG_COORD_AXIS_Y = 1,
+    DENG_COORD_AXIS_Z = 2
 };
 
 enum dengMovementEvent {
@@ -55,7 +58,8 @@ enum dengWriteMode {
 enum dengFolderContentsReadMode {
     DENG_FOLDER_CONTENTS_READ_MODE_FILES_ONLY = 0,
     DENG_FOLDER_CONTENTS_READ_MODE_FOLDERS_ONLY = 1,
-    DENG_FOLDER_CONTENTS_READ_MODE_FILES_AND_FOLDERS = 2
+    DENG_FOLDER_CONTENTS_READ_MODE_FILES_AND_FOLDERS = 2,
+    DENG_FOLDER_CONTENTS_READ_MODE_RECURSIVE = 3
 };
 
 enum dengFolderContentsSortingMode {
@@ -109,6 +113,14 @@ enum dengTriangleAngleType {
     DENG_TRIANGLE_ANGLE_GAMMA = 2
 };
 
+enum dengNumeralType {
+    DENG_NUMERAL_TYPE_FLOAT = 0,
+    DENG_NUMERAL_TYPE_DOUBLE = 1,
+    DENG_NUMERAL_TYPE_NON_FLOATING = 2,
+    DENG_NUMERAL_TYPE_BOOL = 3,
+    DENG_NUMERAL_TYPE_DONT_CARE = 4
+};
+
 
 // external dependencies
 #ifdef _WIN32
@@ -130,6 +142,7 @@ enum dengTriangleAngleType {
 #include <cstring>
 #include <iostream>
 #include <map>
+#include <unordered_map>
 #include <typeinfo>
 
 typedef void(*BufferCreateFunc)(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, VkBuffer *p_buffer, VkDeviceMemory *p_buffer_memory, size_t *p_buffer_index);
@@ -139,6 +152,7 @@ typedef void(*BufferCopyFunc)(VkDevice *p_device, VkCommandPool *p_commandpool, 
 // local dependencies
 #include "../maths/deng_math.h"
 #include "../scripting/parsing.h"
+#include "../utilities/data_handler/typename_finder.h"
 #include "../utilities/timer/timer.h"
 #include "window.h"
 #include "camera.h"

@@ -9,11 +9,11 @@ elseif(WIN32)
     link_directories(../dependencies/lib/windows)
 endif()
 
-if(CMAKE_BUILD_TYPE MATCHES Debug)
+if(CMAKE_BUILD_TYPE MATCHES DEBUG)
     link_directories(../dependencies/lib/debug)
 endif()
 
-add_executable(${PROJECT_NAME}
+add_executable(${PROJECT_NAME} 
     core/camera.cpp
     core/renderer.cpp
     core/renderer_utils.cpp
@@ -31,12 +31,44 @@ add_executable(${PROJECT_NAME}
 
     dengui/core/dengui_window.cpp
     dengui/pixel_perfect_collision/dengui_pixel_collision.cpp
-    dengui/events/dengui_events.cpp
+    # dengui/events/dengui_events.cpp
     dengui/core/dengui_sprites.cpp
-    dengui/events/dengui_event_handles.cpp
+    # dengui/events/dengui_event_handles.cpp
 
-    main/main.cpp
+    dengui/css_engine/css_data_manager.cpp
 )
+
+if(MANUAL_TEST MATCHES FM_FOLDER_CONTENTS_TEST)
+    target_sources(${PROJECT_NAME}
+        PRIVATE main/feature_testing/fm_test/fm_folder_contents_test.cpp
+    )
+
+elseif(MANUAL_TEST MATCHES FM_CSS_PROPERTY_TEST)
+    target_sources(${PROJECT_NAME}
+        PRIVATE main/feature_testing/fm_test/fm_css_property_test.cpp
+    )
+
+elseif(MANUAL_TEST MATCHES TYPENAME_FINDER_TEST)
+    target_sources(${PROJECT_NAME} 
+        PRIVATE main/feature_testing/typename_finder_test/typename_finder_test.cpp
+    )
+
+elseif(MANUAL_TEST MATCHES MATH_CONVERSION_TEST)
+    target_sources(${PROJECT_NAME}
+        PRIVATE main/feature_testing/math_test/math_conversion_test.cpp
+    )
+
+elseif(MANUAL_TEST MATCHES CSS_ENGINE_TITLEBAR_TEST)
+    target_sources(${PROJECT_NAME}
+        PRIVATE main/feature_testing/css_engine_test/css_titlebar_data_test.cpp
+    )
+
+else()
+    target_sources(${PROJECT_NAME} 
+        PRIVATE main/main.cpp
+    )
+
+endif()
 
 if(UNIX)
     target_link_libraries(${PROJECT_NAME}
@@ -47,7 +79,7 @@ if(UNIX)
         PRIVATE dl
     )
 
-    if(CMAKE_BUILD_TYPE MATCHES Debug)
+    if(CMAKE_BUILD_TYPE MATCHES DEBUG)
         target_link_libraries(${PROJECT_NAME} 
             PRIVATE VkLayer_utils
         )
@@ -87,4 +119,6 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         ${CMAKE_SOURCE_DIR}/shaders $<TARGET_FILE_DIR:${PROJECT_NAME}>/shaders
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/config $<TARGET_FILE_DIR:${PROJECT_NAME}>/config
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/src/dengui/css $<TARGET_FILE_DIR:${PROJECT_NAME}>/ui_styling
 )

@@ -2,146 +2,250 @@
 
 namespace dengUI {
 
-    void ShapeVerticesDataCreator::getRectangleVertices(RectangleInfo *p_rectangle_info, WindowObject *p_window_object) {
-        if(p_rectangle_info != nullptr && p_window_object != nullptr) {
-            size_t local_vertices_size = p_rectangle_info->p_vertices_data->size();
-            size_t local_indices_size = p_rectangle_info->p_indices_data->size();
-            p_window_object->vertices_bounds.first = local_vertices_size;
-            p_window_object->indices_bounds.first = local_indices_size;
+    void ShapeVerticesDataCreator::createRectangle(WindowInfo *p_windowinfo, RectangleInfo **pp_rectangle_info, BorderInfo *p_border_info, const dengUIBorderDrawMode &border_draw_mode, const int &sequence_id) {
+        if((*pp_rectangle_info)->p_vertices != nullptr && (*pp_rectangle_info)->p_indices != nullptr) {
+            LOG("rectangle vertices size: " + std::to_string((*pp_rectangle_info)->p_vertices->size()));
+            (*(*pp_rectangle_info)->p_vertices)[0].position_vec.first = p_windowinfo->position.first - ((p_windowinfo->origin.first + 1) * dengMath::Conversion::pixelSizeToVector2DSize((*pp_rectangle_info)->rectangle_size.first, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X) / 2);
+            (*(*pp_rectangle_info)->p_vertices)[0].position_vec.second = p_windowinfo->position.second - ((p_windowinfo->origin.second + 1) * dengMath::Conversion::pixelSizeToVector2DSize((*pp_rectangle_info)->rectangle_size.second, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y) / 2);
+            (*(*pp_rectangle_info)->p_vertices)[0].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+            (*(*pp_rectangle_info)->p_vertices)[0].color_vec = (*pp_rectangle_info)->rectangle_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
 
-            std::vector<uint16_t> local_new_indices;
+            (*(*pp_rectangle_info)->p_vertices)[1].position_vec.first = p_windowinfo->position.first + ((1 - ((p_windowinfo->origin.first + 1) / 2)) * dengMath::Conversion::pixelSizeToVector2DSize((*pp_rectangle_info)->rectangle_size.first, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X));
+            (*(*pp_rectangle_info)->p_vertices)[1].position_vec.second = p_windowinfo->position.second - ((p_windowinfo->origin.second + 1) * dengMath::Conversion::pixelSizeToVector2DSize((*pp_rectangle_info)->rectangle_size.second, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y) / 2);
+            (*(*pp_rectangle_info)->p_vertices)[1].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+            (*(*pp_rectangle_info)->p_vertices)[1].color_vec = (*pp_rectangle_info)->rectangle_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
 
-            switch (p_rectangle_info->enable_fill)
-            {
-            case DENG_TRUE: {
-                p_rectangle_info->p_vertices_data->resize(local_vertices_size + 4);
-                
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size].position_vec.first = p_rectangle_info->p_vertices->first.first;
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size].position_vec.second = p_rectangle_info->p_vertices->first.second;
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size].position_vec.third = (1/p_rectangle_info->sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+            (*(*pp_rectangle_info)->p_vertices)[2].position_vec.first = p_windowinfo->position.first + ((1 - ((p_windowinfo->origin.first + 1) / 2)) * dengMath::Conversion::pixelSizeToVector2DSize((*pp_rectangle_info)->rectangle_size.first, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X)); 
+            (*(*pp_rectangle_info)->p_vertices)[2].position_vec.second = p_windowinfo->position.second + ((1 - ((p_windowinfo->origin.second + 1) / 2)) * dengMath::Conversion::pixelSizeToVector2DSize((*pp_rectangle_info)->rectangle_size.second, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y));
+            (*(*pp_rectangle_info)->p_vertices)[2].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+            (*(*pp_rectangle_info)->p_vertices)[2].color_vec = (*pp_rectangle_info)->rectangle_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
 
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size + 1].position_vec.first = p_rectangle_info->p_vertices->second.first;
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size + 1].position_vec.second = p_rectangle_info->p_vertices->second.second;
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size + 1].position_vec.third = (1/p_rectangle_info->sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+            (*(*pp_rectangle_info)->p_vertices)[3].position_vec.first = p_windowinfo->position.first - ((p_windowinfo->origin.first + 1) * dengMath::Conversion::pixelSizeToVector2DSize((*pp_rectangle_info)->rectangle_size.first, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X) / 2);
+            (*(*pp_rectangle_info)->p_vertices)[3].position_vec.second = p_windowinfo->position.second + ((1 - ((p_windowinfo->origin.first + 1) / 2)) * dengMath::Conversion::pixelSizeToVector2DSize((*pp_rectangle_info)->rectangle_size.second, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y));
+            (*(*pp_rectangle_info)->p_vertices)[3].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+            (*(*pp_rectangle_info)->p_vertices)[3].color_vec = (*pp_rectangle_info)->rectangle_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
 
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size + 2].position_vec.first = p_rectangle_info->p_vertices->third.first;
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size + 2].position_vec.second = p_rectangle_info->p_vertices->third.second;
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size + 2].position_vec.third = (1/p_rectangle_info->sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
-
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size + 3].position_vec.first = p_rectangle_info->p_vertices->fourth.first;
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size + 3].position_vec.second = p_rectangle_info->p_vertices->fourth.second;
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size + 3].position_vec.third = (1/p_rectangle_info->sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
-
-                local_new_indices = {static_cast<uint16_t>(local_vertices_size), static_cast<uint16_t>(local_vertices_size + 1), static_cast<uint16_t>(local_vertices_size + 2),
-                                     static_cast<uint16_t>(local_vertices_size + 2), static_cast<uint16_t>(local_vertices_size + 3), static_cast<uint16_t>(local_vertices_size)};
-                break;
-            }
-
-            case DENG_FALSE: {
-                p_rectangle_info->p_vertices_data->resize(local_vertices_size + 8);
-
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size].position_vec.first = p_rectangle_info->p_vertices->first.first;
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size].position_vec.second = p_rectangle_info->p_vertices->first.second;
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size].position_vec.third = (1/p_rectangle_info->sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
-
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size + 1].position_vec.first = p_rectangle_info->p_vertices->second.first;
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size + 1].position_vec.second = p_rectangle_info->p_vertices->second.second;
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size + 1].position_vec.third = (1/p_rectangle_info->sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
-
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size + 2].position_vec.first = p_rectangle_info->p_vertices->third.first;
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size + 2].position_vec.second = p_rectangle_info->p_vertices->third.second;
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size + 2].position_vec.third = (1/p_rectangle_info->sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
-
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size + 3].position_vec.first = p_rectangle_info->p_vertices->fourth.first;
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size + 3].position_vec.second = p_rectangle_info->p_vertices->fourth.second;
-                (*p_rectangle_info->p_vertices_data)[local_vertices_size + 3].position_vec.third = (1/p_rectangle_info->sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
-
-                float local_distance_from_corner_point = (p_rectangle_info->border_thickness / sin(dengMath::Math::degToRad(45)));
-                dengMath::vec2<float> local_positions;
-
-                switch (p_rectangle_info->border_offset_mode)
-                {
-                case DENGUI_NON_FILLED_BORDER_OFFSET_MODE_IN: {
-                    for(size_t i = 4, angle = 135; i < 8; i++, angle += 90) {
-                        local_positions = dengMath::Math::getCartesianCoordsPoint({(*p_rectangle_info->p_vertices_data)[local_vertices_size + (i - 4)].position_vec.first, (*p_rectangle_info->p_vertices_data)[local_vertices_size + (i - 4)].position_vec.second}, angle, local_distance_from_corner_point, DENG_TRUE);
-                        (*p_rectangle_info->p_vertices_data)[local_vertices_size + i].position_vec.first = local_positions.first;
-                        (*p_rectangle_info->p_vertices_data)[local_vertices_size + i].position_vec.second = local_positions.second;
-                        (*p_rectangle_info->p_vertices_data)[local_vertices_size + i].position_vec.third = (1/p_rectangle_info->sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
-                    }
-                    break;
-                }
-
-                case DENGUI_NON_FILLED_BORDER_OFFSET_MODE_OUT: {
-                    for(size_t i = 4, angle = 315; i < 8; i++, angle += 90) {
-                        local_positions = dengMath::Math::getCartesianCoordsPoint({(*p_rectangle_info->p_vertices_data)[local_vertices_size + (i - 4)].position_vec.first, (*p_rectangle_info->p_vertices_data)[local_vertices_size + (i - 4)].position_vec.second}, angle, local_distance_from_corner_point, DENG_TRUE);
-                        (*p_rectangle_info->p_vertices_data)[local_vertices_size + i].position_vec.first = local_positions.first;
-                        (*p_rectangle_info->p_vertices_data)[local_vertices_size + i].position_vec.second = local_positions.second;
-                        (*p_rectangle_info->p_vertices_data)[local_vertices_size + i].position_vec.third = (1/p_rectangle_info->sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
-                    }
-                }
-                default:
-                    break;
-                }
-
-                local_new_indices = {static_cast<uint16_t>(local_vertices_size), static_cast<uint16_t>(local_vertices_size + 1), static_cast<uint16_t>(local_vertices_size + 5), 
-                                     static_cast<uint16_t>(local_vertices_size + 5), static_cast<uint16_t>(local_vertices_size + 4), static_cast<uint16_t>(local_vertices_size),
-                                     static_cast<uint16_t>(local_vertices_size), static_cast<uint16_t>(local_vertices_size + 4), static_cast<uint16_t>(local_vertices_size + 7),
-                                     static_cast<uint16_t>(local_vertices_size + 7), static_cast<uint16_t>(local_vertices_size + 3), static_cast<uint16_t>(local_vertices_size),
-                                     static_cast<uint16_t>(local_vertices_size + 7), static_cast<uint16_t>(local_vertices_size + 6), static_cast<uint16_t>(local_vertices_size + 2),
-                                     static_cast<uint16_t>(local_vertices_size + 2), static_cast<uint16_t>(local_vertices_size + 3), static_cast<uint16_t>(local_vertices_size + 7),
-                                     static_cast<uint16_t>(local_vertices_size + 5), static_cast<uint16_t>(local_vertices_size + 1), static_cast<uint16_t>(local_vertices_size + 2), 
-                                     static_cast<uint16_t>(local_vertices_size + 2), static_cast<uint16_t>(local_vertices_size + 6), static_cast<uint16_t>(local_vertices_size + 5)};
-            }
+            *(*pp_rectangle_info)->p_indices = {0, 1, 2, 2, 3, 0};
             
+            std::vector<uint16_t> local_new_indices;
+            switch (border_draw_mode)
+            {
+            case DENGUI_BORDER_DRAW_MODE_GENERIC_BORDER:
+                (*(*pp_rectangle_info)->p_vertices)[4].position_vec = (*(*pp_rectangle_info)->p_vertices)[0].position_vec;
+                (*(*pp_rectangle_info)->p_vertices)[4].color_vec = p_border_info->p_css_general_border_info->border_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+                (*(*pp_rectangle_info)->p_vertices)[5].position_vec = (*(*pp_rectangle_info)->p_vertices)[1].position_vec;
+                (*(*pp_rectangle_info)->p_vertices)[5].color_vec = p_border_info->p_css_general_border_info->border_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+                (*(*pp_rectangle_info)->p_vertices)[6].position_vec = (*(*pp_rectangle_info)->p_vertices)[2].position_vec;
+                (*(*pp_rectangle_info)->p_vertices)[6].color_vec = p_border_info->p_css_general_border_info->border_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+                (*(*pp_rectangle_info)->p_vertices)[7].position_vec = (*(*pp_rectangle_info)->p_vertices)[3].position_vec;
+                (*(*pp_rectangle_info)->p_vertices)[7].color_vec = p_border_info->p_css_general_border_info->border_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+
+                (*(*pp_rectangle_info)->p_vertices)[8].position_vec.first = (*(*pp_rectangle_info)->p_vertices)[0].position_vec.first - dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_general_border_info->border_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
+                (*(*pp_rectangle_info)->p_vertices)[8].position_vec.second = (*(*pp_rectangle_info)->p_vertices)[0].position_vec.second - dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_general_border_info->border_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y);
+                (*(*pp_rectangle_info)->p_vertices)[8].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+                (*(*pp_rectangle_info)->p_vertices)[8].color_vec = p_border_info->p_css_general_border_info->border_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+
+                (*(*pp_rectangle_info)->p_vertices)[9].position_vec.first = (*(*pp_rectangle_info)->p_vertices)[1].position_vec.first + dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_general_border_info->border_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
+                (*(*pp_rectangle_info)->p_vertices)[9].position_vec.second = (*(*pp_rectangle_info)->p_vertices)[1].position_vec.second - dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_general_border_info->border_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y);
+                (*(*pp_rectangle_info)->p_vertices)[9].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+                (*(*pp_rectangle_info)->p_vertices)[9].color_vec = p_border_info->p_css_general_border_info->border_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+
+                (*(*pp_rectangle_info)->p_vertices)[10].position_vec.first = (*(*pp_rectangle_info)->p_vertices)[2].position_vec.first + dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_general_border_info->border_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
+                (*(*pp_rectangle_info)->p_vertices)[10].position_vec.second = (*(*pp_rectangle_info)->p_vertices)[2].position_vec.second + dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_general_border_info->border_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y);
+                (*(*pp_rectangle_info)->p_vertices)[10].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+                (*(*pp_rectangle_info)->p_vertices)[10].color_vec = p_border_info->p_css_general_border_info->border_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+
+                (*(*pp_rectangle_info)->p_vertices)[11].position_vec.first = (*(*pp_rectangle_info)->p_vertices)[3].position_vec.first - dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_general_border_info->border_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
+                (*(*pp_rectangle_info)->p_vertices)[11].position_vec.second = (*(*pp_rectangle_info)->p_vertices)[3].position_vec.second + dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_general_border_info->border_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y);
+                (*(*pp_rectangle_info)->p_vertices)[11].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+                (*(*pp_rectangle_info)->p_vertices)[11].color_vec = p_border_info->p_css_general_border_info->border_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+                
+                local_new_indices = {static_cast<uint16_t>(8), static_cast<uint16_t>(9), static_cast<uint16_t>(5), 
+                                     static_cast<uint16_t>(5), static_cast<uint16_t>(4), static_cast<uint16_t>(8),
+                                     static_cast<uint16_t>(5), static_cast<uint16_t>(9), static_cast<uint16_t>(10),
+                                     static_cast<uint16_t>(10), static_cast<uint16_t>(6), static_cast<uint16_t>(5),
+                                     static_cast<uint16_t>(7), static_cast<uint16_t>(6), static_cast<uint16_t>(10),
+                                     static_cast<uint16_t>(10), static_cast<uint16_t>(11), static_cast<uint16_t>(7),
+                                     static_cast<uint16_t>(8), static_cast<uint16_t>(4), static_cast<uint16_t>(7), 
+                                     static_cast<uint16_t>(7), static_cast<uint16_t>(11), static_cast<uint16_t>(8)};
+                break;
+
+            case DENGUI_BORDER_DRAW_MODE_SPECIFIED_BORDER:
+                // top border
+                (*(*pp_rectangle_info)->p_vertices )[4].position_vec.first = ( *(*pp_rectangle_info)->p_vertices)[0].position_vec.first - dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_specified_border_info->border_left_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
+                (*(*pp_rectangle_info)->p_vertices )[4].position_vec.second = ( *(*pp_rectangle_info)->p_vertices)[0].position_vec.second - dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_specified_border_info->border_top_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y);
+                (*(*pp_rectangle_info)->p_vertices )[4].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+                (*(*pp_rectangle_info)->p_vertices )[4].color_vec = p_border_info->p_css_specified_border_info->border_top_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+
+                (*(*pp_rectangle_info)->p_vertices )[5].position_vec.first = ( *(*pp_rectangle_info)->p_vertices)[1].position_vec.first + dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_specified_border_info->border_right_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
+                (*(*pp_rectangle_info)->p_vertices )[5].position_vec.second = ( *(*pp_rectangle_info)->p_vertices)[1].position_vec.second - dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_specified_border_info->border_top_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y);
+                (*(*pp_rectangle_info)->p_vertices )[5].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+                ( *(*pp_rectangle_info)->p_vertices)[5].color_vec = p_border_info->p_css_specified_border_info->border_top_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+
+                ( *(*pp_rectangle_info)->p_vertices)[6].position_vec.first = ( *(*pp_rectangle_info)->p_vertices)[1].position_vec.first + dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_specified_border_info->border_right_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
+                ( *(*pp_rectangle_info)->p_vertices)[6].position_vec.second = ( *(*pp_rectangle_info)->p_vertices)[1].position_vec.second;
+                ( *(*pp_rectangle_info)->p_vertices)[6].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+                ( *(*pp_rectangle_info)->p_vertices)[6].color_vec = p_border_info->p_css_specified_border_info->border_top_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+
+                ( *(*pp_rectangle_info)->p_vertices)[7].position_vec.first = ( *(*pp_rectangle_info)->p_vertices)[0].position_vec.first - dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_specified_border_info->border_left_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
+                ( *(*pp_rectangle_info)->p_vertices)[7].position_vec.second = ( *(*pp_rectangle_info)->p_vertices)[0].position_vec.second;
+                ( *(*pp_rectangle_info)->p_vertices)[7].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+                ( *(*pp_rectangle_info)->p_vertices)[7].color_vec = p_border_info->p_css_specified_border_info->border_top_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+
+                // right border
+                (*(*pp_rectangle_info)->p_vertices)[8].position_vec = (*(*pp_rectangle_info)->p_vertices )[1].position_vec;
+                (*(*pp_rectangle_info)->p_vertices)[8].color_vec = p_border_info->p_css_specified_border_info->border_right_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 2.0f});
+
+                (*(*pp_rectangle_info)->p_vertices)[9].position_vec.first = (*(*pp_rectangle_info)->p_vertices )[1].position_vec.first + dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_specified_border_info->border_right_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
+                (*(*pp_rectangle_info)->p_vertices)[9].position_vec.second = ( *(*pp_rectangle_info)->p_vertices)[1].position_vec.second;
+                (*(*pp_rectangle_info)->p_vertices)[9].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+                (*(*pp_rectangle_info)->p_vertices )[9].color_vec = p_border_info->p_css_specified_border_info->border_right_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 2.0f});
+                
+                (*(*pp_rectangle_info)->p_vertices)[10].position_vec.first = ( *(*pp_rectangle_info)->p_vertices)[2].position_vec.first + dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_specified_border_info->border_right_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
+                (*(*pp_rectangle_info)->p_vertices)[10].position_vec.second = ( *(*pp_rectangle_info)->p_vertices)[2].position_vec.second;
+                (*(*pp_rectangle_info)->p_vertices)[10].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+                (*(*pp_rectangle_info)->p_vertices)[10].color_vec = p_border_info->p_css_specified_border_info->border_right_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+
+                (*(*pp_rectangle_info)->p_vertices)[11].position_vec = ( *(*pp_rectangle_info)->p_vertices)[2].position_vec;
+                (*(*pp_rectangle_info)->p_vertices)[11].color_vec = p_border_info->p_css_specified_border_info->border_right_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+
+                //bottom border
+                (*(*pp_rectangle_info)->p_vertices)[12].position_vec.first = ( *(*pp_rectangle_info)->p_vertices)[3].position_vec.first - dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_specified_border_info->border_left_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
+                (*(*pp_rectangle_info)->p_vertices)[12].position_vec.second = ( *(*pp_rectangle_info)->p_vertices)[3].position_vec.second;
+                (*(*pp_rectangle_info)->p_vertices)[12].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+                (*(*pp_rectangle_info)->p_vertices)[12].color_vec = p_border_info->p_css_specified_border_info->border_bottom_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+
+                (*(*pp_rectangle_info)->p_vertices)[13].position_vec.first = ( *(*pp_rectangle_info)->p_vertices)[2].position_vec.first + dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_specified_border_info->border_right_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
+                (*(*pp_rectangle_info)->p_vertices)[13].position_vec.second = ( *(*pp_rectangle_info)->p_vertices)[2].position_vec.second;
+                (*(*pp_rectangle_info)->p_vertices)[13].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+                (*(*pp_rectangle_info)->p_vertices)[13].color_vec = p_border_info->p_css_specified_border_info->border_bottom_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+
+                (*(*pp_rectangle_info)->p_vertices)[14].position_vec.first = ( *(*pp_rectangle_info)->p_vertices)[2].position_vec.first + dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_specified_border_info->border_right_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
+                (*(*pp_rectangle_info)->p_vertices)[14].position_vec.second = ( *(*pp_rectangle_info)->p_vertices)[2].position_vec.second + dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_specified_border_info->border_bottom_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y);
+                (*(*pp_rectangle_info)->p_vertices)[14].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+                (*(*pp_rectangle_info)->p_vertices)[14].color_vec = p_border_info->p_css_specified_border_info->border_bottom_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+
+                (*(*pp_rectangle_info)->p_vertices)[15].position_vec.first = ( *(*pp_rectangle_info)->p_vertices)[3].position_vec.first - dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_specified_border_info->border_left_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
+                (*(*pp_rectangle_info)->p_vertices)[15].position_vec.second = ( *(*pp_rectangle_info)->p_vertices)[3].position_vec.second + dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_specified_border_info->border_bottom_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y);
+                (*(*pp_rectangle_info)->p_vertices)[15].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+                (*(*pp_rectangle_info)->p_vertices)[15].color_vec = p_border_info->p_css_specified_border_info->border_bottom_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+
+                //left border 
+                (*(*pp_rectangle_info)->p_vertices)[16].position_vec.first = ( *(*pp_rectangle_info)->p_vertices)[0].position_vec.first - dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_specified_border_info->border_left_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
+                (*(*pp_rectangle_info)->p_vertices)[16].position_vec.second = ( *(*pp_rectangle_info)->p_vertices)[0].position_vec.second;
+                (*(*pp_rectangle_info)->p_vertices)[16].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+                (*(*pp_rectangle_info)->p_vertices)[16].color_vec = p_border_info->p_css_specified_border_info->border_left_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+                
+                (*(*pp_rectangle_info)->p_vertices)[17].position_vec = ( *(*pp_rectangle_info)->p_vertices)[0].position_vec;
+                (*(*pp_rectangle_info)->p_vertices)[17].color_vec = p_border_info->p_css_specified_border_info->border_left_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+                
+                (*(*pp_rectangle_info)->p_vertices)[18].position_vec = ( *(*pp_rectangle_info)->p_vertices)[3].position_vec;
+                (*(*pp_rectangle_info)->p_vertices)[18].color_vec = p_border_info->p_css_specified_border_info->border_left_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+
+                (*(*pp_rectangle_info)->p_vertices)[19].position_vec.first = ( *(*pp_rectangle_info)->p_vertices)[3].position_vec.first - dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_specified_border_info->border_left_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
+                (*(*pp_rectangle_info)->p_vertices)[19].position_vec.second = ( *(*pp_rectangle_info)->p_vertices)[3].position_vec.second;
+                (*(*pp_rectangle_info)->p_vertices)[19].position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+                (*(*pp_rectangle_info)->p_vertices)[19].color_vec = p_border_info->p_css_specified_border_info->border_left_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+
+                local_new_indices = {static_cast<uint16_t>(4), static_cast<uint16_t>(5), static_cast<uint16_t>(6), 
+                                     static_cast<uint16_t>(6), static_cast<uint16_t>(7), static_cast<uint16_t>(4),
+                                     static_cast<uint16_t>(8), static_cast<uint16_t>(9), static_cast<uint16_t>(10),
+                                     static_cast<uint16_t>(10), static_cast<uint16_t>(11), static_cast<uint16_t>(8),
+                                     static_cast<uint16_t>(12), static_cast<uint16_t>(13), static_cast<uint16_t>(14),
+                                     static_cast<uint16_t>(14), static_cast<uint16_t>(15), static_cast<uint16_t>(12),
+                                     static_cast<uint16_t>(16), static_cast<uint16_t>(17), static_cast<uint16_t>(18), 
+                                     static_cast<uint16_t>(18), static_cast<uint16_t>(19), static_cast<uint16_t>(16)};
+                break;
+
+            case DENGUI_BORDER_DRAW_MODE_NO_BORDER:
+                return;
+                break;
+
             default:
                 break;
             }
 
-            p_window_object->vertices_bounds.second = p_rectangle_info->p_vertices_data->size();
-            p_rectangle_info->p_indices_data->insert(p_rectangle_info->p_indices_data->end(), local_new_indices.begin(), local_new_indices.end());
-            p_window_object->indices_bounds.second = p_rectangle_info->p_indices_data->size();
-            p_window_object->sequence_id = p_rectangle_info->sequence_id;
-
-            for(size_t i = local_vertices_size; i < p_rectangle_info->p_vertices_data->size(); i++) 
-                (*p_rectangle_info->p_vertices_data)[i].color_vec = *p_rectangle_info->p_color;
+            (*pp_rectangle_info)->p_indices->insert((*pp_rectangle_info)->p_indices->end(), local_new_indices.begin(), local_new_indices.end());
         }
     }
 
-    void ShapeVerticesDataCreator::getTriangleVertices(TriangleInfo *p_triangleinfo, WindowObject *p_window_object) {
-        
-        if(p_triangleinfo != nullptr && p_window_object != nullptr) {
-            size_t local_vertices_size = p_triangleinfo->p_vertices_data->size();
-            size_t local_indices_size = p_triangleinfo->p_indices_data->size();
-            p_window_object->vertices_bounds.first = local_vertices_size;
-            p_window_object->indices_bounds.first = local_indices_size;
+    void ShapeVerticesDataCreator::createTriangle(WindowInfo *p_windowinfo, TriangleInfo **pp_triangle_info, BorderInfo *p_border_info, const dengUIBorderDrawMode &border_draw_mode, const int sequence_id) {
+        if((*pp_triangle_info)->p_vertices != nullptr && (*pp_triangle_info)->p_indices != nullptr && p_windowinfo != nullptr) {
+            dengMath::vec4<dengUtils::UIVerticesData> local_surround_rectangle_vertices;
 
-            p_triangleinfo->p_vertices_data->resize(local_vertices_size + 3);
-            p_triangleinfo->p_indices_data->resize(local_indices_size + 3);
+            local_surround_rectangle_vertices.getVectorElement(0)->position_vec.first = p_windowinfo->position.first - ((p_windowinfo->origin.first + 1) * dengMath::Conversion::pixelSizeToVector2DSize((*pp_triangle_info)->surround_rectangle_size.first, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X) / 2);
+            local_surround_rectangle_vertices.getVectorElement(0)->position_vec.second = p_windowinfo->position.second - ((p_windowinfo->origin.second + 1) * dengMath::Conversion::pixelSizeToVector2DSize((*pp_triangle_info)->surround_rectangle_size.second, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y) / 2);
+            local_surround_rectangle_vertices.getVectorElement(0)->position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
 
-            p_window_object->vertices_bounds.second = p_triangleinfo->p_vertices_data->size();
-            p_window_object->indices_bounds.second = p_triangleinfo->p_indices_data->size();
-            p_window_object->sequence_id = p_triangleinfo->sequence_id;
+            local_surround_rectangle_vertices.getVectorElement(1)->position_vec.first = p_windowinfo->position.first + ((1 - ((p_windowinfo->origin.first + 1) / 2)) * dengMath::Conversion::pixelSizeToVector2DSize((*pp_triangle_info)->surround_rectangle_size.first, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X));
+            local_surround_rectangle_vertices.getVectorElement(1)->position_vec.second = p_windowinfo->position.second - ((p_windowinfo->origin.second + 1) * dengMath::Conversion::pixelSizeToVector2DSize((*pp_triangle_info)->surround_rectangle_size.second, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y) / 2);
+            local_surround_rectangle_vertices.getVectorElement(1)->position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
 
-            (*p_triangleinfo->p_vertices_data)[local_vertices_size].position_vec.first = p_triangleinfo->p_vertices->first.first;
-            (*p_triangleinfo->p_vertices_data)[local_vertices_size].position_vec.second = p_triangleinfo->p_vertices->first.second;
-            (*p_triangleinfo->p_vertices_data)[local_vertices_size].position_vec.third = (1/p_triangleinfo->sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+            local_surround_rectangle_vertices.getVectorElement(2)->position_vec.first = p_windowinfo->position.first + ((1 - ((p_windowinfo->origin.first + 1) / 2)) * dengMath::Conversion::pixelSizeToVector2DSize((*pp_triangle_info)->surround_rectangle_size.first, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X)); 
+            local_surround_rectangle_vertices.getVectorElement(2)->position_vec.second = p_windowinfo->position.second + ((1 - ((p_windowinfo->origin.second + 1) / 2)) * dengMath::Conversion::pixelSizeToVector2DSize((*pp_triangle_info)->surround_rectangle_size.second, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y));
+            local_surround_rectangle_vertices.getVectorElement(2)->position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
 
-            (*p_triangleinfo->p_vertices_data)[local_vertices_size + 1].position_vec.first = p_triangleinfo->p_vertices->second.first;
-            (*p_triangleinfo->p_vertices_data)[local_vertices_size + 1].position_vec.second = p_triangleinfo->p_vertices->second.second;
-            (*p_triangleinfo->p_vertices_data)[local_vertices_size + 1].position_vec.third = (1/p_triangleinfo->sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+            local_surround_rectangle_vertices.getVectorElement(3)->position_vec.first = p_windowinfo->position.first - ((p_windowinfo->origin.first + 1) * dengMath::Conversion::pixelSizeToVector2DSize((*pp_triangle_info)->surround_rectangle_size.first, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X) / 2);
+            local_surround_rectangle_vertices.getVectorElement(3)->position_vec.second = p_windowinfo->position.second + ((1 - ((p_windowinfo->origin.first + 1) / 2)) * dengMath::Conversion::pixelSizeToVector2DSize((*pp_triangle_info)->surround_rectangle_size.second, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y));
+            local_surround_rectangle_vertices.getVectorElement(3)->position_vec.third = (1/sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
 
-            (*p_triangleinfo->p_vertices_data)[local_vertices_size + 2].position_vec.first = p_triangleinfo->p_vertices->third.first;
-            (*p_triangleinfo->p_vertices_data)[local_vertices_size + 2].position_vec.second = p_triangleinfo->p_vertices->third.second;
-            (*p_triangleinfo->p_vertices_data)[local_vertices_size + 2].position_vec.third = (1/p_triangleinfo->sequence_id) * DENGUI_WINDOW_LAYER_MULTIPLIER;
+            dengMath::vec3<dengUtils::UIVerticesData> local_triangle_vertices_data;
 
-            (*p_triangleinfo->p_indices_data)[local_indices_size] = static_cast<uint16_t>(local_vertices_size);
-            (*p_triangleinfo->p_indices_data)[local_indices_size + 1] = static_cast<uint16_t>(local_vertices_size + 1);
-            (*p_triangleinfo->p_indices_data)[local_indices_size + 2] = static_cast<uint16_t>(local_vertices_size + 2);
+            for(size_t i = 0; i < (*pp_triangle_info)->point_collision_with_edge_indices.size(); i++) {
+                switch (*(*pp_triangle_info)->point_collision_with_edge_indices.getVectorElement(i))
+                {
+                case 0: 
+                    (*(*pp_triangle_info)->p_vertices)[i].position_vec.first = local_surround_rectangle_vertices.getVectorElement(*(*pp_triangle_info)->point_collision_with_edge_indices.getVectorElement(0))->position_vec.first + (*(*pp_triangle_info)->triangle_point_edge_rel_coords.getVectorElement(i));
+                    (*(*pp_triangle_info)->p_vertices)[i].position_vec.second = local_surround_rectangle_vertices.getVectorElement(*(*pp_triangle_info)->point_collision_with_edge_indices.getVectorElement(0))->position_vec.second;
+                    break;
+                
+                case 1:
+                    (*(*pp_triangle_info)->p_vertices)[i].position_vec.first = local_surround_rectangle_vertices.getVectorElement(*(*pp_triangle_info)->point_collision_with_edge_indices.getVectorElement(1))->position_vec.first;
+                    (*(*pp_triangle_info)->p_vertices)[i].position_vec.second = local_surround_rectangle_vertices.getVectorElement(*(*pp_triangle_info)->point_collision_with_edge_indices.getVectorElement(1))->position_vec.second + (*(*pp_triangle_info)->triangle_point_edge_rel_coords.getVectorElement(i));
+                    break;
 
-            for(size_t i = local_vertices_size; i < p_triangleinfo->p_vertices_data->size(); i++) 
-                (*p_triangleinfo->p_vertices_data)[i].color_vec = *p_triangleinfo->p_color;
+                case 2:
+                    (*(*pp_triangle_info)->p_vertices)[i].position_vec.first = local_surround_rectangle_vertices.getVectorElement(*(*pp_triangle_info)->point_collision_with_edge_indices.getVectorElement(3))->position_vec.first + (*(*pp_triangle_info)->triangle_point_edge_rel_coords.getVectorElement(i));
+                    (*(*pp_triangle_info)->p_vertices)[i].position_vec.second = local_surround_rectangle_vertices.getVectorElement(*(*pp_triangle_info)->point_collision_with_edge_indices.getVectorElement(3))->position_vec.second;
+                    break;
+
+                case 3:
+                    (*(*pp_triangle_info)->p_vertices)[i].position_vec.first = local_surround_rectangle_vertices.getVectorElement(*(*pp_triangle_info)->point_collision_with_edge_indices.getVectorElement(0))->position_vec.first;
+                    (*(*pp_triangle_info)->p_vertices)[i].position_vec.second = local_surround_rectangle_vertices.getVectorElement(*(*pp_triangle_info)->point_collision_with_edge_indices.getVectorElement(0))->position_vec.second + (*(*pp_triangle_info)->triangle_point_edge_rel_coords.getVectorElement(i));
+                    break;
+                default:
+                    break;
+                }
+
+                (*(*pp_triangle_info)->p_vertices)[i].color_vec = (*pp_triangle_info)->triangle_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+            }
+
+            switch (border_draw_mode)
+            {
+            case DENGUI_BORDER_DRAW_MODE_GENERIC_BORDER:
+                (*(*pp_triangle_info)->p_vertices)[3].position_vec = (*(*pp_triangle_info)->p_vertices)[0].position_vec;
+                (*(*pp_triangle_info)->p_vertices)[3].color_vec = p_border_info->p_css_general_border_info->border_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+                (*(*pp_triangle_info)->p_vertices)[4].position_vec = (*(*pp_triangle_info)->p_vertices)[1].position_vec;
+                (*(*pp_triangle_info)->p_vertices)[4].color_vec = p_border_info->p_css_general_border_info->border_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+                (*(*pp_triangle_info)->p_vertices)[5].position_vec = (*(*pp_triangle_info)->p_vertices)[2].position_vec;
+                (*(*pp_triangle_info)->p_vertices)[5].color_vec = p_border_info->p_css_general_border_info->border_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+
+                (*(*pp_triangle_info)->p_vertices)[6].position_vec.first = (*(*pp_triangle_info)->p_vertices)[0].position_vec.first - dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_general_border_info->border_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X); 
+                (*(*pp_triangle_info)->p_vertices)[6].position_vec.second = (*(*pp_triangle_info)->p_vertices)[0].position_vec.second - dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_general_border_info->border_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y);
+                (*(*pp_triangle_info)->p_vertices)[6].color_vec = p_border_info->p_css_general_border_info->border_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+                
+                (*(*pp_triangle_info)->p_vertices)[7].position_vec.first = (*(*pp_triangle_info)->p_vertices)[1].position_vec.first + dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_general_border_info->border_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
+                (*(*pp_triangle_info)->p_vertices)[7].position_vec.second = (*(*pp_triangle_info)->p_vertices)[1].position_vec.second - dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_general_border_info->border_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y);
+                (*(*pp_triangle_info)->p_vertices)[7].color_vec = p_border_info->p_css_general_border_info->border_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+                 
+                (*(*pp_triangle_info)->p_vertices)[8].position_vec.first = (*(*pp_triangle_info)->p_vertices)[2].position_vec.first - dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_general_border_info->border_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
+                (*(*pp_triangle_info)->p_vertices)[8].position_vec.first = (*(*pp_triangle_info)->p_vertices)[2].position_vec.second - dengMath::Conversion::pixelSizeToVector2DSize(p_border_info->p_css_general_border_info->border_width, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y);
+                (*(*pp_triangle_info)->p_vertices)[8].color_vec = p_border_info->p_css_general_border_info->border_color >> dengMath::vec4<float>({0.0f, 0.0f, 0.0f, 1.0f});
+                break;
+            
+            default:
+                break;
+            }
         }
-
-
     }
 }

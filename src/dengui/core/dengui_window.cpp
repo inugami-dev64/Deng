@@ -2,28 +2,22 @@
 
 namespace dengUI {
 
-    Window::Window(WindowInfo &windowinfo, WindowBorderInfo borderinfo, BufferInfo &bufferinfo) {
+    Window::Window(WindowInfo &windowinfo, BufferInfo &bufferinfo) {
         this->m_windowinfo = windowinfo;
-        this->m_borderinfo = borderinfo;
         this->m_bufferinfo = bufferinfo;
 
-        this->createBaseWindow();
-        this->sortClickableObjects();
-
-        this->m_clickinfo.p_vertices_data = &this->m_vertices_data;
-        this->m_clickinfo.p_indices_data = &this->m_indices_data;
-        this->m_clickinfo.p_window_objects = &this->m_window_objects;
-        this->m_clickinfo.p_windowinfo = &this->m_windowinfo;
-        this->m_clickinfo.p_bufferinfo = &this->m_bufferinfo;
+        this->m_p_css_data_handler = new dengCSS::CSSDataHandler(this->m_windowinfo.p_window, DENG_CSS_PATH);
+        std::vector<std::string> local_css_files;
         
-        this->m_p_collision = new PixelCollision(this->m_windowinfo.p_window, &this->m_vertices_data, &this->m_indices_data);
-        this->m_p_events = new Events(this->m_windowinfo.p_window, this->m_p_collision, &this->m_vertices_data, &this->m_indices_data);
-        this->m_p_handler_list = new WindowObjectHandleList(&this->m_window_objects, &this->m_p_clickable_objects, &this->m_vertices_data, &this->m_indices_data);
+        dengCSS::CSSHeadData *p_local_head_css_data;
+        dengCSS::CSSBodyData *p_local_body_css_data;
+        dengCSS::CSSGenericObjectData *p_local_minimise_triangle_css_data;
 
-        for(size_t i = 0; i < this->m_p_clickable_objects.size(); i++) {
-            this->m_p_collision->setupPixelRangesFromVertices(&this->m_p_clickable_objects[i]->vertices_bounds, &this->m_p_clickable_objects[i]->indices_bounds, this->m_p_clickable_objects[i]->description);
-        }
-        
+        this->m_p_css_data_handler->getHeadData(&p_local_head_css_data);
+        this->m_p_css_data_handler->getBodyData(&p_local_body_css_data);
+        this->m_p_css_data_handler->getGenericObjectData(&p_local_minimise_triangle_css_data);
+
+        this->createBaseWindow(p_local_head_css_data, p_local_body_css_data, p_local_minimise_triangle_css_data);
         this->createBuffers();
     }
 
@@ -33,134 +27,178 @@ namespace dengUI {
         vkFreeMemory(*this->m_windowinfo.p_device, *this->m_bufferinfo.p_vertices_buffer_memory, nullptr);
         vkFreeMemory(*this->m_windowinfo.p_device, *this->m_bufferinfo.p_indices_buffer_memory, nullptr);
         
-        delete this->m_p_handler_list;
-        delete this->m_p_events;
+        // delete this->m_p_handler_list;
+        // delete this->m_p_events;
+        delete this->m_p_css_data_handler;
         delete this->m_p_collision;
     }
 
-    void Window::createBaseWindow() {
-        this->m_window_objects.resize(5);
-        dengMath::vec4<dengMath::vec2<float>> local_rectangle_vertices;
-        dengMath::vec3<dengMath::vec2<float>> local_triangle_vertices;
-        RectangleInfo local_rectangle_info{};
-        TriangleInfo local_triangle_info{};
-
-        // main window
-        local_rectangle_vertices.first = {this->m_windowinfo.position.first - (this->m_windowinfo.origin.first * this->m_windowinfo.size.first), this->m_windowinfo.position.second - (this->m_windowinfo.origin.second * this->m_windowinfo.size.second) + this->m_borderinfo.titlebar_height};
-        local_rectangle_vertices.second = {this->m_windowinfo.position.first + (this->m_windowinfo.size.first - (this->m_windowinfo.origin.first * this->m_windowinfo.size.first)), this->m_windowinfo.position.second - (this->m_windowinfo.origin.second * this->m_windowinfo.size.second) + this->m_borderinfo.titlebar_height};
-        local_rectangle_vertices.third = {this->m_windowinfo.position.first + (this->m_windowinfo.size.first - (this->m_windowinfo.origin.first * this->m_windowinfo.size.first)), this->m_windowinfo.position.second + (this->m_windowinfo.size.second - (this->m_windowinfo.origin.second * this->m_windowinfo.size.second))};
-        local_rectangle_vertices.fourth = {this->m_windowinfo.position.first - (this->m_windowinfo.origin.first * this->m_windowinfo.size.first), this->m_windowinfo.position.second + (this->m_windowinfo.size.second - (this->m_windowinfo.origin.second * this->m_windowinfo.size.second))};
-
-        local_rectangle_info.p_color = &this->m_windowinfo.color;
-        local_rectangle_info.p_vertices = &local_rectangle_vertices;
-        local_rectangle_info.p_vertices_data = &this->m_vertices_data;
-        local_rectangle_info.p_indices_data = &this->m_indices_data;
-        local_rectangle_info.enable_fill = DENG_TRUE;
-        local_rectangle_info.sequence_id = DENGUI_WINDOW_LAYER_TYPE_MAIN_WINDOW;
-
-        this->m_window_objects[0].description = "main window";
-        this->m_window_objects[0].is_clickable = DENG_FALSE;
-        this->m_window_objects[0].is_drawn = DENG_TRUE;
+    void Window::getWindowVertices(const dengUIWindowVerticesType &vertices_type, dengCSS::CSSHeadData *p_css_head_data, dengCSS::CSSBodyData *p_css_body_data, dengCSS::CSSGenericObjectData *p_css_minimise_triangle_data) {
+        RectangleInfo *p_local_rectangle_info;
+        TriangleInfo *p_local_triangle_info;
+        WindowInfo *p_local_window_info;
+        BorderInfo local_window_border_info;
         
-        ShapeVerticesDataCreator::getRectangleVertices(&local_rectangle_info, &this->m_window_objects[0]);
-        LOG("Dengui main window vertices count is: " + std::to_string(this->m_window_objects[0].vertices_bounds.second - this->m_window_objects[0].vertices_bounds.first));
-        LOG("Successfully initialised dengui window main rectangle vertices!");
+        switch (vertices_type)
+        {
+        case DENGUI_WINDOW_VERTICES_TYPE_BODY:
+            p_local_rectangle_info = new RectangleInfo;
 
-        // window borders and titlebar
-            // titlebar
-        local_rectangle_vertices.first = {this->m_vertices_data[this->m_window_objects[0].vertices_bounds.first].position_vec.first, this->m_windowinfo.position.second - (this->m_windowinfo.origin.second * this->m_windowinfo.size.second)};
-        local_rectangle_vertices.second = {this->m_vertices_data[this->m_window_objects[0].vertices_bounds.first + 1].position_vec.first, this->m_windowinfo.position.second - (this->m_windowinfo.origin.second * this->m_windowinfo.size.second)};
-        local_rectangle_vertices.third = {this->m_vertices_data[this->m_window_objects[0].vertices_bounds.first + 1].position_vec.first, local_rectangle_vertices.second.second + this->m_borderinfo.titlebar_height};
-        local_rectangle_vertices.fourth = {this->m_vertices_data[this->m_window_objects[0].vertices_bounds.first].position_vec.first, local_rectangle_vertices.second.second + this->m_borderinfo.titlebar_height};
+            p_local_rectangle_info->p_indices = &this->m_base_window_vertices.window_main_indices;
+            p_local_rectangle_info->p_vertices = &this->m_base_window_vertices.window_main_vertices;
+            p_local_rectangle_info->rectangle_color = p_css_body_data->background_color;
+            p_local_rectangle_info->rectangle_size = {p_css_body_data->width, p_css_body_data->height};
 
-        local_rectangle_info.p_color = &this->m_windowinfo.color;
-        local_rectangle_info.p_vertices = &local_rectangle_vertices;
-        local_triangle_info.sequence_id = DENGUI_WINDOW_LAYER_TYPE_MAIN_WINDOW;
+            if(p_css_body_data->p_general_border_info == nullptr && p_css_body_data->p_specified_border_info == nullptr) {
+                p_local_rectangle_info->p_vertices->resize(4);
 
-        this->m_window_objects[1].description = "titlebar";
-        this->m_window_objects[1].is_clickable = DENG_FALSE;
-        this->m_window_objects[1].is_drawn = DENG_TRUE;
+                local_window_border_info.p_css_general_border_info = nullptr;
+                local_window_border_info.p_css_specified_border_info = nullptr;
+                ShapeVerticesDataCreator::createRectangle(&this->m_windowinfo, &p_local_rectangle_info, &local_window_border_info, DENGUI_BORDER_DRAW_MODE_NO_BORDER, 1);
+            }
 
-        ShapeVerticesDataCreator::getRectangleVertices(&local_rectangle_info, &this->m_window_objects[1]);
+            else if(p_css_body_data->p_general_border_info != nullptr && p_css_body_data->p_specified_border_info == nullptr) {
+                p_local_rectangle_info->p_vertices->resize(12);
 
-            // titlebar borders
-        local_rectangle_vertices.first = {this->m_vertices_data[this->m_window_objects[1].vertices_bounds.first].position_vec.first, this->m_vertices_data[this->m_window_objects[1].vertices_bounds.first].position_vec.second};
-        local_rectangle_vertices.second = {this->m_vertices_data[this->m_window_objects[1].vertices_bounds.first + 1].position_vec.first, this->m_vertices_data[this->m_window_objects[1].vertices_bounds.first + 1].position_vec.second};
-        local_rectangle_vertices.third = {this->m_vertices_data[this->m_window_objects[1].vertices_bounds.first + 2].position_vec.first, this->m_vertices_data[this->m_window_objects[1].vertices_bounds.first + 2].position_vec.second + this->m_borderinfo.thickness};
-        local_rectangle_vertices.fourth = {this->m_vertices_data[this->m_window_objects[1].vertices_bounds.first + 3].position_vec.first, this->m_vertices_data[this->m_window_objects[1].vertices_bounds.first + 3].position_vec.second + this->m_borderinfo.thickness};
+                local_window_border_info.p_css_general_border_info = p_css_body_data->p_general_border_info;
+                local_window_border_info.p_css_specified_border_info = nullptr;
+                ShapeVerticesDataCreator::createRectangle(&this->m_windowinfo, &p_local_rectangle_info, &local_window_border_info, DENGUI_BORDER_DRAW_MODE_GENERIC_BORDER, 1);
+            }
 
-        local_rectangle_info.p_color = &this->m_borderinfo.border_color;
-        local_rectangle_info.p_vertices = &local_rectangle_vertices;
-        local_rectangle_info.enable_fill = DENG_FALSE;
-        local_rectangle_info.border_offset_mode = DENGUI_NON_FILLED_BORDER_OFFSET_MODE_IN;
-        local_rectangle_info.border_thickness = this->m_borderinfo.thickness;
-        local_rectangle_info.sequence_id = DENGUI_WINDOW_LAYER_TYPE_BORDERS_AND_TITLEBAR;
+            else if(p_css_body_data->p_general_border_info == nullptr && p_css_body_data->p_specified_border_info != nullptr) {
+                LOG("seg test!");
+                p_local_rectangle_info->p_vertices->resize(20);
 
-        this->m_window_objects[2].description = "titlebar borders";
-        this->m_window_objects[2].is_clickable = DENG_FALSE;
-        this->m_window_objects[2].is_drawn = DENG_TRUE;
+                local_window_border_info.p_css_general_border_info = nullptr; 
+                local_window_border_info.p_css_specified_border_info = p_css_body_data->p_specified_border_info;
 
-        ShapeVerticesDataCreator::getRectangleVertices(&local_rectangle_info, &this->m_window_objects[2]);
+                ShapeVerticesDataCreator::createRectangle(&this->m_windowinfo, &p_local_rectangle_info, &local_window_border_info, DENGUI_BORDER_DRAW_MODE_SPECIFIED_BORDER, 1);
+            }
 
-            // window borders
-        local_rectangle_vertices.first = {this->m_vertices_data[this->m_window_objects[0].vertices_bounds.first].position_vec.first, this->m_vertices_data[this->m_window_objects[0].vertices_bounds.first].position_vec.second};
-        local_rectangle_vertices.second = {this->m_vertices_data[this->m_window_objects[0].vertices_bounds.first + 1].position_vec.first, this->m_vertices_data[this->m_window_objects[0].vertices_bounds.first + 1].position_vec.second};
-        local_rectangle_vertices.third = {this->m_vertices_data[this->m_window_objects[0].vertices_bounds.first + 2].position_vec.first, this->m_vertices_data[this->m_window_objects[0].vertices_bounds.first + 2].position_vec.second};
-        local_rectangle_vertices.fourth = {this->m_vertices_data[this->m_window_objects[0].vertices_bounds.first + 3].position_vec.first, this->m_vertices_data[this->m_window_objects[0].vertices_bounds.first + 3].position_vec.second};
+            delete p_local_rectangle_info;
+            break;
 
-        local_rectangle_info.p_vertices = &local_rectangle_vertices;
-        local_rectangle_info.p_color = &this->m_borderinfo.border_color;
+        case DENGUI_WINDOW_VERTICES_TYPE_HEAD:
+            p_local_rectangle_info = new RectangleInfo;
+            p_local_window_info = new WindowInfo;
+            *p_local_window_info = this->m_windowinfo;
 
-        this->m_window_objects[3].description = "window borders";
-        this->m_window_objects[3].is_clickable = DENG_FALSE;
-        this->m_window_objects[3].is_drawn = DENG_TRUE;
+            p_local_rectangle_info->p_indices = &this->m_base_window_vertices.window_head_indices;
+            p_local_rectangle_info->p_vertices = &this->m_base_window_vertices.window_head_vertices;
+            p_local_rectangle_info->rectangle_color = p_css_head_data->background_color;
+            p_local_rectangle_info->rectangle_size = {p_css_body_data->width, p_css_head_data->height};
+            LOG("head height: " + std::to_string(p_local_rectangle_info->rectangle_size.second));
+            LOG("body height: " + std::to_string(p_css_body_data->height));
+            p_local_window_info->position.second = this->m_windowinfo.position.second - (this->m_windowinfo.origin.second + 1) / 2 * dengMath::Conversion::pixelSizeToVector2DSize(p_css_body_data->height, this->m_windowinfo.p_window->getSize(), DENG_COORD_AXIS_Y);
+            p_local_window_info->position.second -= (1 - ((this->m_windowinfo.origin.second + 1) / 2)) * dengMath::Conversion::pixelSizeToVector2DSize(p_local_rectangle_info->rectangle_size.second, this->m_windowinfo.p_window->getSize(), DENG_COORD_AXIS_Y);  
+            LOG("position y: " + std::to_string(p_local_window_info->position.second));
+            if((p_css_head_data->p_general_border_info == nullptr && p_css_head_data->p_specified_border_info == nullptr) ||
+            (p_css_head_data->p_general_border_info != nullptr && p_css_head_data->p_specified_border_info != nullptr)) {
+                p_local_rectangle_info->p_vertices->resize(4);
+
+                local_window_border_info.p_css_general_border_info = nullptr;
+                local_window_border_info.p_css_specified_border_info = nullptr;
+                
+                ShapeVerticesDataCreator::createRectangle(p_local_window_info, &p_local_rectangle_info, &local_window_border_info, DENGUI_BORDER_DRAW_MODE_NO_BORDER, 2);
+            }
+
+            else if(p_css_head_data->p_general_border_info != nullptr && p_css_head_data->p_specified_border_info == nullptr) {
+                p_local_rectangle_info->p_vertices->resize(12);
+
+                local_window_border_info.p_css_general_border_info = p_css_head_data->p_general_border_info;
+                local_window_border_info.p_css_specified_border_info = nullptr;
+
+                ShapeVerticesDataCreator::createRectangle(p_local_window_info, &p_local_rectangle_info, &local_window_border_info, DENGUI_BORDER_DRAW_MODE_GENERIC_BORDER, 2);
+            }
+
+            else if(p_css_head_data->p_general_border_info == nullptr && p_css_head_data->p_specified_border_info != nullptr) {
+                p_local_rectangle_info->p_vertices->resize(24);
+
+                local_window_border_info.p_css_general_border_info = nullptr; 
+                local_window_border_info.p_css_specified_border_info = p_css_head_data->p_specified_border_info;
+
+                ShapeVerticesDataCreator::createRectangle(p_local_window_info, &p_local_rectangle_info, &local_window_border_info, DENGUI_BORDER_DRAW_MODE_SPECIFIED_BORDER, 2);
+            }
+
+            delete p_local_window_info;
+            delete p_local_rectangle_info;
+            break;
+
+        case DENGUI_WINDOW_VERTICES_TYPE_TRIANGLE:
+            p_local_triangle_info = new TriangleInfo;
+            p_local_window_info = new WindowInfo;
+            *p_local_window_info = this->m_windowinfo;
+
+            p_local_triangle_info->p_indices = &this->m_base_window_vertices.window_minimise_triangle_indices;
+            p_local_triangle_info->p_vertices = &this->m_base_window_vertices.window_minimise_triangle_vertices;
+            p_local_triangle_info->point_collision_with_edge_indices = {0, 0, 2};
+            p_local_triangle_info->triangle_point_edge_rel_coords = {0.0f, 1.0f, 0.5f};
+
+            p_local_triangle_info->surround_rectangle_size.first = dengMath::Conversion::vector2DSizeToPixelSize(this->m_base_window_vertices.window_head_vertices[3].position_vec.second - this->m_base_window_vertices.window_head_vertices[0].position_vec.second, p_local_window_info->p_window->getSize(), DENG_COORD_AXIS_Y) - p_css_minimise_triangle_data->margin_data.margin_top - p_css_minimise_triangle_data->margin_data.margin_bottom;
+            p_local_triangle_info->surround_rectangle_size.second = dengMath::Conversion::vector2DSizeToPixelSize(this->m_base_window_vertices.window_head_vertices[3].position_vec.second - this->m_base_window_vertices.window_head_vertices[0].position_vec.second, p_local_window_info->p_window->getSize(), DENG_COORD_AXIS_Y) - p_css_minimise_triangle_data->margin_data.margin_top;
+
+            p_local_window_info->position.first = this->m_base_window_vertices.window_head_vertices[0].position_vec.first + (p_local_window_info->origin.first + 1) / 2 * p_local_triangle_info->surround_rectangle_size.first;
+            p_local_window_info->position.second = this->m_base_window_vertices.window_head_vertices[1].position_vec.second + (p_local_window_info->origin.second + 1) / 2 * p_local_triangle_info->surround_rectangle_size.second;
+
+            if((p_css_minimise_triangle_data->p_general_border_info == nullptr && p_css_minimise_triangle_data->p_specified_border_info == nullptr) ||
+            (p_css_minimise_triangle_data->p_general_border_info != nullptr && p_css_minimise_triangle_data->p_specified_border_info != nullptr)) {
+                p_local_rectangle_info->p_vertices->resize(4);
+
+                local_window_border_info.p_css_general_border_info = nullptr;
+                local_window_border_info.p_css_specified_border_info = nullptr;
+                
+                ShapeVerticesDataCreator::createTriangle(p_local_window_info, &p_local_triangle_info, &local_window_border_info, DENGUI_BORDER_DRAW_MODE_NO_BORDER, 2);
+            }
+
+            else if(p_css_minimise_triangle_data->p_general_border_info != nullptr && p_css_minimise_triangle_data->p_specified_border_info == nullptr) {
+                p_local_rectangle_info->p_vertices->resize(9);
+
+                local_window_border_info.p_css_general_border_info = p_css_minimise_triangle_data->p_general_border_info;
+                local_window_border_info.p_css_specified_border_info = nullptr;
+
+                ShapeVerticesDataCreator::createTriangle(p_local_window_info, &p_local_triangle_info, &local_window_border_info, DENGUI_BORDER_DRAW_MODE_GENERIC_BORDER, 2);
+            }
+
+            else if(p_css_minimise_triangle_data->p_general_border_info == nullptr && p_css_minimise_triangle_data->p_specified_border_info != nullptr) {
+                p_local_rectangle_info->p_vertices->resize(24);
+
+                local_window_border_info.p_css_general_border_info = nullptr; 
+                local_window_border_info.p_css_specified_border_info = p_css_minimise_triangle_data->p_specified_border_info;
+
+                ShapeVerticesDataCreator::createTriangle(p_local_window_info, &p_local_triangle_info, &local_window_border_info, DENGUI_BORDER_DRAW_MODE_SPECIFIED_BORDER, 2);
+            }
+            break;
         
-        ShapeVerticesDataCreator::getRectangleVertices(&local_rectangle_info, &this->m_window_objects[3]);
-        LOG("Dengui window border vertices count is: " + std::to_string(this->m_window_objects[3].vertices_bounds.second - this->m_window_objects[3].vertices_bounds.first));
-        LOG("Successfully initialised dengui window border border vertices!");
+        default:
+            break;
+        }
+    }
 
-            // minimizing triangle
-        local_triangle_vertices.first = {this->m_vertices_data[this->m_window_objects[1].vertices_bounds.first].position_vec.first + this->m_borderinfo.thickness + DENGUI_MINIMIZE_TRIANGLE_OFFSET, this->m_vertices_data[this->m_window_objects[1].vertices_bounds.first].position_vec.second + this->m_borderinfo.thickness + DENGUI_MINIMIZE_TRIANGLE_OFFSET};
-        local_triangle_vertices.second = {local_triangle_vertices.first.first + (this->m_borderinfo.titlebar_height - this->m_borderinfo.thickness - DENGUI_MINIMIZE_TRIANGLE_OFFSET), local_triangle_vertices.first.second};
-        local_triangle_vertices.third = {(local_triangle_vertices.first.first + local_triangle_vertices.second.first) / 2, this->m_vertices_data[this->m_window_objects[1].vertices_bounds.first].position_vec.second + (this->m_borderinfo.titlebar_height - DENGUI_MINIMIZE_TRIANGLE_OFFSET)};
+    void Window::createBaseWindow(dengCSS::CSSHeadData *p_head_css_data, dengCSS::CSSBodyData *p_body_css_data, dengCSS::CSSGenericObjectData *p_minimise_triangle_css_data) {
+        this->getWindowVertices(DENGUI_WINDOW_VERTICES_TYPE_BODY, nullptr, p_body_css_data, nullptr);
 
-        local_triangle_info.p_vertices = &local_triangle_vertices;
-        local_triangle_info.p_color = &this->m_borderinfo.minimizing_triangle_color;
-        local_triangle_info.p_vertices_data = &this->m_vertices_data;
-        local_triangle_info.p_indices_data = &this->m_indices_data;
-        local_triangle_info.sequence_id = DENGUI_WINDOW_LAYER_TYPE_BORDERS_AND_TITLEBAR;
+        this->m_vertices_data = this->m_base_window_vertices.window_main_vertices;
+        this->m_indices_data = this->m_base_window_vertices.window_main_indices;
 
-        // MinimiseHandle local_minimise_handle();
+        this->getWindowVertices(DENGUI_WINDOW_VERTICES_TYPE_HEAD, p_head_css_data, p_body_css_data, nullptr);
+        
+        for(size_t i = 0; i < this->m_base_window_vertices.window_head_indices.size(); i++) {
+            this->m_base_window_vertices.window_head_indices[i] += static_cast<uint16_t>(this->m_vertices_data.size());
+        }
 
-        this->m_window_objects[4].description = "minimising triangle";
-        this->m_window_objects[4].is_clickable = DENG_TRUE;
-        this->m_window_objects[4].handle_id = 0;
-        this->m_window_objects[4].is_drawn = DENG_TRUE;
+        this->m_vertices_data.insert(this->m_vertices_data.end(), this->m_base_window_vertices.window_head_vertices.begin(), this->m_base_window_vertices.window_head_vertices.end());
+        this->m_indices_data.insert(this->m_indices_data.end(), this->m_base_window_vertices.window_head_indices.begin(), this->m_base_window_vertices.window_head_indices.end());
 
-        ShapeVerticesDataCreator::getTriangleVertices(&local_triangle_info, &this->m_window_objects[4]);
-        LOG("Dengui minimise triangle vertices count is: " + std::to_string(this->m_window_objects[4].vertices_bounds.second - this->m_window_objects[4].vertices_bounds.first));
+        this->getWindowVertices(DENGUI_WINDOW_VERTICES_TYPE_TRIANGLE, p_head_css_data, p_body_css_data, p_minimise_triangle_css_data);
+
     }
 
     void Window::createBuffers() {
-        std::vector<dengUtils::UIVerticesData> local_vertices_data = this->m_vertices_data;
-        std::vector<uint16_t> local_indices_data = this->m_indices_data;
-        
-        for(size_t i = 0; i < this->m_window_objects.size(); i++) {
-            
-            if(!this->m_window_objects[i].is_drawn) {
-                for(size_t remove_index = this->m_window_objects[i].vertices_bounds.first; remove_index < this->m_window_objects[i].vertices_bounds.second; remove_index++) 
-                    local_vertices_data.erase(local_vertices_data.begin() + remove_index);
-
-                for(size_t remove_index = this->m_window_objects[i].indices_bounds.first; remove_index < this->m_window_objects[i].indices_bounds.second; remove_index++) 
-                    local_indices_data.erase(local_indices_data.begin() + remove_index);
-            }
-        }
-
         VkDeviceSize local_size = static_cast<VkDeviceSize>(sizeof(this->m_vertices_data[0]) * this->m_vertices_data.size());
 
         // vertices buffer
         this->m_bufferinfo.p_buffer_create_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_staging_buffer_memory, nullptr);
-        this->m_bufferinfo.p_buffer_memory_populate_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, local_vertices_data.data(), this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_staging_buffer_memory);
+        this->m_bufferinfo.p_buffer_memory_populate_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, this->m_vertices_data.data(), this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_staging_buffer_memory);
 
         this->m_bufferinfo.p_buffer_create_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, this->m_bufferinfo.p_vertices_buffer, this->m_bufferinfo.p_vertices_buffer_memory, nullptr);
         this->m_bufferinfo.p_buffer_copy_func(this->m_windowinfo.p_device, this->m_bufferinfo.p_commandpool, this->m_bufferinfo.p_graphics_queue, this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_vertices_buffer, &local_size);
@@ -172,7 +210,7 @@ namespace dengUI {
         local_size = static_cast<VkDeviceSize>(sizeof(this->m_indices_data[0]) * this->m_indices_data.size());
 
         this->m_bufferinfo.p_buffer_create_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_staging_buffer_memory, nullptr);
-        this->m_bufferinfo.p_buffer_memory_populate_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, local_indices_data.data(), this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_staging_buffer_memory);
+        this->m_bufferinfo.p_buffer_memory_populate_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, this->m_indices_data.data(), this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_staging_buffer_memory);
 
         this->m_bufferinfo.p_buffer_create_func(this->m_windowinfo.p_device, this->m_windowinfo.p_gpu, &local_size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, this->m_bufferinfo.p_indices_buffer, this->m_bufferinfo.p_indices_buffer_memory, nullptr);
         this->m_bufferinfo.p_buffer_copy_func(this->m_windowinfo.p_device, this->m_bufferinfo.p_commandpool, this->m_bufferinfo.p_graphics_queue, this->m_bufferinfo.p_staging_buffer, this->m_bufferinfo.p_indices_buffer, &local_size);
@@ -183,27 +221,27 @@ namespace dengUI {
         *this->m_bufferinfo.p_indices_size = static_cast<uint32_t>(this->m_indices_data.size());
     }
 
-    void Window::sortClickableObjects() {
-        for(size_t i = 0; i < this->m_window_objects.size(); i++) {
-            if(this->m_window_objects[i].is_clickable == DENG_TRUE)
-                this->m_p_clickable_objects.push_back(&this->m_window_objects[i]);
-        }
-    }
+    // void Window::sortClickableObjects() {
+    //     for(size_t i = 0; i < this->m_window_objects.size(); i++) {
+    //         if(this->m_window_objects[i].is_clickable == DENG_TRUE)
+    //             this->m_p_clickable_objects.push_back(&this->m_window_objects[i]);
+    //     }
+    // }
 
-    void Window::getClickableObjects(std::vector<WindowObject*> *p_clickable_objects) {
-        p_clickable_objects->clear();
-        p_clickable_objects = &this->m_p_clickable_objects;
-    }
+   // void Window::getClickableObjects(std::vector<WindowObject*> *p_clickable_objects) {
+   //     p_clickable_objects->clear();
+   //     p_clickable_objects = &this->m_p_clickable_objects;
+   // }
 
     void Window::update() {
-        for(size_t i = 0; i < this->m_p_clickable_objects.size(); i++) {
-            this->m_clickinfo.vertices_bounds = this->m_p_clickable_objects[i]->vertices_bounds;
-            this->m_clickinfo.indices_bounds = this->m_p_clickable_objects[i]->indices_bounds;
-            this->m_clickinfo.p_is_clicked = &this->m_p_clickable_objects[i]->is_clicked;
-            this->m_clickinfo.description = this->m_p_clickable_objects[i]->description;
-            this->m_clickinfo.handle_id = this->m_p_clickable_objects[i]->handle_id;
+        // for(size_t i = 0; i < this->m_p_clickable_objects.size(); i++) {
+        //     this->m_clickinfo.vertices_bounds = this->m_p_clickable_objects[i]->vertices_bounds;
+        //     this->m_clickinfo.indices_bounds = this->m_p_clickable_objects[i]->indices_bounds;
+        //     this->m_clickinfo.p_is_clicked = &this->m_p_clickable_objects[i]->is_clicked;
+        //     this->m_clickinfo.description = this->m_p_clickable_objects[i]->description;
+        //     this->m_clickinfo.handle_id = this->m_p_clickable_objects[i]->handle_id;
 
-            this->m_p_events->checkForClicks(&this->m_clickinfo, this->m_p_handler_list);
-        }
+        //     this->m_p_events->checkForClicks(&this->m_clickinfo, this->m_p_handler_list);
+        // }
     }
 }
