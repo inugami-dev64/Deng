@@ -317,19 +317,19 @@ namespace dengMath {
     };
 
     // generic math functions
-    struct Math {
-        static double exp(double base, int exp);
-        static vec2<float> getCartesianCoordsPoint(const vec2<float> &centre, const int16_t &angle, const float &distance, const dengBool &inverted_y_axis);
-        static float getFractionNumerator(const float &value_numerator, const float &value_denominator, const float &equivalent_denominator);
-        static float getVectorLengthFromBounds(vec2<vec2<float>> vector_bounds);
-        static float getTriangleAnglesFromEdges(const vec3<float> &triangle_edges, const dengTriangleAngleType &triangle_angle_type);
-        static float getVector2DRotation(vec2<vec2<float>> vector_bounds);
-    };
+    double exp(double base, int exp);
+    float exp(float base, int exp);
+
+    vec2<float> getCartesianCoordsPoint(const vec2<float> &centre, const int16_t &angle, const float &distance, const dengBool &inverted_y_axis);
+    float getFractionNumerator(const float &value_numerator, const float &value_denominator, const float &equivalent_denominator);
+    float getVectorLengthFromBounds(vec2<vec2<float>> vector_bounds);
+    float getTriangleAnglesFromEdges(const vec3<float> &triangle_edges, const dengTriangleAngleType &triangle_angle_type);
+    float getVector2DRotation(vec2<vec2<float>> vector_bounds);
 
     struct Conversion {
         static float degToRad(const float &deg);
         static float radToDeg(const float &rad);
-        static double vector2DSizeToPixelSize(const float &vec_size, const vec2<uint32_t> &window_size, const dengCoordinateAxisType &axis_type);
+        static double vector2DSizeToPixelSize(const double &vec_size, const vec2<uint32_t> &window_size, const dengCoordinateAxisType &axis_type);
         static float pixelSizeToVector2DSize(const double &pixel_size, const vec2<uint32_t> &window_size, const dengCoordinateAxisType &axis_type);
 
         std::unordered_map<char, int> hex_definitions;

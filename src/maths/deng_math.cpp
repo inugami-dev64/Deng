@@ -3,7 +3,8 @@
 namespace dengMath {
 
     // generic math methods
-    double Math::exp(double base, int exp) {
+    // Expand base by exp 
+    double exp(double base, int exp) {
         if(exp == 0) return 1.0;
         double local_current_value = base;
 
@@ -15,7 +16,20 @@ namespace dengMath {
         else return local_current_value;
     }
 
-    vec2<float> Math::getCartesianCoordsPoint(const vec2<float> &centre_position, const int16_t &angle, const float &distance, const dengBool &inverted_y_axis) {
+    // Expand base by exp
+    float exp(float base, int exp) {
+        if(exp == 0) return 1.0;
+        float local_current_value = base;
+
+        for(int i = 0; i < exp - 1; i++) {
+            local_current_value *= base;
+        }
+
+        if(exp < 0) return 1.0/local_current_value;
+        else return local_current_value;
+    }
+
+    vec2<float> getCartesianCoordsPoint(const vec2<float> &centre_position, const int16_t &angle, const float &distance, const dengBool &inverted_y_axis) {
         vec2<float> local_coords;
         local_coords.first = (sin(Conversion::degToRad(angle)) * distance) + centre_position.first;
         if(!inverted_y_axis) local_coords.second = (cos(Conversion::degToRad(angle)) * distance) + centre_position.second;
@@ -24,16 +38,16 @@ namespace dengMath {
         return local_coords; 
     }
 
-    float Math::getFractionNumerator(const float &value_numerator, const float &value_denominator, const float &equivalent_denominator) {
+    float getFractionNumerator(const float &value_numerator, const float &value_denominator, const float &equivalent_denominator) {
         return (value_numerator * equivalent_denominator) / value_denominator;
     }
 
-    float Math::getVectorLengthFromBounds(vec2<vec2<float>> vector_bounds) {
+    float getVectorLengthFromBounds(vec2<vec2<float>> vector_bounds) {
         vec2<float> local_vector_coordinates = vector_bounds.second - vector_bounds.first;
         return static_cast<float>(sqrt(pow(local_vector_coordinates.first, 2) + pow(local_vector_coordinates.second, 2)));
     }
 
-    float Math::getTriangleAnglesFromEdges(const vec3<float> &triangle_edges, const dengTriangleAngleType &triangle_angle_type) {
+    float getTriangleAnglesFromEdges(const vec3<float> &triangle_edges, const dengTriangleAngleType &triangle_angle_type) {
         switch (triangle_angle_type)
         {
         case DENG_TRIANGLE_ANGLE_ALPHA:
@@ -56,9 +70,9 @@ namespace dengMath {
         }
     }
 
-    float Math::getVector2DRotation(vec2<vec2<float>> vector_bounds) {
+    float getVector2DRotation(vec2<vec2<float>> vector_bounds) {
         vec2<float> local_vector_position = vector_bounds.second - vector_bounds.first;
-        float local_vector_length = Math::getVectorLengthFromBounds(vector_bounds);
+        float local_vector_length = getVectorLengthFromBounds(vector_bounds);
         
         // first - rotation calculated from sin, second - rotation calculated from cos
         vec2<float> local_rotations;
@@ -94,21 +108,21 @@ namespace dengMath {
     uint32_t Conversion::hexToDec(const std::string &hex_value) {
         uint32_t local_dec = 0;
         for(size_t i = 0, exp_i = hex_value.size() - 1; i < hex_value.size(); i++, exp_i--)
-            local_dec += (hex_definitions[hex_value[i]] * dengMath::Math::exp(16.0, exp_i));
+            local_dec += (hex_definitions[hex_value[i]] * dengMath::exp(16.0, exp_i));
 
         LOG("decimal of " + hex_value + " is " + std::to_string(local_dec));
         return local_dec;
     }
 
-    double Conversion::vector2DSizeToPixelSize(const float &vec_size, const vec2<uint32_t> &window_size, const dengCoordinateAxisType &axis_type) {
+    double Conversion::vector2DSizeToPixelSize(const double &vec_size, const vec2<uint32_t> &window_size, const dengCoordinateAxisType &axis_type) {
         switch (axis_type)
         {
         case DENG_COORD_AXIS_X:
-            return static_cast<double>(vec_size + 1) / (2.0 / static_cast<double>(window_size.first));
+            return static_cast<double>(vec_size) * static_cast<double>(window_size.first) / 2;
             break;
         
         case DENG_COORD_AXIS_Y: 
-            return static_cast<double>(vec_size + 1) / (2.0 / static_cast<double>(window_size.second));
+            return (static_cast<double>(vec_size) * static_cast<double>(window_size.second)) / 2;
             break;
 
         default:
@@ -192,7 +206,7 @@ namespace dengMath {
         switch (movement_type)
         {
         case DENG_COORD_AXIS_X: {
-            vec2<float> local_movement = Math::getCartesianCoordsPoint({0.0f, 0.0f}, (this->y_rot + 90), movement_speed.first, DENG_FALSE);
+            vec2<float> local_movement = getCartesianCoordsPoint({0.0f, 0.0f}, (this->y_rot + 90), movement_speed.first, DENG_FALSE);
 
             if(substract) this->m_camera_position.first -= local_movement.first, this->m_camera_position.third -= local_movement.second ;
             else this->m_camera_position.first += local_movement.first, this->m_camera_position.third += local_movement.second;
@@ -205,7 +219,7 @@ namespace dengMath {
             break;
 
         case DENG_COORD_AXIS_Z: {
-            vec2<float> local_movement = Math::getCartesianCoordsPoint({0.0f, 0.0f}, this->y_rot, movement_speed.third, DENG_FALSE);
+            vec2<float> local_movement = getCartesianCoordsPoint({0.0f, 0.0f}, this->y_rot, movement_speed.third, DENG_FALSE);
             
             if(substract) this->m_camera_position.first -= local_movement.first, this->m_camera_position.third -= local_movement.second;
             else this->m_camera_position.first += local_movement.first, this->m_camera_position.third += local_movement.second;

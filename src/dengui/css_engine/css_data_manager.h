@@ -25,7 +25,7 @@ namespace dengCSS {
         dengMath::vec3<float> border_bottom_color;
     };
 
-    struct CSSMargindata {
+    struct CSSMarginData {
         double margin_top, margin_right, margin_bottom, margin_left;
     };
 
@@ -62,7 +62,7 @@ namespace dengCSS {
         dengCSSFontWeight font_weight;
         
         double height, width;
-        CSSMargindata margin_data;
+        CSSMarginData margin_data;
 
         ~CSSGenericObjectData() {
             if(this->p_general_border_info != nullptr) delete this->p_general_border_info;
@@ -87,7 +87,7 @@ namespace dengCSS {
 
         dengBool populateDataHeader(const std::string &css_file_name, const std::string &css_class_name, CSSDataHeader *p_data_header);
         void populateBorderValueData(CSSDataHeader *p_data_header, CSSGeneralBorderInfo **pp_general_border_info, CSSSpecifiedBorderInfo **pp_specified_border_info, const dengMath::vec2<double> &block_size);
-        void populateMarginData(CSSDataHeader *p_data_header, CSSMargindata *p_margin_data, const dengMath::vec2<double> &block_size);
+        void populateMarginData(CSSDataHeader *p_data_header, CSSMarginData *p_margin_data, const dengMath::vec2<double> &block_size);
 
     public: 
         void readClassData(const std::string &class_name, const dengCSSClassReadMode &class_read_mode, const dengMath::vec2<double> &block_size);

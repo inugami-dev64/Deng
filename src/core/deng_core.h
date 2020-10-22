@@ -23,6 +23,9 @@
     const bool enable_validation_layers = false;
 #endif
 
+#define DISABLE_DENGUI 0
+
+
 enum dengPipelineDrawMode {
     DENG_PIPELINE_DRAW_MODE_LINEAR = 0,
     DENG_PIPELINE_DRAW_MODE_INDEXED = 1

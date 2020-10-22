@@ -54,6 +54,11 @@ namespace dengUI {
         DENGUI_WINDOW_ASSET_TYPE_TEXT_ENTRY_BOX = 3,
         DENGUI_WINDOW_ASSET_TYPE_TEXT_LABEL = 4
     };
+
+    enum dengUISizeUnit {
+        DENGUI_SIZE_UNIT_VECTOR_UNITS = 0,
+        DENGUI_SIZE_UNIT_PIXELS = 1
+    };
 }
 
 #include "../css_engine/css_engine_core.h"

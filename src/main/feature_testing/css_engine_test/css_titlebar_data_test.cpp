@@ -11,7 +11,7 @@ int main() {
     
     LOG("test");
     local_fm.getFolderContents("ui_styling", &local_files, DENG_FOLDER_CONTENTS_READ_MODE_RECURSIVE, DENG_FOLDER_CONTENTS_SORT_STYLE_DONT_CARE);
-    local_css_data_handler.readClassData("body", DENG_CSS_CLASS_READ_MODE_MAIN_CLASS);
+    local_css_data_handler.readClassData("body", DENG_CSS_CLASS_READ_MODE_MAIN_CLASS, {1600, 1200});
     local_css_data_handler.getBodyData(&p_local_objects_data);
 
     std::cout << "background-color: {" << p_local_objects_data->background_color.first << ";" << p_local_objects_data->background_color.second << ";" << p_local_objects_data->background_color.third << "}\n";

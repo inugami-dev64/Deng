@@ -151,7 +151,7 @@ namespace dengCSS {
         return local_is_class_found_in_file;
     }
 
-    void CSSDataHandler::populateMarginData(CSSDataHeader *p_data_header, CSSMargindata *p_margin_data, const dengMath::vec2<double> &block_size) {
+    void CSSDataHandler::populateMarginData(CSSDataHeader *p_data_header, CSSMarginData *p_margin_data, const dengMath::vec2<double> &block_size) {
         if(p_data_header->properties_data[DENG_CSS_PROPERTY_MARGIN] != "") {
             double local_margin_x = this->handleGeneralSize(p_data_header->properties_data[DENG_CSS_PROPERTY_MARGIN], DENG_COORD_AXIS_X, block_size);
             double local_margin_y = this->handleGeneralSize(p_data_header->properties_data[DENG_CSS_PROPERTY_MARGIN], DENG_COORD_AXIS_Y, block_size);

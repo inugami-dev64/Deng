@@ -68,7 +68,7 @@ namespace deng {
         }
 
         this->view_matrix.setTransformationMatrix();
-        this->view_matrix.setRotation(dengMath::Math::getFractionNumerator(this->m_mouse_pos.second, this->m_mouse_sens.second, -90.0f), dengMath::Math::getFractionNumerator(this->m_mouse_pos.first, this->m_mouse_sens.first, 360.0f));
+        this->view_matrix.setRotation(dengMath::getFractionNumerator(this->m_mouse_pos.second, this->m_mouse_sens.second, -90.0f), dengMath::getFractionNumerator(this->m_mouse_pos.first, this->m_mouse_sens.first, 360.0f));
 
         #if CAMERA_MOUSE_DEBUG
             LOG("Mouse x_pos: " + std::to_string(this->m_mouse_pos.first) + "/Mouse y_pos: " + std::to_string(this->m_mouse_pos.second));

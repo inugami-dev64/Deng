@@ -1,6 +1,12 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
+#if !DISABLE_DENGUI
+    #define DENG_PIPELINE_COUNT 3
+#else
+    #define DENG_PIPELINE_COUNT 2
+#endif
+
 namespace deng {
 
     class Renderer
@@ -19,7 +25,12 @@ namespace deng {
         // 2) grid pipeline
         // 3) reverse grid pipeline
         // 4) dengui pipeline
-        std::array<PipelineData, 4> m_pipelines;
+
+        #if !DISABLE_DENGUI
+            std::array<PipelineData, DENG_PIPELINE_COUNT> m_pipelines;
+        #else
+            std::array<PipelineData, DENG_PIPELINE_COUNT> m_pipelines;
+        #endif
 
         dengMath::vec2<std::pair<dengPipelineType, VkDescriptorPool>> m_descriptor_pool_sets;
         dengMath::vec2<std::pair<dengPipelineType, std::vector<VkDescriptorSet>>> m_descriptor_sets;

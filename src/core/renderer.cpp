@@ -32,7 +32,9 @@ namespace deng
         this->initDescriptorSetLayouts();
         this->initPipelineLayouts();
         this->initCommandPool();
-        this->initDengUI();
+        #if !DISABLE_DENGUI
+            this->initDengUI();
+        #endif
         this->initGraphicsPipelines();
         this->initDepthResources();
         this->initFrameBuffers();
@@ -48,7 +50,9 @@ namespace deng
     Renderer::~Renderer() {
         delete this->m_p_grid_manager;
         delete this->m_p_ev;
-        delete this->m_p_dengui_window;
+        #if !DISABLE_DENGUI
+            delete this->m_p_dengui_window;
+        #endif
         delete this->m_p_camera;
         delete this->m_p_device_swapchain_details;
 
@@ -613,7 +617,7 @@ namespace deng
         local_bufferinfo.p_buffer_copy_func = Renderer::copyBufferToBuffer;
         local_bufferinfo.p_commandpool = &this->m_commandpool;
         local_bufferinfo.p_graphics_queue = &this->m_queues.graphics_queue;
-        local_bufferinfo.p_indices_size = &this->m_pipelines[3].indices_size;
+        local_bufferinfo.p_indices_size = &this->m_pipelines[2].indices_size;
         local_bufferinfo.p_staging_buffer = &this->m_buffers.staging_buffer;
         local_bufferinfo.p_staging_buffer_memory = &this->m_buffers.staging_buffer_memory;
         local_bufferinfo.p_vertices_buffer = &this->m_buffers.window_buffer;
@@ -622,66 +626,60 @@ namespace deng
         local_bufferinfo.p_indices_buffer_memory = &this->m_buffers.window_index_buffer_memory;
 
         this->m_p_dengui_window = new dengUI::Window(local_window_info, local_bufferinfo);
-        LOG("seg test");
     }
 
     void Renderer::initGraphicsPipelines() {
         this->m_pipelines[0].pipeline_type = DENG_PIPELINE_TYPE_OBJECT_BASED;
         this->m_pipelines[1].pipeline_type = DENG_PIPELINE_TYPE_SPECIFIED;
-        this->m_pipelines[2].pipeline_type = DENG_PIPELINE_TYPE_SPECIFIED;
-        this->m_pipelines[3].pipeline_type = DENG_PIPELINE_TYPE_UI;
 
         this->m_pipelines[0].pipeline_draw_mode = DENG_PIPELINE_DRAW_MODE_LINEAR;
         this->m_pipelines[1].pipeline_draw_mode = DENG_PIPELINE_DRAW_MODE_LINEAR;
-        this->m_pipelines[2].pipeline_draw_mode = DENG_PIPELINE_DRAW_MODE_LINEAR;
-        this->m_pipelines[3].pipeline_draw_mode = DENG_PIPELINE_DRAW_MODE_INDEXED;
 
         this->m_pipelines[0].p_pipeline_layout = &this->m_pipeline_layouts.second.second;
         this->m_pipelines[1].p_pipeline_layout = &this->m_pipeline_layouts.first.second;
-        this->m_pipelines[2].p_pipeline_layout = &this->m_pipeline_layouts.first.second;
-        this->m_pipelines[3].p_pipeline_layout = &this->m_pipeline_layouts.first.second;
 
         this->m_pipelines[0].p_descriptor_sets = &this->m_descriptor_sets.second.second;
         this->m_pipelines[1].p_descriptor_sets = &this->m_descriptor_sets.first.second;
-        this->m_pipelines[2].p_descriptor_sets = &this->m_descriptor_sets.first.second;
-        this->m_pipelines[3].p_descriptor_sets = &this->m_descriptor_sets.first.second;
 
         this->m_pipelines[0].p_vertices_buffer = &this->m_buffers.vertex_buffer;
         this->m_pipelines[1].p_vertices_buffer = &this->m_buffers.grid_buffer;
-        this->m_pipelines[2].p_vertices_buffer = &this->m_buffers.grid_buffer;
-        this->m_pipelines[3].p_vertices_buffer = &this->m_buffers.window_buffer;
-        this->m_pipelines[3].p_indices_buffer = &this->m_buffers.window_index_buffer; 
 
         this->m_pipelines[0].vertices_size = static_cast<uint32_t>(this->m_sample_object.vertex_data.size());
         this->m_pipelines[1].vertices_size = static_cast<uint32_t>(this->m_grid.vertex_data.size());
-        this->m_pipelines[2].vertices_size = static_cast<uint32_t>(this->m_grid.vertex_data.size());
-        
-        LOG("third pipeline indices size: " + std::to_string(this->m_pipelines[3].indices_size));
 
         PipelineCreator local_main_pipeline_creator(&this->m_pipelines[0], &this->m_device, &this->m_fm, &this->m_extent, &this->m_renderpass);
         PipelineCreator local_grid_pipeline_creator(&this->m_pipelines[1], &this->m_device, &this->m_fm, &this->m_extent, &this->m_renderpass);
-        PipelineCreator local_reverse_grid_pipeline_creator(&this->m_pipelines[2], &this->m_device, &this->m_fm, &this->m_extent, &this->m_renderpass);
-        PipelineCreator local_ui_pipeline_creator(&this->m_pipelines[3], &this->m_device, &this->m_fm, &this->m_extent, &this->m_renderpass);
 
         VkGraphicsPipelineCreateInfo local_main_pipeline_createinfo = local_main_pipeline_creator.getGraphicsPipelineInfo("shaders/bin/deng/object_vert.spv", "shaders/bin/deng/object_frag.spv", "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, 0);
-        VkGraphicsPipelineCreateInfo local_grid_pipeline_createinfo = local_grid_pipeline_creator.getGraphicsPipelineInfo("shaders/bin/deng/specified_vert.spv", "shaders/bin/deng/specified_frag.spv", "main", VK_POLYGON_MODE_LINE, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, 0);
-        VkGraphicsPipelineCreateInfo local_reverse_grid_pipeline_createinfo = local_reverse_grid_pipeline_creator.getGraphicsPipelineInfo("shaders/bin/deng/specified_vert.spv", "shaders/bin/deng/specified_frag.spv", "main", VK_POLYGON_MODE_LINE, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, 0);
-        VkGraphicsPipelineCreateInfo local_ui_pipeline_createinfo = local_ui_pipeline_creator.getGraphicsPipelineInfo("shaders/bin/dengui/ui_vert.spv", "shaders/bin/dengui/ui_frag.spv", "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, 0);
-
-        std::array<VkGraphicsPipelineCreateInfo, 4> local_pipeline_createinfos = {local_main_pipeline_createinfo, local_grid_pipeline_createinfo, local_reverse_grid_pipeline_createinfo, local_ui_pipeline_createinfo};
+        VkGraphicsPipelineCreateInfo local_grid_pipeline_createinfo = local_grid_pipeline_creator.getGraphicsPipelineInfo("shaders/bin/deng/specified_vert.spv", "shaders/bin/deng/specified_frag.spv", "main", VK_POLYGON_MODE_LINE, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, 0);
 
         LOG("Pipeline createinfos created!");
 
-        std::array<VkPipeline, 4> local_pipelines;
+        std::array<VkGraphicsPipelineCreateInfo, DENG_PIPELINE_COUNT> local_pipeline_createinfos;
+        std::array<VkPipeline, DENG_PIPELINE_COUNT> local_pipelines;
+
+        #if !DISABLE_DENGUI
+            this->m_pipelines[2].pipeline_type = DENG_PIPELINE_TYPE_UI;
+            this->m_pipelines[2].pipeline_draw_mode = DENG_PIPELINE_DRAW_MODE_INDEXED;
+            this->m_pipelines[2].p_pipeline_layout = &this->m_pipeline_layouts.first.second;
+            this->m_pipelines[2].p_descriptor_sets = &this->m_descriptor_sets.first.second;
+            this->m_pipelines[2].p_vertices_buffer = &this->m_buffers.window_buffer;
+            this->m_pipelines[2].p_indices_buffer = &this->m_buffers.window_index_buffer; 
+            PipelineCreator local_ui_pipeline_creator(&this->m_pipelines[2], &this->m_device, &this->m_fm, &this->m_extent, &this->m_renderpass);
+            VkGraphicsPipelineCreateInfo local_ui_pipeline_createinfo = local_ui_pipeline_creator.getGraphicsPipelineInfo("shaders/bin/dengui/ui_vert.spv", "shaders/bin/dengui/ui_frag.spv", "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, DENG_TRUE, DENG_FALSE, 0);
+            local_pipeline_createinfos = {local_main_pipeline_createinfo, local_grid_pipeline_createinfo, local_ui_pipeline_createinfo};
+        #else
+            local_pipeline_createinfos = {local_main_pipeline_createinfo, local_grid_pipeline_createinfo};
+        #endif
+
         if(vkCreateGraphicsPipelines(this->m_device, VK_NULL_HANDLE, static_cast<uint32_t>(local_pipeline_createinfos.size()), local_pipeline_createinfos.data(), nullptr, local_pipelines.data()) != VK_SUCCESS) {
             ERR("Failed to create graphics pipelines!");
         }
 
         else {
-            this->m_pipelines[0].pipeline = local_pipelines[0];
-            this->m_pipelines[1].pipeline = local_pipelines[1];
-            this->m_pipelines[2].pipeline = local_pipelines[2];
-            this->m_pipelines[3].pipeline = local_pipelines[3];
+            size_t index;
+            for(index = 0; index < local_pipelines.size(); index++)
+                this->m_pipelines[index].pipeline = local_pipelines[index];
 
             LOG("Graphics pipelines created successfully!");
         }
@@ -799,26 +797,13 @@ namespace deng
             vkFreeMemory(this->m_device, this->m_buffers.staging_buffer_memory, nullptr);
         }
 
-        // local_size = sizeof(obj.vertexIndicesData.posIndices[0]) * obj.vertexIndicesData.posIndices.size();
-
-        // this->makeBuffer(&local_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, obj, DENG_BUFFER_TYPE_STAGING, nullptr);
-        // this->populateBufferMem(&local_size, obj.vertexIndicesData.posIndices.data(), obj.buffers.staging_buffer, obj.buffers.staging_bufferMem);
-        
-        // this->makeBuffer(&local_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, obj, DENG_BUFFER_TYPE_INDICES, nullptr);
-        // this->copyBufferToBuffer(obj.buffers.staging_buffer, obj.buffers.index_buffer, local_size);
-
-        // vkDestroyBuffer(this->m_device, obj.buffers.staging_buffer, nullptr);
-        // vkFreeMemory(this->m_device, obj.buffers.staging_bufferMem, nullptr);
-
         local_size = sizeof(dengMath::UniformBufferData);
 
         this->m_buffers.uniform_buffers.resize(this->m_swapchain_images.size());
         this->m_buffers.uniform_buffers_memory.resize(this->m_swapchain_images.size());
 
-        for(size_t i = 0; i < this->m_swapchain_images.size(); i++) {
+        for(size_t i = 0; i < this->m_swapchain_images.size(); i++) 
             this->makeBuffer(&this->m_device, &this->m_gpu, &local_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &this->m_buffers.uniform_buffers[i], &this->m_buffers.uniform_buffers_memory[i], &i);
-        }
-
     }
 
     void Renderer::initDescriptorPool() {
@@ -1012,7 +997,7 @@ namespace deng
                 VkDeviceSize local_offsets[] = {0};
 
                 for(size_t ii = 0; ii < this->m_pipelines.size(); ii++) {
-                    if(!((ii == 1 || ii == 2) && this->m_environment_conf.show_grid == DENG_FALSE)) {
+                    if(!(ii == 1 && this->m_environment_conf.show_grid == DENG_FALSE)) {
                         vkCmdBindPipeline(this->m_commandbuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipelines[ii].pipeline);
                         vkCmdBindVertexBuffers(this->m_commandbuffers[i], 0, 1, this->m_pipelines[ii].p_vertices_buffer, local_offsets);
 

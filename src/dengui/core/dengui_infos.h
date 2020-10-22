@@ -2,7 +2,13 @@
 #define DENGUI_INFOS_H
 
 namespace dengUI {
-    
+
+    struct TriangleAndRectangleVerticesRelativityInfo {
+        dengCoordinateAxisType rectangle_axis_type;
+        float rectangle_vertex_distance;
+        size_t rectangle_vertex_index;
+    };
+
     struct BaseWindowVertices {
         std::vector<dengUtils::UIVerticesData> window_main_vertices;
         std::vector<uint16_t> window_main_indices;
@@ -27,6 +33,7 @@ namespace dengUI {
     struct RectangleInfo {
         std::vector<dengUtils::UIVerticesData> *p_vertices;
         std::vector<uint16_t> *p_indices;
+        dengCSS::CSSMarginData margin_data;
 
         dengMath::vec2<float> rectangle_size;
         dengMath::vec3<float> rectangle_color;
@@ -36,10 +43,10 @@ namespace dengUI {
         std::vector<dengUtils::UIVerticesData> *p_vertices;
         std::vector<uint16_t> *p_indices;
         dengMath::vec3<float> triangle_color;
+        dengCSS::CSSMarginData margin_data;
 
         dengMath::vec2<float> surround_rectangle_size;
-        dengMath::vec3<uint16_t> point_collision_with_edge_indices;
-        dengMath::vec3<float> triangle_point_edge_rel_coords;
+        dengMath::vec3<TriangleAndRectangleVerticesRelativityInfo> vertices_relativity_infos;
     };
 
     struct BufferInfo {
