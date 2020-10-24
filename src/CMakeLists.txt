@@ -1,17 +1,6 @@
 set(CMAKE_CXX_FLAGS "-Wall -std=c++11")
 include_directories(headers)
-include_directories(../dependencies/src)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/deng)
-
-if(UNIX)
-    link_directories(../dependencies/lib/unix)
-elseif(WIN32)
-    link_directories(../dependencies/lib/windows)
-endif()
-
-if(CMAKE_BUILD_TYPE MATCHES DEBUG)
-    link_directories(../dependencies/lib/debug)
-endif()
 
 add_executable(${PROJECT_NAME} 
     core/camera.cpp
@@ -85,9 +74,6 @@ if(UNIX)
         )
 
         message("Debug mode detected!")
-
-        file(APPEND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/run_debug.sh "#!/bin/bash\n")
-        file(APPEND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/run_debug.sh "VK_LAYER_PATH=../../dependencies/explicit_layer.d ./deng")
     endif()
 
 elseif(WIN32)

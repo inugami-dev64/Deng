@@ -1357,11 +1357,11 @@ namespace deng
     }
 
     bool Renderer::checkValidationLayerSupport() {
-        uint32_t layerCount;
-        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+        uint32_t local_layer_count;
+        vkEnumerateInstanceLayerProperties(&local_layer_count, nullptr);
 
-        std::vector<VkLayerProperties> local_available_layers(layerCount);
-        vkEnumerateInstanceLayerProperties(&layerCount, local_available_layers.data());
+        std::vector<VkLayerProperties> local_available_layers(local_layer_count);
+        vkEnumerateInstanceLayerProperties(&local_layer_count, local_available_layers.data());
         bool isLayer = false;
 
         for(const VkLayerProperties &properties : local_available_layers) {
