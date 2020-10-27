@@ -35,7 +35,8 @@ namespace deng {
         return this->m_input_mode;
     }
 
-    void Window::setInputMode(const dengInputMode &new_input_mode) {
+    void Window::setInputMode(const dengInputMode &new_input_mode) {    
+        XGrabPointer();    
         switch (new_input_mode)
         {
         case DENG_INPUT_MOVEMENT:

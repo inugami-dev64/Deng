@@ -1,5 +1,5 @@
 CC = gcc
-LDFLAGS = -lX11
+LDFLAGS = -lX11 -lXcursor
 OBJ = main.o x11_surface.o key_translation.o
 TARGET = window
 

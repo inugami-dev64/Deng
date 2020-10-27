@@ -121,19 +121,19 @@ enum DENGKey {
     DENG_KEY_MENU           =   348
 };
 
-enum DENGKeyMode {
-    DENG_KEY_MODE_PRESS = 0,
-    DENG_KEY_MODE_HOLD = 1,
-    DENG_KEY_MODE_RELEASE = 2
+enum DENGMouseButton {
+    DENG_MOUSE_BTN_UNKNOWN = -1,
+    DENG_MOUSE_BTN_1 = 0,
+    DENG_MOUSE_BTN_2 = 1,
+    DENG_MOUSE_BTN_3 = 2,
+    DENG_MOUSE_SCROLL_DOWN = 3,
+    DENG_MOUSE_SCROLL_UP = 4
 };
 
-enum DENGKeyType {
-    DENG_KEY_TYPE_GENERIC = 0,
-    DENG_KEY_TYPE_FUNCTION = 1
-};
 
 #ifdef __linux__
-    enum DENGKey translateX11KeySym(KeySym keysym);
+    enum DENGKey translateX11Key(KeySym keysym);
+    enum DENGMouseButton translateX11Btn(unsigned int button);
 #endif
 
 #ifdef WIN32

@@ -2,7 +2,7 @@
 
 #ifdef __linux__
 
-enum DENGKey translateX11KeySym(KeySym keysym) {
+enum DENGKey translateX11Key(KeySym keysym) {
     switch (keysym)
     {   
         // Generic keys
@@ -124,6 +124,19 @@ enum DENGKey translateX11KeySym(KeySym keysym) {
         case XK_Menu:               return DENG_KEY_MENU;
 
         default: return DENG_KEY_UNKNOWN;
+    }
+}
+
+enum DENGMouseButton translateX11Btn(unsigned int button) {
+    switch (button)
+    {
+        case Button1: return DENG_MOUSE_BTN_1;
+        case Button2: return DENG_MOUSE_BTN_2;
+        case Button3: return DENG_MOUSE_BTN_3;
+        case Button4: return DENG_MOUSE_SCROLL_UP;
+        case Button5: return DENG_MOUSE_SCROLL_DOWN;
+        
+        default: return DENG_MOUSE_BTN_UNKNOWN;
     }
 }
 
