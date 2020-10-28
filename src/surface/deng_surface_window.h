@@ -2,63 +2,81 @@
 
 #define MOUSE_BUTTON 0
 #define KB_KEY 1
-#define REFRESH_INTERVAL 100 // microseconds
+#define REFRESH_INTERVAL 10 // microseconds
+#define MAX_MOUSE_PTR_DISTANCE_FROM_BORDER 100 
 
-struct WindowConstructionInfo {
-    int size_x;
-    int size_y;
-    unsigned int position_x;
-    unsigned int position_y;
-};
 
-struct ActiveKeys {
+typedef enum WindowMode {
+    DENG_WINDOW_MODE_FIXED = 0,
+    DENG_WINDOW_MODE_RESIZEABLE = 1,
+    DENG_WINDOW_MODE_FULL_SCREEN = 2
+} WindowMode;
+
+typedef struct VirtualMousePosition {
+    int is_enabled;
+    int x;
+    int y;
+    int orig_x;
+    int orig_y;
+    int movement_x;
+    int movement_y;
+    int is_setback;
+} VirtualMousePosition;
+
+typedef struct ActiveKeys {
     size_t key_count;
     enum DENGKey *p_keys;
 
     size_t btn_count;
     enum DENGMouseButton *p_btn;
-};
-
-struct WindowInfo {
-    int x;
-    int y;
-
-};
+} ActiveKeys;
 
 #ifdef __linux__
     #define EVENT_MASKS KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | LeaveWindowMask | FocusChangeMask | PointerMotionMask
-    struct X11Handler {
+    
+    #define DENG_CURSOR_HIDDEN "cursor/x11-cursors/invisible"
+    #define DENG_CURSOR_MARK_SELECT "cursor/x11-cursors/mark_select"
+    
+    typedef struct X11Handler {
         Display *p_display;
+        Cursor default_cursor;
         int screen;
         Window window;
         XEvent event;
         GC gc;
-    };
+    } X11Handler;
 #endif
 
 #ifdef WIN32
     // win32 includes
 #endif
 
-// method declaration
+typedef struct DENGWindow {
+    int width;
+    int height;
+    int border_width;
+    const char *window_title;
+    WindowMode window_mode;
+    ActiveKeys active_keys;
 
-// key vector methods
-static void add_key(enum DENGKey *p_key, enum DENGMouseButton *p_btn, int type);
-static void remove_key(size_t index, int type);
-static size_t get_key_index(enum DENGKey key, enum DENGMouseButton, int type);
-static void clean_keys(int type);
+    VirtualMousePosition virtual_mouse_position;
 
-static void handle_key_events();
-static void handle_mouse_events();
+    #ifdef __linux__
+        X11Handler x11_handler;
+    #endif
+    
+} DENGWindow;
 
-int is_key_active(enum DENGKey key);
-int is_mouse_btn_active(enum DENGMouseButton btn);
+// method declarations
+int is_key_active(DENGWindow *p_window, DENGKey key);
+int is_mouse_btn_active(DENGWindow *p_window, DENGMouseButton btn);
 
-void set_mouse_pos(int x, int y);
-void get_mouse_pos(int *p_x, int *p_y);
+void set_mouse_input_mode(DENGWindow *p_window, int mouse_mode);
+void get_mouse_pos(DENGWindow *p_window, int *p_x, int *p_y);
+void set_cursor(DENGWindow *p_window, const char *cursor_path);
 
-void init_window(const char *p_window_title, int size_x, int size_y);
-void update_window();
-void destroy_window();
+DENGWindow *init_window(int width, int height, int border_width, const char *title, WindowMode window_mode);
+void update_window(DENGWindow *p_window);
+void destroy_window(DENGWindow *p_window);
 
 #endif

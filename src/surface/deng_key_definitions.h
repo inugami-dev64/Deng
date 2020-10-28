@@ -1,6 +1,11 @@
 #ifndef DENG_KEY_DEFINITIONS_H
 
-enum DENGKey {
+#define DENG_HIDE_CURSOR 0x0001
+#define DENG_SHOW_CURSOR 0x0002
+#define DENG_ENABLE_MOUSE_VIRTUALISATION 0x0004
+#define DENG_DISABLE_MOUSE_VIRTUALISATION 0x0008
+
+typedef enum DENGKey {
     // Generic keys
     DENG_KEY_UNKNOWN        =   -1,
     DENG_KEY_SPACE          =   32,
@@ -119,16 +124,16 @@ enum DENGKey {
     DENG_KEY_RIGHT_ALT      =   346,
     DENG_KEY_RIGHT_SUPER    =   347,
     DENG_KEY_MENU           =   348
-};
+} DENGKey;
 
-enum DENGMouseButton {
+typedef enum DENGMouseButton {
     DENG_MOUSE_BTN_UNKNOWN = -1,
     DENG_MOUSE_BTN_1 = 0,
     DENG_MOUSE_BTN_2 = 1,
     DENG_MOUSE_BTN_3 = 2,
     DENG_MOUSE_SCROLL_DOWN = 3,
     DENG_MOUSE_SCROLL_UP = 4
-};
+} DENGMouseButton;
 
 
 #ifdef __linux__
