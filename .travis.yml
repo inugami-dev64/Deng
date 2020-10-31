@@ -4,7 +4,8 @@ os:
 before_install:
   - sudo apt-get update
   - sudo apt-get -y install make cmake xorg-dev libc6-dev libvulkan1 libvulkan-dev vulkan-utils libxcursor1 libx11-dev
-
+  - git clone https://github.com/KhronosGroup/Vulkan-Headers
+  - sudo cp -r Vulkan-Headers/include/vulkan /usr/includes
 addons:
   apt:
     update: true
