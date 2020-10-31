@@ -9,17 +9,14 @@ namespace deng
         this->loadDataFromConf(DENG_TRUE, DENG_TRUE, DENG_TRUE);
         this->m_p_window = &win;
 
+
         this->m_p_grid_manager = new dengUtils::GridManager(&this->m_grid, this->m_far_plane + 5, &this->m_environment_conf.grid_height, &this->m_environment_conf.grid_width, &this->m_environment_conf.grid_line_color_r, &this->m_environment_conf.grid_line_color_g, &this->m_environment_conf.grid_line_color_b);
+        LOG("seg test!");
         this->m_p_camera = new Camera({this->m_camera_conf.movement_x, this->m_camera_conf.movement_y, this->m_camera_conf.movement_z}, {this->m_camera_conf.mouse_movement_x, this->m_camera_conf.mouse_movement_y}, this->m_camera_conf.fov, this->m_near_plane, this->m_far_plane, this->m_p_window);
         this->m_p_ev = new dengMath::Events(this->m_p_window, this->m_p_camera);
 
         this->initObjects(this->m_sample_object, "objects/obj1.obj", "textures/obj1.tga", DENG_COORDINATE_MODE_DEFAULT);
         this->initGrid();
-
-        #if GENERIC_DEBUG
-            this->m_p_ev->setGrid(&this->m_grid);
-        #endif
-
         this->initInstance();
         this->initDebugMessenger();
         this->initWindowSurface();
@@ -165,7 +162,6 @@ namespace deng
 
     void Renderer::initGrid() {
         this->m_p_grid_manager->generateVertices(this->m_p_camera->view_matrix.getPosition());
-        LOG("seg test!");
     }
 
     void Renderer::initInstance() {
@@ -184,15 +180,18 @@ namespace deng
         local_instance_createInfo.pApplicationInfo = &local_appInfo;
 
         //get count of required GLFW extensions
-        std::vector<const char*> local_extensions = this->getRequiredExtensions();
-        local_instance_createInfo.enabledExtensionCount = local_extensions.size();
-        local_instance_createInfo.ppEnabledExtensionNames = local_extensions.data();
-        
+        uint32_t local_extension_count;
+        const char **local_extensions = get_required_surface_extensions(this->m_p_window->getWindow(), &local_extension_count, static_cast<int>(enable_validation_layers));
+        local_instance_createInfo.enabledExtensionCount = local_extension_count;
+        local_instance_createInfo.ppEnabledExtensionNames = local_extensions;
+
+        LOG("Required extensions count is: " + std::to_string(local_instance_createInfo.enabledExtensionCount));
+
         VkDebugUtilsMessengerCreateInfoEXT local_debug_createInfo{};
+
         if(enable_validation_layers && !this->checkValidationLayerSupport()) {
             ERR("No validation layers available!");
         }
-
         else if(enable_validation_layers && this->checkValidationLayerSupport()) {
             local_instance_createInfo.enabledLayerCount = 1;
             local_instance_createInfo.ppEnabledLayerNames = &this->m_p_validation_layer;
@@ -209,13 +208,13 @@ namespace deng
             local_instance_createInfo.enabledLayerCount = 0;
             local_instance_createInfo.pNext = nullptr;
         }
-        LOG("seg test!");
+
         if(vkCreateInstance(&local_instance_createInfo, nullptr, &this->m_instance) != VK_SUCCESS) {
             ERR("Failed to create an instance!");
         }
 
         else LOG("Successfully created an instance");
-        LOG("seg test 2!");
+        LOG("seg test!");
     }
 
     void Renderer::initDebugMessenger() {
@@ -238,8 +237,9 @@ namespace deng
     }
 
     void Renderer::initWindowSurface() {
+        
         LOG("Initialising window surface!");
-        if(glfwCreateWindowSurface(this->m_instance, this->m_p_window->getWindow(), nullptr, &this->m_surface) != VK_SUCCESS) {
+        if(init_surface(this->m_p_window->getWindow(), &this->m_instance, &this->m_surface) != VK_SUCCESS) {
             ERR("Failed to create window surface!");
         }
         else {
@@ -1332,18 +1332,6 @@ namespace deng
         return VK_FALSE;
     }
 
-    std::vector<const char*> Renderer::getRequiredExtensions() {
-        uint32_t glfwExtensionCount = 0;
-        const char **glfwExtensions;
-        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-        std::vector<const char*> local_extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-        if(enable_validation_layers) local_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-        LOG("GLFW extension count: " + std::to_string(glfwExtensionCount));
-
-        return local_extensions;
-    }
-
     VkResult Renderer::makeDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT *p_createinfo) {
         auto fun = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(this->m_instance, "vkCreateDebugUtilsMessengerEXT");
         if(fun == nullptr) {
@@ -1487,13 +1475,13 @@ namespace deng
 
     void Renderer::run() {
         this->m_p_window->setInputMode(DENG_INPUT_MOVEMENT);
-        while(!glfwWindowShouldClose(this->m_p_window->getWindow())) {
-            glfwPollEvents();
+        while(1) {
+            update_window(this->m_p_window->getWindow());
             this->m_p_ev->update();
             this->m_p_dengui_window->update();
             this->makeFrame();
         }
         vkDeviceWaitIdle(this->m_device);
-        glfwTerminate();
+        destroy_window(this->m_p_window->getWindow());
     }
 } 

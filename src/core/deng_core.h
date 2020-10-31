@@ -3,12 +3,12 @@
 
 /*  BEFORE EVERY GIT COMMIT SET GENERIC_DEBUG VALUE TO 0!!!     */
 
-#define GENERIC_DEBUG 0
+#define GENERIC_DEBUG 1
 
 /*  please do not enable these at the same time, 
     otherwise you won't be able to debug anything */
 #define CAMERA_LOCATION_DEBUG 0
-#define CAMERA_MOUSE_DEBUG 0
+#define CAMERA_MOUSE_DEBUG 1
 
 #define ERR(x) throw std::runtime_error(x)
 #define ERRME(x) std::cout << "\033[1;31m" << x << "\033[0m\n" 
@@ -133,8 +133,6 @@ enum dengNumeralType {
 #endif
 
 #include <vulkan/vulkan.h>
-#include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
 #include <cmath>
 #include <chrono>
 #include <type_traits>
@@ -153,6 +151,7 @@ typedef void(*BufferMemoryPopulateFunc)(VkDevice *p_device, VkPhysicalDevice *p_
 typedef void(*BufferCopyFunc)(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkBuffer *p_dst_buffer, VkDeviceSize *p_size);
 
 // local dependencies
+#include "../surface/deng_surface_core.h"
 #include "../maths/deng_math.h"
 #include "../scripting/parsing.h"
 #include "../utilities/data_handler/typename_finder.h"

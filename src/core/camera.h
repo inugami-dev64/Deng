@@ -17,10 +17,11 @@ namespace deng {
     class Camera
     {
     private:
+        dengMath::vec2<float> m_zero_camera_rotation_mouse_pos;
         Window *m_p_window;
         dengMath::vec2<float> m_mouse_sens;
-        dengMath::vec2<double> m_mouse_pos; // only reason it is double because glfwGetCursorPos() double parametre
-        dengMath::vec4<float> m_movementSpeed;
+        dengMath::vec2<float> m_mouse_pos; 
+        dengMath::vec4<float> m_movement_speed;
         
         float m_draw_distance; // distance
         float m_FOV; // in degrees

@@ -1,6 +1,17 @@
 set(CMAKE_CXX_FLAGS "-Wall -std=c++11")
-include_directories(headers)
+
+# include_directories(headers)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/deng)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/deng/lib)
+
+set(LIB_SURFACE "surface")
+
+add_library(${LIB_SURFACE} SHARED 
+    surface/x11_surface.c 
+    surface/key_translation.c
+    surface/key_vector.c
+    surface/vulkan_handler.c
+)
 
 add_executable(${PROJECT_NAME} 
     core/camera.cpp
@@ -26,6 +37,7 @@ add_executable(${PROJECT_NAME}
 
     dengui/css_engine/css_data_manager.cpp
 )
+
 
 if(MANUAL_TEST MATCHES FM_FOLDER_CONTENTS_TEST)
     target_sources(${PROJECT_NAME}
@@ -60,12 +72,14 @@ else()
 endif()
 
 if(UNIX)
+
     target_link_libraries(${PROJECT_NAME}
-        PRIVATE glfw3
         PRIVATE vulkan
         PRIVATE pthread
         PRIVATE X11
+        PRIVATE Xcursor
         PRIVATE dl
+        PUBLIC ${LIB_SURFACE}
     )
 
     if(CMAKE_BUILD_TYPE MATCHES DEBUG)
@@ -81,6 +95,7 @@ elseif(WIN32)
         PRIVATE glfw3dll
         PRIVATE opengl32
         PRIVATE vulkan-1
+        PUBLIC ${PROTOBUF_LIBRARY}
     )
 
     if(CMAKE_BUILD_TYPE MATCHES Debug) 
@@ -107,4 +122,6 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         ${CMAKE_SOURCE_DIR}/config $<TARGET_FILE_DIR:${PROJECT_NAME}>/config
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/src/dengui/css $<TARGET_FILE_DIR:${PROJECT_NAME}>/ui_styling
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/src/surface/cursor $<TARGET_FILE_DIR:${PROJECT_NAME}>/cursor
 )

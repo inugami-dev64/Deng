@@ -1,7 +1,7 @@
 #ifndef EVENTS_H
 #define EVENTS_H
 
-#define DENG_INPUT_MODE_CHANGE_INTERVAL 200
+#define DENG_KEY_PRESS_INTERVAL 200 // milliseconds
 #define DENG_MOVEMENT_INTERVAL 1
 
 namespace dengMath {
@@ -11,6 +11,7 @@ namespace dengMath {
     private:
         dengUtils::Timer m_movement_timer;
         dengUtils::Timer m_input_mode_change_timer;
+        std::pair<dengBool, DENGKey> m_is_key_registered;
 
         deng::Camera *m_p_camera;
         deng::Window *m_p_window;
@@ -25,12 +26,7 @@ namespace dengMath {
     private:
         void getMovementType();
         void checkForInputModeChange();
-        dengBool isKeyPressed(const int &key, const dengBool &isRepeated, dengBool *isReleased);
-        void isMouseKeysPressed(dengBool *lmb_click, dengBool *mmb_click, dengBool *rmb_click);
-
-        #if GENERIC_DEBUG
-            void handleGridCoordinateLogging(const int32_t &log_key, const std::string &file_name);
-        #endif
+        dengBool clickHandler(DENGKey key);
         
 
     public:
@@ -38,10 +34,6 @@ namespace dengMath {
         dengMovementEvent getMovement();
         void handleExit();
         void update();
-
-        #if GENERIC_DEBUG
-            void setGrid(dengUtils::SpecifiedObject *grid);
-        #endif
     };
 }
 

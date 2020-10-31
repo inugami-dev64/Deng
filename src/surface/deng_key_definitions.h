@@ -1,9 +1,11 @@
 #ifndef DENG_KEY_DEFINITIONS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define DENG_HIDE_CURSOR 0x0001
 #define DENG_SHOW_CURSOR 0x0002
-#define DENG_ENABLE_MOUSE_VIRTUALISATION 0x0004
-#define DENG_DISABLE_MOUSE_VIRTUALISATION 0x0008
 
 typedef enum DENGKey {
     // Generic keys
@@ -143,6 +145,10 @@ typedef enum DENGMouseButton {
 
 #ifdef WIN32
     void translateWIN32KeyCodes();
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

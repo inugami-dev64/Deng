@@ -2,103 +2,30 @@
 
 namespace dengMath {
     Events::Events(deng::Window *p_win, deng::Camera *p_camera) {
+        this->m_is_key_registered.first = DENG_FALSE;
         this->m_p_camera = p_camera;
         this->m_p_window = p_win;
     }
 
-    // logging debug functions 
-    #if GENERIC_DEBUG
-        void Events::setGrid(dengUtils::SpecifiedObject *grid) {
-            this->m_grid = grid;
-        }
-
-        void Events::handleGridCoordinateLogging(const int32_t &log_key, const std::string &file_name) {
-            if(this->isKeyPressed(log_key, DENG_FALSE, nullptr)) {
-                dengUtils::FileManager fm;
-                fm.writeToFile(file_name, "#entry point", DENG_WRITEMODE_REWRITE);
-
-                for(dengUtils::SpecifiedVertexData &vertex_data : this->m_grid->vertex_data) {
-                    fm.writeToFile(file_name, "{" + std::to_string(vertex_data.position_vec.first) + ";" + std::to_string(vertex_data.position_vec.second) + ";" + std::to_string(vertex_data.position_vec.third) + "}", DENG_WRITEMODE_FROM_END);
-                }
-            }
-        }
-    #endif
-
-    dengBool Events::isKeyPressed(const int &key, const dengBool &isRepeated, dengBool *isReleased) {
-        switch (isRepeated)
-        {
-        case DENG_TRUE: {
-            if(glfwGetKey(this->m_p_window->getWindow(), key) == GLFW_PRESS || glfwGetKey(this->m_p_window->getWindow(), key) == GLFW_REPEAT) {
-                return DENG_TRUE;
-            }
-
-            else if(isReleased != nullptr && glfwGetKey(this->m_p_window->getWindow(), key) == GLFW_RELEASE) {
-                *isReleased = DENG_TRUE;
-                return DENG_FALSE;
-            }
-
-            else return DENG_FALSE;
-            break;
-        }
-
-        case DENG_FALSE: {
-            if(glfwGetKey(this->m_p_window->getWindow(), key) == GLFW_PRESS) {
-                return DENG_TRUE;
-            }
-
-            else if(isReleased != nullptr && glfwGetKey(this->m_p_window->getWindow(), key) == GLFW_RELEASE) {
-                *isReleased = DENG_TRUE;
-                return DENG_FALSE;
-            }
-
-            else return DENG_FALSE;
-            break;
-        }
-        
-        default:
-            return DENG_FALSE;
-            break;
-        }
-    }
-
-    void Events::isMouseKeysPressed(dengBool *lmb_click, dengBool *mmb_click, dengBool *rmb_click) {
-        if(glfwGetMouseButton(this->m_p_window->getWindow(), GLFW_MOUSE_BUTTON_1) == GLFW_PRESS || glfwGetMouseButton(this->m_p_window->getWindow(), GLFW_MOUSE_BUTTON_1) == GLFW_REPEAT) {
-            if(lmb_click != nullptr) *lmb_click = DENG_TRUE;
-        }
-
-        else if(lmb_click != nullptr) *lmb_click = DENG_FALSE;
-
-        if(glfwGetMouseButton(this->m_p_window->getWindow(), GLFW_MOUSE_BUTTON_2) == GLFW_PRESS || glfwGetMouseButton(this->m_p_window->getWindow(), GLFW_MOUSE_BUTTON_2) == GLFW_REPEAT) {
-            if(rmb_click != nullptr) *rmb_click = DENG_TRUE;
-        }
-
-        else if(rmb_click != nullptr) *rmb_click = DENG_FALSE;
-
-        if(glfwGetMouseButton(this->m_p_window->getWindow(), GLFW_MOUSE_BUTTON_3) == GLFW_PRESS || glfwGetMouseButton(this->m_p_window->getWindow(), GLFW_MOUSE_BUTTON_3) == GLFW_PRESS) {
-            if(mmb_click != nullptr) *mmb_click = DENG_TRUE;
-        }
-
-        else if(mmb_click != nullptr) *mmb_click = DENG_FALSE;
-    }
-
     void Events::getMovementType() {
-        if(this->isKeyPressed(GLFW_KEY_W, DENG_TRUE, nullptr)) {
+        if(is_key_active(this->m_p_window->getWindow(), DENG_KEY_W) && !is_key_active(this->m_p_window->getWindow(), DENG_KEY_S)) {
             this->m_movements.third = DENG_MOVEMENT_FORWARD;
         }
 
-        else if(this->isKeyPressed(GLFW_KEY_S, DENG_TRUE, nullptr)) {
+        else if(!is_key_active(this->m_p_window->getWindow(), DENG_KEY_W) && is_key_active(this->m_p_window->getWindow(), DENG_KEY_S)) {
             this->m_movements.third = DENG_MOVEMENT_BACKWARD;
         }
+
         else {
             this->m_movements.third = DENG_MOVEMENT_NONE;
         }
 
 
-        if(this->isKeyPressed(GLFW_KEY_A, DENG_TRUE, nullptr)) {
+        if(is_key_active(this->m_p_window->getWindow(), DENG_KEY_A) && !is_key_active(this->m_p_window->getWindow(), DENG_KEY_D)) {
             this->m_movements.first = DENG_MOVEMENT_LEFTWARD;
         }
 
-        else if(this->isKeyPressed(GLFW_KEY_D, DENG_TRUE, nullptr)) {
+        else if(!is_key_active(this->m_p_window->getWindow(), DENG_KEY_A) && is_key_active(this->m_p_window->getWindow(), DENG_KEY_D)) {
             this->m_movements.first = DENG_MOVEMENT_RIGHTWARD;
         }
         else {
@@ -106,11 +33,11 @@ namespace dengMath {
         }
 
 
-        if(this->isKeyPressed(GLFW_KEY_SPACE, DENG_TRUE, nullptr)) {
+        if(is_key_active(this->m_p_window->getWindow(), DENG_KEY_SPACE) && !is_key_active(this->m_p_window->getWindow(), DENG_KEY_LEFT_CTRL)) {
             this->m_movements.second = DENG_MOVEMENT_UPWARD;
         }
 
-        else if(this->isKeyPressed(GLFW_KEY_LEFT_CONTROL, DENG_TRUE, nullptr)) {
+        else if(!is_key_active(this->m_p_window->getWindow(), DENG_KEY_SPACE) && is_key_active(this->m_p_window->getWindow(), DENG_KEY_LEFT_CTRL)) {
             this->m_movements.second = DENG_MOVEMENT_DOWNWARD;
         }
 
@@ -125,7 +52,7 @@ namespace dengMath {
             this->m_p_camera->updateCursorPos();
             this->m_p_camera->setCameraViewRotation();
 
-            if(this->m_input_mode_change_timer.isTimePassed(DENG_INPUT_MODE_CHANGE_INTERVAL) && this->isKeyPressed(GLFW_KEY_ESCAPE, DENG_FALSE, nullptr)) {
+            if(this->m_input_mode_change_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && is_key_active(this->m_p_window->getWindow(), DENG_KEY_ESCAPE)) {
 
                 #if CAMERA_MOUSE_DEBUG
                     LOG("frozen_mouse_position x:" + std::to_string(this->m_frozen_mouse_position.first) + "/" + std::to_string(this->m_frozen_mouse_position.second));
@@ -142,7 +69,7 @@ namespace dengMath {
             this->m_movements.second = DENG_MOVEMENT_NONE;
             this->m_movements.third = DENG_MOVEMENT_NONE;
 
-            if(this->m_input_mode_change_timer.isTimePassed(DENG_INPUT_MODE_CHANGE_INTERVAL) && this->isKeyPressed(GLFW_KEY_ESCAPE, DENG_FALSE, nullptr)) {
+            if(this->m_input_mode_change_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && is_key_active(this->m_p_window->getWindow(), DENG_KEY_ESCAPE)) {
                 this->m_p_camera->setMousePosition(this->m_frozen_mouse_position);
                 this->m_p_window->setInputMode(DENG_INPUT_MOVEMENT);
                 this->m_input_mode_change_timer.setNewTimePoint();
@@ -152,10 +79,6 @@ namespace dengMath {
 
     void Events::update() {
         this->checkForInputModeChange();
-
-        #if GENERIC_DEBUG
-            this->handleGridCoordinateLogging(GLFW_KEY_F12, "grid_coord.log");
-        #endif
         
         if(this->m_movement_timer.isTimePassed(DENG_MOVEMENT_INTERVAL)) {
 

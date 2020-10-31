@@ -5,6 +5,7 @@
 
 namespace dengMath {
 
+    /* vector and matrix structures */
     template<typename T>
     struct vec4 {
         T first, second, third, fourth;
@@ -40,7 +41,7 @@ namespace dengMath {
         vec4<T> operator+(const vec4<T> &vector) {
             vec4<T> local_vec4;
             if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(uint8_t).name() || typeid(T).name() == typeid(uint16_t).name() || typeid(T).name() == typeid(uint32_t).name() || typeid(T).name() == typeid(uint64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
-                local_vec4 = {(first + vector.first), (second + vector.second), (third + vector.third), (fourth + vector.fourth)};
+                local_vec4 = {(this->first + vector.first), (this->second + vector.second), (this->third + vector.third), (this->fourth + vector.fourth)};
             }
 
             return local_vec4;
@@ -49,18 +50,18 @@ namespace dengMath {
         vec4<T> operator-(const vec4<T> &vector) {
             vec4<T> local_vec4;
             if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(uint8_t).name() || typeid(T).name() == typeid(uint16_t).name() || typeid(T).name() == typeid(uint32_t).name() || typeid(T).name() == typeid(uint64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
-                local_vec4 = {(first - vector.first), (second - vector.second), (third - vector.third), (fourth - vector.fourth)};
+                local_vec4 = {(this->first - vector.first), (this->second - vector.second), (this->third - vector.third), (this->fourth - vector.fourth)};
             }
 
             return local_vec4;
         }
 
         dengBool operator<(vec4<T> vector) {
-            return static_cast<dengBool>(first < vector.first && second < vector.second && third < vector.third && fourth < vector.fourth);
+            return static_cast<dengBool>(this->first < vector.first && this->second < vector.second && this->third < vector.third && this->fourth < vector.fourth);
         }
 
         dengBool operator>(vec4<T> vector) {
-            return static_cast<dengBool>(first > vector.first && second > vector.second && third > vector.third && fourth > vector.fourth);
+            return static_cast<dengBool>(this->first > vector.first && this->second > vector.second && this->third > vector.third && this->fourth > vector.fourth);
         }
     };
 

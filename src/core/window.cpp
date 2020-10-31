@@ -1,26 +1,20 @@
 #include "deng_core.h"
 
 namespace deng {
-    Window::Window(const uint32_t &x, const uint32_t &y, const char *title) {
+    Window::Window(const int &x, const int &y, const char *title) {
         this->m_size = {x, y};
         this->m_pixel_size = {2.0 / static_cast<double>(this->m_size.first), 2.0 / static_cast<double>(this->m_size.second)};
         LOG("Pixel size: " + std::to_string(this->m_pixel_size.first) + "/" + std::to_string(this->m_pixel_size.second));
 
-        glfwInit();
-
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
-        this->m_game_window = glfwCreateWindow(this->m_size.first, this->m_size.second, title, nullptr, nullptr);
+        this->m_p_game_window = init_window(1600, 1200, 5, "game", DENG_WINDOW_MODE_FIXED);
     }
 
     Window::~Window() {
-        glfwDestroyWindow(this->m_game_window);
-        glfwTerminate();
+        destroy_window(this->m_p_game_window);
     }
 
-    GLFWwindow *Window::getWindow() {
-        return this->m_game_window;
+    DENGWindow *Window::getWindow() {
+        return this->m_p_game_window;
     }
 
     const char *Window::getTitle() {
@@ -36,15 +30,14 @@ namespace deng {
     }
 
     void Window::setInputMode(const dengInputMode &new_input_mode) {    
-        XGrabPointer();    
         switch (new_input_mode)
         {
         case DENG_INPUT_MOVEMENT:
-            glfwSetInputMode(this->m_game_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            set_mouse_cursor_mode(this->m_p_game_window, DENG_HIDE_CURSOR);
             break;
 
         case DENG_INPUT_NONMOVEMENT:
-            glfwSetInputMode(this->m_game_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            set_mouse_cursor_mode(this->m_p_game_window, DENG_SHOW_CURSOR);
             break;
         
         default:
