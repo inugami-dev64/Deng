@@ -113,7 +113,7 @@ typedef enum DENGKey {
     DENG_KEY_NP_DECIMAL     =   330,
     DENG_KEY_NP_DIVIDE      =   331,
     DENG_KEY_NP_MULTIPLY    =   332,
-    DENG_KEY_NP_SUBSTRACT   =   333,
+    DENG_KEY_NP_SUBTRACT    =   333,
     DENG_KEY_NP_ADD         =   334,
     DENG_KEY_NP_ENTER       =   335,
     DENG_KEY_NP_EQUAL       =   336,
@@ -139,12 +139,13 @@ typedef enum DENGMouseButton {
 
 
 #ifdef __linux__
-    enum DENGKey translateX11Key(KeySym keysym);
-    enum DENGMouseButton translateX11Btn(unsigned int button);
+    DENGKey translateX11Key(KeySym keysym);
+    DENGMouseButton translateX11Btn(unsigned int button);
 #endif
 
 #ifdef WIN32
-    void translateWIN32KeyCodes();
+    DENGKey translateWIN32Key(uint16_t key_code);
+    DENGMouseButton translateWIN32Btn(UINT msg);
 #endif
 
 #ifdef __cplusplus

@@ -18,22 +18,9 @@ extern "C" {
 #define X11_WINDOW 0x01
 #define WIN32_WINDOW 0x02 
 
-
-typedef enum WindowMode {
-    DENG_WINDOW_MODE_FIXED = 0,
-    DENG_WINDOW_MODE_RESIZEABLE = 1,
-    DENG_WINDOW_MODE_FULL_SCREEN = 2
-} WindowMode;
-
-typedef struct VirtualMousePosition {
-    int is_enabled;
-    float x;
-    float y;
-    float orig_x;
-    float orig_y;
-    float movement_x;
-    float movement_y;
-} VirtualMousePosition;
+#define bool_t int
+#define true 1
+#define false 0
 
 typedef struct ActiveKeys {
     size_t key_count;
@@ -51,12 +38,28 @@ typedef struct ReleasedKeys {
     DENGMouseButton *p_btn;
 } ReleasedKeys;
 
+typedef enum WindowMode {
+    DENG_WINDOW_MODE_FIXED = 0,
+    DENG_WINDOW_MODE_FULL_SCREEN = 1
+} WindowMode;
+
+typedef struct VirtualMousePosition {
+    bool_t is_enabled;
+    float x;
+    float y;
+    float orig_x;
+    float orig_y;
+    float movement_x;
+    float movement_y;
+} VirtualMousePosition;
+
 #ifdef __linux__
     #define EVENT_MASKS KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | LeaveWindowMask | FocusChangeMask | PointerMotionMask
     
     #define DENG_CURSOR_HIDDEN "cursor/x11-cursors/invisible"
     #define DENG_CURSOR_DEFAULT "default"
-    
+    #define DEFAULT_WINDOW_BORDER 5
+
     typedef struct X11Handler {
         Display *p_display;
         Cursor default_cursor;
@@ -68,13 +71,21 @@ typedef struct ReleasedKeys {
 #endif
 
 #ifdef WIN32
-    // win32 includes
+    typedef struct WIN32Handler {
+        WNDCLASS *p_window;
+        HWND *p_hwnd;
+        MSG *p_message;
+        RAWINPUTDEVICE rids[2];
+        LONG mouse_x_pos;
+        LONG mouse_y_pos;
+    } WIN32Handler;
+
+    #define DENG_WIN32_CLASS_NAME L"DENG_WINDOW"
 #endif
 
 typedef struct DENGWindow {
     int width;
     int height;
-    int border_width;
     const char *window_title;
     WindowMode window_mode;
     ActiveKeys active_keys;
@@ -83,25 +94,26 @@ typedef struct DENGWindow {
     int mode;
     VirtualMousePosition virtual_mouse_position;
 
-    #ifdef __linux__ 
+    #ifdef __linux__
         X11Handler x11_handler;
+    #endif
+
+    #ifdef _WIN32
+        WIN32Handler win32_handler;
     #endif
     
 } DENGWindow;
 
 // method declarations
-int is_key_active(DENGWindow *p_window, DENGKey key);
-int is_mouse_btn_active(DENGWindow *p_window, DENGMouseButton btn);
-int is_key_released(DENGWindow *p_window, DENGKey key);
-int is_mouse_btn_released(DENGWindow *p_window, DENGMouseButton btn);
-
 void set_mouse_cursor_mode(DENGWindow *p_window, int mouse_mode);
 void set_mouse_coords(DENGWindow *p_window, int x, int y);
-void get_mouse_pos(DENGWindow *p_window, float *p_x, float *p_y, int init_virtual_cursor);
+void get_mouse_pos(DENGWindow *p_window, float *p_x, float *p_y, bool_t init_virtual_cursor);
 
-DENGWindow *init_window(int width, int height, int border_width, const char *title, WindowMode window_mode);
+DENGWindow *init_window(int width, int height, char *title, WindowMode window_mode);
+
 void update_window(DENGWindow *p_window);
 void destroy_window(DENGWindow *p_window);
+bool_t is_running(DENGWindow *p_window);
 
 #ifdef __cplusplus
 }

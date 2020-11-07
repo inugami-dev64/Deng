@@ -10,12 +10,12 @@ static DENGKey recent_release_key;
 static DENGMouseButton recent_press_btn;
 static DENGMouseButton recent_release_btn;
 
-DENGWindow *init_window(int width, int height, int border_width, const char *title, WindowMode window_mode) {
+DENGWindow *init_window(int width, int height, char *title, WindowMode window_mode) {
     DENGWindow *p_window = malloc(sizeof(DENGWindow));
     
     p_window->width = width;
     p_window->height = height;
-    p_window->border_width = border_width;
+    p_window->window_title = title;
     p_window->virtual_mouse_position.is_enabled = 0;
     p_window->virtual_mouse_position.movement_x = 0;
     p_window->virtual_mouse_position.movement_y = 0;
@@ -33,7 +33,9 @@ DENGWindow *init_window(int width, int height, int border_width, const char *tit
         local_size_hints.min_height = local_size_hints.max_height = p_window->height;   
     }
 
-    p_window->x11_handler.window = XCreateSimpleWindow(p_window->x11_handler.p_display, DefaultRootWindow(p_window->x11_handler.p_display), 0, 0, width, height, border_width, WhitePixel(p_window->x11_handler.p_display, p_window->x11_handler.screen), BlackPixel(p_window->x11_handler.p_display, p_window->x11_handler.screen));
+    
+
+    p_window->x11_handler.window = XCreateSimpleWindow(p_window->x11_handler.p_display, DefaultRootWindow(p_window->x11_handler.p_display), 0, 0, width, height, DEFAULT_WINDOW_BORDER, WhitePixel(p_window->x11_handler.p_display, p_window->x11_handler.screen), BlackPixel(p_window->x11_handler.p_display, p_window->x11_handler.screen));
 
     XSetStandardProperties(p_window->x11_handler.p_display, p_window->x11_handler.window, title, title, None, NULL, 0, NULL);
     XSetWMNormalHints(p_window->x11_handler.p_display, p_window->x11_handler.window, &local_size_hints);
@@ -52,18 +54,7 @@ DENGWindow *init_window(int width, int height, int border_width, const char *tit
     XClearWindow(p_window->x11_handler.p_display, p_window->x11_handler.window);
     XMapRaised(p_window->x11_handler.p_display, p_window->x11_handler.window);
 
-    p_window->active_keys.p_keys = malloc(sizeof(DENGKey));
-    p_window->active_keys.key_count = 0;
-
-    p_window->active_keys.p_btn = malloc(sizeof(DENGMouseButton));
-    p_window->active_keys.btn_count = 0;
-
-    p_window->released_keys.p_keys = malloc(sizeof(DENGKey));
-    p_window->released_keys.key_count = 0;
-
-    p_window->released_keys.p_btn = malloc(sizeof(DENGMouseButton));
-    p_window->released_keys.btn_count = 0;
-
+    init_key_vectors(p_window);
     p_window->mode = X11_WINDOW;
 
     return p_window;
@@ -120,7 +111,7 @@ static void handle_mouse_events(DENGWindow *p_window) {
                 
         for(int index = 0; index < p_window->active_keys.btn_count; index++) {
             if(p_window->active_keys.p_btn[index] == recent_release_btn) {
-                // add_key(p_window, NULL, &p_window->active_keys.p_btn[index], MOUSE_BUTTON, RELEASE_KEYS);
+                add_key(p_window, NULL, &recent_release_key, MOUSE_BUTTON, RELEASE_KEYS);
                 remove_key(p_window, index, MOUSE_BUTTON, ACTIVE_KEYS);
                 break;   
             }
@@ -132,44 +123,11 @@ static void handle_mouse_events(DENGWindow *p_window) {
     }
 }
 
-int is_key_active(DENGWindow *p_window, DENGKey key) {
-    size_t index;
-    for(index = 0; index < p_window->active_keys.key_count; index++) 
-        if(key == p_window->active_keys.p_keys[index]) return 1;
-
-    return 0;
-}
-
-int is_mouse_btn_active(DENGWindow *p_window, DENGMouseButton btn) {
-    size_t index;
-    for(index = 0; index < p_window->active_keys.btn_count; index++)
-        if(btn == p_window->active_keys.p_btn[index]) return 1;
-    
-    return 0;
-}
-
-int is_key_released(DENGWindow *p_window, DENGKey key) {
-    size_t index; 
-    for(index = 0; index < p_window->released_keys.key_count; index++) 
-        if(key == p_window->released_keys.p_keys[index]) return 1;
-    
-    return 0;
-}
-
-int is_mouse_btn_released(DENGWindow *p_window, DENGMouseButton key) {
-    size_t index; 
-    for(index = 0; index < p_window->released_keys.btn_count; index++) 
-        if(key == p_window->released_keys.p_btn[index]) return 1;
-    
-    return 0;
-}
-
-
 void set_mouse_coords(DENGWindow *p_window, int x, int y) {
     XWarpPointer(p_window->x11_handler.p_display, None, p_window->x11_handler.window, 0, 0, 0, 0, x, y);
 }
 
-void get_mouse_pos(DENGWindow *p_window, float *p_x, float *p_y, int init_virtual_cursor) {
+void get_mouse_pos(DENGWindow *p_window, float *p_x, float *p_y, bool_t init_virtual_cursor) {
     // dummy variables for x11
     Window return_window;
     int win_x, win_y, x, y;
@@ -199,7 +157,7 @@ void get_mouse_pos(DENGWindow *p_window, float *p_x, float *p_y, int init_virtua
     }
 }
 
-static void set_cursor(DENGWindow *p_window, const char *file_path, int is_library_cur) {
+static void set_cursor(DENGWindow *p_window, const char *file_path, bool_t is_library_cur) {
     Cursor cursor;
 
     switch (is_library_cur)
@@ -220,19 +178,19 @@ static void set_cursor(DENGWindow *p_window, const char *file_path, int is_libra
 
 void set_mouse_cursor_mode(DENGWindow *p_window, int mouse_mode) {
     if(mouse_mode & DENG_HIDE_CURSOR) {
-        set_cursor(p_window, DENG_CURSOR_HIDDEN, 0);
-        p_window->virtual_mouse_position.is_enabled = 0;
+        set_cursor(p_window, DENG_CURSOR_HIDDEN, false);
+        p_window->virtual_mouse_position.is_enabled = false;
         float x, y;
-        get_mouse_pos(p_window, &x, &y, 1);
+        get_mouse_pos(p_window, &x, &y, true);
         p_window->virtual_mouse_position.x = x;
         p_window->virtual_mouse_position.y = y;
 
-        p_window->virtual_mouse_position.is_enabled = 1;
+        p_window->virtual_mouse_position.is_enabled = true;
     }
 
     if(mouse_mode & DENG_SHOW_CURSOR) {
         set_cursor(p_window, DENG_CURSOR_DEFAULT, 1);
-        p_window->virtual_mouse_position.is_enabled = 0;
+        p_window->virtual_mouse_position.is_enabled = false;
     }
 }
 

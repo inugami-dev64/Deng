@@ -1,6 +1,17 @@
 #include "deng_surface_core.h"
 
-// Kb key methods
+void init_key_vectors(DENGWindow *p_window) {
+    p_window->active_keys.key_count = 0;
+    p_window->active_keys.p_keys = (DENGKey*) malloc(sizeof(DENGKey));
+    p_window->active_keys.btn_count = 0;
+    p_window->active_keys.p_btn = (DENGMouseButton*) malloc(sizeof(DENGMouseButton));
+
+    p_window->released_keys.key_count = 0;
+    p_window->released_keys.p_keys = (DENGKey*) malloc(sizeof(DENGKey));
+    p_window->released_keys.btn_count = 0;
+    p_window->released_keys.p_btn = (DENGMouseButton*) malloc(sizeof(DENGMouseButton));
+}
+
 void add_key(DENGWindow *p_window, DENGKey *p_key, DENGMouseButton *p_btn, int key_type, int array_type) {
     switch (key_type)
     {
@@ -91,7 +102,8 @@ size_t get_key_index(DENGWindow *p_window, DENGKey key, DENGMouseButton btn, int
     }
 
     default:
-        break;
+        perror("Arguments to function call get_key_index are invalid!");
+        return (size_t) -1;
     }
 }
 
@@ -102,6 +114,7 @@ void remove_key(DENGWindow *p_window, size_t index, int key_type, int array_type
     {
     case MOUSE_BUTTON: {
         if(array_type & ACTIVE_KEYS) {
+            // it's fine i'm using gcc :)))
             DENGMouseButton tmp[p_window->active_keys.btn_count--];
 
             for(l_index = 0, r_index = 0; l_index < p_window->active_keys.btn_count; l_index++, r_index++) {
@@ -120,6 +133,7 @@ void remove_key(DENGWindow *p_window, size_t index, int key_type, int array_type
         }
 
         if(array_type & RELEASE_KEYS) {
+            // it's fine i'm using gcc :)))
             DENGMouseButton tmp[p_window->released_keys.btn_count--];
 
             for(l_index = 0, r_index = 0; l_index < p_window->released_keys.btn_count; l_index++, r_index++) {
@@ -141,6 +155,7 @@ void remove_key(DENGWindow *p_window, size_t index, int key_type, int array_type
 
     case KB_KEY: {
         if(array_type & ACTIVE_KEYS) {
+            // it's fine i'm using gcc :)))
             DENGKey tmp[p_window->active_keys.key_count--];
 
             for(l_index = 0, r_index = 0; l_index < p_window->active_keys.key_count; l_index++, r_index++) {
@@ -159,6 +174,7 @@ void remove_key(DENGWindow *p_window, size_t index, int key_type, int array_type
         }
 
         if(array_type & RELEASE_KEYS) {
+            // it's fine i'm using gcc :)))
             DENGKey tmp[p_window->released_keys.key_count--];
 
             for(l_index = 0, r_index = 0; l_index < p_window->released_keys.key_count; l_index++, r_index++) {
@@ -216,4 +232,50 @@ void clean_keys(DENGWindow *p_window, int key_type, int array_type) {
     default:
         break;
     }
+}
+
+int is_key_active(DENGWindow *p_window, DENGKey key) {
+    size_t index;
+    for(index = 0; index < p_window->active_keys.key_count; index++) 
+        if(key == p_window->active_keys.p_keys[index]) return true;
+
+    return false;
+}
+
+int is_mouse_btn_active(DENGWindow *p_window, DENGMouseButton btn) {
+    size_t index;
+    for(index = 0; index < p_window->active_keys.btn_count; index++)
+        if(btn == p_window->active_keys.p_btn[index]) return true;
+    
+    return false;
+}
+
+int is_key_released(DENGWindow *p_window, DENGKey key) {
+    size_t index; 
+    for(index = 0; index < p_window->released_keys.key_count; index++) 
+        if(key == p_window->released_keys.p_keys[index]) return true;
+    
+    return false;
+}
+
+int is_mouse_btn_released(DENGWindow *p_window, DENGMouseButton key) {
+    size_t index; 
+    for(index = 0; index < p_window->released_keys.btn_count; index++) 
+        if(key == p_window->released_keys.p_btn[index]) return true;
+    
+    return false;
+}
+
+void free_key_vectors(DENGWindow *p_window) {
+    if(p_window->active_keys.btn_count != 0)
+        free(p_window->active_keys.p_btn);
+    
+    if(p_window->active_keys.key_count != 0)
+        free(p_window->active_keys.p_keys);
+
+    if(p_window->released_keys.key_count != 0)
+        free(p_window->released_keys.p_keys);
+
+    if(p_window->released_keys.btn_count != 0)
+        free(p_window->released_keys.p_btn);
 }
