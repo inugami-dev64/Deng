@@ -307,7 +307,7 @@ namespace dengMath {
         float m_far;
 
     public:
-        ProjectionMatrix(const float &FOV, const float &near, const float &far, const float &aspect_ratio);
+        ProjectionMatrix(const float &FOV, const float &near_plane, const float &far_plane, const float &aspect_ratio);
         void getProjectionMatrix(mat4<float> *p_matrix);
     };
 

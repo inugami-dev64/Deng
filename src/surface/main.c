@@ -31,8 +31,8 @@ int main() {
         else if(!read_esc) read_esc = is_key_released(p_window, DENG_KEY_ESCAPE);
             
         get_mouse_pos(p_window, &mouse_x, &mouse_y, false);
-        printf("Mouse x: %f", mouse_x);
-        printf("Mouse y: %f\n", mouse_y);
+        // printf("Mouse x: %f", mouse_x);
+        // printf("Mouse y: %f\n", mouse_y);
         // if(!is_w && !is_a && !is_s && !is_d) printf("%s\n", "No movement");
     }
 

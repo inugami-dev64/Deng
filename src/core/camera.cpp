@@ -1,7 +1,7 @@
 #include "deng_core.h"
 
 namespace deng {
-    Camera::Camera(const dengMath::vec3<float> &camera_movement_speed_multiplier, const dengMath::vec2<float> &mouse_movement_speed_multiplier, const float &FOV, const float &near,const float &far, Window *window) {
+    Camera::Camera(const dengMath::vec3<float> &camera_movement_speed_multiplier, const dengMath::vec2<float> &mouse_movement_speed_multiplier, const float &FOV, const float &near_plane, const float &far_plane, Window *window) {
         this->m_mouse_pos.first = 0.0f;
         this->m_mouse_pos.second = 0.0f;
         this->m_p_window = window;
@@ -13,7 +13,7 @@ namespace deng {
         this->setMousePosition(this->m_zero_camera_rotation_mouse_pos);
 
         this->m_is_init = DENG_TRUE;
-        this->p_projection_matrix = new dengMath::ProjectionMatrix(FOV, near, far, static_cast<float>(this->m_p_window->getSize().first / this->m_p_window->getSize().second));
+        this->p_projection_matrix = new dengMath::ProjectionMatrix(FOV, near_plane, far_plane, static_cast<float>(this->m_p_window->getSize().first / this->m_p_window->getSize().second));
 
         this->m_movement_speed.first = DENG_CAMERA_BASE_SPEED_X * camera_movement_speed_multiplier.first;
         this->m_movement_speed.second = DENG_CAMERA_BASE_SPEED_Y * camera_movement_speed_multiplier.second;

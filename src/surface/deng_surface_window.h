@@ -76,11 +76,17 @@ typedef struct VirtualMousePosition {
         HWND *p_hwnd;
         MSG *p_message;
         RAWINPUTDEVICE rids[2];
+        RAWINPUT *p_raw_input;
+        UINT raw_input_size;
         LONG mouse_x_pos;
         LONG mouse_y_pos;
     } WIN32Handler;
 
-    #define DENG_WIN32_CLASS_NAME L"DENG_WINDOW"
+    #ifndef DENG_VULKAN
+        #define DENG_WIN32_CLASS_NAME L"DENG_WINDOW"
+    #else 
+        #define DENG_WIN32_CLASS_NAME "DENG_WINDOW"
+    #endif
 #endif
 
 typedef struct DENGWindow {

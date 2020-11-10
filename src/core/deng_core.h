@@ -2,29 +2,37 @@
 #define DENG_CORE_H
 
 /*  BEFORE EVERY GIT COMMIT SET GENERIC_DEBUG VALUE TO 0!!!     */
-
-#define GENERIC_DEBUG 1
+#define DENG_VULKAN
+#define GENERIC_DEBUG 0
 
 /*  please do not enable these at the same time, 
     otherwise you won't be able to debug anything */
 #define CAMERA_LOCATION_DEBUG 0
-#define CAMERA_MOUSE_DEBUG 1
+#define CAMERA_MOUSE_DEBUG 0
 
 #define ERR(x) throw std::runtime_error(x)
-#define ERRME(x) std::cout << "\033[1;31m" << x << "\033[0m\n" 
+
+#ifdef _WIN32
+    #define TERM_ERRME_MODE ""
+    #define TERM_LOG_MODE ""
+    #define TERM_END "\n"
+#else
+    #define TERM_ERRME_MODE"\033[1;31m"
+    #define TERM_LOG_MODE "\033[1;34m"
+    #define TERM_END "\033[0m\n"
+#endif
+#define ERRME(x) std::cout << TERM_ERRME_MODE << x << TERM_END 
 
 #if GENERIC_DEBUG
-    #define LOG(x) std::cout << "\033[1;34m" << x << "\033[0m\n"
-    #define ERRMEDB(x) std::cout << "\033[1;31m" << x << "\033[0m\n";
+    #define LOG(x) std::cout << TERM_LOG_MODE << x << TERM_END
+    #define ERRMEDB(x) std::cout << TERM_ERRME_MODE << x << TERM_END;
     const bool enable_validation_layers = true;
 #else
     #define LOG(x)
     #define ERRMEDB(x)
     const bool enable_validation_layers = false;
 #endif
-
 #define DISABLE_DENGUI 0
-
 
 enum dengPipelineDrawMode {
     DENG_PIPELINE_DRAW_MODE_LINEAR = 0,

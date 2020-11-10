@@ -250,6 +250,7 @@ DENGKey translateWIN32Key(uint16_t key_code) {
         case VK_ADD:                return DENG_KEY_NP_ADD;
         case VK_LSHIFT:             return DENG_KEY_LEFT_SHIFT;
         case VK_LCONTROL:           return DENG_KEY_LEFT_CTRL;
+        case VK_CONTROL:            return DENG_KEY_LEFT_CTRL;
         case VK_LMENU:              return DENG_KEY_LEFT_ALT;
         case VK_LWIN:               return DENG_KEY_LEFT_SUPER;
         case VK_RSHIFT:             return DENG_KEY_RIGHT_SHIFT;

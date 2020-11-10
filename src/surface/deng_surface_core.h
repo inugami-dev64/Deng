@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+#define _BSD_SOURCE
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -14,7 +16,6 @@ extern "C" {
 #endif
 
 #include <vulkan/vulkan.h>
-
 #ifdef __linux__
     #include <X11/Xlib.h>
     #include <X11/Xutil.h>
@@ -35,6 +36,7 @@ extern "C" {
 #include "deng_surface_window.h"
 #include "key_vector.h"
 #include "vulkan_handler.h"
+
 
 #ifdef __cplusplus
 }

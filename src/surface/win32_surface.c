@@ -32,10 +32,6 @@ DENGWindow *init_window(int width, int height, char *title, WindowMode window_mo
     p_window->win32_handler.p_hwnd = (HWND*) calloc(1, sizeof(HWND));
     p_window->win32_handler.p_message = (MSG*) calloc(1, sizeof(MSG));
 
-    int output_size = MultiByteToWideChar(CP_ACP, 0, title, -1, NULL, 0);
-    wchar_t *win_title = (wchar_t*) malloc(output_size * sizeof(wchar_t));
-    MultiByteToWideChar(CP_ACP, 0, title, -1, win_title, output_size);
-
     p_window->win32_handler.p_window->hInstance = GetModuleHandle(NULL);
     p_window->win32_handler.p_window->lpszClassName = DENG_WIN32_CLASS_NAME;
     p_window->win32_handler.p_window->hCursor = LoadCursor(NULL, IDC_ARROW);
@@ -74,15 +70,12 @@ DENGWindow *init_window(int width, int height, char *title, WindowMode window_mo
         break;
     }
     
-    *p_window->win32_handler.p_hwnd = CreateWindowEx(0, win_class, win_title, window_style, CW_USEDEFAULT, CW_USEDEFAULT, p_window->width, p_window->height, NULL, NULL, p_window->win32_handler.p_window->hInstance, NULL);
+    *p_window->win32_handler.p_hwnd = CreateWindowEx(0, win_class, title, window_style, CW_USEDEFAULT, CW_USEDEFAULT, p_window->width, p_window->height, NULL, NULL, p_window->win32_handler.p_window->hInstance, NULL);
 
     if(*p_window->win32_handler.p_hwnd == NULL) {
         printf("%s\n", "Failed to initialize win32 window!");
-        free(win_title);
         exit(1);
     }
-
-    free(win_title);
 
     p_window->win32_handler.rids[0].usUsagePage = 0x01;
     p_window->win32_handler.rids[0].usUsage = 0x02;
@@ -111,29 +104,21 @@ DENGWindow *init_window(int width, int height, char *title, WindowMode window_mo
 LRESULT CALLBACK win32_message_handler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     switch(msg) {  
         case WM_CLOSE:
-            PostQuitMessage(0);
+            destroy_window(p_recent_window);
             break;
 
         case WM_DESTROY:
             return 0;
 
-        case WM_INPUT: {
-            char key_buffer[sizeof(RAWINPUT)] = {0};
-            UINT kb_size = sizeof(RAWINPUT);
-            GetRawInputData((HRAWINPUT) lparam, RID_INPUT, key_buffer, &kb_size, sizeof(RAWINPUTHEADER));
-            RAWINPUT *raw_input = (RAWINPUT*) key_buffer;
+        case WM_SYSKEYDOWN: 
+        case WM_KEYDOWN:
+            recent_press_key = translateWIN32Key((uint16_t) wparam);
 
-            if(raw_input->header.dwType == RIM_TYPEKEYBOARD) {
-                recent_press_key = translateWIN32Key(raw_input->data.keyboard.VKey);
+            if((key_index = get_key_index(p_recent_window, recent_press_key, DENG_MOUSE_BTN_UNKNOWN, KB_KEY, ACTIVE_KEYS)) == p_recent_window->active_keys.key_count)
+                add_key(p_recent_window, &recent_press_key, NULL, KB_KEY, ACTIVE_KEYS);
+            break;
 
-                if((key_index = get_key_index(p_recent_window, recent_press_key, DENG_MOUSE_BTN_UNKNOWN, KB_KEY, ACTIVE_KEYS)) == p_recent_window->active_keys.key_count)
-                    add_key(p_recent_window, &recent_press_key, NULL, KB_KEY, ACTIVE_KEYS);
-            }
-
-            return 0;
-        }
-
-        case WM_SYSKEYUP: case WM_KEYUP:
+        case WM_SYSKEYUP: case WM_KEYUP: case WM_IME_KEYUP: 
             recent_release_key = translateWIN32Key((uint16_t) wparam);
 
             for(int index = 0; index < p_recent_window->active_keys.key_count; index++) {
@@ -142,14 +127,14 @@ LRESULT CALLBACK win32_message_handler(HWND hwnd, UINT msg, WPARAM wparam, LPARA
                     remove_key(p_recent_window, index, KB_KEY, ACTIVE_KEYS);
                 }
             }
-            return 0;
+            break;
 
         case WM_LBUTTONDOWN: case WM_MBUTTONDOWN: case WM_RBUTTONDOWN:
             recent_press_btn = translateWIN32Btn(msg);
 
             if((key_index = get_key_index(p_recent_window, DENG_KEY_UNKNOWN, recent_press_btn, MOUSE_BUTTON, ACTIVE_KEYS)) == p_recent_window->active_keys.btn_count)
                 add_key(p_recent_window, NULL, &recent_press_btn, MOUSE_BUTTON, ACTIVE_KEYS);
-            return 0;
+            break;
 
         case WM_LBUTTONUP: case WM_MBUTTONUP: case WM_RBUTTONUP: 
             recent_release_btn = translateWIN32Btn(msg);
@@ -160,7 +145,7 @@ LRESULT CALLBACK win32_message_handler(HWND hwnd, UINT msg, WPARAM wparam, LPARA
                     remove_key(p_recent_window, index, MOUSE_BUTTON, ACTIVE_KEYS);
                 }
             }
-            return 0;
+            break;
     }
 
     return DefWindowProc(hwnd, msg, wparam, lparam);
@@ -170,8 +155,10 @@ void update_window(DENGWindow *p_window) {
     clean_keys(p_window, KB_KEY | MOUSE_BUTTON, RELEASE_KEYS);
     ShowWindow(*p_window->win32_handler.p_hwnd, SW_NORMAL);
 
-    TranslateMessage(p_window->win32_handler.p_message);
-    DispatchMessage(p_window->win32_handler.p_message);
+    while(PeekMessageW(p_window->win32_handler.p_message, NULL, 0, 0, PM_REMOVE)) {
+        TranslateMessage(p_window->win32_handler.p_message);
+        DispatchMessage(p_window->win32_handler.p_message);
+    }
     
     if(p_recent_window != p_window) p_recent_window = p_window;  
 
@@ -181,16 +168,6 @@ void update_window(DENGWindow *p_window) {
     }
 
     usleep(DENG_REFRESH_INTERVAL);
-}
-
-void destroy_window(DENGWindow *p_window) {
-    free_key_vectors(p_window);
-    if(!is_window_deleted) {
-        free(p_window->win32_handler.p_window);
-        free(p_window->win32_handler.p_hwnd);
-        free(p_window->win32_handler.p_message);
-    }
-    exit(0);
 }
 
 void set_mouse_coords(DENGWindow *p_window, int x, int y) {
@@ -250,6 +227,16 @@ void get_mouse_pos(DENGWindow *p_window, float *p_x, float *p_y, bool_t init_vir
             set_mouse_coords(p_window, p_window->virtual_mouse_position.orig_x, p_window->virtual_mouse_position.orig_y);
     }
 
+}
+
+void destroy_window(DENGWindow *p_window) {
+    free_key_vectors(p_window);
+    if(!is_window_deleted) {
+        free(p_window->win32_handler.p_window);
+        free(p_window->win32_handler.p_hwnd);
+        free(p_window->win32_handler.p_message);
+    }
+    exit(EXIT_SUCCESS);
 }
 
 bool_t is_running(DENGWindow *p_window) {

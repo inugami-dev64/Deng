@@ -17,7 +17,6 @@ void add_key(DENGWindow *p_window, DENGKey *p_key, DENGMouseButton *p_btn, int k
     {
     case MOUSE_BUTTON:
         if(array_type & ACTIVE_KEYS) {
-            // printf("%s\n", "Adding btn to active keys!");
             p_window->active_keys.btn_count++;
             p_window->active_keys.p_btn = realloc(p_window->active_keys.p_btn, p_window->active_keys.btn_count * sizeof(DENGMouseButton));
         
@@ -25,7 +24,6 @@ void add_key(DENGWindow *p_window, DENGKey *p_key, DENGMouseButton *p_btn, int k
         }
         
         if(array_type & RELEASE_KEYS) {
-            // printf("%s\n", "Adding btn to release keys!");
             p_window->released_keys.btn_count++;
             p_window->released_keys.p_btn = realloc(p_window->released_keys.p_btn, p_window->released_keys.btn_count * sizeof(DENGMouseButton));
 
@@ -36,7 +34,6 @@ void add_key(DENGWindow *p_window, DENGKey *p_key, DENGMouseButton *p_btn, int k
 
     case KB_KEY:
         if(array_type & ACTIVE_KEYS) {
-            // printf("%s\n", "Adding key to active keys!");
             p_window->active_keys.key_count++;
             p_window->active_keys.p_keys = realloc(p_window->active_keys.p_keys, p_window->active_keys.key_count * sizeof(DENGKey));
 
@@ -44,7 +41,6 @@ void add_key(DENGWindow *p_window, DENGKey *p_key, DENGMouseButton *p_btn, int k
         }
 
         if(array_type & RELEASE_KEYS) {
-            // printf("%s\n", "Adding key to release keys!");
             p_window->released_keys.key_count++;
             p_window->released_keys.p_keys = realloc(p_window->released_keys.p_keys, p_window->released_keys.key_count * sizeof(DENGKey));
 

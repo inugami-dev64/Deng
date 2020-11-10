@@ -202,7 +202,6 @@ namespace dengMath {
     }
 
     void ViewMatrix::addToPosition(const vec4<float> &movement_speed, const dengCoordinateAxisType &movement_type, const bool &substract) {
-
         switch (movement_type)
         {
         case DENG_COORD_AXIS_X: {
@@ -272,10 +271,10 @@ namespace dengMath {
 
     }
 
-    ProjectionMatrix::ProjectionMatrix(const float &FOV, const float &near, const float &far, const float &aspect_ratio) {
+    ProjectionMatrix::ProjectionMatrix(const float &FOV, const float &near_plane, const float &far_plane, const float &aspect_ratio) {
         this->m_FOV = FOV;
-        this->m_near = near;
-        this->m_far = far;
+        this->m_near = near_plane;
+        this->m_far = far_plane;
         this->m_aspect_ratio = aspect_ratio;
     }
 

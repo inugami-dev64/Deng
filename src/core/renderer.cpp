@@ -9,14 +9,13 @@ namespace deng
         this->loadDataFromConf(DENG_TRUE, DENG_TRUE, DENG_TRUE);
         this->m_p_window = &win;
 
-
         this->m_p_grid_manager = new dengUtils::GridManager(&this->m_grid, this->m_far_plane + 5, &this->m_environment_conf.grid_height, &this->m_environment_conf.grid_width, &this->m_environment_conf.grid_line_color_r, &this->m_environment_conf.grid_line_color_g, &this->m_environment_conf.grid_line_color_b);
-        LOG("seg test!");
         this->m_p_camera = new Camera({this->m_camera_conf.movement_x, this->m_camera_conf.movement_y, this->m_camera_conf.movement_z}, {this->m_camera_conf.mouse_movement_x, this->m_camera_conf.mouse_movement_y}, this->m_camera_conf.fov, this->m_near_plane, this->m_far_plane, this->m_p_window);
         this->m_p_ev = new dengMath::Events(this->m_p_window, this->m_p_camera);
 
         this->initObjects(this->m_sample_object, "objects/obj1.obj", "textures/obj1.tga", DENG_COORDINATE_MODE_DEFAULT);
-        this->initGrid();
+        // Grid is disabled for now :(
+        // this->initGrid();
         this->initInstance();
         this->initDebugMessenger();
         this->initWindowSurface();
@@ -161,23 +160,26 @@ namespace deng
     }
 
     void Renderer::initGrid() {
+        LOG("initGrid camera view matrix position is: {" + std::to_string(this->m_p_camera->view_matrix.getPosition().first) + ";" + std::to_string(this->m_p_camera->view_matrix.getPosition().second) + ";" + std::to_string(this->m_p_camera->view_matrix.getPosition().third) + "}");
         this->m_p_grid_manager->generateVertices(this->m_p_camera->view_matrix.getPosition());
     }
 
     void Renderer::initInstance() {
         //initialise appinfo
-        VkApplicationInfo local_appInfo{};
-        local_appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        local_appInfo.pApplicationName = this->m_p_window->getTitle();
-        local_appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 3);
-        local_appInfo.pEngineName = "Deng";
-        local_appInfo.engineVersion = VK_MAKE_VERSION(0, 1, 0);
-        local_appInfo.apiVersion = VK_API_VERSION_1_0;
+        VkApplicationInfo local_appinfo{};
+        local_appinfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        local_appinfo.pApplicationName = this->m_p_window->getTitle();
+        local_appinfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+        local_appinfo.pEngineName = "Deng";
+        local_appinfo.engineVersion = VK_MAKE_VERSION(0, 1, 0);
+        local_appinfo.apiVersion = VK_API_VERSION_1_0;
+
+        // LOG(local_appinfo.pApplicationName);
 
         //initialise create info
         VkInstanceCreateInfo local_instance_createInfo{}; 
         local_instance_createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        local_instance_createInfo.pApplicationInfo = &local_appInfo;
+        local_instance_createInfo.pApplicationInfo = &local_appinfo;
 
         //get count of required GLFW extensions
         uint32_t local_extension_count;
@@ -208,7 +210,8 @@ namespace deng
             local_instance_createInfo.enabledLayerCount = 0;
             local_instance_createInfo.pNext = nullptr;
         }
-
+        
+        LOG("seg test!");
         if(vkCreateInstance(&local_instance_createInfo, nullptr, &this->m_instance) != VK_SUCCESS) {
             ERR("Failed to create an instance!");
         }

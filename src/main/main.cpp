@@ -1,7 +1,7 @@
 #include "../core/deng_core.h"
 
 int main() {
-    deng::Window window(1600, 1200, "Game!");
+    deng::Window window(1200, 800, "Game!");
     deng::Renderer rend(window);
     rend.run();
     

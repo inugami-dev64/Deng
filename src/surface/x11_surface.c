@@ -4,6 +4,7 @@ static void handle_key_events();
 static void handle_mouse_events();
 static void set_cursor(DENGWindow *p_window, const char *cursor_path, int is_library_cur);
 
+static bool_t is_running_var;
 static DENGKey recent_press_key;
 static DENGKey recent_release_key;
 
@@ -55,6 +56,7 @@ DENGWindow *init_window(int width, int height, char *title, WindowMode window_mo
     XMapRaised(p_window->x11_handler.p_display, p_window->x11_handler.window);
 
     init_key_vectors(p_window);
+    is_running_var = true;
     p_window->mode = X11_WINDOW;
 
     return p_window;
@@ -196,12 +198,19 @@ void set_mouse_cursor_mode(DENGWindow *p_window, int mouse_mode) {
 
 void update_window(DENGWindow *p_window) {
     clean_keys(p_window, KB_KEY | MOUSE_BUTTON, RELEASE_KEYS);
-    if(XCheckWindowEvent(p_window->x11_handler.p_display, p_window->x11_handler.window, KeyPressMask | KeyReleaseMask, &p_window->x11_handler.event));
+    if(XCheckWindowEvent(p_window->x11_handler.p_display, p_window->x11_handler.window, KeyPressMask | KeyReleaseMask, &p_window->x11_handler.event))
         handle_key_events(p_window);
     
-    if(XCheckWindowEvent(p_window->x11_handler.p_display, p_window->x11_handler.window, ButtonPressMask | ButtonReleaseMask, &p_window->x11_handler.event));
+    if(XCheckWindowEvent(p_window->x11_handler.p_display, p_window->x11_handler.window, ButtonPressMask | ButtonReleaseMask, &p_window->x11_handler.event))
         handle_mouse_events(p_window);
-    
+
+    if(XCheckWindowEvent(p_window->x11_handler.p_display, p_window->x11_handler.window, 0, &p_window->x11_handler.event)) {
+        if(p_window->x11_handler.event.type == ClientMessage && p_window->x11_handler.event.xclient_data.l[0] == wmDeleteMessage) {
+            destroy_window(p_window);
+            is_running_var = false;
+        }
+    }
+
     usleep(DENG_REFRESH_INTERVAL);
 }
 
@@ -209,9 +218,10 @@ void destroy_window(DENGWindow *p_window) {
     XFreeGC(p_window->x11_handler.p_display, p_window->x11_handler.gc);
     XDestroyWindow(p_window->x11_handler.p_display, p_window->x11_handler.window);
     XCloseDisplay(p_window->x11_handler.p_display);
-    if(p_window->active_keys.p_keys != NULL) free(p_window->active_keys.p_keys);
-    if(p_window->active_keys.p_btn != NULL) free(p_window->active_keys.p_btn);
-    if(p_window->released_keys.p_keys != NULL) free(p_window->released_keys.p_keys);
-    if(p_window->released_keys.p_btn != NULL) free(p_window->released_keys.p_btn);
+    free_key_vectors(p_window);
     exit(EXIT_SUCCESS);
+}
+
+bool_t is_running(DENGWindow *p_window) {
+    return is_running_var;
 }

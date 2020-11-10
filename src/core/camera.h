@@ -38,7 +38,7 @@ namespace deng {
         dengMath::ProjectionMatrix *p_projection_matrix;
 
     public:
-        Camera(const dengMath::vec3<float> &camera_movement_speed_multiplier, const dengMath::vec2<float> &mouse_movement_speed_multiplier, const float &FOV, const float &near, const float &far, Window *p_window);
+        Camera(const dengMath::vec3<float> &camera_movement_speed_multiplier, const dengMath::vec2<float> &mouse_movement_speed_multiplier, const float &FOV, const float &near_plane, const float &far_plane, Window *p_window);
         ~Camera();
         void updateCursorPos();
         void setCameraViewRotation();

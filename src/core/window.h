@@ -7,13 +7,13 @@ namespace deng {
     {
     private:
         DENGWindow *m_p_game_window;
-        const char *m_title;
+        char *m_title;
         dengMath::vec2<uint32_t> m_size;
         dengInputMode m_input_mode;
         dengMath::vec2<double> m_pixel_size;
 
     public:
-        Window(const int &x, const int &y, const char *title);
+        Window(const int &x, const int &y, char *title);
         ~Window();
         DENGWindow *getWindow();
         const char *getTitle();

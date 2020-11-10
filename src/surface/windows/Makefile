@@ -1,7 +1,7 @@
 CC = gcc
 VULKANVERSION = 1.2.154.1
 
-LDFLAGS = -s -lcomctl32 -lvulkan-1 -Wl,--subsystem,windows
+LDFLAGS = -s -lcomctl32 -lvulkan-1 
 CCFLAGS = -D UNICODE -D _UNICODE -Wall
 INCLUDEFLAGS = -I C:\VulkanSDK\$(VULKANVERSION)\Include 
 LDPATH = -L C:\VulkanSDK\$(VULKANVERSION)\Lib

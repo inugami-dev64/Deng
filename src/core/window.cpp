@@ -1,12 +1,13 @@
 #include "deng_core.h"
 
 namespace deng {
-    Window::Window(const int &x, const int &y, const char *title) {
+    Window::Window(const int &x, const int &y, char *title) {
         this->m_size = {x, y};
+        this->m_title = title;
         this->m_pixel_size = {2.0 / static_cast<double>(this->m_size.first), 2.0 / static_cast<double>(this->m_size.second)};
         LOG("Pixel size: " + std::to_string(this->m_pixel_size.first) + "/" + std::to_string(this->m_pixel_size.second));
 
-        this->m_p_game_window = init_window(1600, 1200, "Game!", DENG_WINDOW_MODE_FIXED);
+        this->m_p_game_window = init_window(x, y, this->m_title, DENG_WINDOW_MODE_FIXED);
     }
 
     Window::~Window() {
