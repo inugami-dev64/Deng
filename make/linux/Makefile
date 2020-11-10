@@ -7,9 +7,10 @@ TARGET = $(BUILD_DIR)/deng/deng
 LIBSURFACE_TARGET = libsurface.a
 
 LD_PATH = -L $(BUILD_DIR)/deng/lib
+
 CC_FLAGS = -Wall -m64
 CXX_FLAGS = -Wall -m64 -std=c++11
-LD_FLAGS = -lvulkan -lpthread -lX11 -lXcursor -ldl -lsurface 
+LD_FLAGS = -lvulkan -lpthread -lsurface -lX11 -lXcursor -ldl 
 
 MAIN_SRC = $(SRC_DIR)/main/main.cpp
 MAIN_OBJ = $(BUILD_DIR)/obj/deng/main.cpp.o
