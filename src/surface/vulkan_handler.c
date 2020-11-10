@@ -33,7 +33,7 @@ const char **get_required_surface_extensions(DENGWindow *p_window, uint32_t *p_c
         break;
     }   
 
-    const char **pp_const_ext = pp_extensions;
+    const char **pp_const_ext = (const char**) pp_extensions;
 
     return pp_const_ext;
 }

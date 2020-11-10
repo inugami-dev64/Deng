@@ -85,7 +85,7 @@ namespace dengUtils {
         for(std::string &line : file_contents) {
             if(line.find(conf) == 0) {
                 std::string value_str;
-                int8_t index;
+                size_t index;
 
                 if(static_cast<int>(line.find("#")) == -1 && static_cast<int>(line.find("=")) == -1) {
                     ERR(DENG_CONF_PARSING_ERROR_MSG(file_name) + DENG_GENERAL_PARSING_ERROR_LINE_MSG(std::to_string(line_index)));
@@ -120,7 +120,7 @@ namespace dengUtils {
             }
             line_index++;
         }
-        T i;
+        T i = {};
         return i;
     }
 }

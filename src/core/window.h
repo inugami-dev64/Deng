@@ -13,7 +13,7 @@ namespace deng {
         dengMath::vec2<double> m_pixel_size;
 
     public:
-        Window(const int &x, const int &y, char *title);
+        Window(const int &x, const int &y, const char *title);
         ~Window();
         DENGWindow *getWindow();
         const char *getTitle();

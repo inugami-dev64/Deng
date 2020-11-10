@@ -17,7 +17,7 @@
     #define TERM_LOG_MODE ""
     #define TERM_END "\n"
 #else
-    #define TERM_ERRME_MODE"\033[1;31m"
+    #define TERM_ERRME_MODE "\033[1;31m"
     #define TERM_LOG_MODE "\033[1;34m"
     #define TERM_END "\033[0m\n"
 #endif

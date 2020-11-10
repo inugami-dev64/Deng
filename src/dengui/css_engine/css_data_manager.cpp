@@ -8,9 +8,6 @@ namespace dengCSS {
         this->m_filemanager.filterByFileExtension(&this->m_css_files, DENG_FILE_EXTENSION_CSS);
         dengMath::vec2<double> local_relative_block_size;
 
-        for(std::string &str : this->m_css_files)
-            LOG(str);
-
         this->readClassData(DENG_CSS_CLASS_BODY, DENG_CSS_CLASS_READ_MODE_MAIN_CLASS, this->m_p_window->getSize().vecCast<double>());
         local_relative_block_size = {this->m_body_data.width, this->m_body_data.height};
         this->readClassData(DENG_CSS_CLASS_HEAD, DENG_CSS_CLASS_READ_MODE_MAIN_CLASS, local_relative_block_size);
@@ -63,13 +60,12 @@ namespace dengCSS {
                 break;
             }
 
-
             default:
                 break;
             }
-
-            return 0.0;
         }
+
+        return 0.0;
     }
 
     dengMath::vec3<float> CSSDataHandler::handleGeneralColor(std::string &str_color) {
@@ -95,7 +91,7 @@ namespace dengCSS {
 
     CSSGeneralBorderInfo CSSDataHandler::handleBorderData(std::string &property_values) {
         CSSGeneralBorderInfo local_border_info = {0.0f, {0.0f, 0.0f, 0.0f}};
-        int index, ch_index;
+        size_t index, ch_index;
         std::array<std::string, 3> local_border_str_values = {""}; 
         
         if(property_values == "") {
@@ -116,6 +112,8 @@ namespace dengCSS {
             local_border_info.border_width = this->handleGeneralSize(local_border_str_values[0], DENG_COORD_AXIS_X, this->m_p_window->getSize().vecCast<double>());
             local_border_info.border_color = this->handleGeneralColor(local_border_str_values[2]);
         }
+
+        return local_border_info;
     }
 
     dengCSSFontWeight CSSDataHandler::handleFontWeight(const std::string &str_weight) {

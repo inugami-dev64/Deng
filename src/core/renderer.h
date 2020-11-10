@@ -2,9 +2,9 @@
 #define RENDERER_H
 
 #if !DISABLE_DENGUI
-    #define DENG_PIPELINE_COUNT 3
-#else
     #define DENG_PIPELINE_COUNT 2
+#else
+    #define DENG_PIPELINE_COUNT 1
 #endif
 
 namespace deng {

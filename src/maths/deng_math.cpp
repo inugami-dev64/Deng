@@ -68,6 +68,8 @@ namespace dengMath {
         default:
             break;
         }
+
+        return 0.0f;
     }
 
     float getVector2DRotation(vec2<vec2<float>> vector_bounds) {

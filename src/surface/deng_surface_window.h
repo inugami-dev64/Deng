@@ -56,7 +56,7 @@ typedef struct VirtualMousePosition {
 #ifdef __linux__
     #define EVENT_MASKS KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | LeaveWindowMask | FocusChangeMask | PointerMotionMask
     
-    #define DENG_CURSOR_HIDDEN "cursor/x11-cursors/invisible"
+    #define DENG_CURSOR_HIDDEN "xcursor/invisible"
     #define DENG_CURSOR_DEFAULT "default"
     #define DEFAULT_WINDOW_BORDER 5
 

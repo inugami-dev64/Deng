@@ -32,15 +32,12 @@ DENGWindow *init_window(int width, int height, char *title, WindowMode window_mo
         local_size_hints.flags |= (PMinSize | PMaxSize);
         local_size_hints.min_width = local_size_hints.max_width =  p_window->width;
         local_size_hints.min_height = local_size_hints.max_height = p_window->height;   
-    }
-
-    
+    }    
 
     p_window->x11_handler.window = XCreateSimpleWindow(p_window->x11_handler.p_display, DefaultRootWindow(p_window->x11_handler.p_display), 0, 0, width, height, DEFAULT_WINDOW_BORDER, WhitePixel(p_window->x11_handler.p_display, p_window->x11_handler.screen), BlackPixel(p_window->x11_handler.p_display, p_window->x11_handler.screen));
 
     XSetStandardProperties(p_window->x11_handler.p_display, p_window->x11_handler.window, title, title, None, NULL, 0, NULL);
     XSetWMNormalHints(p_window->x11_handler.p_display, p_window->x11_handler.window, &local_size_hints);
-    int i;
 
     XSelectInput(p_window->x11_handler.p_display, p_window->x11_handler.window, EVENT_MASKS);
     p_window->x11_handler.gc = XCreateGC(p_window->x11_handler.p_display, p_window->x11_handler.window, 0, 0);
@@ -69,7 +66,7 @@ static void handle_key_events(DENGWindow *p_window) {
     case KeyPress: {
         recent_press_key = translateX11Key(XLookupKeysym(&p_window->x11_handler.event.xkey, 0));
 
-        if(key_index = get_key_index(p_window, recent_press_key, DENG_MOUSE_BTN_UNKNOWN, KB_KEY, ACTIVE_KEYS) == p_window->active_keys.key_count)
+        if((key_index = get_key_index(p_window, recent_press_key, DENG_MOUSE_BTN_UNKNOWN, KB_KEY, ACTIVE_KEYS)) == p_window->active_keys.key_count)
             add_key(p_window, &recent_press_key, NULL, KB_KEY, ACTIVE_KEYS);
 
         break;
@@ -102,7 +99,7 @@ static void handle_mouse_events(DENGWindow *p_window) {
     case ButtonPress: {
         recent_press_btn = translateX11Btn(p_window->x11_handler.event.xbutton.button);
 
-        if(key_index = get_key_index(p_window, DENG_KEY_UNKNOWN, recent_press_btn, MOUSE_BUTTON, ACTIVE_KEYS) == p_window->active_keys.btn_count)
+        if((key_index = get_key_index(p_window, DENG_KEY_UNKNOWN, recent_press_btn, MOUSE_BUTTON, ACTIVE_KEYS)) == p_window->active_keys.btn_count)
             add_key(p_window, NULL, &recent_press_btn, MOUSE_BUTTON, ACTIVE_KEYS);
         
         break;
@@ -113,7 +110,7 @@ static void handle_mouse_events(DENGWindow *p_window) {
                 
         for(int index = 0; index < p_window->active_keys.btn_count; index++) {
             if(p_window->active_keys.p_btn[index] == recent_release_btn) {
-                add_key(p_window, NULL, &recent_release_key, MOUSE_BUTTON, RELEASE_KEYS);
+                add_key(p_window, NULL, &recent_release_btn, MOUSE_BUTTON, RELEASE_KEYS);
                 remove_key(p_window, index, MOUSE_BUTTON, ACTIVE_KEYS);
                 break;   
             }
@@ -165,7 +162,7 @@ static void set_cursor(DENGWindow *p_window, const char *file_path, bool_t is_li
     switch (is_library_cur)
     {
     case 0:
-        cursor = XcursorFilenameLoadCursor(p_window->x11_handler.p_display, realpath(file_path, NULL));
+        cursor = XcursorFilenameLoadCursor(p_window->x11_handler.p_display, file_path);
         break;
 
     case 1:
@@ -204,11 +201,9 @@ void update_window(DENGWindow *p_window) {
     if(XCheckWindowEvent(p_window->x11_handler.p_display, p_window->x11_handler.window, ButtonPressMask | ButtonReleaseMask, &p_window->x11_handler.event))
         handle_mouse_events(p_window);
 
-    if(XCheckWindowEvent(p_window->x11_handler.p_display, p_window->x11_handler.window, 0, &p_window->x11_handler.event)) {
-        if(p_window->x11_handler.event.type == ClientMessage && p_window->x11_handler.event.xclient_data.l[0] == wmDeleteMessage) {
+    if(XCheckWindowEvent(p_window->x11_handler.p_display, p_window->x11_handler.window, StructureNotifyMask, &p_window->x11_handler.event)) {
+        if(p_window->x11_handler.event.type == DestroyNotify)
             destroy_window(p_window);
-            is_running_var = false;
-        }
     }
 
     usleep(DENG_REFRESH_INTERVAL);

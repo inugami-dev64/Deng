@@ -38,8 +38,6 @@ namespace dengUI {
         }
 
         // get boundaries 
-        dengUIPixelBoundariesMode local_dengui_pixel_boundaries_mode;
-
         for(size_t i = 0; i < this->m_objects_pixel_data[local_pixel_group_index].pixels_data.size() - 1; i++) {
             if(this->m_objects_pixel_data[local_pixel_group_index].pixels_data[i].second == vertical_index) {
                 if(this->m_objects_pixel_data[local_pixel_group_index].pixels_data[i - 1].second != vertical_index && this->m_objects_pixel_data[local_pixel_group_index].pixels_data[i + 1].second != vertical_index) {
@@ -72,7 +70,6 @@ namespace dengUI {
 
     void PixelCollision::setupPixelRangesFromVertices(dengMath::vec2<size_t> *vertices_bounds, dengMath::vec2<size_t> *indices_bounds, const char *p_object_description) {
         this->m_objects_pixel_data.resize(this->m_objects_pixel_data.size() + 1);
-        size_t local_obj_pix_size = this->m_objects_pixel_data.size() - 1;
 
         LOG("m_objects_pixel_data size: " + std::to_string(this->m_objects_pixel_data.size()));
         this->m_objects_pixel_data[this->m_objects_pixel_data.size() - 1].object_description = p_object_description;
@@ -170,9 +167,8 @@ namespace dengUI {
                 this->m_objects_pixel_data[this->m_objects_pixel_data.size() - 1].pixels_data.push_back(local_new_pixel_coords);
             }
 
-            for(dengMath::vec2<double> &pixel_data : this->m_objects_pixel_data[this->m_objects_pixel_data.size() - 1].pixels_data) {
+            for(dengMath::vec2<double> &pixel_data : this->m_objects_pixel_data[this->m_objects_pixel_data.size() - 1].pixels_data)
                 LOG("Pixel coords: " + std::to_string(pixel_data.first) + "/" + std::to_string(pixel_data.second));
-            }
 
             LOG("Successfully rasterised triangle vertices!");
                 // this->m_objects_pixel_data[this->m_objects_pixel_data.size() - 1].pixels_data.resize(this->m_objects_pixel_data[this->m_objects_pixel_data.size() - 1].pixels_data.size() + 3);

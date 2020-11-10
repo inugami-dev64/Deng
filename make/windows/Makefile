@@ -3,13 +3,14 @@ CXX = g++
 LD = ar
 SRC_DIR = ..\..\src
 BUILD_DIR = ..\..\build
-TARGET = deng.exe
+TARGET = $(BUILD_DIR)\deng\deng.exe
 LIBSURFACE_TARGET = libsurface.a
 VULKANSDK_VERSION = 1.2.154.1
+VULKANSDK_PATH = C:\VulkanSDK\$(VULKANSDK_VERSION)
 
-INCLUDE_PATH = -I C:\VulkanSDK\$(VULKANSDK_VERSION)\Include
+INCLUDE_PATH = -I $(VULKANSDK_PATH)\Include
 
-LD_PATH = -L C:\VulkanSDK\$(VULKANSDK_VERSION)\Lib \
+LD_PATH = -L $(VULKANSDK_PATH)\Lib \
 		  -L $(BUILD_DIR)\deng\lib
 
 MAIN_SRC = $(SRC_DIR)\main\main.cpp
@@ -59,11 +60,10 @@ $(TARGET): .init_build $(LIBSURFACE_TARGET) $(OBJ)
 .init_build:
 	.\init_build.bat $(BUILD_DIR)
 
-# Surface library building 
+# Surface library build
 $(LIBSURFACE_TARGET): $(LIBSURFACE_OBJ)
 	$(LD) rs $(LIBSURFACE_TARGET) $(LIBSURFACE_OBJ)
 	move $(LIBSURFACE_TARGET) $(BUILD_DIR)\deng\lib 
-	$(LD_FLAGS) = -lsurface
 
 $(BUILD_DIR)\obj\libsurface\vulkan_handler.c.o: $(SRC_DIR)\surface\vulkan_handler.c
 	$(CC) -c $(SRC_DIR)\surface\vulkan_handler.c -o $(BUILD_DIR)\obj\libsurface\vulkan_handler.c.o $(INCLUDE_PATH) $(CC_FLAGS)
@@ -82,7 +82,7 @@ $(BUILD_DIR)\obj\libsurface\win32_surface.c.o: $(SRC_DIR)\surface\win32_surface.
 $(BUILD_DIR)\obj\deng\camera.cpp.o: $(SRC_DIR)\core\camera.cpp
 	$(CXX) -c $(SRC_DIR)\core\camera.cpp -o $(BUILD_DIR)\obj\deng\camera.cpp.o $(INCLUDE_PATH) $(CXX_FLAGS) 
 
-$(BUILD_DIR)\obj\deng\renderer_utils.cpp.o: $(SRC_DIR)\core\renderer_utils.cpp
+$(BUILD_DIR)/obj/deng/renderer_utils.cpp.o: $(SRC_DIR)\core\renderer_utils.cpp
 	$(CXX) -c $(SRC_DIR)\core\renderer_utils.cpp -o $(BUILD_DIR)\obj\deng\renderer_utils.cpp.o $(INCLUDE_PATH) $(CXX_FLAGS)
 
 $(BUILD_DIR)\obj\deng\renderer.cpp.o: $(SRC_DIR)\core\renderer.cpp

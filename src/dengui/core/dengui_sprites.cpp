@@ -218,8 +218,6 @@ namespace dengUI {
             local_surround_rectangle_vertices.fourth.position_vec.first = p_windowinfo->position.first - ((p_windowinfo->origin.first + 1) * local_rectangle_size.first / 2) + dengMath::Conversion::pixelSizeToVector2DSize((*pp_triangle_info)->margin_data.margin_left, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_X);
             local_surround_rectangle_vertices.fourth.position_vec.second = p_windowinfo->position.second + ((1 - ((p_windowinfo->origin.first + 1) / 2)) * local_rectangle_size.second) - dengMath::Conversion::pixelSizeToVector2DSize((*pp_triangle_info)->margin_data.margin_bottom, p_windowinfo->p_window->getSize(), DENG_COORD_AXIS_Y);
 
-            dengMath::vec3<dengUtils::UIVerticesData> local_triangle_vertices_data;
-
             for(index = 0; index < (*pp_triangle_info)->vertices_relativity_infos.size(); index++) {
                 vertices_rel_index = (*pp_triangle_info)->vertices_relativity_infos.getVectorElement(index)->rectangle_vertex_index;
 

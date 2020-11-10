@@ -47,7 +47,7 @@ namespace dengUI {
             p_local_rectangle_info->p_indices = &this->m_base_window_vertices.window_main_indices;
             p_local_rectangle_info->p_vertices = &this->m_base_window_vertices.window_main_vertices;
             p_local_rectangle_info->rectangle_color = p_css_body_data->background_color;
-            p_local_rectangle_info->rectangle_size = {p_css_body_data->width, p_css_body_data->height};
+            p_local_rectangle_info->rectangle_size = {static_cast<float>(p_css_body_data->width), static_cast<float>(p_css_body_data->height)};
 
             p_local_rectangle_info->margin_data.margin_top = 0.0f;
             p_local_rectangle_info->margin_data.margin_right = 0.0f;
@@ -90,12 +90,12 @@ namespace dengUI {
             p_local_rectangle_info->p_indices = &this->m_base_window_vertices.window_head_indices;
             p_local_rectangle_info->p_vertices = &this->m_base_window_vertices.window_head_vertices;
             p_local_rectangle_info->rectangle_color = p_css_head_data->background_color;
-            p_local_rectangle_info->rectangle_size = {p_css_body_data->width, p_css_head_data->height};
+            p_local_rectangle_info->rectangle_size = {static_cast<float>(p_css_body_data->width), static_cast<float>(p_css_head_data->height)};
             
-            p_local_rectangle_info->margin_data.margin_top = 0.0f;
-            p_local_rectangle_info->margin_data.margin_right = 0.0f;
-            p_local_rectangle_info->margin_data.margin_bottom = 0.0f;
-            p_local_rectangle_info->margin_data.margin_left = 0.0f;
+            p_local_rectangle_info->margin_data.margin_top = 0.0;
+            p_local_rectangle_info->margin_data.margin_right = 0.0;
+            p_local_rectangle_info->margin_data.margin_bottom = 0.0;
+            p_local_rectangle_info->margin_data.margin_left = 0.0;
             
             p_local_window_info->position.second = this->m_windowinfo.position.second - (this->m_windowinfo.origin.second + 1) / 2 * dengMath::Conversion::pixelSizeToVector2DSize(p_css_body_data->height, this->m_windowinfo.p_window->getSize(), DENG_COORD_AXIS_Y);
             p_local_window_info->position.second -= (1 - ((this->m_windowinfo.origin.second + 1) / 2)) * dengMath::Conversion::pixelSizeToVector2DSize(p_local_rectangle_info->rectangle_size.second, this->m_windowinfo.p_window->getSize(), DENG_COORD_AXIS_Y);  

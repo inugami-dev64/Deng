@@ -1,13 +1,13 @@
 # DENG
 
-DENG is a cross platform game engine based on vulkan! <br> 
-It is currently in early development stage! <br>
+![alt text](logo/logo_full.png) <br>
+DENG is a cross platform game engine based mainly on Vulkan API <br> 
+It is currently in early development stage and not much has been done yet, however renderer and multiplatform window surface have been successfully created and implemented.<br>
 <br>
 
 ## Object and texture formats
 ### Model formats
 * .obj - currently supported <br>
-* .stl - support will be added soon <br>
 <br>
 
 ### Texture formats

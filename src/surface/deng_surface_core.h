@@ -5,15 +5,17 @@
 extern "C" {
 #endif
 
-#define _BSD_SOURCE
-#include <unistd.h>
+#ifdef _WIN32
+    #define VK_USE_PLATFORM_WIN32_KHR 1
+    #define _BSD_SOURCE
+#elif __linux__
+    #define VK_USE_PLATFORM_XLIB_KHR 1
+#endif
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
-
-#ifdef _WIN32
-    #define VK_USE_PLATFORM_WIN32_KHR 1
-#endif
+#include <unistd.h>
 
 #include <vulkan/vulkan.h>
 #ifdef __linux__

@@ -101,6 +101,8 @@ size_t get_key_index(DENGWindow *p_window, DENGKey key, DENGMouseButton btn, int
         perror("Arguments to function call get_key_index are invalid!");
         return (size_t) -1;
     }
+
+    return (size_t) -1;
 }
 
 void remove_key(DENGWindow *p_window, size_t index, int key_type, int array_type) {
