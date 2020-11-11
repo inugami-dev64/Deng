@@ -91,6 +91,12 @@ namespace dengUtils {
     };
 
     dengTextureFormat getTexFileFormat(const std::string &texture_filepath);
+
+    #pragma pack(1)
+    struct PNGDataHeader {
+        
+    };
+    #pragma pack()
 }
 
 #endif
