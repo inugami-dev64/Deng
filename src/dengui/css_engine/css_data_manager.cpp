@@ -98,8 +98,6 @@ namespace dengCSS {
             ERRMEDB("No general border property values given!");
             return local_border_info; 
         }
-
-        LOG("property values: " + property_values);
         
         for(index = 0, ch_index = 0; ch_index < property_values.size(); ch_index++) {
             if(property_values[ch_index] != ' ' && property_values[ch_index] != ';')
@@ -126,14 +124,12 @@ namespace dengCSS {
         PropertiesDefinitions local_properties_def;
         dengBool local_is_class_found_in_file = DENG_FALSE;
         std::vector<std::string> local_css_data;
-        LOG(css_class_name + ": ");
 
         for(size_t i = 0; i < local_properties_def.properties_names.size(); i++) {
             switch (this->m_filemanager.getCSSProperyValue(css_class_name, local_properties_def.properties_names[i], css_file_name, &local_css_data))
             {
             case DENG_TRUE:
                 p_data_header->properties_data[i] = local_css_data[0];
-                LOG(p_data_header->properties_data[i]);
                 local_is_class_found_in_file = DENG_TRUE;
                 local_css_data.clear();
                 break;
@@ -170,8 +166,6 @@ namespace dengCSS {
         if(p_data_header->properties_data[DENG_CSS_PROPERTY_BORDER] != "") {
             *pp_general_border_info = new CSSGeneralBorderInfo;
             **pp_general_border_info = this->handleBorderData(p_data_header->properties_data[DENG_CSS_PROPERTY_BORDER]);
-            LOG("border color is: {" + std::to_string((*pp_general_border_info)->border_color.first) + ";" + std::to_string((*pp_general_border_info)->border_color.second) + ";" + std::to_string((*pp_general_border_info)->border_color.third) + "}");
-            LOG("border width is: " + std::to_string((*pp_general_border_info)->border_width));
         }
         
         else if(p_data_header->properties_data[DENG_CSS_PROPERTY_BORDER_COLOR] != "" && p_data_header->properties_data[DENG_CSS_PROPERTY_BORDER_WIDTH] != "") {

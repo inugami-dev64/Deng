@@ -3,7 +3,7 @@
 
 /*  BEFORE EVERY GIT COMMIT SET GENERIC_DEBUG VALUE TO 0!!!     */
 #define DENG_VULKAN
-#define GENERIC_DEBUG 0
+#define GENERIC_DEBUG 1
 
 /*  please do not enable these at the same time, 
     otherwise you won't be able to debug anything */
@@ -32,6 +32,7 @@
     #define ERRMEDB(x)
     const bool enable_validation_layers = false;
 #endif
+
 #define DISABLE_DENGUI 0
 
 enum dengPipelineDrawMode {

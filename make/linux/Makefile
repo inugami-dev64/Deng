@@ -48,7 +48,7 @@ $(TARGET): .init_build $(LIBSURFACE_TARGET) $(OBJ)
 	cp -r ../../textures $(BUILD_DIR)/deng/
 	cp -r ../../shaders $(BUILD_DIR)/deng/
 	cp -r ../../config $(BUILD_DIR)/deng/
-	cp -r $(SRC_DIR)/dengui/css $(BUILD_DIR)/deng/
+	cp -r $(SRC_DIR)/dengui/css $(BUILD_DIR)/deng/ui_styling
 	cp -r $(SRC_DIR)/surface/xcursor $(BUILD_DIR)/deng/
 
 .init_build:

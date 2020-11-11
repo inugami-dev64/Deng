@@ -620,7 +620,7 @@ namespace deng
         local_bufferinfo.p_buffer_copy_func = Renderer::copyBufferToBuffer;
         local_bufferinfo.p_commandpool = &this->m_commandpool;
         local_bufferinfo.p_graphics_queue = &this->m_queues.graphics_queue;
-        local_bufferinfo.p_indices_size = &this->m_pipelines[2].indices_size;
+        local_bufferinfo.p_indices_size = &this->m_pipelines[1].indices_size;
         local_bufferinfo.p_staging_buffer = &this->m_buffers.staging_buffer;
         local_bufferinfo.p_staging_buffer_memory = &this->m_buffers.staging_buffer_memory;
         local_bufferinfo.p_vertices_buffer = &this->m_buffers.window_buffer;
@@ -1000,20 +1000,18 @@ namespace deng
                 VkDeviceSize local_offsets[] = {0};
 
                 for(size_t ii = 0; ii < this->m_pipelines.size(); ii++) {
-                    if(!(ii == 1 && this->m_environment_conf.show_grid == DENG_FALSE)) {
-                        vkCmdBindPipeline(this->m_commandbuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipelines[ii].pipeline);
-                        vkCmdBindVertexBuffers(this->m_commandbuffers[i], 0, 1, this->m_pipelines[ii].p_vertices_buffer, local_offsets);
+                    vkCmdBindPipeline(this->m_commandbuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipelines[ii].pipeline);
+                    vkCmdBindVertexBuffers(this->m_commandbuffers[i], 0, 1, this->m_pipelines[ii].p_vertices_buffer, local_offsets);
 
-                        if(this->m_pipelines[ii].pipeline_draw_mode == DENG_PIPELINE_DRAW_MODE_INDEXED) {
-                            vkCmdBindIndexBuffer(this->m_commandbuffers[i], *this->m_pipelines[ii].p_indices_buffer, 0, VK_INDEX_TYPE_UINT16);
-                            vkCmdBindDescriptorSets(this->m_commandbuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, *this->m_pipelines[ii].p_pipeline_layout, 0, 1, &this->m_pipelines[ii].p_descriptor_sets->at(i), 0, nullptr);
-                            vkCmdDrawIndexed(this->m_commandbuffers[i], this->m_pipelines[ii].indices_size, 1, 0, 0, 0);
-                        }
+                    if(this->m_pipelines[ii].pipeline_draw_mode == DENG_PIPELINE_DRAW_MODE_INDEXED) {
+                        vkCmdBindIndexBuffer(this->m_commandbuffers[i], *this->m_pipelines[ii].p_indices_buffer, 0, VK_INDEX_TYPE_UINT16);
+                        vkCmdBindDescriptorSets(this->m_commandbuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, *this->m_pipelines[ii].p_pipeline_layout, 0, 1, &this->m_pipelines[ii].p_descriptor_sets->at(i), 0, nullptr);
+                        vkCmdDrawIndexed(this->m_commandbuffers[i], this->m_pipelines[ii].indices_size, 1, 0, 0, 0);
+                    }
 
-                        else if(this->m_pipelines[ii].pipeline_draw_mode == DENG_PIPELINE_DRAW_MODE_LINEAR) {
-                            vkCmdBindDescriptorSets(this->m_commandbuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, *this->m_pipelines[ii].p_pipeline_layout, 0, 1, &this->m_pipelines[ii].p_descriptor_sets->at(i), 0, nullptr);
-                            vkCmdDraw(this->m_commandbuffers[i], this->m_pipelines[ii].vertices_size, 1, 0, 0);
-                        }
+                    else if(this->m_pipelines[ii].pipeline_draw_mode == DENG_PIPELINE_DRAW_MODE_LINEAR) {
+                        vkCmdBindDescriptorSets(this->m_commandbuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, *this->m_pipelines[ii].p_pipeline_layout, 0, 1, &this->m_pipelines[ii].p_descriptor_sets->at(i), 0, nullptr);
+                        vkCmdDraw(this->m_commandbuffers[i], this->m_pipelines[ii].vertices_size, 1, 0, 0);
                     }
                 }
 
