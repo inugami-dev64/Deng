@@ -17,6 +17,55 @@ namespace dengUI {
         this->m_p_css_data_handler->getBodyData(&p_local_body_css_data);
         this->m_p_css_data_handler->getGenericObjectData(&p_local_minimise_triangle_css_data);
 
+        #ifdef GENERIC_DEBUG
+            LOG("\nHead CSS data:");
+            LOG("Head height: " + std::to_string(p_local_head_css_data->height));
+            LOG("Background color: " + std::to_string(p_local_head_css_data->background_color.first) + ";" + std::to_string(p_local_head_css_data->background_color.second) + ";" + std::to_string(p_local_head_css_data->background_color.third) + "}");
+            
+            if(p_local_head_css_data->p_general_border_info != nullptr) {
+                LOG("Head border width: " + std::to_string(p_local_head_css_data->p_general_border_info->border_width));
+                LOG("Head border color: {" + std::to_string(p_local_head_css_data->p_general_border_info->border_color.first) + ";" + std::to_string(p_local_head_css_data->p_general_border_info->border_color.second) + ";" + std::to_string(p_local_head_css_data->p_general_border_info->border_color.third) + "}");
+            }
+
+            else if(p_local_head_css_data->p_specified_border_info != nullptr) {
+                LOG("Head border top width: " + std::to_string(p_local_head_css_data->p_specified_border_info->border_top_width));
+                LOG("Head border top color: {" + std::to_string(p_local_head_css_data->p_specified_border_info->border_top_color.first) + ";" + std::to_string(p_local_head_css_data->p_specified_border_info->border_top_color.second) + ";" + std::to_string(p_local_head_css_data->p_specified_border_info->border_top_color.third) + "}");
+                
+                LOG("Head border right width: " + std::to_string(p_local_head_css_data->p_specified_border_info->border_right_width));
+                LOG("Head border right color: {" + std::to_string(p_local_head_css_data->p_specified_border_info->border_right_color.first) + ";" + std::to_string(p_local_head_css_data->p_specified_border_info->border_right_color.second) + ";" + std::to_string(p_local_head_css_data->p_specified_border_info->border_right_color.third) + "}");
+                
+                LOG("Head border bottom width: " + std::to_string(p_local_head_css_data->p_specified_border_info->border_bottom_width));
+                LOG("Head border bottom color: {" + std::to_string(p_local_head_css_data->p_specified_border_info->border_bottom_color.first) + ";" + std::to_string(p_local_head_css_data->p_specified_border_info->border_bottom_color.second) + ";" + std::to_string(p_local_head_css_data->p_specified_border_info->border_bottom_color.third) + "}");
+                
+                LOG("Head border left width: " + std::to_string(p_local_head_css_data->p_specified_border_info->border_left_width));
+                LOG("Head border left color: {" + std::to_string(p_local_head_css_data->p_specified_border_info->border_left_color.first) + ";" + std::to_string(p_local_head_css_data->p_specified_border_info->border_left_color.second) + ";" + std::to_string(p_local_head_css_data->p_specified_border_info->border_left_color.third) + "}");
+            }
+
+            LOG("\nBody CSS data:");
+            LOG("Body height: " + std::to_string(p_local_body_css_data->height));
+            LOG("Body width: " + std::to_string(p_local_body_css_data->width));
+
+            if(p_local_body_css_data->p_general_border_info != nullptr) {
+                LOG("Head border width: " + std::to_string(p_local_body_css_data->p_general_border_info->border_width));
+                LOG("Head border color: {" + std::to_string(p_local_body_css_data->p_general_border_info->border_color.first) + ";" + std::to_string(p_local_body_css_data->p_general_border_info->border_color.second) + ";" + std::to_string(p_local_body_css_data->p_general_border_info->border_color.third) + "}");
+            }
+
+            else if(p_local_body_css_data->p_specified_border_info != nullptr) {
+                LOG("Head border top width: " + std::to_string(p_local_body_css_data->p_specified_border_info->border_top_width));
+                LOG("Head border top color: {" + std::to_string(p_local_body_css_data->p_specified_border_info->border_top_color.first) + ";" + std::to_string(p_local_body_css_data->p_specified_border_info->border_top_color.second) + ";" + std::to_string(p_local_body_css_data->p_specified_border_info->border_top_color.third) + "}");
+                
+                LOG("Head border right width: " + std::to_string(p_local_body_css_data->p_specified_border_info->border_right_width));
+                LOG("Head border right color: {" + std::to_string(p_local_body_css_data->p_specified_border_info->border_right_color.first) + ";" + std::to_string(p_local_body_css_data->p_specified_border_info->border_right_color.second) + ";" + std::to_string(p_local_body_css_data->p_specified_border_info->border_right_color.third) + "}");
+                
+                LOG("Head border bottom width: " + std::to_string(p_local_body_css_data->p_specified_border_info->border_bottom_width));
+                LOG("Head border bottom color: {" + std::to_string(p_local_body_css_data->p_specified_border_info->border_bottom_color.first) + ";" + std::to_string(p_local_body_css_data->p_specified_border_info->border_bottom_color.second) + ";" + std::to_string(p_local_body_css_data->p_specified_border_info->border_bottom_color.third) + "}");
+                
+                LOG("Head border left width: " + std::to_string(p_local_body_css_data->p_specified_border_info->border_left_width));
+                LOG("Head border left color: {" + std::to_string(p_local_body_css_data->p_specified_border_info->border_left_color.first) + ";" + std::to_string(p_local_body_css_data->p_specified_border_info->border_left_color.second) + ";" + std::to_string(p_local_body_css_data->p_specified_border_info->border_left_color.third) + "}\n");
+            }
+
+        #endif
+
         this->createBaseWindow(p_local_head_css_data, p_local_body_css_data, p_local_minimise_triangle_css_data);
         this->createBuffers();
     }
@@ -193,7 +242,7 @@ namespace dengUI {
     }
 
     void Window::createBaseWindow(dengCSS::CSSHeadData *p_head_css_data, dengCSS::CSSBodyData *p_body_css_data, dengCSS::CSSGenericObjectData *p_minimise_triangle_css_data) {
-        size_t index;
+        size_t i;
         this->getWindowVertices(DENGUI_WINDOW_VERTICES_TYPE_BODY, nullptr, p_body_css_data, nullptr);
 
         this->m_vertices_data = this->m_base_window_vertices.window_main_vertices;
@@ -201,19 +250,31 @@ namespace dengUI {
 
         this->getWindowVertices(DENGUI_WINDOW_VERTICES_TYPE_HEAD, p_head_css_data, p_body_css_data, nullptr);
         
-        for(index = 0; index < this->m_base_window_vertices.window_head_indices.size(); index++)
-            this->m_base_window_vertices.window_head_indices[index] += static_cast<uint16_t>(this->m_vertices_data.size());
+        for(i = 0; i < this->m_base_window_vertices.window_head_indices.size(); i++)
+            this->m_base_window_vertices.window_head_indices[i] += static_cast<uint16_t>(this->m_vertices_data.size());
 
         this->m_vertices_data.insert(this->m_vertices_data.end(), this->m_base_window_vertices.window_head_vertices.begin(), this->m_base_window_vertices.window_head_vertices.end());
         this->m_indices_data.insert(this->m_indices_data.end(), this->m_base_window_vertices.window_head_indices.begin(), this->m_base_window_vertices.window_head_indices.end());
 
         this->getWindowVertices(DENGUI_WINDOW_VERTICES_TYPE_TRIANGLE, p_head_css_data, p_body_css_data, p_minimise_triangle_css_data);
 
-        for(index = 0; index < this->m_base_window_vertices.window_minimise_triangle_indices.size(); index++)
-            this->m_base_window_vertices.window_minimise_triangle_indices[index] += static_cast<uint16_t>(this->m_vertices_data.size());
+        for(i = 0; i < this->m_base_window_vertices.window_minimise_triangle_indices.size(); i++)
+            this->m_base_window_vertices.window_minimise_triangle_indices[i] += static_cast<uint16_t>(this->m_vertices_data.size());
 
         this->m_vertices_data.insert(this->m_vertices_data.end(), this->m_base_window_vertices.window_minimise_triangle_vertices.begin(), this->m_base_window_vertices.window_minimise_triangle_vertices.end());
         this->m_indices_data.insert(this->m_indices_data.end(), this->m_base_window_vertices.window_minimise_triangle_indices.begin(), this->m_base_window_vertices.window_minimise_triangle_indices.end());
+    
+        #ifdef GENERIC_DEBUG
+            LOG("\nAll DENGUI window vertices are following: ");
+            for(i = 0; i < this->m_vertices_data.size(); i++)
+                LOG("Vertex " + std::to_string(i) + ": {" + std::to_string(this->m_vertices_data[i].position_vec.first) + ";" + std::to_string(this->m_vertices_data[i].position_vec.second) + ";" + std::to_string(this->m_vertices_data[i].position_vec.third) + "}");
+            LOG("");
+
+            LOG("\nAll DENGUI window indices are following: ");
+            for(i = 0; i < this->m_indices_data.size(); i++)
+                LOG("Index " + std::to_string(i) + ": " + std::to_string(this->m_indices_data[i]));
+            LOG("");
+        #endif
     }
 
     void Window::createBuffers() {

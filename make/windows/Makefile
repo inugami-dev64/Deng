@@ -82,7 +82,7 @@ $(BUILD_DIR)\obj\libsurface\win32_surface.c.o: $(SRC_DIR)\surface\win32_surface.
 $(BUILD_DIR)\obj\deng\camera.cpp.o: $(SRC_DIR)\core\camera.cpp
 	$(CXX) -c $(SRC_DIR)\core\camera.cpp -o $(BUILD_DIR)\obj\deng\camera.cpp.o $(INCLUDE_PATH) $(CXX_FLAGS) 
 
-$(BUILD_DIR)/obj/deng/renderer_utils.cpp.o: $(SRC_DIR)\core\renderer_utils.cpp
+$(BUILD_DIR)\obj\deng\renderer_utils.cpp.o: $(SRC_DIR)\core\renderer_utils.cpp
 	$(CXX) -c $(SRC_DIR)\core\renderer_utils.cpp -o $(BUILD_DIR)\obj\deng\renderer_utils.cpp.o $(INCLUDE_PATH) $(CXX_FLAGS)
 
 $(BUILD_DIR)\obj\deng\renderer.cpp.o: $(SRC_DIR)\core\renderer.cpp
