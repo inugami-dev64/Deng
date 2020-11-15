@@ -17,7 +17,7 @@ namespace dengUtils {
         case DENG_NUMERAL_TYPE_NON_FLOATING:
             if(typeid(sample_object) == typeid(int) || typeid(sample_object) == typeid(int8_t) || typeid(sample_object) == typeid(int16_t) ||
             typeid(sample_object) == typeid(int32_t) || typeid(sample_object) == typeid(uint8_t) || typeid(sample_object) == typeid(uint16_t) || 
-            typeid(sample_object) == typeid(uint32_t)) return DENG_TRUE;
+            typeid(sample_object) == typeid(uint32_t) || typeid(sample_object) == typeid(size_t)) return DENG_TRUE;
             break;
 
         case DENG_NUMERAL_TYPE_FLOAT:

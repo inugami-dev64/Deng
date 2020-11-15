@@ -22,9 +22,9 @@ namespace deng {
         return DENG_FALSE;
     }
 
-    uint32_t HardwareSpecs::getMemoryType(const VkPhysicalDevice &gpu, const uint32_t &type_filter, const VkMemoryPropertyFlags &properties) {
+    uint32_t HardwareSpecs::getMemoryType(VkPhysicalDevice *p_gpu, const uint32_t &type_filter, const VkMemoryPropertyFlags &properties) {
         VkPhysicalDeviceMemoryProperties local_memory_properties;
-        vkGetPhysicalDeviceMemoryProperties(gpu, &local_memory_properties);
+        vkGetPhysicalDeviceMemoryProperties(*p_gpu, &local_memory_properties);
 
         for(uint32_t i = 0; i < local_memory_properties.memoryTypeCount; i++) {
             if(type_filter & (1 << i) && (local_memory_properties.memoryTypes[i].propertyFlags & properties)) {
@@ -36,13 +36,13 @@ namespace deng {
         ERR("Failed to find suitable memory type");
     }
 
-    uint32_t HardwareSpecs::getDeviceScore(const VkPhysicalDevice &gpu, std::vector<const char*> &required_extenstions) {
+    uint32_t HardwareSpecs::getDeviceScore(VkPhysicalDevice *p_gpu, std::vector<const char*> &required_extenstions) {
         uint32_t score = 0;
         VkPhysicalDeviceFeatures local_device_features;
         VkPhysicalDeviceProperties local_device_properties;
 
-        vkGetPhysicalDeviceProperties(gpu, &local_device_properties);
-        vkGetPhysicalDeviceFeatures(gpu, &local_device_features);
+        vkGetPhysicalDeviceProperties(*p_gpu, &local_device_properties);
+        vkGetPhysicalDeviceFeatures(*p_gpu, &local_device_features);
 
         if(local_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) score += 1000;
         
@@ -57,7 +57,7 @@ namespace deng {
         if(!local_device_features.samplerAnisotropy) return 0;
 
         for(const char* extenstion_name : required_extenstions) {
-            if(HardwareSpecs::getExtensionSupport(gpu, extenstion_name) != DENG_TRUE) {
+            if(HardwareSpecs::getExtensionSupport(*p_gpu, extenstion_name) != DENG_TRUE) {
                 LOG("Required extension: " + std::string(extenstion_name) + " is not supported!");
                 return 0;
             }
@@ -139,16 +139,12 @@ namespace deng {
 
         switch (this->m_p_pipeline_data->pipeline_type)
         {
-        case DENG_PIPELINE_TYPE_OBJECT_BASED:
-            local_input_binding_desc.stride = sizeof(dengUtils::ObjVertexData);
+        case DENG_PIPELINE_TYPE_UNMAPPED:
+            local_input_binding_desc.stride = sizeof(dengUtils::UnmappedVerticesData);
             break;
         
-        case DENG_PIPELINE_TYPE_SPECIFIED:
-            local_input_binding_desc.stride = sizeof(dengUtils::SpecifiedVertexData);
-            break;
-
-        case DENG_PIPELINE_TYPE_UI:
-            local_input_binding_desc.stride = sizeof(dengUtils::UIVerticesData);
+        case DENG_PIPELINE_TYPE_TEXTURE_MAPPED:
+            local_input_binding_desc.stride = sizeof(dengMath::vec3<float>);
             break;
         
         default:
@@ -164,42 +160,30 @@ namespace deng {
 
         switch (this->m_p_pipeline_data->pipeline_type)
         {
-        case DENG_PIPELINE_TYPE_OBJECT_BASED:
+        case DENG_PIPELINE_TYPE_UNMAPPED:
             local_input_attr_desc[0].binding = 0;
             local_input_attr_desc[0].location = 0;
             local_input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-            local_input_attr_desc[0].offset = offsetof(dengUtils::ObjVertexData, position_vec);
-
-            local_input_attr_desc[1].binding = 0;
-            local_input_attr_desc[1].location = 1;
-            local_input_attr_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
-            local_input_attr_desc[1].offset = offsetof(dengUtils::ObjVertexData, texture_vec);
-            break;
-
-        case DENG_PIPELINE_TYPE_SPECIFIED:
-            local_input_attr_desc[0].binding = 0;
-            local_input_attr_desc[0].location = 0;
-            local_input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-            local_input_attr_desc[0].offset = offsetof(dengUtils::SpecifiedVertexData, position_vec);
+            local_input_attr_desc[0].offset = offsetof(dengUtils::UnmappedVerticesData, position_vec);
 
             local_input_attr_desc[1].binding = 0;
             local_input_attr_desc[1].location = 1;
             local_input_attr_desc[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-            local_input_attr_desc[1].offset = offsetof(dengUtils::SpecifiedVertexData, color_vec);
+            local_input_attr_desc[1].offset = offsetof(dengUtils::UnmappedVerticesData, color_vec);
             break;
 
-        case DENG_PIPELINE_TYPE_UI:
+        case DENG_PIPELINE_TYPE_TEXTURE_MAPPED:
             local_input_attr_desc[0].binding = 0;
             local_input_attr_desc[0].location = 0;
             local_input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-            local_input_attr_desc[0].offset = offsetof(dengUtils::UIVerticesData, position_vec);
-            
+            local_input_attr_desc[0].offset = offsetof(dengUtils::TextureMappedVerticesData, position_vec);
+
             local_input_attr_desc[1].binding = 0;
             local_input_attr_desc[1].location = 1;
-            local_input_attr_desc[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-            local_input_attr_desc[1].offset = offsetof(dengUtils::UIVerticesData, color_vec);
+            local_input_attr_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
+            local_input_attr_desc[1].offset = offsetof(dengUtils::TextureMappedVerticesData, texture_vec);
             break;
-        
+
         default:
             break;
         }
@@ -362,4 +346,178 @@ namespace deng {
         return this->m_present_modes;
     }
 
+
+    /* Generic memory allocation method */
+    void BufferHandler::allocateMemory(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceMemory *p_memory, const VkDeviceSize &size, uint32_t mem_type_bits, VkMemoryPropertyFlags properties) {
+        VkMemoryAllocateInfo local_allocinfo{};
+        local_allocinfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        local_allocinfo.allocationSize = size;
+        local_allocinfo.memoryTypeIndex = HardwareSpecs::getMemoryType(p_gpu, mem_type_bits, properties);
+
+        if(vkAllocateMemory(*p_device, &local_allocinfo, nullptr, p_memory) != VK_SUCCESS)
+            ERR("Failed to allocate buffer memory!");
+    }
+
+    /* VkImage related functions */
+    VkMemoryRequirements BufferHandler::makeImage(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkImage *p_image, uint32_t &width, uint32_t &height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkDeviceSize offset) {
+        VkImageCreateInfo local_image_createInfo{};
+        local_image_createInfo.sType  = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        local_image_createInfo.imageType = VK_IMAGE_TYPE_2D;
+        local_image_createInfo.extent.width = width;
+        local_image_createInfo.extent.height = height;
+        local_image_createInfo.extent.depth = 1;
+        local_image_createInfo.mipLevels = 1;
+        local_image_createInfo.arrayLayers = 1;
+        local_image_createInfo.format = format;
+        local_image_createInfo.tiling = tiling;
+        local_image_createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        local_image_createInfo.usage = usage;
+        local_image_createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        local_image_createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if(vkCreateImage(*p_device, &local_image_createInfo, nullptr, p_image) != VK_SUCCESS) 
+            ERR("Failed to create image!");
+
+        VkMemoryRequirements local_memory_requirement;
+        vkGetImageMemoryRequirements(*p_device, *p_image, &local_memory_requirement);
+        
+        return local_memory_requirement;
+    }
+
+    void BufferHandler::transitionImageLayout(VkDevice *p_device, VkImage *p_image, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout) {
+        VkCommandBuffer local_commandbuffer;
+        BufferHandler::beginCommandBufferSingleCommand(p_device, p_commandpool, local_commandbuffer);
+
+        VkImageMemoryBarrier local_memory_barrier{};
+        local_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        local_memory_barrier.oldLayout = old_layout;
+        local_memory_barrier.newLayout = new_layout;
+        local_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        local_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        local_memory_barrier.image = *p_image;
+        local_memory_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        local_memory_barrier.subresourceRange.baseMipLevel = 0;
+        local_memory_barrier.subresourceRange.levelCount = 1;
+        local_memory_barrier.subresourceRange.baseArrayLayer = 0;
+        local_memory_barrier.subresourceRange.layerCount = 1;
+
+        VkPipelineStageFlags local_src_stage;
+        VkPipelineStageFlags local_dst_stage;
+        
+        if(old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+            local_memory_barrier.srcAccessMask = 0;
+            local_memory_barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+            local_src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            local_dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        }
+        else if(old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+            local_memory_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            local_memory_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+            local_src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            local_dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        }
+        else {
+            ERR("Invalid layout transitions!");
+        }
+
+        vkCmdPipelineBarrier(local_commandbuffer, local_src_stage, local_dst_stage, 0, 0, nullptr, 0, nullptr, 1, &local_memory_barrier);
+
+        BufferHandler::endCommandBufferSingleCommand(p_device, p_graphics_queue, p_commandpool, local_commandbuffer);
+    }
+
+    void BufferHandler::copyBufferToImage(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer &src_buffer, VkImage &dst_image, const uint32_t &width, const uint32_t &height) {
+        VkCommandBuffer local_commandbuffer;
+        BufferHandler::beginCommandBufferSingleCommand(p_device, p_commandpool, local_commandbuffer);
+
+        VkBufferImageCopy local_copy_region{};
+        local_copy_region.bufferOffset = 0;
+        local_copy_region.bufferRowLength = 0;
+        local_copy_region.bufferImageHeight = 0;
+
+        local_copy_region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        local_copy_region.imageSubresource.mipLevel = 0;
+        local_copy_region.imageSubresource.baseArrayLayer = 0;
+        local_copy_region.imageSubresource.layerCount = 1;
+
+        local_copy_region.imageOffset = {0, 0, 0};
+        local_copy_region.imageExtent = {width, height, 1};
+
+        vkCmdCopyBufferToImage(local_commandbuffer, src_buffer, dst_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &local_copy_region);
+
+        BufferHandler::endCommandBufferSingleCommand(p_device, p_graphics_queue, p_commandpool, local_commandbuffer);
+    }
+    
+    /* VkBuffer related functions */
+    VkMemoryRequirements BufferHandler::makeBuffer(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, VkBuffer *p_buffer, VkDeviceMemory *p_buffer_memory, VkDeviceSize offset) {
+        
+        VkBufferCreateInfo local_buffer_createInfo{};
+        local_buffer_createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        local_buffer_createInfo.size = *p_size;
+        local_buffer_createInfo.usage = usage;
+        local_buffer_createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if(vkCreateBuffer(*p_device, &local_buffer_createInfo, nullptr, p_buffer) != VK_SUCCESS)
+            ERR("Failed to create a buffer!");
+
+        VkMemoryRequirements local_memory_requirement;
+        vkGetBufferMemoryRequirements(*p_device, *p_buffer, &local_memory_requirement);
+
+        return local_memory_requirement;
+    }
+
+    void BufferHandler::populateBufferMem(VkDevice *p_device, VkDeviceSize *p_size, const void *p_src_data, VkDeviceMemory *p_buffer_memory, VkDeviceSize offset) {
+        LOG("Populating buffer memory!");
+        void *local_data;
+        vkMapMemory(*p_device, *p_buffer_memory, offset, *p_size, 0, &local_data);
+            memcpy(local_data, p_src_data, static_cast<size_t>(*p_size));
+        vkUnmapMemory(*p_device, *p_buffer_memory);
+    }
+
+    void BufferHandler::copyBufferToBuffer(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkBuffer *p_dst_buffer, VkDeviceSize *p_size, const VkDeviceSize &offset) {
+        VkCommandBuffer local_commandbuffer;
+        BufferHandler::beginCommandBufferSingleCommand(p_device, p_commandpool, local_commandbuffer);
+
+        VkBufferCopy local_copy_region{};
+        local_copy_region.srcOffset = 0;
+        local_copy_region.dstOffset = offset;
+        local_copy_region.size = *p_size;
+        
+        vkCmdCopyBuffer(local_commandbuffer, *p_src_buffer, *p_dst_buffer, 1, &local_copy_region);
+        BufferHandler::endCommandBufferSingleCommand(p_device, p_graphics_queue, p_commandpool, local_commandbuffer);
+    }
+
+    /* single commandbuffer command recorder functions */
+    void BufferHandler::beginCommandBufferSingleCommand(VkDevice *device, VkCommandPool *commandpool, VkCommandBuffer &commandBuffer) {
+        VkCommandBufferAllocateInfo local_commandBuffer_allocInfo{};
+        local_commandBuffer_allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        local_commandBuffer_allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        local_commandBuffer_allocInfo.commandPool = *commandpool;
+        local_commandBuffer_allocInfo.commandBufferCount = 1;
+
+        vkAllocateCommandBuffers(*device, &local_commandBuffer_allocInfo, &commandBuffer);
+        
+        VkCommandBufferBeginInfo local_commandBuffer_beginInfo{};
+        local_commandBuffer_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        local_commandBuffer_beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        if(vkBeginCommandBuffer(commandBuffer, &local_commandBuffer_beginInfo) != VK_SUCCESS) {
+            ERR("Failed to begin command recording buffer!");
+        }
+    }
+
+    void BufferHandler::endCommandBufferSingleCommand(VkDevice *device, VkQueue *graphics_queue, VkCommandPool *commandpool, VkCommandBuffer &commandBuffer) {
+        vkEndCommandBuffer(commandBuffer);
+
+        VkSubmitInfo local_submitInfo{};
+        local_submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        local_submitInfo.commandBufferCount = 1;
+        local_submitInfo.pCommandBuffers = &commandBuffer;
+        
+        vkQueueSubmit(*graphics_queue, 1, &local_submitInfo, VK_NULL_HANDLE);
+        vkQueueWaitIdle(*graphics_queue);
+
+        vkFreeCommandBuffers(*device, *commandpool, 1, &commandBuffer);
+    }
 }

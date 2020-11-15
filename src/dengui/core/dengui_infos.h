@@ -10,13 +10,13 @@ namespace dengUI {
     };
 
     struct BaseWindowVertices {
-        std::vector<dengUtils::UIVerticesData> window_main_vertices;
+        std::vector<dengUtils::UnmappedVerticesData> window_main_vertices;
         std::vector<uint16_t> window_main_indices;
         
-        std::vector<dengUtils::UIVerticesData> window_head_vertices;
+        std::vector<dengUtils::UnmappedVerticesData> window_head_vertices;
         std::vector<uint16_t> window_head_indices;
 
-        std::vector<dengUtils::UIVerticesData> window_minimise_triangle_vertices;
+        std::vector<dengUtils::UnmappedVerticesData> window_minimise_triangle_vertices;
         std::vector<uint16_t> window_minimise_triangle_indices;
     };
 
@@ -31,7 +31,7 @@ namespace dengUI {
     };
 
     struct RectangleInfo {
-        std::vector<dengUtils::UIVerticesData> *p_vertices;
+        std::vector<dengUtils::UnmappedVerticesData> *p_vertices;
         std::vector<uint16_t> *p_indices;
         dengCSS::CSSMarginData margin_data;
 
@@ -40,7 +40,7 @@ namespace dengUI {
     };
 
     struct TriangleInfo {
-        std::vector<dengUtils::UIVerticesData> *p_vertices;
+        std::vector<dengUtils::UnmappedVerticesData> *p_vertices;
         std::vector<uint16_t> *p_indices;
         dengMath::vec3<float> triangle_color;
         dengCSS::CSSMarginData margin_data;
@@ -69,6 +69,17 @@ namespace dengUI {
         BufferMemoryPopulateFunc p_buffer_memory_populate_func;
     };
 
+    struct ImageInfo {
+        VkBuffer *p_staging_buffer;
+        VkDeviceMemory *p_staging_buffer_memory;
+
+        VkImage *p_image;
+        VkDeviceMemory *p_image_memory;
+        VkDeviceSize offset;
+
+        
+    };
+
     struct WindowInfo {
         dengMath::vec2<float> origin;
         dengMath::vec2<float> position;
@@ -87,7 +98,7 @@ namespace dengUI {
     struct ClickInfo {
         WindowInfo *p_windowinfo;
 
-        std::vector<dengUtils::UIVerticesData> *p_vertices_data;
+        std::vector<dengUtils::UnmappedVerticesData> *p_vertices_data;
         std::vector<uint16_t> *p_indices_data;
         BufferInfo *p_bufferinfo;
 

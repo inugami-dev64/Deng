@@ -63,6 +63,10 @@ namespace dengMath {
         dengBool operator>(vec4<T> vector) {
             return static_cast<dengBool>(this->first > vector.first && this->second > vector.second && this->third > vector.third && this->fourth > vector.fourth);
         }
+
+        dengBool operator==(vec4<T> vector) {
+            return this->first == vector.first && this->second == vector.second && this->third == vector.third && this->fourth == vector.fourth;
+        }
     };
 
     template<typename T>
@@ -125,6 +129,10 @@ namespace dengMath {
 
         dengBool operator>(vec3<T> vector) {
             return static_cast<dengBool>(first > vector.first && second > vector.second && third > vector.third);
+        }
+
+        dengBool operator==(vec3<T> vector) {
+            return this->first == vector.first && this->second == vector.second && this->third == vector.third;
         }
 
     };
@@ -193,6 +201,10 @@ namespace dengMath {
 
         dengBool operator>(vec2<T> vector) {
             return static_cast<dengBool>(first > vector.first && second > vector.second);
+        }
+
+        dengBool operator==(vec2<T> vector) {
+            return this->first == vector.first && this->second == vector.second;
         }
     };
 
@@ -312,9 +324,9 @@ namespace dengMath {
     };
 
     struct UniformBufferData {
-        mat4<float> model;
         mat4<float> view;
         mat4<float> projection;
+        // model matrix will be added separately 
     };
 
     // generic math functions

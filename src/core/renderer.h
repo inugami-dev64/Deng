@@ -3,8 +3,10 @@
 
 #if !DISABLE_DENGUI
     #define DENG_PIPELINE_COUNT 2
+    #define DENGUI_PIPELINE_INDEX 1
 #else
     #define DENG_PIPELINE_COUNT 1
+    #define DENGUI_PIPELINE_INDEX 0
 #endif
 
 namespace deng {
@@ -13,29 +15,27 @@ namespace deng {
     {   
     private:
         std::vector<const char*> m_required_extension_names;
+        std::vector<dengMath::vec3<float>> m_dummy_vertices = {{0.0f, 0.0f, 0.0f}, 
+                                                               {0.0f, 0.0f, 0.0f},
+                                                               {0.0f, 0.0f, 0.0f}};
+
         const float m_near_plane = 0.1f;
         const float m_far_plane = 25.0f;
 
         const char *m_p_validation_layer = "VK_LAYER_KHRONOS_validation";
 
-        const int m_MAX_FRAMES_IN_FLIGHT = 2; 
+        const int m_max_frames_in_flight = 2; 
         size_t m_current_frame = 0;
 
-        // 1) main pipeline;
-        // 2) grid pipeline
-        // 3) reverse grid pipeline
-        // 4) dengui pipeline
+        VkDeviceSize m_maximum_offset = 0;
 
-        #if !DISABLE_DENGUI
-            std::array<PipelineData, DENG_PIPELINE_COUNT> m_pipelines;
-        #else
-            std::array<PipelineData, DENG_PIPELINE_COUNT> m_pipelines;
-        #endif
+        std::array<PipelineData, DENG_PIPELINE_COUNT> m_pipelines;
 
         dengMath::vec2<std::pair<dengPipelineType, VkDescriptorPool>> m_descriptor_pool_sets;
-        dengMath::vec2<std::pair<dengPipelineType, std::vector<VkDescriptorSet>>> m_descriptor_sets;
-        dengMath::vec2<std::pair<dengPipelineType, VkDescriptorSetLayout>> m_descriptor_set_layouts;
         dengMath::vec2<std::pair<dengPipelineType, VkPipelineLayout>> m_pipeline_layouts;
+        dengMath::vec2<std::pair<dengPipelineType, VkDescriptorSetLayout>> m_descriptor_set_layouts;
+
+        std::vector<VkDescriptorSet> m_unmapped_descriptor_sets;
 
         VkInstance m_instance;
         VkDebugUtilsMessengerEXT m_debug_messenger;
@@ -51,6 +51,7 @@ namespace deng {
         VkExtent2D m_extent;
 
         VkRenderPass m_renderpass;
+        
 
         std::vector<VkFramebuffer> m_swapchain_framebuffers;
         VkCommandPool m_commandpool;
@@ -58,6 +59,7 @@ namespace deng {
         std::vector<VkImage> m_swapchain_images;
         std::vector<VkImageView> m_swapchain_image_views;
         std::vector<const char*> m_required_extensions_name;
+        std::vector<dengUtils::GameObject> *m_p_game_objects;
 
         std::vector<VkSemaphore> m_image_available_semaphore_set;
         std::vector<VkSemaphore> m_render_finished_semaphore_set;
@@ -65,7 +67,11 @@ namespace deng {
 
         std::vector<VkCommandBuffer> m_commandbuffers;
 
-        dengUtils::Buffers m_buffers;
+        dengUtils::BufferData m_buffer_data;
+
+        VkImage m_depth_image;
+        VkDeviceMemory m_depth_image_memory;
+        VkImageView m_depth_image_view;
 
         SwapChainDetails *m_p_device_swapchain_details;
         Camera *m_p_camera;
@@ -75,8 +81,8 @@ namespace deng {
         QueueFamilies m_queue_families;
         Queues m_queues;
         dengUtils::FileManager m_fm;
-        dengUtils::DepthImageData m_depthimage_data;
         dengUtils::GridManager *m_p_grid_manager;
+        VkSampler m_sampler;
 
         // config structs
         dengUtils::DengUIConf m_dengui_conf;
@@ -84,8 +90,6 @@ namespace deng {
         dengUtils::EditorCameraConf m_camera_conf;
 
         //game objects (currently just hardcoded, soon to be added from editor in form of objects vector)
-        dengUtils::GameObject m_sample_object;
-        dengUtils::SpecifiedObject m_grid;
         dengUI::Window *m_p_dengui_window;
         
         // std::vector<dengUI::UIVerticesData> m_dengui_window_vertices;
@@ -111,19 +115,18 @@ namespace deng {
         void initFrameBuffers();
         void initDepthResources();
         void initTextureImage(dengUtils::GameObject &obj);
-        void initTextureSampler(dengUtils::GameObject &obj);
+        void initTextureSampler();
         void initBuffers(dengUtils::GameObject &obj);
         void initDescriptorPool();
-        void initDescriptorSets();
+        void initDescriptorSets(dengUtils::GameObject *p_obj);
         void initTextureBuffer();
         void initCommandPool();
         void initCommandBuffers();
         void initSemaphores();
         
-        void initObjects(dengUtils::GameObject &obj, const std::string &obj_source_filepath, const std::string &tex_source_filepath, const dengCoordinateMode &coordinate_mode);
         void initGrid();
 
-        void deleteTextureImage(dengUtils::GameObject &obj);
+        void deleteTextureImage();
         void deleteCommandBuffers();
         void deleteSemaphores();
         void deleteCommandPool();
@@ -142,27 +145,19 @@ namespace deng {
 
         /* frame update */
         void makeFrame();
-        void updateUniformBufferData(const uint32_t &current_image, dengUtils::GameObject &obj);
-
-        /* VkImage related functions */
-        void makeImage(const VkFormat &format, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, dengUtils::GameObject *p_obj, const dengImageType &image_type);
-        void transitionImageLayout(VkImage &image, const VkFormat &format, const VkImageLayout &old_layout, const VkImageLayout &new_layout); 
-        void copyBufferToImage(VkBuffer &src_buffer, VkImage &dst_image, const uint32_t &width, const uint32_t &height);
-        
-        /* VkBuffer related functions */
-        static void makeBuffer(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, VkBuffer *p_buffer, VkDeviceMemory *p_buffer_memory, size_t *p_buffer_index);
-        static void populateBufferMem(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const void *p_src_data, VkBuffer *p_buffer, VkDeviceMemory *p_buffer_memory);
-        static void copyBufferToBuffer(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkBuffer *p_dst_buffer, VkDeviceSize *p_size);
-
-        /* single commandbuffer command recorder function */
-        static void beginCommandBufferSingleCommand(VkDevice *device, VkCommandPool *commandpool, VkCommandBuffer &commandbuffer);
-        static void endCommandBufferSingleCommand(VkDevice *device, VkQueue *graphics_queue, VkCommandPool *commandpool, VkCommandBuffer &commandBuffer);
+        void updateUniformBufferData(const uint32_t &current_image, const VkDeviceSize &offset);
 
         VkResult makeDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT  *p_messenger_createinfo);
         static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT *p_callback_data, void *p_user_data);
 
+        VkPipelineLayout *getPipelineLayoutPtr(dengPipelineType pipeline_type);
+        std::vector<VkDescriptorSet> *getDescriptorSetsPtr(dengPipelineType pipeline_type);
+
     public:
         void run();
+        void initObjects(std::vector<dengUtils::GameObject> *p_game_objects);
+        VkDeviceSize getBufferMemoryOffset();
+        void setBufferMemoryOffset(VkDeviceSize size);
         Renderer(Window &win);
         ~Renderer();
     };

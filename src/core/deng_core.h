@@ -33,11 +33,17 @@
     const bool enable_validation_layers = false;
 #endif
 
-#define DISABLE_DENGUI 0
+#define DISABLE_DENGUI 1
 
 enum dengPipelineDrawMode {
     DENG_PIPELINE_DRAW_MODE_LINEAR = 0,
     DENG_PIPELINE_DRAW_MODE_INDEXED = 1
+};
+
+enum dengPipelineBufferMode {
+    DENG_PIPELINE_BUFFER_MODE_TEXTURE_MAPPED_BUFFER = 0,
+    DENG_PIPELINE_BUFFER_MODE_DENGUI_WINDOW_BUFFER = 1,
+    DENG_PIPELINE_BUFFER_MODE_GRID_BUFFER = 2,
 };
 
 enum dengBool {
@@ -85,9 +91,8 @@ enum dengFolderContentsSortingMode {
 };
 
 enum dengPipelineType {
-    DENG_PIPELINE_TYPE_OBJECT_BASED = 0,
-    DENG_PIPELINE_TYPE_SPECIFIED = 1,
-    DENG_PIPELINE_TYPE_UI = 2
+    DENG_PIPELINE_TYPE_UNMAPPED = 0,
+    DENG_PIPELINE_TYPE_TEXTURE_MAPPED = 1,
 };
 
 enum dengCoordinateMode {
@@ -157,17 +162,20 @@ enum dengNumeralType {
 
 typedef void(*BufferCreateFunc)(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, VkBuffer *p_buffer, VkDeviceMemory *p_buffer_memory, size_t *p_buffer_index);
 typedef void(*BufferMemoryPopulateFunc)(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const void *p_src_data, VkBuffer *p_buffer, VkDeviceMemory *p_buffer_memory);
-typedef void(*BufferCopyFunc)(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkBuffer *p_dst_buffer, VkDeviceSize *p_size);
+typedef void(*BufferCopyFunc)(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkBuffer *p_dst_buffer, VkDeviceSize *p_size, const VkDeviceSize &offset);
+
+typedef void(*ImageCreateFunc)(VkDevice *p_device, VkPhysicalDevice *p_gpu, dengUtils::RawTextureData *p_image_data, VkFormat format, VkImageTiling image_tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkDeviceSize offset);
+typedef void(*ImageLayoutTransitionFunc)(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout);
+typedef void(*CopyBufferToImageFunc)(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer &src_buffer, VkImage &dst_image, const uint32_t &width, const uint32_t &height);
 
 // local dependencies
 #include "../surface/deng_surface_core.h"
 #include "../maths/deng_math.h"
-#include "../scripting/parsing.h"
 #include "../utilities/data_handler/typename_finder.h"
 #include "../utilities/timer/timer.h"
 #include "window.h"
 #include "camera.h"
-#include "../utilities/data_handler/objects_handler.h"
+#include "../utilities/data_handler/object_data_structs.h"
 #include "../utilities/map/grid_generator.h"
 #include "../maths/events.h"
 #include "../utilities/data_handler/files.h"

@@ -14,6 +14,16 @@ namespace dengUI {
         static void createTriangle(WindowInfo *p_windowsinfo, TriangleInfo **pp_triangle_info, BorderInfo *p_border_info, const dengUIBorderDrawMode &border_draw_mode, const dengUISizeUnit &size_unit, const int sequence_id);
         // static void createCircle(WindowInfo *p_windowinfo, CircleInfo **pp_circle_info, )
     };
+
+    class Label {
+    private:
+        const char *m_label_content;
+        dengMath::vec2<float> m_font_size;
+
+    private:
+        void mapCharacters();
+        void initLabel();
+    };
 }  
 
 #endif

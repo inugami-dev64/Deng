@@ -12,7 +12,7 @@ CC_FLAGS = -Wall -m64
 CXX_FLAGS = -Wall -m64 -std=c++11
 LD_FLAGS = -lvulkan -lpthread -lsurface -lX11 -lXcursor -ldl 
 
-MAIN_SRC = $(SRC_DIR)/main/main.cpp
+MAIN_SRC = $(SRC_DIR)/main/feature_testing/ui_testing/font_test.cpp
 MAIN_OBJ = $(BUILD_DIR)/obj/deng/main.cpp.o
 
 CORE_OBJ = $(BUILD_DIR)/obj/deng/camera.cpp.o \
@@ -23,7 +23,8 @@ CORE_OBJ = $(BUILD_DIR)/obj/deng/camera.cpp.o \
 DENGUI_OBJ = $(BUILD_DIR)/obj/deng/dengui_sprites.cpp.o \
 			 $(BUILD_DIR)/obj/deng/dengui_window.cpp.o \
 			 $(BUILD_DIR)/obj/deng/css_data_manager.cpp.o \
-			 $(BUILD_DIR)/obj/deng/dengui_pixel_collision.cpp.o
+			 $(BUILD_DIR)/obj/deng/dengui_pixel_collision.cpp.o \
+			 $(BUILD_DIR)/obj/deng/dengui_font_loader.cpp.o 
 
 MATH_OBJ = $(BUILD_DIR)/obj/deng/deng_math.cpp.o \
 		   $(BUILD_DIR)/obj/deng/events.cpp.o 
@@ -31,7 +32,6 @@ MATH_OBJ = $(BUILD_DIR)/obj/deng/deng_math.cpp.o \
 UTILITIES_OBJ = $(BUILD_DIR)/obj/deng/object_loader.cpp.o \
 				$(BUILD_DIR)/obj/deng/texture_loader.cpp.o \
 				$(BUILD_DIR)/obj/deng/file_manager.cpp.o \
-				$(BUILD_DIR)/obj/deng/objects_handler.cpp.o \
 				$(BUILD_DIR)/obj/deng/grid_generator.cpp.o \
 				$(BUILD_DIR)/obj/deng/timer.cpp.o 
 
@@ -107,6 +107,9 @@ $(BUILD_DIR)/obj/deng/css_data_manager.cpp.o: $(SRC_DIR)/dengui/css_engine/css_d
 $(BUILD_DIR)/obj/deng/dengui_pixel_collision.cpp.o: $(SRC_DIR)/dengui/pixel_perfect_collision/dengui_pixel_collision.cpp
 	$(CXX) -c $(SRC_DIR)/dengui/pixel_perfect_collision/dengui_pixel_collision.cpp -o $(BUILD_DIR)/obj/deng/dengui_pixel_collision.cpp.o $(CXX_FLAGS)
 
+$(BUILD_DIR)/obj/deng/dengui_font_loader.cpp.o: $(SRC_DIR)/dengui/core/dengui_font_loader.cpp
+	$(CXX) -c $(SRC_DIR)/dengui/core/dengui_font_loader.cpp -o $(BUILD_DIR)/obj/deng/dengui_font_loader.cpp.o $(CXX_FLAGS)
+
 
 # Math objects
 $(BUILD_DIR)/obj/deng/deng_math.cpp.o: $(SRC_DIR)/maths/deng_math.cpp	
@@ -125,10 +128,7 @@ $(BUILD_DIR)/obj/deng/texture_loader.cpp.o: $(SRC_DIR)/utilities/assets_handler/
 
 $(BUILD_DIR)/obj/deng/file_manager.cpp.o: $(SRC_DIR)/utilities/data_handler/file_manager.cpp
 	$(CXX) -c $(SRC_DIR)/utilities/data_handler/file_manager.cpp -o $(BUILD_DIR)/obj/deng/file_manager.cpp.o $(INCLUDE_PATH) $(CXX_FLAGS)
-	
-$(BUILD_DIR)/obj/deng/objects_handler.cpp.o: $(SRC_DIR)/utilities/data_handler/objects_handler.cpp
-	$(CXX) -c $(SRC_DIR)/utilities/data_handler/objects_handler.cpp -o $(BUILD_DIR)/obj/deng/objects_handler.cpp.o $(INCLUDE_PATH) $(CXX_FLAGS)
-	
+		
 $(BUILD_DIR)/obj/deng/grid_generator.cpp.o: $(SRC_DIR)/utilities/map/grid_generator.cpp
 	$(CXX) -c $(SRC_DIR)/utilities/map/grid_generator.cpp -o $(BUILD_DIR)/obj/deng/grid_generator.cpp.o $(INCLUDE_PATH) $(CXX_FLAGS)
 	

@@ -5,7 +5,7 @@ namespace dengUI {
 
     class Window {
     private:
-        std::vector<dengUtils::UIVerticesData> m_vertices_data;
+        std::vector<dengUtils::UnmappedVerticesData> m_vertices_data;
         std::vector<uint16_t> m_indices_data;
         WindowInfo m_windowinfo;
         BufferInfo m_bufferinfo;
