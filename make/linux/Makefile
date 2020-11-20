@@ -12,7 +12,7 @@ CC_FLAGS = -Wall -m64
 CXX_FLAGS = -Wall -m64 -std=c++11
 LD_FLAGS = -lvulkan -lpthread -lsurface -lX11 -lXcursor -ldl 
 
-MAIN_SRC = $(SRC_DIR)/main/feature_testing/ui_testing/font_test.cpp
+MAIN_SRC = $(SRC_DIR)/main/main.cpp
 MAIN_OBJ = $(BUILD_DIR)/obj/deng/main.cpp.o
 
 CORE_OBJ = $(BUILD_DIR)/obj/deng/camera.cpp.o \
@@ -20,11 +20,11 @@ CORE_OBJ = $(BUILD_DIR)/obj/deng/camera.cpp.o \
 		   $(BUILD_DIR)/obj/deng/renderer.cpp.o \
 		   $(BUILD_DIR)/obj/deng/window.cpp.o 
 
-DENGUI_OBJ = $(BUILD_DIR)/obj/deng/dengui_sprites.cpp.o \
-			 $(BUILD_DIR)/obj/deng/dengui_window.cpp.o \
-			 $(BUILD_DIR)/obj/deng/css_data_manager.cpp.o \
-			 $(BUILD_DIR)/obj/deng/dengui_pixel_collision.cpp.o \
-			 $(BUILD_DIR)/obj/deng/dengui_font_loader.cpp.o 
+# DENGUI_OBJ = $(BUILD_DIR)/obj/deng/dengui_sprites.cpp.o \
+# 			 $(BUILD_DIR)/obj/deng/dengui_window.cpp.o \
+# 			 $(BUILD_DIR)/obj/deng/css_data_manager.cpp.o \
+# 			 $(BUILD_DIR)/obj/deng/dengui_pixel_collision.cpp.o \
+# 			 $(BUILD_DIR)/obj/deng/dengui_font_loader.cpp.o 
 
 MATH_OBJ = $(BUILD_DIR)/obj/deng/deng_math.cpp.o \
 		   $(BUILD_DIR)/obj/deng/events.cpp.o 
@@ -32,10 +32,10 @@ MATH_OBJ = $(BUILD_DIR)/obj/deng/deng_math.cpp.o \
 UTILITIES_OBJ = $(BUILD_DIR)/obj/deng/object_loader.cpp.o \
 				$(BUILD_DIR)/obj/deng/texture_loader.cpp.o \
 				$(BUILD_DIR)/obj/deng/file_manager.cpp.o \
-				$(BUILD_DIR)/obj/deng/grid_generator.cpp.o \
-				$(BUILD_DIR)/obj/deng/timer.cpp.o 
+				$(BUILD_DIR)/obj/deng/timer.cpp.o
+				# $(BUILD_DIR)/obj/deng/grid_generator.cpp.o 
 
-OBJ = $(MAIN_OBJ) $(CORE_OBJ) $(DENGUI_OBJ) $(MATH_OBJ) $(UTILITIES_OBJ)
+OBJ = $(MAIN_OBJ) $(CORE_OBJ) $(MATH_OBJ) $(UTILITIES_OBJ)
 
 LIBSURFACE_OBJ = $(BUILD_DIR)/obj/libsurface/vulkan_handler.c.o \
 				 $(BUILD_DIR)/obj/libsurface/key_translation.c.o \

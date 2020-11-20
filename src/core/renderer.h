@@ -5,8 +5,8 @@
     #define DENG_PIPELINE_COUNT 2
     #define DENGUI_PIPELINE_INDEX 1
 #else
-    #define DENG_PIPELINE_COUNT 1
-    #define DENGUI_PIPELINE_INDEX 0
+    #define DENG_PIPELINE_COUNT 2
+    #define DENGUI_PIPELINE_INDEX 1
 #endif
 
 namespace deng {
@@ -81,7 +81,7 @@ namespace deng {
         QueueFamilies m_queue_families;
         Queues m_queues;
         dengUtils::FileManager m_fm;
-        dengUtils::GridManager *m_p_grid_manager;
+        // dengUtils::GridManager *m_p_grid_manager;
         VkSampler m_sampler;
 
         // config structs
@@ -90,7 +90,7 @@ namespace deng {
         dengUtils::EditorCameraConf m_camera_conf;
 
         //game objects (currently just hardcoded, soon to be added from editor in form of objects vector)
-        dengUI::Window *m_p_dengui_window;
+        // dengUI::Window *m_p_dengui_window;
         
         // std::vector<dengUI::UIVerticesData> m_dengui_window_vertices;
         // std::vector<uint16_t> m_dengui_window_indices;
@@ -114,11 +114,11 @@ namespace deng {
         void initDengUI();
         void initFrameBuffers();
         void initDepthResources();
-        void initTextureImage(dengUtils::GameObject &obj);
+        void initTextureImage();
         void initTextureSampler();
-        void initBuffers(dengUtils::GameObject &obj);
+        void initBuffers();
         void initDescriptorPool();
-        void initDescriptorSets(dengUtils::GameObject *p_obj);
+        void initDescriptorSets(dengBool init_texture_mapped_descriptor_sets);
         void initTextureBuffer();
         void initCommandPool();
         void initCommandBuffers();
@@ -145,13 +145,10 @@ namespace deng {
 
         /* frame update */
         void makeFrame();
-        void updateUniformBufferData(const uint32_t &current_image, const VkDeviceSize &offset);
+        void updateUniformBufferData(const uint32_t &current_image);
 
         VkResult makeDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT  *p_messenger_createinfo);
         static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT *p_callback_data, void *p_user_data);
-
-        VkPipelineLayout *getPipelineLayoutPtr(dengPipelineType pipeline_type);
-        std::vector<VkDescriptorSet> *getDescriptorSetsPtr(dengPipelineType pipeline_type);
 
     public:
         void run();

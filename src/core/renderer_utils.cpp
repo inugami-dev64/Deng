@@ -28,7 +28,7 @@ namespace deng {
 
         for(uint32_t i = 0; i < local_memory_properties.memoryTypeCount; i++) {
             if(type_filter & (1 << i) && (local_memory_properties.memoryTypes[i].propertyFlags & properties)) {
-                LOG("Vertex buffer mem type: " + std::to_string(i));
+                LOG("Buffer mem type: " + std::to_string(i));
                 return i;
             }
         }
@@ -83,9 +83,7 @@ namespace deng {
         return false;
     }
 
-    uint32_t QueueFamilies::getGraphicsFamily() {
-        return this->m_graphics_family_index;
-    }
+    uint32_t QueueFamilies::getGraphicsFamily() { return this->m_graphics_family_index; }
 
     bool QueueFamilies::findPresentSupportFamily(VkPhysicalDevice &gpu, VkSurfaceKHR &surface) {
         uint32_t family_count = 0;
@@ -99,7 +97,7 @@ namespace deng {
             if(support) {
                 if(this->m_graphics_family_index != i) {
                     this->m_present_family_index = i; 
-                    LOG("Presentation queue family index: " + std::to_string(this->m_present_family_index));
+                    LOG("Presentation queue family index: " + this->m_present_family_index);
                     return true;
                 }
             }
@@ -107,9 +105,7 @@ namespace deng {
         return false;
     }
 
-    uint32_t QueueFamilies::getPresentFamily() {
-        return this->m_present_family_index;
-    }
+    uint32_t QueueFamilies::getPresentFamily() { return this->m_present_family_index; }
 
 
     PipelineCreator::PipelineCreator(PipelineData *p_pipeline_data, VkDevice *device, dengUtils::FileManager *filemanager, VkExtent2D *extent, VkRenderPass *renderpass) {
@@ -144,7 +140,7 @@ namespace deng {
             break;
         
         case DENG_PIPELINE_TYPE_TEXTURE_MAPPED:
-            local_input_binding_desc.stride = sizeof(dengMath::vec3<float>);
+            local_input_binding_desc.stride = sizeof(dengUtils::TextureMappedVerticesData);
             break;
         
         default:
@@ -168,7 +164,7 @@ namespace deng {
 
             local_input_attr_desc[1].binding = 0;
             local_input_attr_desc[1].location = 1;
-            local_input_attr_desc[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+            local_input_attr_desc[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
             local_input_attr_desc[1].offset = offsetof(dengUtils::UnmappedVerticesData, color_vec);
             break;
 
@@ -359,7 +355,7 @@ namespace deng {
     }
 
     /* VkImage related functions */
-    VkMemoryRequirements BufferHandler::makeImage(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkImage *p_image, uint32_t &width, uint32_t &height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkDeviceSize offset) {
+    VkMemoryRequirements BufferHandler::makeImage(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkImage *p_image, uint32_t &width, uint32_t &height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage) {
         VkImageCreateInfo local_image_createInfo{};
         local_image_createInfo.sType  = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         local_image_createInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -427,7 +423,7 @@ namespace deng {
         BufferHandler::endCommandBufferSingleCommand(p_device, p_graphics_queue, p_commandpool, local_commandbuffer);
     }
 
-    void BufferHandler::copyBufferToImage(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer &src_buffer, VkImage &dst_image, const uint32_t &width, const uint32_t &height) {
+    void BufferHandler::copyBufferToImage(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkImage *p_dst_image, const uint32_t &width, const uint32_t &height) {
         VkCommandBuffer local_commandbuffer;
         BufferHandler::beginCommandBufferSingleCommand(p_device, p_commandpool, local_commandbuffer);
 
@@ -444,13 +440,13 @@ namespace deng {
         local_copy_region.imageOffset = {0, 0, 0};
         local_copy_region.imageExtent = {width, height, 1};
 
-        vkCmdCopyBufferToImage(local_commandbuffer, src_buffer, dst_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &local_copy_region);
+        vkCmdCopyBufferToImage(local_commandbuffer, *p_src_buffer, *p_dst_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &local_copy_region);
 
         BufferHandler::endCommandBufferSingleCommand(p_device, p_graphics_queue, p_commandpool, local_commandbuffer);
     }
     
     /* VkBuffer related functions */
-    VkMemoryRequirements BufferHandler::makeBuffer(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, VkBuffer *p_buffer, VkDeviceMemory *p_buffer_memory, VkDeviceSize offset) {
+    VkMemoryRequirements BufferHandler::makeBuffer(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const VkBufferUsageFlags &usage, VkBuffer *p_buffer) {
         
         VkBufferCreateInfo local_buffer_createInfo{};
         local_buffer_createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

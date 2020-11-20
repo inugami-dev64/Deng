@@ -17,11 +17,6 @@ namespace dengMath {
         deng::Window *m_p_window;
         vec3<dengMovementEvent> m_movements;
         vec2<float> m_frozen_mouse_position;
-        
-
-        #if GENERIC_DEBUG
-            dengUtils::SpecifiedObject *m_grid;
-        #endif
 
     private:
         void getMovementType();

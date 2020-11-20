@@ -20,9 +20,10 @@ namespace dengUtils {
         dengBool isBetweenComments(std::vector<dengMath::vec2<dengMath::vec2<size_t>>> *comment_bounds, const dengMath::vec2<dengMath::vec2<size_t>> &attribute_boundaries);
         
         dengBool identifyLineComment(int *p_comment_start_index, const std::string &line, char comment);
+    
     public:
         void getFileContents(const std::string &file_name, std::vector<char> *p_char_output_vector, std::vector<std::string> *p_string_output_vector);
-        void writeToFile(const std::string &file_name, const std::string &line_contents, const uint32_t &write_mode);
+        void writeToFile(const std::string &file_name, const std::string &line_contents, const dengWriteMode &write_mode);
         void getFolderContents(std::string folder_name, std::vector<std::string> *p_folder_contents, const dengFolderContentsReadMode &folder_contents_read_mode, const dengFolderContentsSortingMode &folder_contents_sort_mode);
         void filterByFileExtension(std::vector<std::string> *p_file_name_data, const std::string &file_extension);
         
@@ -112,11 +113,10 @@ namespace dengUtils {
 
             else {
                 index = static_cast<int8_t>(file_contents[*p_local_index].find("=")) + 1;
-                while(file_contents[*p_local_index][ch_index] == ' ' || file_contents[*p_local_index][index] == '"') index++;
+                while(file_contents[*p_local_index][ch_index] == ' ' || file_contents[*p_local_index][ch_index] == '"') ch_index++;
 
-                for(; index < file_contents[*p_local_index].size() && file_contents[*p_local_index][index] != ' ' && file_contents[*p_local_index][index] != '#' && file_contents[*p_local_index][index] != '"'; index++) {
+                for(; index < file_contents[*p_local_index].size() && file_contents[*p_local_index][ch_index] != ' ' && file_contents[*p_local_index][index] != '#' && file_contents[*p_local_index][index] != '"'; index++)
                     value_str += file_contents[*p_local_index][index];
-                }
             }
         }
 

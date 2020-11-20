@@ -13,12 +13,12 @@ namespace deng {
         static void allocateMemory(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceMemory *p_memory, const VkDeviceSize &size, uint32_t mem_type_bits, VkMemoryPropertyFlags properties);
 
         /* VkImage related functions */
-        static VkMemoryRequirements makeImage(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkImage *p_image, uint32_t &width, uint32_t &height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkDeviceSize offset);
+        static VkMemoryRequirements makeImage(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkImage *p_image, uint32_t &width, uint32_t &height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage);
         static void transitionImageLayout(VkDevice *p_device, VkImage *p_image, VkCommandPool *p_command_pool, VkQueue *p_graphics_queue, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout); 
-        static void copyBufferToImage(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer &src_buffer, VkImage &dst_image, const uint32_t &width, const uint32_t &height);
+        static void copyBufferToImage(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkImage *p_dst_image, const uint32_t &width, const uint32_t &height);
         
         /* VkBuffer related functions */
-        static VkMemoryRequirements makeBuffer(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, VkBuffer *p_buffer, VkDeviceMemory *p_buffer_memory, VkDeviceSize offset);
+        static VkMemoryRequirements makeBuffer(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const VkBufferUsageFlags &usage, VkBuffer *p_buffer);
         static void populateBufferMem(VkDevice *p_device, VkDeviceSize *p_size, const void *p_src_data, VkDeviceMemory *p_buffer_memory, VkDeviceSize offset);
         static void copyBufferToBuffer(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkBuffer *p_dst_buffer, VkDeviceSize *p_size, const VkDeviceSize &offset);
 
@@ -49,12 +49,6 @@ namespace deng {
     struct PipelineData {
         dengPipelineType pipeline_type;
         dengPipelineDrawMode pipeline_draw_mode;
-        dengPipelineBufferMode pipeline_buffer_mode;
-        std::vector<VkDescriptorSet> *p_descriptor_sets;
-        uint32_t vertices_size;
-        uint32_t indices_size;
-        VkDeviceSize first_vertex_binding;
-        VkDeviceSize first_index_binding;
         VkPipelineLayout *p_pipeline_layout;
         VkPipeline pipeline;
     };

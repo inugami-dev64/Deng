@@ -4,8 +4,9 @@
 #define PI 3.1415926f
 
 namespace dengMath {
-
+    
     /* vector and matrix structures */
+    
     template<typename T>
     struct vec4 {
         T first, second, third, fourth;
@@ -65,7 +66,7 @@ namespace dengMath {
         }
 
         dengBool operator==(vec4<T> vector) {
-            return this->first == vector.first && this->second == vector.second && this->third == vector.third && this->fourth == vector.fourth;
+            return static_cast<dengBool>(this->first == vector.first && this->second == vector.second && this->third == vector.third && this->fourth == vector.fourth);
         }
     };
 
@@ -75,6 +76,8 @@ namespace dengMath {
         size_t size() {
             return static_cast<size_t>(3);
         }
+
+        void fit();
 
         T *getVectorElement(const size_t &i) {
             T *local_current_element;
@@ -132,7 +135,7 @@ namespace dengMath {
         }
 
         dengBool operator==(vec3<T> vector) {
-            return this->first == vector.first && this->second == vector.second && this->third == vector.third;
+            return static_cast<dengBool>(this->first == vector.first && this->second == vector.second && this->third == vector.third);
         }
 
     };
@@ -204,7 +207,7 @@ namespace dengMath {
         }
 
         dengBool operator==(vec2<T> vector) {
-            return this->first == vector.first && this->second == vector.second;
+            return static_cast<dengBool>(this->first == vector.first && this->second == vector.second);
         }
     };
 

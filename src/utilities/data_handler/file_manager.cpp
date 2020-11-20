@@ -25,7 +25,7 @@ namespace dengUtils {
         delete this->p_file_in;
     }
 
-    void FileManager::writeToFile(const std::string &file_name, const std::string &line_contents, const uint32_t &write_mode) {
+    void FileManager::writeToFile(const std::string &file_name, const std::string &line_contents, const dengWriteMode &write_mode) {
 
         switch (write_mode)
         {
