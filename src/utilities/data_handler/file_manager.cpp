@@ -1,11 +1,12 @@
 #include "../../core/deng_core.h"
 
-namespace dengUtils {
+namespace dengUtils {   
 
     void FileManager::getFileContents(const std::string &file_name, std::vector<char> *p_char_output_vector, std::vector<std::string> *p_string_output_vector) {
         this->p_file_in = new std::ifstream(file_name, std::ios::ate | std::ios::binary);
         size_t file_size = (size_t) this->p_file_in->tellg();
         this->p_file_in->seekg(0);
+        LOG("hello!");
 
         if(!this->p_file_in->is_open()) {
             ERRME("Failed to load file '" + file_name + "'!");
@@ -25,7 +26,7 @@ namespace dengUtils {
         delete this->p_file_in;
     }
 
-    void FileManager::writeToFile(const std::string &file_name, const std::string &line_contents, const uint32_t &write_mode) {
+    void FileManager::writeToFile(const std::string &file_name, const std::string &line_contents, const dengWriteMode &write_mode) {
 
         switch (write_mode)
         {
@@ -53,6 +54,29 @@ namespace dengUtils {
             else 
                 p_file_name_data->erase(p_file_name_data->begin() + i);
         }
+    }
+
+    dengBool FileManager::identifyLineComment(int *p_comment_start_index, const std::string &line, char comment) {
+        if((*p_comment_start_index = (int) line.find(comment)) != -1)
+            return DENG_FALSE;
+
+        else
+            return DENG_TRUE;
+    }
+
+    size_t FileManager::findFirstLineInstance(const std::string &keyword, std::vector<std::string> &file_contents) {
+        size_t line_index;
+        dengBool is_found = DENG_FALSE;
+        for(line_index = 0; line_index < file_contents.size(); line_index++) {
+            LOG("seg test!");
+            if(file_contents[line_index].find(keyword) != (size_t) -1) {
+                is_found = DENG_TRUE;   
+                break;
+            }
+        }
+
+        if(is_found) return line_index;
+        else return (size_t) -1;
     }
 
     void FileManager::sortAlphabetically(std::vector<std::string> *p_sortable_data, const dengBool &is_reverse_alphabet) {
@@ -265,9 +289,7 @@ namespace dengUtils {
             }
         }
 
-        else {
-            ERRME("Directory '" + folder_name + " not found!");
-        }
+        else ERRME("Directory '" + folder_name + " not found!");
     }
 
     void FileManager::getBounds(std::vector<dengMath::vec2<dengMath::vec2<size_t>>> *p_bounds_data, const dengMath::vec2<std::string> &bound_strings, std::vector<std::string> *p_file_contents) {

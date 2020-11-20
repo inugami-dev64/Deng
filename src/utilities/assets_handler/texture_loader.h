@@ -51,7 +51,7 @@ namespace dengUtils {
 
     public:
         TextureLoaderBMP(const std::string &file_name);
-        void getTextureDetails(uint32_t *p_texture_width, uint32_t *p_texture_height, VkDeviceSize *texture_size, std::vector<uint8_t> &texture_pixel_data);
+        void getTextureDetails(RawTextureData *p_raw_texture_data);
     };
 
     // tga format
@@ -87,7 +87,7 @@ namespace dengUtils {
 
     public:
         TextureLoaderTGA(const std::string &file_name);
-        void getTextureDetails(uint32_t *p_texture_width, uint32_t *p_texture_height, VkDeviceSize *p_texture_size, std::vector<uint8_t> &texture_pixel_data);
+        void getTextureDetails(RawTextureData *p_raw_texture_data);
     };
 
     dengTextureFormat getTexFileFormat(const std::string &texture_filepath);

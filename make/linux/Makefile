@@ -20,10 +20,11 @@ CORE_OBJ = $(BUILD_DIR)/obj/deng/camera.cpp.o \
 		   $(BUILD_DIR)/obj/deng/renderer.cpp.o \
 		   $(BUILD_DIR)/obj/deng/window.cpp.o 
 
-DENGUI_OBJ = $(BUILD_DIR)/obj/deng/dengui_sprites.cpp.o \
-			 $(BUILD_DIR)/obj/deng/dengui_window.cpp.o \
-			 $(BUILD_DIR)/obj/deng/css_data_manager.cpp.o \
-			 $(BUILD_DIR)/obj/deng/dengui_pixel_collision.cpp.o
+# DENGUI_OBJ = $(BUILD_DIR)/obj/deng/dengui_sprites.cpp.o \
+# 			 $(BUILD_DIR)/obj/deng/dengui_window.cpp.o \
+# 			 $(BUILD_DIR)/obj/deng/css_data_manager.cpp.o \
+# 			 $(BUILD_DIR)/obj/deng/dengui_pixel_collision.cpp.o \
+# 			 $(BUILD_DIR)/obj/deng/dengui_font_loader.cpp.o 
 
 MATH_OBJ = $(BUILD_DIR)/obj/deng/deng_math.cpp.o \
 		   $(BUILD_DIR)/obj/deng/events.cpp.o 
@@ -31,11 +32,10 @@ MATH_OBJ = $(BUILD_DIR)/obj/deng/deng_math.cpp.o \
 UTILITIES_OBJ = $(BUILD_DIR)/obj/deng/object_loader.cpp.o \
 				$(BUILD_DIR)/obj/deng/texture_loader.cpp.o \
 				$(BUILD_DIR)/obj/deng/file_manager.cpp.o \
-				$(BUILD_DIR)/obj/deng/objects_handler.cpp.o \
-				$(BUILD_DIR)/obj/deng/grid_generator.cpp.o \
-				$(BUILD_DIR)/obj/deng/timer.cpp.o 
+				$(BUILD_DIR)/obj/deng/timer.cpp.o
+				# $(BUILD_DIR)/obj/deng/grid_generator.cpp.o 
 
-OBJ = $(MAIN_OBJ) $(CORE_OBJ) $(DENGUI_OBJ) $(MATH_OBJ) $(UTILITIES_OBJ)
+OBJ = $(MAIN_OBJ) $(CORE_OBJ) $(MATH_OBJ) $(UTILITIES_OBJ)
 
 LIBSURFACE_OBJ = $(BUILD_DIR)/obj/libsurface/vulkan_handler.c.o \
 				 $(BUILD_DIR)/obj/libsurface/key_translation.c.o \
@@ -50,6 +50,7 @@ $(TARGET): .init_build $(LIBSURFACE_TARGET) $(OBJ)
 	cp -r ../../config $(BUILD_DIR)/deng/
 	cp -r $(SRC_DIR)/dengui/css $(BUILD_DIR)/deng/ui_styling
 	cp -r $(SRC_DIR)/surface/xcursor $(BUILD_DIR)/deng/
+	cp -r ../../fonts $(BUILD_DIR)/deng
 
 .init_build:
 	chmod +x init_build.sh
@@ -106,6 +107,9 @@ $(BUILD_DIR)/obj/deng/css_data_manager.cpp.o: $(SRC_DIR)/dengui/css_engine/css_d
 $(BUILD_DIR)/obj/deng/dengui_pixel_collision.cpp.o: $(SRC_DIR)/dengui/pixel_perfect_collision/dengui_pixel_collision.cpp
 	$(CXX) -c $(SRC_DIR)/dengui/pixel_perfect_collision/dengui_pixel_collision.cpp -o $(BUILD_DIR)/obj/deng/dengui_pixel_collision.cpp.o $(CXX_FLAGS)
 
+$(BUILD_DIR)/obj/deng/dengui_font_loader.cpp.o: $(SRC_DIR)/dengui/core/dengui_font_loader.cpp
+	$(CXX) -c $(SRC_DIR)/dengui/core/dengui_font_loader.cpp -o $(BUILD_DIR)/obj/deng/dengui_font_loader.cpp.o $(CXX_FLAGS)
+
 
 # Math objects
 $(BUILD_DIR)/obj/deng/deng_math.cpp.o: $(SRC_DIR)/maths/deng_math.cpp	
@@ -124,10 +128,7 @@ $(BUILD_DIR)/obj/deng/texture_loader.cpp.o: $(SRC_DIR)/utilities/assets_handler/
 
 $(BUILD_DIR)/obj/deng/file_manager.cpp.o: $(SRC_DIR)/utilities/data_handler/file_manager.cpp
 	$(CXX) -c $(SRC_DIR)/utilities/data_handler/file_manager.cpp -o $(BUILD_DIR)/obj/deng/file_manager.cpp.o $(INCLUDE_PATH) $(CXX_FLAGS)
-	
-$(BUILD_DIR)/obj/deng/objects_handler.cpp.o: $(SRC_DIR)/utilities/data_handler/objects_handler.cpp
-	$(CXX) -c $(SRC_DIR)/utilities/data_handler/objects_handler.cpp -o $(BUILD_DIR)/obj/deng/objects_handler.cpp.o $(INCLUDE_PATH) $(CXX_FLAGS)
-	
+		
 $(BUILD_DIR)/obj/deng/grid_generator.cpp.o: $(SRC_DIR)/utilities/map/grid_generator.cpp
 	$(CXX) -c $(SRC_DIR)/utilities/map/grid_generator.cpp -o $(BUILD_DIR)/obj/deng/grid_generator.cpp.o $(INCLUDE_PATH) $(CXX_FLAGS)
 	

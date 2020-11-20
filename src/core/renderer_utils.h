@@ -5,8 +5,26 @@ namespace deng {
 
     struct HardwareSpecs {
         static dengBool getExtensionSupport(const VkPhysicalDevice &gpu, const char *p_extension_name);
-        static uint32_t getMemoryType(const VkPhysicalDevice &gpu, const uint32_t &type_filter, const VkMemoryPropertyFlags &properties);
-        static uint32_t getDeviceScore(const VkPhysicalDevice &device, std::vector<const char*> &extenstions);
+        static uint32_t getMemoryType(VkPhysicalDevice *p_gpu, const uint32_t &type_filter, const VkMemoryPropertyFlags &properties);
+        static uint32_t getDeviceScore(VkPhysicalDevice *p_device, std::vector<const char*> &extenstions);
+    };
+
+    struct BufferHandler {
+        static void allocateMemory(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceMemory *p_memory, const VkDeviceSize &size, uint32_t mem_type_bits, VkMemoryPropertyFlags properties);
+
+        /* VkImage related functions */
+        static VkMemoryRequirements makeImage(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkImage *p_image, uint32_t &width, uint32_t &height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage);
+        static void transitionImageLayout(VkDevice *p_device, VkImage *p_image, VkCommandPool *p_command_pool, VkQueue *p_graphics_queue, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout); 
+        static void copyBufferToImage(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkImage *p_dst_image, const uint32_t &width, const uint32_t &height);
+        
+        /* VkBuffer related functions */
+        static VkMemoryRequirements makeBuffer(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const VkBufferUsageFlags &usage, VkBuffer *p_buffer);
+        static void populateBufferMem(VkDevice *p_device, VkDeviceSize *p_size, const void *p_src_data, VkDeviceMemory *p_buffer_memory, VkDeviceSize offset);
+        static void copyBufferToBuffer(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkBuffer *p_dst_buffer, VkDeviceSize *p_size, const VkDeviceSize &offset);
+
+        /* single commandbuffer command recorder function */
+        static void beginCommandBufferSingleCommand(VkDevice *device, VkCommandPool *commandpool, VkCommandBuffer &commandbuffer);
+        static void endCommandBufferSingleCommand(VkDevice *device, VkQueue *graphics_queue, VkCommandPool *commandpool, VkCommandBuffer &commandBuffer);
     };
 
     class QueueFamilies {
@@ -31,11 +49,6 @@ namespace deng {
     struct PipelineData {
         dengPipelineType pipeline_type;
         dengPipelineDrawMode pipeline_draw_mode;
-        std::vector<VkDescriptorSet> *p_descriptor_sets;
-        uint32_t vertices_size;
-        uint32_t indices_size;
-        VkBuffer *p_vertices_buffer;
-        VkBuffer *p_indices_buffer;
         VkPipelineLayout *p_pipeline_layout;
         VkPipeline pipeline;
     };

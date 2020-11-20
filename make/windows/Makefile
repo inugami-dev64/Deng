@@ -56,6 +56,7 @@ $(TARGET): .init_build $(LIBSURFACE_TARGET) $(OBJ)
 	Xcopy /E ..\..\shaders $(BUILD_DIR)\deng\shaders\ /D /Y
 	Xcopy /E ..\..\config $(BUILD_DIR)\deng\config\ /D /Y
 	Xcopy /E $(SRC_DIR)\dengui\css $(BUILD_DIR)\deng\ui_styling\ /D /Y
+	XCopy /E ..\..\fonts $(BUILD_DIR)\deng\fonts /D /Y
 
 .init_build:
 	.\init_build.bat $(BUILD_DIR)

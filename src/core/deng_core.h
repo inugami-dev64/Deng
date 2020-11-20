@@ -2,6 +2,7 @@
 #define DENG_CORE_H
 
 /*  BEFORE EVERY GIT COMMIT SET GENERIC_DEBUG VALUE TO 0!!!     */
+/*  DENGUI and grid have been totally removed from the engine */
 #define DENG_VULKAN
 #define GENERIC_DEBUG 1
 
@@ -24,8 +25,9 @@
 #define ERRME(x) std::cout << TERM_ERRME_MODE << x << TERM_END 
 
 #if GENERIC_DEBUG
+    
     #define LOG(x) std::cout << TERM_LOG_MODE << x << TERM_END
-    #define ERRMEDB(x) std::cout << TERM_ERRME_MODE << x << TERM_END;
+    #define ERRMEDB(x) std::cout << TERM_ERRME_MODE << x << TERM_END
     const bool enable_validation_layers = true;
 #else
     #define LOG(x)
@@ -33,11 +35,17 @@
     const bool enable_validation_layers = false;
 #endif
 
-#define DISABLE_DENGUI 0
+#define DISABLE_DENGUI 1
 
 enum dengPipelineDrawMode {
     DENG_PIPELINE_DRAW_MODE_LINEAR = 0,
     DENG_PIPELINE_DRAW_MODE_INDEXED = 1
+};
+
+enum dengPipelineBufferMode {
+    DENG_PIPELINE_BUFFER_MODE_TEXTURE_MAPPED_BUFFER = 0,
+    DENG_PIPELINE_BUFFER_MODE_DENGUI_WINDOW_BUFFER = 1,
+    DENG_PIPELINE_BUFFER_MODE_GRID_BUFFER = 2,
 };
 
 enum dengBool {
@@ -85,9 +93,8 @@ enum dengFolderContentsSortingMode {
 };
 
 enum dengPipelineType {
-    DENG_PIPELINE_TYPE_OBJECT_BASED = 0,
-    DENG_PIPELINE_TYPE_SPECIFIED = 1,
-    DENG_PIPELINE_TYPE_UI = 2
+    DENG_PIPELINE_TYPE_UNMAPPED = 0,
+    DENG_PIPELINE_TYPE_TEXTURE_MAPPED = 1,
 };
 
 enum dengCoordinateMode {
@@ -155,26 +162,21 @@ enum dengNumeralType {
 #include <unordered_map>
 #include <typeinfo>
 
-typedef void(*BufferCreateFunc)(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties, VkBuffer *p_buffer, VkDeviceMemory *p_buffer_memory, size_t *p_buffer_index);
-typedef void(*BufferMemoryPopulateFunc)(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const void *p_src_data, VkBuffer *p_buffer, VkDeviceMemory *p_buffer_memory);
-typedef void(*BufferCopyFunc)(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkBuffer *p_dst_buffer, VkDeviceSize *p_size);
-
 // local dependencies
 #include "../surface/deng_surface_core.h"
 #include "../maths/deng_math.h"
-#include "../scripting/parsing.h"
 #include "../utilities/data_handler/typename_finder.h"
+#include "../utilities/data_handler/files.h"
 #include "../utilities/timer/timer.h"
 #include "window.h"
 #include "camera.h"
-#include "../utilities/data_handler/objects_handler.h"
-#include "../utilities/map/grid_generator.h"
+#include "../utilities/data_handler/object_data_structs.h"
+// #include "../utilities/map/grid_generator.h"
 #include "../maths/events.h"
-#include "../utilities/data_handler/files.h"
 #include "renderer_utils.h"
 #include "../utilities/assets_handler/texture_loader.h"
 #include "../utilities/assets_handler/object_loader.h"
-#include "../dengui/core/dengui_core.h"
+// #include "../dengui/core/dengui_core.h"
 #include "renderer.h"
 
 #endif

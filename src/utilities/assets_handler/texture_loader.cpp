@@ -1,6 +1,7 @@
 #include "../../core/deng_core.h"
 
 namespace dengUtils {
+    /* BMP format */
     TextureLoaderBMP::TextureLoaderBMP(const std::string &file_name) {
         std::ifstream texture_file{file_name.c_str(), std::fstream::binary};
         if(texture_file) {
@@ -92,43 +93,35 @@ namespace dengUtils {
         else return true;
     }
 
-    void TextureLoaderBMP::getTextureDetails(uint32_t *texture_width, uint32_t *texture_height, VkDeviceSize *texture_size, std::vector<uint8_t> &texture_pixel_data) {
-        *texture_width = this->m_info_header.width;
-        *texture_height = this->m_info_header.height;
-        *texture_size = this->m_info_header.width * this->m_info_header.height * 4;
+    void TextureLoaderBMP::getTextureDetails(RawTextureData *p_raw_texture_data) {
+        p_raw_texture_data->width = this->m_info_header.width;
+        p_raw_texture_data->height = this->m_info_header.height;
+        p_raw_texture_data->texture_size = this->m_info_header.width * this->m_info_header.height * 4;
 
-        texture_pixel_data.resize(*texture_size);
+        p_raw_texture_data->texture_pixels_data.resize(p_raw_texture_data->texture_size);
         // checks if alpha channel is present and if not then create it
         if(this->m_info_header.bit_count == 32) {
             // rearrangement of pixel data from bottom - right to top - right format 
             for(int32_t hI = this->m_info_header.height - 1, i = 0; hI >= 0; hI--) 
-                for(int32_t wI = 0; wI < this->m_info_header.width * 4; wI++, i++) texture_pixel_data[i] = this->pixel_data[hI][wI];
+                for(int32_t wI = 0; wI < this->m_info_header.width * 4; wI++, i++) p_raw_texture_data->texture_pixels_data[i] = this->pixel_data[hI][wI];
         }
 
         else if(this->m_info_header.bit_count == 24) {
             for(int32_t hI = this->m_info_header.height - 1, i = 0; hI >= 0; hI--) {
                 for(int32_t wI = 0; wI < this->m_info_header.width * 3; wI += 3, i += 4) {
-                    texture_pixel_data[i] = this->pixel_data[hI][wI];
-                    texture_pixel_data[i + 1] = this->pixel_data[hI][wI + 1];
-                    texture_pixel_data[i + 2] = this->pixel_data[hI][wI + 2];
-                    texture_pixel_data[i + 3] = 255;
+                    p_raw_texture_data->texture_pixels_data[i] = this->pixel_data[hI][wI];
+                    p_raw_texture_data->texture_pixels_data[i + 1] = this->pixel_data[hI][wI + 1];
+                    p_raw_texture_data->texture_pixels_data[i + 2] = this->pixel_data[hI][wI + 2];
+                    p_raw_texture_data->texture_pixels_data[i + 3] = 255;
                 }
             }
         }
-
-        // FileManager fm;
-        // fm.writeToFile("rgbbitmap.log", "#entry point", DENG_WRITEMODE_REWRITE);
-        // fm.writeToFile("rgbbitmap.log", "width=" + std::to_string(this->m_info_header.width), DENG_WRITEMODE_FROM_END);
-        // fm.writeToFile("rgbbitmap.log", "height=" + std::to_string(this->m_info_header.height), DENG_WRITEMODE_FROM_END);
-        // for(size_t i = 0; i < texPixelData.size(); i++) {
-        //     fm.writeToFile("rgbbitmap.log", "{" + std::to_string(texPixelData[i]) + "}", DENG_WRITEMODE_FROM_END);
-        // }
     }
 
 
-    //tga format
+    /* TGA format */
     TextureLoaderTGA::TextureLoaderTGA(const std::string &file_name) {
-        std::ifstream texture_file(file_name.c_str(), std::fstream::binary);
+        std::ifstream texture_file{file_name.c_str(), std::fstream::binary};
         if(texture_file) {
             texture_file.read((char*) &this->m_type_header, sizeof(this->m_type_header));
             
@@ -191,23 +184,23 @@ namespace dengUtils {
         }
     }
 
-    void TextureLoaderTGA::getTextureDetails(uint32_t *texWidth, uint32_t *texHeight, VkDeviceSize *texSize, std::vector<uint8_t> &texPixelData) {
-        *texWidth = static_cast<uint32_t>(this->m_info_header.height);
-        *texHeight = static_cast<uint32_t>(this->m_info_header.width);
-        *texSize = this->m_info_header.width * this->m_info_header.height * 4;
+    void TextureLoaderTGA::getTextureDetails(RawTextureData *p_raw_texture_data) {
+        p_raw_texture_data->height = static_cast<uint32_t>(this->m_info_header.height);
+        p_raw_texture_data->width = static_cast<uint32_t>(this->m_info_header.width);
+        p_raw_texture_data->texture_size = this->m_info_header.width * this->m_info_header.height * 4;
 
-        texPixelData.resize(*texSize);
+        p_raw_texture_data->texture_pixels_data.resize(p_raw_texture_data->texture_size);
 
         //no pixel rearrangement needed
         if(this->m_info_header.y_origin == this->m_info_header.height) {
             for(int32_t hI = 0, i = 0; hI < this->m_info_header.height; hI++) {
                 for(int32_t wI = 0; wI < (this->m_info_header.width * this->m_info_header.bit_count / 8); wI++, i++) {
-                    if(this->m_info_header.bit_count == 32) texPixelData[i] = this->m_pixeldata[hI][wI];
+                    if(this->m_info_header.bit_count == 32) p_raw_texture_data->texture_pixels_data[i] = this->m_pixeldata[hI][wI];
                     else if(this->m_info_header.bit_count == 24) {
-                        texPixelData[i] = this->m_pixeldata[hI][wI];
-                        texPixelData[i + 1] = this->m_pixeldata[hI][wI + 1];
-                        texPixelData[i + 2] = this->m_pixeldata[hI][wI + 2];
-                        texPixelData[i + 3] = 255;
+                        p_raw_texture_data->texture_pixels_data[i] = this->m_pixeldata[hI][wI];
+                        p_raw_texture_data->texture_pixels_data[i + 1] = this->m_pixeldata[hI][wI + 1];
+                        p_raw_texture_data->texture_pixels_data[i + 2] = this->m_pixeldata[hI][wI + 2];
+                        p_raw_texture_data->texture_pixels_data[i + 3] = 255;
                         wI += 2;
                         i += 3;
                     }
@@ -219,12 +212,12 @@ namespace dengUtils {
         else if(this->m_info_header.y_origin == 0) {
             for(int32_t hI = this->m_info_header.height - 1, i = 0; hI >= 0; hI--) {
                 for(int32_t wI = 0; wI < this->m_info_header.width * this->m_info_header.bit_count / 8; wI++, i++) {
-                    if(this->m_info_header.bit_count == 32) texPixelData[i] = this->m_pixeldata[hI][wI];
+                    if(this->m_info_header.bit_count == 32) p_raw_texture_data->texture_pixels_data[i] = this->m_pixeldata[hI][wI];
                     else if(this->m_info_header.bit_count == 24) {
-                        texPixelData[i] = this->m_pixeldata[hI][wI];
-                        texPixelData[i + 1] = this->m_pixeldata[hI][wI + 1];
-                        texPixelData[i + 2] = this->m_pixeldata[hI][wI + 2];
-                        texPixelData[i + 3] = 255;
+                        p_raw_texture_data->texture_pixels_data[i] = this->m_pixeldata[hI][wI];
+                        p_raw_texture_data->texture_pixels_data[i + 1] = this->m_pixeldata[hI][wI + 1];
+                        p_raw_texture_data->texture_pixels_data[i + 2] = this->m_pixeldata[hI][wI + 2];
+                        p_raw_texture_data->texture_pixels_data[i + 3] = 255;
                         wI += 2;
                         i += 3;
                     }

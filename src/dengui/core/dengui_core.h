@@ -63,10 +63,12 @@ namespace dengUI {
 
 #include "../css_engine/css_engine_core.h"
 #include "dengui_infos.h"
+#include "dengui_font_loader.h"
 #include "../pixel_perfect_collision/dengui_pixel_collision.h"
 // #include "../events/dengui_event_handles.h"
 // #include "../events/dengui_events.h"
 #include "dengui_sprites.h"
 #include "dengui_window.h"
+
 
 #endif
