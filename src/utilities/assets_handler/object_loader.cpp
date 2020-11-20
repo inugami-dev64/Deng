@@ -239,7 +239,7 @@ namespace dengUtils {
                 this->m_vertex_texture_coord_vector[this->m_vertex_texture_coord_faces_vector[index]].second};
             }
 
-            // this->indexVertices(p_obj);
+            this->indexVertices(p_obj);
             break;
         
         case DENG_PIPELINE_TYPE_UNMAPPED:
