@@ -6,6 +6,7 @@ namespace dengUtils {
         this->p_file_in = new std::ifstream(file_name, std::ios::ate | std::ios::binary);
         size_t file_size = (size_t) this->p_file_in->tellg();
         this->p_file_in->seekg(0);
+        LOG("hello!");
 
         if(!this->p_file_in->is_open()) {
             ERRME("Failed to load file '" + file_name + "'!");
@@ -63,11 +64,12 @@ namespace dengUtils {
             return DENG_TRUE;
     }
 
-    size_t FileManager::findFirstLineInstance(const std::string &keyword, std::vector<std::string> *p_file_contents) {
+    size_t FileManager::findFirstLineInstance(const std::string &keyword, std::vector<std::string> &file_contents) {
         size_t line_index;
         dengBool is_found = DENG_FALSE;
-        for(line_index = 0; line_index < p_file_contents->size(); line_index++) {
-            if((*p_file_contents)[line_index].find(keyword) != (size_t) -1) {
+        for(line_index = 0; line_index < file_contents.size(); line_index++) {
+            LOG("seg test!");
+            if(file_contents[line_index].find(keyword) != (size_t) -1) {
                 is_found = DENG_TRUE;   
                 break;
             }

@@ -33,7 +33,7 @@ namespace dengUtils {
         template<typename T>
         T getConfVal(const std::string &conf, const std::string &file_name, int *p_line_index, dengBool allow_whitespaces);
 
-        size_t findFirstLineInstance(const std::string &keyword, std::vector<std::string> *p_file_contents);
+        size_t findFirstLineInstance(const std::string &keyword, std::vector<std::string> &p_file_contents);
     };
 
     struct EditorEnvironmentConf {
@@ -85,59 +85,46 @@ namespace dengUtils {
         size_t index, ch_index;
         std::vector<std::string> file_contents;
         this->getFileContents(file_name, nullptr, &file_contents);
-        int *p_local_index;
+        int local_index;
 
-        if(p_line_index == nullptr) {
-            p_local_index = new int;
-            *p_local_index = -1; 
-        }
+        if(p_line_index == nullptr) local_index = -1;
+        else local_index = *p_line_index;
 
-        else p_local_index = p_line_index;
-
-        switch (*p_local_index)
-        {
-        case -1: {
-            *p_local_index = this->findFirstLineInstance(conf, &file_contents);
-            if(*p_local_index == (size_t) -1) ERRME("Couldn't find conf " + conf + " in file " + file_name);
-            break;
-        }
-        
-        default:
-            break;
+        if(local_index == -1) {
+            local_index = this->findFirstLineInstance(conf, file_contents);
+            if(local_index == (size_t) -1) ERRME("Couldn't find conf " + conf + " in file " + file_name);
         }
 
         std::string value_str;
         if(allow_whitespaces) {
-            if(static_cast<int>(file_contents[*p_local_index].find("#")) == -1 && static_cast<int>(file_contents[*p_local_index].find("=")) == -1)
-                ERRME("Failed to get conf value in file " + file_name + " on line " + std::to_string(*p_local_index));
+            if(static_cast<int>(file_contents[local_index].find("#")) == -1 && static_cast<int>(file_contents[local_index].find("=")) == -1)
+                ERRME("Failed to get conf value in file " + file_name + " on line " + std::to_string(local_index));
 
             else {
-                index = static_cast<int8_t>(file_contents[*p_local_index].find("=")) + 1;
-                while(file_contents[*p_local_index][ch_index] == ' ' || file_contents[*p_local_index][ch_index] == '"') ch_index++;
+                ch_index = file_contents[local_index].find("=") + 1;
+                while(file_contents[local_index][ch_index] == ' ' || file_contents[local_index][ch_index] == '"') ch_index++;
 
-                for(; index < file_contents[*p_local_index].size() && file_contents[*p_local_index][ch_index] != ' ' && file_contents[*p_local_index][index] != '#' && file_contents[*p_local_index][index] != '"'; index++)
-                    value_str += file_contents[*p_local_index][index];
+                for(; ch_index < file_contents[local_index].size() && file_contents[local_index][ch_index] != ' ' && file_contents[local_index][ch_index] != '#' && file_contents[local_index][ch_index] != '"'; ch_index++)
+                    value_str += file_contents[local_index][ch_index];
             }
         }
 
         else {
             int comment_line;
-            this->identifyLineComment(&comment_line, file_contents[*p_local_index], '#');
+            this->identifyLineComment(&comment_line, file_contents[local_index], '#');
             
-            if((int) (ch_index = file_contents[*p_local_index].find(conf)) == -1)  
-                ERRME("Failed to get config " + conf + " in file " + file_name + " on line " + std::to_string(*p_local_index));
+            if((int) (ch_index = file_contents[local_index].find(conf)) == -1)  
+                ERRME("Failed to get config " + conf + " in file " + file_name + " on line " + std::to_string(local_index));
 
             ch_index += conf.size();
-            if(file_contents[*p_local_index][ch_index] == '=' && file_contents[*p_local_index][ch_index++] != ' ') {
-                for(; file_contents[*p_local_index][ch_index] != ' ' && file_contents[*p_local_index][ch_index] != '#' && ch_index < file_contents[*p_local_index].size(); ch_index++)
-                    value_str+=file_contents[*p_local_index][ch_index];
+            if(file_contents[local_index][ch_index] == '=' && file_contents[local_index][ch_index++] != ' ') {
+                for(; file_contents[local_index][ch_index] != ' ' && file_contents[local_index][ch_index] != '#' && ch_index < file_contents[local_index].size(); ch_index++)
+                    value_str+=file_contents[local_index][ch_index];
             }
 
             else 
-                ERRME("Failed to get conf value in file " + file_name + " on line " + std::to_string(*p_local_index));
+                ERRME("Failed to get conf value in file " + file_name + " on line " + std::to_string(local_index));
         }
-
-        if(p_line_index == nullptr) delete p_local_index;
 
         T i = {};
         if(FindWithTypename::isNumeralType(i, DENG_NUMERAL_TYPE_BOOL)) {
@@ -145,8 +132,10 @@ namespace dengUtils {
             else if(value_str == "false") return false; 
         }
 
-        else if(FindWithTypename::isNumeralType(i, DENG_NUMERAL_TYPE_FLOAT))
+        else if(FindWithTypename::isNumeralType(i, DENG_NUMERAL_TYPE_FLOAT)) {
+            LOG(value_str);
             return static_cast<T>(std::stof(value_str));
+        }
 
         else if(FindWithTypename::isNumeralType(i, DENG_NUMERAL_TYPE_DOUBLE))
             return static_cast<T>(std::stod(value_str));

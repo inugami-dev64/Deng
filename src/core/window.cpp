@@ -6,7 +6,6 @@ namespace deng {
         this->m_title = (char*) title;
         this->m_pixel_size = {2.0 / static_cast<double>(this->m_size.first), 2.0 / static_cast<double>(this->m_size.second)};
         LOG("Pixel size: " + std::to_string(this->m_pixel_size.first) + "/" + std::to_string(this->m_pixel_size.second));
-
         this->m_p_game_window = init_window(x, y, this->m_title, DENG_WINDOW_MODE_FIXED);
     }
 

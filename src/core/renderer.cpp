@@ -6,7 +6,6 @@ namespace deng
         size_t index;
         //Required extensions vector initialisation
         this->m_required_extensions_name.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-
         this->loadDataFromConf(DENG_TRUE, DENG_TRUE, DENG_FALSE);
         this->m_p_window = &win;
 
@@ -33,13 +32,14 @@ namespace deng
         #if !DISABLE_DENGUI
             this->initDengUI();
         #endif
-        this->initGraphicsPipelines();
-        this->initDepthResources();
-        this->initFrameBuffers();
     }
 
     void Renderer::initObjects(std::vector<dengUtils::GameObject> *p_game_objects) {
         this->m_p_game_objects = p_game_objects;
+        
+        this->initGraphicsPipelines();
+        this->initDepthResources();
+        this->initFrameBuffers();
         this->initTextureSampler();
 
         this->initTextureImage();
@@ -81,7 +81,7 @@ namespace deng
     }
 
     void Renderer::loadDataFromConf(const dengBool &load_camera_conf, const dengBool &load_environment_conf, const dengBool &load_dengUI_conf) {
-        if(load_camera_conf == DENG_TRUE) {
+        if(load_camera_conf) {
             this->m_camera_conf.movement_x = this->m_fm.getConfVal<float>("movement_x", "config/engine_camera.conf", nullptr, DENG_TRUE);
             this->m_camera_conf.movement_y = this->m_fm.getConfVal<float>("movement_y", "config/engine_camera.conf", nullptr, DENG_TRUE);
             this->m_camera_conf.movement_z = this->m_fm.getConfVal<float>("movement_z", "config/engine_camera.conf", nullptr, DENG_TRUE);
@@ -91,7 +91,7 @@ namespace deng
             this->m_camera_conf.fov = this->m_fm.getConfVal<float>("fov", "config/engine_camera.conf", nullptr, DENG_TRUE);
         }
         
-        if(load_environment_conf == DENG_TRUE) {
+        if(load_environment_conf) {
             this->m_environment_conf.environment_color_r = this->m_fm.getConfVal<float>("environment_color_r", "config/engine_editor_environment.conf", nullptr, DENG_TRUE);
             this->m_environment_conf.environment_color_g = this->m_fm.getConfVal<float>("environment_color_g", "config/engine_editor_environment.conf", nullptr, DENG_TRUE);
             this->m_environment_conf.environment_color_b = this->m_fm.getConfVal<float>("environment_color_b", "config/engine_editor_environment.conf", nullptr, DENG_TRUE);
@@ -104,7 +104,7 @@ namespace deng
             this->m_environment_conf.grid_line_color_b = this->m_fm.getConfVal<float>("grid_line_color_b", "config/engine_editor_environment.conf", nullptr, DENG_TRUE);
         }
 
-        if(load_dengUI_conf == DENG_TRUE) {
+        if(load_dengUI_conf) {
             this->m_dengui_conf.dengui_window_color_r = this->m_fm.getConfVal<float>("dengui_window_color_r", "config/dengui.conf", nullptr, DENG_TRUE);
             this->m_dengui_conf.dengui_window_color_g = this->m_fm.getConfVal<float>("dengui_window_color_g", "config/dengui.conf", nullptr, DENG_TRUE);
             this->m_dengui_conf.dengui_window_color_b = this->m_fm.getConfVal<float>("dengui_window_color_b", "config/dengui.conf", nullptr, DENG_TRUE);

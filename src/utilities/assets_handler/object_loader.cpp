@@ -237,8 +237,6 @@ namespace dengUtils {
 
                 p_obj->texture_mapped_vertices_data[index].texture_vec = {this->m_vertex_texture_coord_vector[this->m_vertex_texture_coord_faces_vector[index]].first, 
                 this->m_vertex_texture_coord_vector[this->m_vertex_texture_coord_faces_vector[index]].second};
-
-                // p_obj->indices_data[index] = index;
             }
 
             // this->indexVertices(p_obj);
