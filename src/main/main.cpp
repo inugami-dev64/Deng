@@ -15,7 +15,7 @@ int main() {
     // model_handler.initModelMatrix(index, &generic_model_matrix); DENG_PIPELINE_TYPE_TEXTURE_MAPPED;
     dengUtils::FragInfo frag_info;
     frag_info.pipeline_type = DENG_PIPELINE_TYPE_TEXTURE_MAPPED;
-    frag_info.texture_file = "textures/obj1.tga";
+    frag_info.texture_file = "textures/small.bmp";
 
     dengUtils::ModelHandler model_handler(0);
 

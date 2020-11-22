@@ -70,6 +70,7 @@ namespace dengUtils {
                     this->pixel_data[hI].resize(this->m_info_header.width * this->m_info_header.bit_count / 8);
                     texture_file.read((char*) this->pixel_data[hI].data(), this->m_info_header.width * this->m_info_header.bit_count / 8);
                     texture_file.read((char*) padding_count_per_row.data(), padding_count_per_row.size());
+                    // lol wut, just use seek
                 }
             }
         }
