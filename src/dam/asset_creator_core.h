@@ -6,8 +6,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "dyn_arr.h"
-#include "hdr_data.h"
+#define true 1
+#define false 0
+
 #include "loader.h"
+#include "hdr_data.h"
+#include "assembler.h"
 
 #endif
