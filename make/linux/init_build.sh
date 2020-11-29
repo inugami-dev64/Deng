@@ -5,6 +5,8 @@ then
     mkdir $1
     mkdir $1/obj
     mkdir $1/obj/libsurface
+    mkdir $1/obj/libdas
+    mkdir $1/obj/dam
     mkdir $1/obj/deng
     mkdir $1/deng
     mkdir $1/deng/lib
