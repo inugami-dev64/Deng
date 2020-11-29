@@ -19,9 +19,19 @@ else
         mkdir $1/obj/libsurface 
     fi
 
+    if [ ! -d $1/obj/libdas ] 
+    then 
+        mkdir $1/obj/libdas 
+    fi
+
     if [ ! -d $1/obj/deng ] 
     then 
         mkdir $1/obj/deng 
+    fi
+
+    if [ ! -d $1/obj/dam ] 
+    then 
+        mkdir $1/obj/dam 
     fi
 
     if [ ! -d $1/deng ] 

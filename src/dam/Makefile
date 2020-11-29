@@ -1,21 +1,21 @@
 CC = gcc
-OBJ = loader.c.o \
-	  assembler.c.o \
-	  main.c.o \
+OBJ = das_handler.c.o \
+	  data_loader.c.o \
+	  dam.c.o \
 
 TARGET = dam
 
 $(TARGET): $(OBJ)
 	$(CC) $(OBJ) -o $(TARGET)
 
-loader.c.o: loader.c
-	$(CC) -c loader.c -o loader.c.o
+das_handler.c.o: das_handler.c
+	$(CC) -c das_handler.c -o das_handler.c.o
 
-main.c.o: main.c
-	$(CC) -c main.c -o main.c.o
+dam.c.o: dam.c
+	$(CC) -c dam.c -o dam.c.o
 
-assembler.c.o: assembler.c
-	$(CC) -c assembler.c -o assembler.c.o
+data_loader.c.o: data_loader.c
+	$(CC) -c data_loader.c -o data_loader.c.o
 
 .PHONY: clean
 clean:

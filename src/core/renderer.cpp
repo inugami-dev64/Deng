@@ -3,7 +3,6 @@
 namespace deng
 {
     Renderer::Renderer(Window &win) {
-        size_t index;
         //Required extensions vector initialisation
         this->m_required_extensions_name.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
         this->loadDataFromConf(DENG_TRUE, DENG_TRUE, DENG_FALSE);
@@ -104,24 +103,24 @@ namespace deng
             this->m_environment_conf.grid_line_color_b = this->m_fm.getConfVal<float>("grid_line_color_b", "config/engine_editor_environment.conf", nullptr, DENG_TRUE);
         }
 
-        if(load_dengUI_conf) {
-            this->m_dengui_conf.dengui_window_color_r = this->m_fm.getConfVal<float>("dengui_window_color_r", "config/dengui.conf", nullptr, DENG_TRUE);
-            this->m_dengui_conf.dengui_window_color_g = this->m_fm.getConfVal<float>("dengui_window_color_g", "config/dengui.conf", nullptr, DENG_TRUE);
-            this->m_dengui_conf.dengui_window_color_b = this->m_fm.getConfVal<float>("dengui_window_color_b", "config/dengui.conf", nullptr, DENG_TRUE);
-            this->m_dengui_conf.dengui_window_color_a = this->m_fm.getConfVal<float>("dengui_window_color_a", "config/dengui.conf", nullptr, DENG_TRUE), nullptr, DENG_TRUE;
+        // if(load_dengUI_conf) {
+        //     this->m_dengui_conf.dengui_window_color_r = this->m_fm.getConfVal<float>("dengui_window_color_r", "config/dengui.conf", nullptr, DENG_TRUE);
+        //     this->m_dengui_conf.dengui_window_color_g = this->m_fm.getConfVal<float>("dengui_window_color_g", "config/dengui.conf", nullptr, DENG_TRUE);
+        //     this->m_dengui_conf.dengui_window_color_b = this->m_fm.getConfVal<float>("dengui_window_color_b", "config/dengui.conf", nullptr, DENG_TRUE);
+        //     this->m_dengui_conf.dengui_window_color_a = this->m_fm.getConfVal<float>("dengui_window_color_a", "config/dengui.conf", nullptr, DENG_TRUE), nullptr, DENG_TRUE;
 
-            this->m_dengui_conf.dengui_border_thickness = this->m_fm.getConfVal<float>("dengui_border_thickness", "config/dengui.conf", nullptr, DENG_TRUE);
-            this->m_dengui_conf.dengui_titlebar_height = this->m_fm.getConfVal<float>("dengui_titlebar_height", "config/dengui.conf", nullptr, DENG_TRUE);
-            this->m_dengui_conf.dengui_border_color_r = this->m_fm.getConfVal<float>("dengui_border_color_r", "config/dengui.conf", nullptr, DENG_TRUE);
-            this->m_dengui_conf.dengui_border_color_g = this->m_fm.getConfVal<float>("dengui_border_color_g", "config/dengui.conf", nullptr, DENG_TRUE);
-            this->m_dengui_conf.dengui_border_color_b = this->m_fm.getConfVal<float>("dengui_border_color_b", "config/dengui.conf", nullptr, DENG_TRUE);
-            this->m_dengui_conf.dengui_border_color_a = this->m_fm.getConfVal<float>("dengui_border_color_a", "config/dengui.conf", nullptr, DENG_TRUE);
+        //     this->m_dengui_conf.dengui_border_thickness = this->m_fm.getConfVal<float>("dengui_border_thickness", "config/dengui.conf", nullptr, DENG_TRUE);
+        //     this->m_dengui_conf.dengui_titlebar_height = this->m_fm.getConfVal<float>("dengui_titlebar_height", "config/dengui.conf", nullptr, DENG_TRUE);
+        //     this->m_dengui_conf.dengui_border_color_r = this->m_fm.getConfVal<float>("dengui_border_color_r", "config/dengui.conf", nullptr, DENG_TRUE);
+        //     this->m_dengui_conf.dengui_border_color_g = this->m_fm.getConfVal<float>("dengui_border_color_g", "config/dengui.conf", nullptr, DENG_TRUE);
+        //     this->m_dengui_conf.dengui_border_color_b = this->m_fm.getConfVal<float>("dengui_border_color_b", "config/dengui.conf", nullptr, DENG_TRUE);
+        //     this->m_dengui_conf.dengui_border_color_a = this->m_fm.getConfVal<float>("dengui_border_color_a", "config/dengui.conf", nullptr, DENG_TRUE);
 
-            this->m_dengui_conf.dengui_minimizing_triangle_color_r = this->m_fm.getConfVal<float>("dengui_minimizing_triangle_color_r", "config/dengui.conf", nullptr, DENG_TRUE);
-            this->m_dengui_conf.dengui_minimizing_triangle_color_g = this->m_fm.getConfVal<float>("dengui_minimizing_triangle_color_g", "config/dengui.conf", nullptr, DENG_TRUE);
-            this->m_dengui_conf.dengui_minimizing_triangle_color_b = this->m_fm.getConfVal<float>("dengui_minimizing_triangle_color_b", "config/dengui.conf", nullptr, DENG_TRUE);
-            this->m_dengui_conf.dengui_minimizing_triangle_color_b = this->m_fm.getConfVal<float>("dengui_minimizing_triangle_color_a", "config/dengui.conf", nullptr, DENG_TRUE);
-        }
+        //     this->m_dengui_conf.dengui_minimizing_triangle_color_r = this->m_fm.getConfVal<float>("dengui_minimizing_triangle_color_r", "config/dengui.conf", nullptr, DENG_TRUE);
+        //     this->m_dengui_conf.dengui_minimizing_triangle_color_g = this->m_fm.getConfVal<float>("dengui_minimizing_triangle_color_g", "config/dengui.conf", nullptr, DENG_TRUE);
+        //     this->m_dengui_conf.dengui_minimizing_triangle_color_b = this->m_fm.getConfVal<float>("dengui_minimizing_triangle_color_b", "config/dengui.conf", nullptr, DENG_TRUE);
+        //     this->m_dengui_conf.dengui_minimizing_triangle_color_b = this->m_fm.getConfVal<float>("dengui_minimizing_triangle_color_a", "config/dengui.conf", nullptr, DENG_TRUE);
+        // }
     }
 
     // void Renderer::initGrid() {

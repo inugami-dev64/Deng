@@ -51,6 +51,21 @@ typedef struct DynamicPixelData {
     uint16_t height;
 } DynamicPixelData;
 
+typedef struct Asset {
+    char *name;
+    char *description;
+    uint64_t time_point; 
+    DynamicVertices vertices;
+    DynamicIndices indices;
+    DynamicPixelData pixel_data;
+} Asset;
+
+typedef struct AssetAssemblyInfo {
+    int frag_mode;
+    OBJColorData color_data;
+    
+} AssetAssemblyInfo;
+
 typedef enum ImageFormat {
     IMAGE_FORMAT_BMP = 0,
     IMAGE_FORMAT_TGA = 1,
@@ -61,29 +76,28 @@ typedef enum ImageFormat {
 
 /* Image loading */
 
-void load_image(DynamicPixelData *p_pixel_data, const char *file_name);
+void load_image(Asset *p_asset, const char *file_name);
 #ifdef LOADER_ONLY
     static ImageFormat detect_image_format(const char *file_name);
-    static void load_BMP_image(DynamicPixelData *p_pixel_data, const char *file_name);
-    static void load_TGA_image(DynamicPixelData *p_pixel_data, const char *file_name);
+    static void load_BMP_image(Asset *p_asset, const char *file_name);
+    static void load_TGA_image(Asset *p_asset, const char *file_name);
 #endif
 
 /* Vertices data loading */
 /* Vertices type values define the following: */
     /* 0 - UNMAPPED */
     /* 1 - TEXTURE MAPPED */
-void load_model(DynamicVertices *p_vertices, DynamicIndices *p_indices, const char *file_name, OBJColorData *p_color_data, int color_mode);
+void load_model(Asset *p_asset, const char *file_name, OBJColorData *p_color_data, int color_mode);
 #ifdef LOADER_ONLY
     static void load_OBJ_model_vertices(OBJVerticesData **pp_vert_data, size_t *p_vert_data_size, OBJTextureData **pp_texture_data, size_t *p_tex_data_size, long file_size);
     static void load_OBJ_indices(uint32_t **pp_vert_indices, size_t *p_vert_indices_size, uint32_t **pp_tex_vert_indices, size_t *p_tex_vert_indices_size, long file_size);
-    static void index_unmapped_vertices(OBJVerticesData **pp_vert_data, size_t vert_size, uint32_t **pp_indices, size_t indices_size, OBJColorData *p_color_data, DynamicVertices **pp_out_vert, DynamicIndices **pp_out_indices);
+    static void index_unmapped_vertices(OBJVerticesData **pp_vert_data, size_t vert_size, uint32_t **pp_indices, size_t indices_size, OBJColorData *p_color_data, Asset *p_asset);
     
     static void index_tex_mapped_vertices(OBJVerticesData **pp_vert_data, size_t vert_size, OBJTextureData **pp_tex_data, size_t tex_size, uint32_t **pp_vert_indices, size_t vert_indices_size, uint32_t **pp_tex_indices, 
-    size_t tex_indices_size, DynamicVertices **pp_out_vert, DynamicIndices **pp_out_indices);
-
-/* Memory usage mananger functions */
-    static void clean_buffer(char *buffer, size_t size);
-    static void check_for_mem_alloc_err(void *mem_addr);
+    size_t tex_indices_size, Asset *p_asset);
 #endif
+
+void clean_buffer(char *buffer, size_t size);
+void check_for_mem_alloc_err(void *mem_addr);
 
 #endif

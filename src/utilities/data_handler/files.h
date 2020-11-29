@@ -82,7 +82,7 @@ namespace dengUtils {
 
     template<typename T>
     T FileManager::getConfVal(const std::string &conf, const std::string &file_name, int *p_line_index, dengBool allow_whitespaces) {
-        size_t index, ch_index;
+        size_t ch_index;
         std::vector<std::string> file_contents;
         this->getFileContents(file_name, nullptr, &file_contents);
         int local_index;
@@ -92,7 +92,7 @@ namespace dengUtils {
 
         if(local_index == -1) {
             local_index = this->findFirstLineInstance(conf, file_contents);
-            if(local_index == (size_t) -1) ERRME("Couldn't find conf " + conf + " in file " + file_name);
+            if(local_index == -1) ERRME("Couldn't find conf " + conf + " in file " + file_name);
         }
 
         std::string value_str;

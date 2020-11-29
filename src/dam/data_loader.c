@@ -1,19 +1,26 @@
 #define LOADER_ONLY
-#include "asset_creator_core.h"
+#include "dam_core.h"
 
 static FILE *file;
 
-static void check_for_mem_alloc_err(void *mem_addr) {
+/* Memory management functions */
+void check_for_mem_alloc_err(void *mem_addr) {
     if(mem_addr == NULL) {
         printf("Failed to allocate memory!\n");
         exit(-1);
     }
 }
 
+void clean_buffer(char *buffer, size_t size) {
+    for(size_t index = 0; index < size; index++)
+        buffer[index] = 0x00;
+}
+
+
 void init_BMP_image_headers(BMPFileHeader *p_file_header, BMPInfoHeader *p_info_header, BMPColorHeader *p_color_header) {
     *p_file_header = (BMPFileHeader) {0x4D42, 0, 0, 0, 0};
     *p_info_header = (BMPInfoHeader) {0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0};
-    *p_color_header = (BMPColorHeader) {0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000, 0x73524742, 0};
+    *p_color_header = (BMPColorHeader) {0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000, 0x73524742, {0}};
 }
 
 void init_TGA_image_headers(TGATypeHeader *p_type_header, TGAColorMapHeader *p_color_map_header, TGAInfoHeader *p_info_header) {
@@ -22,27 +29,20 @@ void init_TGA_image_headers(TGATypeHeader *p_type_header, TGAColorMapHeader *p_c
     *p_info_header = (TGAInfoHeader) {0, 0, 0, 0, 0, 0};
 }
 
-static void clean_buffer(char *buffer, size_t size) {
-    for(size_t index = 0; index < size; index++)
-        buffer[index] = 0x00;
-}
-
 /* Image loaders */
 
 // Callback function to get image data
-void load_image(DynamicPixelData *p_pixel_data, const char *file_name) {
+void load_image(Asset *p_asset, const char *file_name) {
     ImageFormat format = detect_image_format(file_name);
-    printf("Detected texture format!\n");
 
     switch (format)
     {
     case IMAGE_FORMAT_BMP:
-        printf("test\n");
-        load_BMP_image(p_pixel_data, file_name);
+        load_BMP_image(p_asset, file_name);
         break;
 
     case IMAGE_FORMAT_TGA:
-        load_TGA_image(p_pixel_data, file_name);
+        load_TGA_image(p_asset, file_name);
         break;
     
     default:
@@ -67,13 +67,12 @@ ImageFormat detect_image_format(const char *file_name) {
 }
 
 /* TGA image */
-void load_TGA_image(DynamicPixelData *p_pixel_data, const char *file_name) {
-    size_t index;
+static void load_TGA_image(Asset *p_asset, const char *file_name) {
     TGATypeHeader type_header;
     TGAColorMapHeader color_header;
     TGAInfoHeader info_header;
     init_TGA_image_headers(&type_header, &color_header, &info_header);
-    p_pixel_data->p_pixel_data = (uint8_t*) malloc(sizeof(uint8_t));
+    p_asset->pixel_data.p_pixel_data = (uint8_t*) malloc(sizeof(uint8_t));
 
     file = fopen(file_name, "rb");
     if(!file) {
@@ -117,9 +116,9 @@ void load_TGA_image(DynamicPixelData *p_pixel_data, const char *file_name) {
     fread((void*) &color_header, sizeof(color_header), 1, file);
     fread((void*) &info_header, sizeof(info_header), 1, file);
     
-    p_pixel_data->size = (size_t) (info_header.height * info_header.width * 4);
-    p_pixel_data->p_pixel_data = realloc(p_pixel_data->p_pixel_data, p_pixel_data->size);
-    check_for_mem_alloc_err(p_pixel_data->p_pixel_data);
+    p_asset->pixel_data.size = (size_t) (info_header.height * info_header.width * 4);
+    p_asset->pixel_data.p_pixel_data = (uint8_t*) realloc(p_asset->pixel_data.p_pixel_data, p_asset->pixel_data.size);
+    check_for_mem_alloc_err(p_asset->pixel_data.p_pixel_data);
     
     switch (info_header.bit_count)
     {
@@ -135,12 +134,12 @@ void load_TGA_image(DynamicPixelData *p_pixel_data, const char *file_name) {
 
             for(h_index = (int) info_header.height - 1, data_index = 0; h_index >= 0; h_index--) {
                 for(w_index = 0; w_index < info_header.width * 4; w_index++, data_index++)
-                    p_pixel_data->p_pixel_data[data_index] = tmp_arr[(int) h_index][w_index];
+                    p_asset->pixel_data.p_pixel_data[data_index] = tmp_arr[(int) h_index][w_index];
             }
         }
 
         else 
-            fread(p_pixel_data->p_pixel_data, p_pixel_data->size * sizeof(uint8_t), 1, file);
+            fread(p_asset->pixel_data.p_pixel_data, p_asset->pixel_data.size * sizeof(uint8_t), 1, file);
         break;
     }
 
@@ -155,10 +154,10 @@ void load_TGA_image(DynamicPixelData *p_pixel_data, const char *file_name) {
 
             for(h_index = (int) info_header.height - 1, data_index = 0; h_index >= 0; h_index--) {
                 for(w_index = 0; w_index < (int) info_header.width * 3; w_index += 3, data_index += 4) {
-                    p_pixel_data->p_pixel_data[data_index] = tmp_arr[(size_t) h_index][(size_t) w_index];
-                    p_pixel_data->p_pixel_data[data_index + 1] = tmp_arr[(size_t) h_index][(size_t) w_index + 1];
-                    p_pixel_data->p_pixel_data[data_index + 2] = tmp_arr[(size_t) h_index][(size_t) w_index + 2];
-                    p_pixel_data->p_pixel_data[data_index + 3] = 0xFF;
+                    p_asset->pixel_data.p_pixel_data[data_index] = tmp_arr[(size_t) h_index][(size_t) w_index];
+                    p_asset->pixel_data.p_pixel_data[data_index + 1] = tmp_arr[(size_t) h_index][(size_t) w_index + 1];
+                    p_asset->pixel_data.p_pixel_data[data_index + 2] = tmp_arr[(size_t) h_index][(size_t) w_index + 2];
+                    p_asset->pixel_data.p_pixel_data[data_index + 3] = 0xFF;
                 }
             }
         }
@@ -168,11 +167,11 @@ void load_TGA_image(DynamicPixelData *p_pixel_data, const char *file_name) {
             uint8_t tmp_arr[info_header.height * info_header.width * 3];
             fread(tmp_arr, 3 * info_header.width * info_header.height * sizeof(uint8_t), 1, file);
 
-            for(tmp_index = 0, data_index = 0; data_index < p_pixel_data->size; data_index += 4, tmp_index += 3) {
-                p_pixel_data->p_pixel_data[data_index] = tmp_arr[tmp_index];
-                p_pixel_data->p_pixel_data[data_index + 1] = tmp_arr[tmp_index + 1];
-                p_pixel_data->p_pixel_data[data_index + 2] = tmp_arr[tmp_index + 2];
-                p_pixel_data->p_pixel_data[data_index + 3] = 0xFF;
+            for(tmp_index = 0, data_index = 0; data_index < p_asset->pixel_data.size; data_index += 4, tmp_index += 3) {
+                p_asset->pixel_data.p_pixel_data[data_index] = tmp_arr[tmp_index];
+                p_asset->pixel_data.p_pixel_data[data_index + 1] = tmp_arr[tmp_index + 1];
+                p_asset->pixel_data.p_pixel_data[data_index + 2] = tmp_arr[tmp_index + 2];
+                p_asset->pixel_data.p_pixel_data[data_index + 3] = 0xFF;
             }
         }
     }
@@ -181,16 +180,19 @@ void load_TGA_image(DynamicPixelData *p_pixel_data, const char *file_name) {
         break;
     }
 
+    p_asset->pixel_data.width = info_header.width;
+    p_asset->pixel_data.height = info_header.height;
+
     fclose(file);
 }
 
 /* BMP image */
-void load_BMP_image(DynamicPixelData *p_pixel_data, const char *file_name) {
+static void load_BMP_image(Asset *p_asset, const char *file_name) {
     BMPFileHeader file_header;
     BMPInfoHeader info_header;
     BMPColorHeader color_header;
     init_BMP_image_headers(&file_header, &info_header, &color_header);
-    p_pixel_data->p_pixel_data = (uint8_t*) malloc(sizeof(uint8_t));
+    p_asset->pixel_data.p_pixel_data = (uint8_t*) malloc(sizeof(uint8_t));
     file = fopen(file_name, "rb");
 
     if(!file) {
@@ -222,7 +224,7 @@ void load_BMP_image(DynamicPixelData *p_pixel_data, const char *file_name) {
         }
     }
 
-    else if(info_header.bit_count == 32 && !info_header.size >= (sizeof(BMPInfoHeader) + sizeof(BMPColorHeader))) {
+    else if(info_header.bit_count == 32 && !(info_header.size >= (sizeof(BMPInfoHeader) + sizeof(BMPColorHeader)))) {
         printf("%s%s%s\n", "ERROR: Texture file ", file_name, " doesn't contain bit mask information!");
         return;
     }
@@ -245,10 +247,12 @@ void load_BMP_image(DynamicPixelData *p_pixel_data, const char *file_name) {
     }
 
     file_header.file_size = file_header.offset_data;
+    p_asset->pixel_data.width = (uint16_t) info_header.width;
+    p_asset->pixel_data.height = (uint16_t) info_header.height;
 
-    p_pixel_data->size = info_header.height * info_header.width * 4;
-    p_pixel_data->p_pixel_data = realloc((void*) p_pixel_data->p_pixel_data, p_pixel_data->size);
-    check_for_mem_alloc_err((void*) p_pixel_data->p_pixel_data);
+    p_asset->pixel_data.size = info_header.height * info_header.width * 4;
+    p_asset->pixel_data.p_pixel_data = (uint8_t*) realloc((void*) p_asset->pixel_data.p_pixel_data, p_asset->pixel_data.size);
+    check_for_mem_alloc_err((void*) p_asset->pixel_data.p_pixel_data);
 
     /* No padding */
     if(info_header.bit_count == 32) {
@@ -261,7 +265,7 @@ void load_BMP_image(DynamicPixelData *p_pixel_data, const char *file_name) {
 
         for(h_index = (int) info_header.height - 1, data_index = 0; h_index >= 0; h_index--)
             for(w_index = 0; w_index < 4 * info_header.width; w_index++, data_index++)
-                p_pixel_data->p_pixel_data[data_index] = tmp_arr[(size_t) h_index][w_index];
+                p_asset->pixel_data.p_pixel_data[data_index] = tmp_arr[(size_t) h_index][w_index];
     }
     /* With padding */
     else {
@@ -278,10 +282,10 @@ void load_BMP_image(DynamicPixelData *p_pixel_data, const char *file_name) {
 
         for(h_index = (int) info_header.height - 1, data_index = 0; h_index >= 0; h_index--) {
             for(w_index = 0; w_index < info_header.width * 3; w_index += 3, data_index += 4) {
-                p_pixel_data->p_pixel_data[data_index] = tmp_arr[(size_t) h_index][w_index];
-                p_pixel_data->p_pixel_data[data_index + 1] = tmp_arr[(size_t) h_index][w_index + 1];
-                p_pixel_data->p_pixel_data[data_index + 2] = tmp_arr[(size_t) h_index][w_index + 2];
-                p_pixel_data->p_pixel_data[data_index + 3] = 0xFF;
+                p_asset->pixel_data.p_pixel_data[data_index] = tmp_arr[(size_t) h_index][w_index];
+                p_asset->pixel_data.p_pixel_data[data_index + 1] = tmp_arr[(size_t) h_index][w_index + 1];
+                p_asset->pixel_data.p_pixel_data[data_index + 2] = tmp_arr[(size_t) h_index][w_index + 2];
+                p_asset->pixel_data.p_pixel_data[data_index + 3] = 0xFF;
             }
         }
     }
@@ -293,7 +297,7 @@ void load_BMP_image(DynamicPixelData *p_pixel_data, const char *file_name) {
 /* 3D model loading */
 
 // Callback function for loading 3d model data
-void load_model(DynamicVertices *p_out_vertices, DynamicIndices *p_out_indices, const char *file_name, OBJColorData *p_color_data, int color_mode) {
+void load_model(Asset *p_asset, const char *file_name, OBJColorData *p_color_data, int color_mode) {
     file = fopen(file_name, "rb");
     if(!file) printf("ERROR: Failed to open model file: %s\n", file_name);
 
@@ -313,22 +317,20 @@ void load_model(DynamicVertices *p_out_vertices, DynamicIndices *p_out_indices, 
     uint32_t *p_tex_vert_indices = NULL;
     size_t tex_vert_indices_size = 0;
 
-    OBJColorData color_data = (OBJColorData) {0.0f, 0.0f, 1.0f, 1.0f};
-
     load_OBJ_model_vertices(&p_vertices_data, &vertices_size, &p_texture_data, &texture_size, file_size);
     load_OBJ_indices(&p_vertices_indices, &vertices_indices_size, &p_tex_vert_indices, &tex_vert_indices_size, file_size);
 
     switch (color_mode)
     {
     case 0:
-        index_unmapped_vertices(&p_vertices_data, vertices_size, &p_vertices_indices, vertices_indices_size, p_color_data, &p_out_vertices, &p_out_indices);
-        p_out_vertices->vertices_type = 0;
+        index_unmapped_vertices(&p_vertices_data, vertices_size, &p_vertices_indices, vertices_indices_size, p_color_data, p_asset);
+        p_asset->vertices.vertices_type = 0;
         break;
     
     case 1:
         index_tex_mapped_vertices(&p_vertices_data, vertices_size, &p_texture_data, texture_size, &p_vertices_indices, vertices_indices_size, &p_tex_vert_indices,
-        tex_vert_indices_size, &p_out_vertices, &p_out_indices);
-        p_out_vertices->vertices_type = 1;
+        tex_vert_indices_size, p_asset);
+        p_asset->vertices.vertices_type = 1;
         break;
     
     default:
@@ -339,33 +341,33 @@ void load_model(DynamicVertices *p_out_vertices, DynamicIndices *p_out_indices, 
 }
 
 // Index unmapped vertices
-static void index_unmapped_vertices(OBJVerticesData **pp_vert_data, size_t vert_size, uint32_t **pp_indices, size_t indices_size, OBJColorData *p_color_data, DynamicVertices **pp_out_vert, DynamicIndices **pp_out_indices) {
-    (*pp_out_indices)->p_indices = (uint32_t*) malloc(indices_size * sizeof(uint32_t));
-    (*pp_out_indices)->size = indices_size;
+static void index_unmapped_vertices(OBJVerticesData **pp_vert_data, size_t vert_size, uint32_t **pp_indices, size_t indices_size, OBJColorData *p_color_data, Asset *p_asset) {
+    p_asset->indices.p_indices = (uint32_t*) malloc(indices_size * sizeof(uint32_t));
+    p_asset->indices.size = indices_size;
 
-    (*pp_out_vert)->p_unmapped_vertices = (VERT_UNMAPPED*) malloc(vert_size * sizeof(VERT_UNMAPPED));
-    (*pp_out_vert)->vertices_type = 1;
+    p_asset->vertices.p_unmapped_vertices = (VERT_UNMAPPED*) malloc(vert_size * sizeof(VERT_UNMAPPED));
+    p_asset->vertices.vertices_type = 1;
 
     size_t index;
     for(index = 0; index < vert_size; index++) {
-        (*pp_out_vert)->p_unmapped_vertices[index].vert_data = (*pp_vert_data)[index];
-        (*pp_out_vert)->p_unmapped_vertices[index].color_data = *p_color_data;
+        p_asset->vertices.p_unmapped_vertices[index].vert_data = (*pp_vert_data)[index];
+        p_asset->vertices.p_unmapped_vertices[index].color_data = *p_color_data;
     }
 
     for(index = 0; index < indices_size; index++)
-        (*pp_out_indices)->p_indices[index] = (*pp_indices)[index]; 
+        p_asset->indices.p_indices[index] = (*pp_indices)[index]; 
 }
 
 // Index texture mapped vertices
 static void index_tex_mapped_vertices(OBJVerticesData **pp_vert_data, size_t vert_size, OBJTextureData **pp_tex_data, size_t tex_size, uint32_t **pp_vert_indices, size_t vert_indices_size, uint32_t **pp_tex_indices, 
-size_t tex_indices_size, DynamicVertices **pp_out_vert, DynamicIndices **pp_out_indices) {
+size_t tex_indices_size, Asset *p_asset) {
     size_t l_index, r_index;
     int is_found;
-    (*pp_out_vert)->p_mapped_vertices = (VERT_MAPPED*) malloc(sizeof(VERT_MAPPED));
-    (*pp_out_vert)->size = 0;
+    p_asset->vertices.p_mapped_vertices = (VERT_MAPPED*) malloc(sizeof(VERT_MAPPED));
+    p_asset->vertices.size = 0;
 
-    (*pp_out_indices)->p_indices = (uint32_t*) malloc(vert_indices_size * sizeof(uint32_t));
-    (*pp_out_indices)->size = vert_indices_size; 
+    p_asset->indices.p_indices = (uint32_t*) malloc(vert_indices_size * sizeof(uint32_t));
+    p_asset->indices.size = vert_indices_size; 
 
     VERT_MAPPED *p_tmp_vert = (VERT_MAPPED*) malloc(vert_indices_size * sizeof(VERT_MAPPED));
 
@@ -378,12 +380,12 @@ size_t tex_indices_size, DynamicVertices **pp_out_vert, DynamicIndices **pp_out_
     for(l_index = 0; l_index < vert_indices_size; l_index++) {
         // Iterate through output array to find equal value with p_tmp_vert values
         is_found = false;
-        for(r_index = 0; r_index < (*pp_out_vert)->size; r_index++) {
-            if((*pp_out_vert)->p_mapped_vertices[r_index].vert_data.vert_x == p_tmp_vert[l_index].vert_data.vert_x &&
-               (*pp_out_vert)->p_mapped_vertices[r_index].vert_data.vert_y == p_tmp_vert[l_index].vert_data.vert_y &&
-               (*pp_out_vert)->p_mapped_vertices[r_index].vert_data.vert_z == p_tmp_vert[l_index].vert_data.vert_z &&
-               (*pp_out_vert)->p_mapped_vertices[r_index].tex_data.tex_x == p_tmp_vert[l_index].tex_data.tex_x && 
-               (*pp_out_vert)->p_mapped_vertices[r_index].tex_data.tex_y == p_tmp_vert[l_index].tex_data.tex_y)  {
+        for(r_index = 0; r_index < p_asset->vertices.size; r_index++) {
+            if(p_asset->vertices.p_mapped_vertices[r_index].vert_data.vert_x == p_tmp_vert[l_index].vert_data.vert_x &&
+               p_asset->vertices.p_mapped_vertices[r_index].vert_data.vert_y == p_tmp_vert[l_index].vert_data.vert_y &&
+               p_asset->vertices.p_mapped_vertices[r_index].vert_data.vert_z == p_tmp_vert[l_index].vert_data.vert_z &&
+               p_asset->vertices.p_mapped_vertices[r_index].tex_data.tex_x == p_tmp_vert[l_index].tex_data.tex_x && 
+               p_asset->vertices.p_mapped_vertices[r_index].tex_data.tex_y == p_tmp_vert[l_index].tex_data.tex_y)  {
                 is_found = true;
                 break;
             }
@@ -391,15 +393,15 @@ size_t tex_indices_size, DynamicVertices **pp_out_vert, DynamicIndices **pp_out_
 
         // Check if previous vertex instance is found and then index it
         if(!is_found) {
-            (*pp_out_vert)->size++;
-            (*pp_out_vert)->p_mapped_vertices = (VERT_MAPPED*) realloc((void*) (*pp_out_vert)->p_mapped_vertices, (*pp_out_vert)->size * sizeof(VERT_MAPPED));
-            check_for_mem_alloc_err((void*) (*pp_out_vert)->p_mapped_vertices);
+            p_asset->vertices.size++;
+            p_asset->vertices.p_mapped_vertices = (VERT_MAPPED*) realloc((void*) p_asset->vertices.p_mapped_vertices, p_asset->vertices.size * sizeof(VERT_MAPPED));
+            check_for_mem_alloc_err((void*) p_asset->vertices.p_mapped_vertices);
             
-            (*pp_out_vert)->p_mapped_vertices[(*pp_out_vert)->size - 1] = p_tmp_vert[l_index];
-            (*pp_out_indices)->p_indices[l_index] = (*pp_out_vert)->size - 1;
+            p_asset->vertices.p_mapped_vertices[p_asset->vertices.size - 1] = p_tmp_vert[l_index];
+            p_asset->indices.p_indices[l_index] = p_asset->vertices.size - 1;
         }
 
-        else (*pp_out_indices)->p_indices[l_index] = (uint32_t) r_index;
+        else p_asset->indices.p_indices[l_index] = (uint32_t) r_index;
     }   
 
     free(p_tmp_vert); 

@@ -4,14 +4,17 @@ LD = ar
 SRC_DIR = ../../src
 BUILD_DIR = ../../build
 TARGET = $(BUILD_DIR)/deng/deng
-LIBSURFACE_TARGET = libsurface.a
+DAM_TARGET = $(BUILD_DIR)/deng/dam
+LIBSURFACE_TARGET = $(BUILD_DIR)/deng/lib/libsurface.a
+LIBDAS_TARGET = $(BUILD_DIR)/deng/lib/libdas.so
 
 LD_PATH = -L $(BUILD_DIR)/deng/lib
 
 CC_FLAGS = -Wall -m64
 CXX_FLAGS = -Wall -m64 -std=c++11
-LD_FLAGS = -lvulkan -lpthread -lsurface -lX11 -lXcursor -ldl 
+LD_FLAGS = -lvulkan -lpthread -lsurface -ldas -lX11 -lXcursor -ldl 
 
+# Main engine with sample object loading
 MAIN_SRC = $(SRC_DIR)/main/main.cpp
 MAIN_OBJ = $(BUILD_DIR)/obj/deng/main.cpp.o
 
@@ -19,12 +22,6 @@ CORE_OBJ = $(BUILD_DIR)/obj/deng/camera.cpp.o \
 		   $(BUILD_DIR)/obj/deng/renderer_utils.cpp.o \
 		   $(BUILD_DIR)/obj/deng/renderer.cpp.o \
 		   $(BUILD_DIR)/obj/deng/window.cpp.o 
-
-# DENGUI_OBJ = $(BUILD_DIR)/obj/deng/dengui_sprites.cpp.o \
-# 			 $(BUILD_DIR)/obj/deng/dengui_window.cpp.o \
-# 			 $(BUILD_DIR)/obj/deng/css_data_manager.cpp.o \
-# 			 $(BUILD_DIR)/obj/deng/dengui_pixel_collision.cpp.o \
-# 			 $(BUILD_DIR)/obj/deng/dengui_font_loader.cpp.o 
 
 MATH_OBJ = $(BUILD_DIR)/obj/deng/deng_math.cpp.o \
 		   $(BUILD_DIR)/obj/deng/events.cpp.o 
@@ -37,13 +34,21 @@ UTILITIES_OBJ = $(BUILD_DIR)/obj/deng/object_loader.cpp.o \
 
 OBJ = $(MAIN_OBJ) $(CORE_OBJ) $(MATH_OBJ) $(UTILITIES_OBJ)
 
+# Surface library (static)
 LIBSURFACE_OBJ = $(BUILD_DIR)/obj/libsurface/vulkan_handler.c.o \
 				 $(BUILD_DIR)/obj/libsurface/key_translation.c.o \
 				 $(BUILD_DIR)/obj/libsurface/key_vector.c.o \
 				 $(BUILD_DIR)/obj/libsurface/x11_surface.c.o
 
-$(TARGET): .init_build $(LIBSURFACE_TARGET) $(OBJ)
-	$(CXX) -o $(BUILD_DIR)/deng/$(TARGET) $(OBJ) $(LD_PATH) $(LD_FLAGS)
+# DENG asset file (das) format library (shared)
+LIBDAS_OBJ = $(BUILD_DIR)/obj/libdas/das_handler.c.o \
+			 $(BUILD_DIR)/obj/libdas/data_loader.c.o
+
+DAM_OBJ = $(BUILD_DIR)/obj/dam/dam.c.o
+
+
+$(TARGET): .init_build $(LIBDAS_TARGET) $(DAM_TARGET) $(LIBSURFACE_TARGET) $(OBJ)
+	$(CXX) -o $(TARGET) $(OBJ) $(LD_PATH) $(LD_FLAGS)
 	cp -r ../../objects $(BUILD_DIR)/deng/
 	cp -r ../../textures $(BUILD_DIR)/deng/
 	cp -r ../../shaders $(BUILD_DIR)/deng/
@@ -59,7 +64,6 @@ $(TARGET): .init_build $(LIBSURFACE_TARGET) $(OBJ)
 # Surface library build
 $(LIBSURFACE_TARGET): $(LIBSURFACE_OBJ)
 	$(LD) rs $(LIBSURFACE_TARGET) $(LIBSURFACE_OBJ)
-	mv $(LIBSURFACE_TARGET) $(BUILD_DIR)/deng/lib/
 
 $(BUILD_DIR)/obj/libsurface/vulkan_handler.c.o: $(SRC_DIR)/surface/vulkan_handler.c
 	$(CC) -c $(SRC_DIR)/surface/vulkan_handler.c -o $(BUILD_DIR)/obj/libsurface/vulkan_handler.c.o $(CC_FLAGS)
@@ -72,6 +76,25 @@ $(BUILD_DIR)/obj/libsurface/key_translation.c.o: $(SRC_DIR)/surface/key_translat
 
 $(BUILD_DIR)/obj/libsurface/x11_surface.c.o: $(SRC_DIR)/surface/x11_surface.c
 	$(CC) -c $(SRC_DIR)/surface/x11_surface.c -o $(BUILD_DIR)/obj/libsurface/x11_surface.c.o $(CC_FLAGS)
+
+
+# dam build
+$(DAM_TARGET): $(DAM_OBJ)
+	$(CC) -o $(DAM_TARGET) $(DAM_OBJ) $(LD_PATH) -ldas
+
+$(DAM_OBJ): $(SRC_DIR)/dam/dam.c
+	$(CC) -c $(SRC_DIR)/dam/dam.c -o $(DAM_OBJ) $(CC_FLAGS)
+
+
+# libdas library build
+$(LIBDAS_TARGET): $(LIBDAS_OBJ)
+	$(CC) -shared -o $(LIBDAS_TARGET) $(LIBDAS_OBJ)
+
+$(BUILD_DIR)/obj/libdas/das_handler.c.o: $(SRC_DIR)/dam/das_handler.c
+	$(CC) -c $(SRC_DIR)/dam/das_handler.c -o $(BUILD_DIR)/obj/libdas/das_handler.c.o $(CC_FLAGS)
+
+$(BUILD_DIR)/obj/libdas/data_loader.c.o: $(SRC_DIR)/dam/data_loader.c
+	$(CC) -c $(SRC_DIR)/dam/data_loader.c -o $(BUILD_DIR)/obj/libdas/data_loader.c.o $(CC_FLAGS)
 
 
 # Engine core objects
