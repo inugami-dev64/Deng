@@ -1,43 +1,13 @@
 #include "dam.h"
 
-/* Get the file extension */
-static char *get_extension(char *file_name) {
-    size_t ext_index;
-    int name_index;
-    int is_ext_found = false;
-
-    // Find the file extension start point
-    for(name_index = (int) strlen(file_name) - 1; name_index >= 0 ; name_index--) {
-        if(file_name[name_index] == 0x2E) {
-            is_ext_found = true;
-            break;
-        }
-    }
-
-    if(!is_ext_found) return NULL;
-
-    char *ext;
-    
-    if(name_index != strlen(file_name) - 1 && name_index != 0)
-        ext = (char*) calloc(strlen(file_name) - name_index + 1, sizeof(char));
-
-    else return NULL;
-
-    for(ext_index = 0; name_index < strlen(file_name); name_index++, ext_index++) 
-        ext[ext_index] = file_name[name_index];
-
-    return ext;
-}
-
-
 /* Count years recursively */
-uint16_t count_years(int64_t *p_time, uint16_t years, int n, int *p_is_leap_year) {
+uint16_t damCountYears(int64_t *p_time, uint16_t years, int n, int *p_is_leap_year) {
     if(n < 3 && (*p_time) - SECONDS_PER_YEAR >= 0) {
         n++;
         years++;
         (*p_time) -= SECONDS_PER_YEAR;
         *p_is_leap_year = false;
-        return count_years(p_time, years, n, p_is_leap_year);
+        return damCountYears(p_time, years, n, p_is_leap_year);
     }
     
     else if((*p_time) - SECONDS_PER_LEAP_YEAR >= 0) {
@@ -45,7 +15,7 @@ uint16_t count_years(int64_t *p_time, uint16_t years, int n, int *p_is_leap_year
         (*p_time) -= SECONDS_PER_LEAP_YEAR;
         n = 0;
         *p_is_leap_year = true;
-        return count_years(p_time, years, n, p_is_leap_year);
+        return damCountYears(p_time, years, n, p_is_leap_year);
     }
 
     return years;
@@ -53,34 +23,34 @@ uint16_t count_years(int64_t *p_time, uint16_t years, int n, int *p_is_leap_year
 
 
 /* Count months recursively */
-uint16_t count_months(int64_t *p_time, uint16_t months, int is_leap_year) {
+uint16_t damCountMonths(int64_t *p_time, uint16_t months, int is_leap_year) {
     if(months <= 12) {
         // Check if month has 31 days
         if(months % 2 && (*p_time) - SECONDS_PER_31_DAY_MONTH >= 0) {
             months++;
             (*p_time) -= SECONDS_PER_31_DAY_MONTH;
-            return count_months(p_time, months, is_leap_year);
+            return damCountMonths(p_time, months, is_leap_year);
         } 
 
         // Check if month has 30 days
         else if(!(months % 2) && months != 2 && (*p_time) - SECONDS_PER_30_DAY_MONTH >= 0) {
             months++;
             (*p_time) -= SECONDS_PER_30_DAY_MONTH;
-            return count_months(p_time, months, is_leap_year);
+            return damCountMonths(p_time, months, is_leap_year);
         }
 
         // No leap year february
         else if(months == 2 && !is_leap_year && (*p_time) - SECONDS_IN_FEBRUARY >= 0) {
             months++;
             (*p_time) -= SECONDS_IN_FEBRUARY;
-            return count_months(p_time, months, is_leap_year);
+            return damCountMonths(p_time, months, is_leap_year);
         }
 
         // Leap year february
         else if(months == 2 && is_leap_year && (*p_time) - SECONDS_IN_LEAP_YEAR_FEBRUARY >= 0) {
             months++;
             (*p_time) -= SECONDS_IN_LEAP_YEAR_FEBRUARY;
-            return count_months(p_time, months, is_leap_year);
+            return damCountMonths(p_time, months, is_leap_year);
         }
     }
 
@@ -89,35 +59,60 @@ uint16_t count_months(int64_t *p_time, uint16_t months, int is_leap_year) {
 
 
 /* Format date from time from epoch */
-static void format_date(char *date, char *time, int64_t time_from_epoch) {
+void damFormatDate(char *date, char *time, int64_t time_from_epoch) {
     int is_leap_year;
+    char *ch_month, *ch_day;
+    ch_month = (char*) calloc(2, sizeof(char));
+    ch_day = (char*) calloc(2, sizeof(char));
+    
+    char *ch_hour, *ch_minute, *ch_second;
+    ch_hour = (char*) calloc(2, sizeof(char));
+    ch_minute = (char*) calloc(2, sizeof(char));
+    ch_second = (char*) calloc(2, sizeof(char));
+
     // Count years since epoch
     time_from_epoch -= 2 * SECONDS_PER_YEAR;
-    uint16_t year_count = 1972 + count_years(&time_from_epoch, 0, 0, &is_leap_year);
+    uint16_t year_count = 1972 + damCountYears(&time_from_epoch, 0, 0, &is_leap_year);
 
     // Count months from remaining time
-    uint16_t month = count_months(&time_from_epoch, 1, is_leap_year);
+    uint16_t month = damCountMonths(&time_from_epoch, 1, is_leap_year);
+    if(month < 10) sprintf(ch_month, "0%d", month);
+    else sprintf(ch_month, "%d", month);
 
     // Count day
-    uint16_t day = (uint16_t) (time_from_epoch / 86400);
+    uint16_t day = (uint16_t) (time_from_epoch / 86400) + 1;
     time_from_epoch %= 86400;
-
-    sprintf(date, "%d/%d/%d", year_count, month, day);
+    if(day < 10) sprintf(ch_day, "0%d", day);
+    else sprintf(ch_day, "%d", day);
+    
+    sprintf(date, "%d/%s/%s", year_count, ch_month, ch_day);
+    free(ch_month);
+    free(ch_day);
 
     // Count hours
-    uint16_t hours = (uint16_t) (time_from_epoch / 3600);
+    uint16_t hour = (uint16_t) (time_from_epoch / 3600);
     time_from_epoch %= 3600;
+    if(hour < 10) sprintf(ch_hour, "0%d", hour); 
+    else sprintf(ch_hour, "%d", hour);
 
     // Count minutes
-    uint16_t minutes = (uint16_t) (time_from_epoch / 60);
+    uint16_t minute = (uint16_t) (time_from_epoch / 60);
     time_from_epoch %= 60;
+    if(minute < 10) sprintf(ch_minute, "0%d", minute);
+    else sprintf(ch_minute, "%d", minute);
 
-    sprintf(time, "%d:%d:%d", hours, minutes, (uint16_t) time_from_epoch);
+    if(time_from_epoch < 10) sprintf(ch_second, "0%ld", time_from_epoch);
+    else sprintf(ch_second, "%ld", time_from_epoch);
+    
+    sprintf(time, "%s:%s:%s", ch_hour, ch_minute, ch_second);
+    free(ch_hour);
+    free(ch_minute);
+    free(ch_second);
 }
 
 
 /* Read local repository paths */
-static void read_local_repo_conf(char ***ppp_repo_path, size_t *p_repo_count, int *p_write_repo_id) {
+void damReadLocalRepoConf(char ***ppp_repo_path, size_t *p_repo_count, int *p_write_repo_id) {
     size_t l_index, r_index;
     int is_default_found = false;
     int is_white_space_handled;
@@ -197,7 +192,7 @@ static void read_local_repo_conf(char ***ppp_repo_path, size_t *p_repo_count, in
 
                 *p_write_repo_id = l_index + 1;
                 
-                if((*ppp_repo_path)[l_index][pos_before_white_space] != '/') {
+                if((*ppp_repo_path)[l_index][pos_before_white_space - 1] != '/') {
                     buffer = (char*) calloc(pos_before_white_space + 1, sizeof(char));
                     buffer[pos_before_white_space] = '/';
                 }
@@ -246,7 +241,7 @@ static void read_local_repo_conf(char ***ppp_repo_path, size_t *p_repo_count, in
 
 
 /* List all available assets in local repositories */
-static void list_assets(char **pp_repo_paths, size_t repo_count) {
+void damListAssets(char **pp_repo_paths, size_t repo_count) {
     DIR *dir;
     FILE *file;
 
@@ -272,9 +267,9 @@ static void list_assets(char **pp_repo_paths, size_t repo_count) {
         // Read all files in repositories and select ones with .das extension
         while((dir_contents = readdir(dir)) != NULL) {
             if(dir_contents->d_type == DT_REG) {
-                file_ext = get_extension(dir_contents->d_name);
+                file_ext = cm_GetFileExtName(dir_contents->d_name);
                
-                if(file_ext && !strcmp(file_ext, ".das")) {
+                if(file_ext && !strcmp(file_ext, "das")) {
                     repo_contents_size++;
                     pp_repo_contents = (char**) realloc((void*) pp_repo_contents, sizeof(char*));
                     pp_repo_contents[repo_contents_size - 1] = (char*) calloc(strlen(dir_contents->d_name), sizeof(char));
@@ -307,7 +302,7 @@ static void list_assets(char **pp_repo_paths, size_t repo_count) {
             uint64_t time_point;
 
             file = fopen(file_path, "rb");
-            read_INFO_HDR(&asset_name, &asset_description, &time_point, file_path, file);
+            dasReadINFOHDR(&asset_name, &asset_description, &time_point, file_path, file);
 
             printf("\n[%s]\n", pp_repo_contents[r_index]);
             printf("Full path: %s\n", file_path);
@@ -316,7 +311,7 @@ static void list_assets(char **pp_repo_paths, size_t repo_count) {
             
             int64_t signed_time_stamp = (int64_t) time_point;
             char date[11], time[9];
-            format_date(date, time, signed_time_stamp);
+            damFormatDate(date, time, signed_time_stamp);
             
             printf("Date of creation: %s\n", date);
             printf("Time of creation: %s(UTC)\n", time);
@@ -344,7 +339,7 @@ static void list_assets(char **pp_repo_paths, size_t repo_count) {
 
 
 /* Add new local repository path to the config file */
-static int add_repo(char **pp_repo_path, size_t *p_repo_count, char *new_repo, int default_id) {
+int damAddRepo(char **pp_repo_path, size_t *p_repo_count, char *new_repo, int default_id) {
     size_t index;
     FILE *file;
     char *buffer;
@@ -372,7 +367,7 @@ static int add_repo(char **pp_repo_path, size_t *p_repo_count, char *new_repo, i
     // Push new repo to repo paths 
     (*p_repo_count)++;
     pp_repo_path = (char**) realloc(pp_repo_path, (*p_repo_count) * sizeof(char*));
-    check_for_mem_alloc_err((void*) pp_repo_path);
+    cm_CheckMemoryAlloc((void*) pp_repo_path);
 
     pp_repo_path[(*p_repo_count) - 1] = (char*) calloc(strlen(new_repo), sizeof(char));
     strncpy(pp_repo_path[(*p_repo_count) - 1], new_repo, strlen(new_repo));
@@ -389,7 +384,7 @@ static int add_repo(char **pp_repo_path, size_t *p_repo_count, char *new_repo, i
 
 
 /* Set default local repository for assembling assets */
-static void set_default_repo(char **pp_repo_paths, size_t repo_count, int id) {
+void damSetDefaultRepo(char **pp_repo_paths, size_t repo_count, int id) {
     size_t index;
     FILE *file;
 
@@ -414,7 +409,7 @@ static void set_default_repo(char **pp_repo_paths, size_t repo_count, int id) {
 
 
 /* List all local repos */
-static void list_local_repos(char **pp_repo_paths, size_t repo_count, int default_id) {
+void damListLocalRepos(char **pp_repo_paths, size_t repo_count, int default_id) {
     size_t index;
     for(index = 0; index < repo_count; index++) {
         if(default_id - 1 == index) printf("[%ld] %s [DEFAULT]\n", index + 1, pp_repo_paths[index]);
@@ -430,7 +425,7 @@ static void list_local_repos(char **pp_repo_paths, size_t repo_count, int defaul
 
 
 /* Assemble name and description to asset file */
-static void asset_assembly_caller(Asset *p_asset, char **pp_repo_paths, int repo_id) {
+void damAssetAssemblyCaller(DENGasset *p_asset, char **pp_repo_paths, int repo_id) {
     size_t index;
     char *total_file_name;
     char file_name_buffer[24];
@@ -468,7 +463,7 @@ static void asset_assembly_caller(Asset *p_asset, char **pp_repo_paths, int repo
     p_asset->name = name_buffer;
     p_asset->description = desc_buffer;
 
-    assemble_das(p_asset, total_file_name);
+    dasAssemble(p_asset, total_file_name);
 
     free(total_file_name);
 }
@@ -481,7 +476,7 @@ int main(int argc, char *argv[]) {
     // Read local repository contents
     char **pp_repo_paths;
     size_t repo_count = 0;
-    read_local_repo_conf(&pp_repo_paths, &repo_count, &write_repo_id);
+    damReadLocalRepoConf(&pp_repo_paths, &repo_count, &write_repo_id);
     
     // Main command line flags handling
     for(index = 1; index < (size_t) argc; index++) {
@@ -498,7 +493,7 @@ int main(int argc, char *argv[]) {
 
             // List all assets
             if(!strcmp(argv[index], "-l") || !strcmp(argv[index], "--list")) {
-                list_assets(pp_repo_paths, repo_count);
+                damListAssets(pp_repo_paths, repo_count);
                 return 0;
             }
 
@@ -514,7 +509,7 @@ int main(int argc, char *argv[]) {
                 }
 
                 closedir(test_dir);
-                if(add_repo(pp_repo_paths, &repo_count, argv[index], write_repo_id)) {
+                if(damAddRepo(pp_repo_paths, &repo_count, argv[index], write_repo_id)) {
                     printf("Failed to add repo!\n");
                     printf("Repository with name %s already exists!\n", argv[index]);
                 }
@@ -532,66 +527,36 @@ int main(int argc, char *argv[]) {
 
                 else write_repo_id = atoi(argv[index]);
 
-                set_default_repo(pp_repo_paths, repo_count, write_repo_id);
+                damSetDefaultRepo(pp_repo_paths, repo_count, write_repo_id);
                 return 0;
             }
 
             // List all available repositories
             if(!strcmp(argv[index], "--list-repos")) {
-                list_local_repos(pp_repo_paths, repo_count, write_repo_id);
+                damListLocalRepos(pp_repo_paths, repo_count, write_repo_id);
                 return 0;
             }
             
             // Assemble asset
             if(!strcmp(argv[index], "--assemble")) {
-                int frag_mode = -1;
                 char *tex_path;
                 OBJColorData color_data;
-                int is_obj_specified = 0;
+                int is_obj_specified = false;
                 char *obj_path;
-
-
-                Asset asset;
+                DENGasset asset;
                 index++;
-                // Iterate througn all arguments and check which flags are in use
-                for(; index < (size_t) argc; index++) {
-                    if((!strcmp(argv[index], "-f") || !strcmp(argv[index], "--frag")) && (index + 1) < (size_t) argc) {
-                        index++;
-                        // Check if asset color is static 
-                        if(!strcmp(argv[index], "--color") && (index + 4) < (size_t) argc) {
-                            color_data.col_r = atoi(argv[(index++)]);
-                            color_data.col_g = atoi(argv[(index++)]);
-                            color_data.col_b = atoi(argv[(index++)]);
-                            color_data.col_a = atoi(argv[(index++)]);
-                            frag_mode = 0;
-                        }
 
-                        // Check if asset is texture mapped
-                        else if(!strcmp(argv[index], "--tex-path") && (index++) < (size_t) argc) {
-                            tex_path = argv[index];
-                            frag_mode = 1;
-                        }
-
-                        // No usage flag
-                        else {
-                            printf("Please specify the color or texture path!\n");
-                            printf("For more information use dam --help!\n");
-                        }
-                    }
-
-                    // Check is asset object file is specified
-                    if((!strcmp(argv[index], "-o") || !strcmp(argv[index], "--obj-path")) && (index++) < (size_t) argc) {
-                        obj_path = argv[index];
-                        is_obj_specified = 1;
-                    }
+                // Check is asset object file is specified
+                if((!strcmp(argv[index], "-o") || !strcmp(argv[index], "--obj-path")) && (index++) < (size_t) argc) {
+                    obj_path = argv[index];
+                    is_obj_specified = true;
                 }
 
                 // All flags are specified
-                if(is_obj_specified && frag_mode != -1 && write_repo_id) {
+                if(is_obj_specified && write_repo_id) {
                     printf("Loading asset data...\n");
-                    load_model(&asset, obj_path, &color_data, frag_mode);
-                    if(frag_mode == 1) load_image(&asset, tex_path);
-                    asset_assembly_caller(&asset, pp_repo_paths, write_repo_id);
+                    dasLoadModel(&asset, obj_path);
+                    damAssetAssemblyCaller(&asset, pp_repo_paths, write_repo_id);
                     printf("Done!\n");
                 }
 
@@ -600,13 +565,8 @@ int main(int argc, char *argv[]) {
                     printf("Please specify the source model file!\n");
                     printf("For more information use dam --help!\n");
                 }
-                
-                // Frag info is missing
-                else if(frag_mode == -1) {
-                    printf("Please specify correct frag mode!\n");
-                    printf("For more information use dam --help!\n");
-                }
 
+                // No default write repo specified
                 else if(!write_repo_id) {
                     printf("No default repository set!\n");
                     printf("Set default repository with dam --local --set-default-repo-id [ID]\n");

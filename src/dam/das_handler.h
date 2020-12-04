@@ -13,25 +13,24 @@ typedef struct Frag {
 } Frag;
 
 /* das assembler functions */
-#ifdef DAS_HANDLER_ONLY
+#ifdef DAS_EXT_HANDLER
     // Generic file extension name adder
-    char *get_file_ext_name(char *file_name); 
-    void assemble_INFO_HDR(char *asset_name, char *description, FILE *file);
-    void assemble_VERT_HDR(DynamicVertices *p_vertices, FILE *file);
-    void assemble_INDX_HDR(DynamicIndices *p_indices, FILE *file);
-    void assemble_TPIX_HDR(DynamicPixelData *p_pixel_data, FILE *file);
+    char *dasGetFileExtName(char *file_name); 
+    void dasAssembleINFOHDR(char *asset_name, char *description, FILE *file);
+    void dasAssembleVERTHDR(DynamicVertices *p_vertices, FILE *file);
+    void dasAssembleINDXHDR(DynamicIndices *p_indices, FILE *file);
 #endif
+
 /* Callback function for creating .das binary asset file */
-void assemble_das(Asset *p_asset, char *file_name);
+void dasAssemble(DENGasset *passet, const char *filename);
 
 /* das reader functions */
-#ifdef DAS_HANDLER_ONLY
-    void read_INFO_HDR(char **asset_name, char **description, uint64_t *p_time_point, char *file_name, FILE *file);
-    void read_VERT_HDR(DynamicVertices *p_vertices, char *file_name, FILE *file);
-    void read_INDX_HDR(DynamicIndices *p_indices, char *file_name, FILE *file);
-    void read_TPIX_HDR(DynamicPixelData *p_pixel_data, char *file_name, FILE *file);
+#ifdef DAS_EXT_HANDLER
+    void dasReadINFOHDR(char **assetname, char **description, uint64_t *ptimepoint, char *filename, FILE *file);
+    void dasReadVERTHDR(DynamicVertices *pvertices, char *filename, FILE *file);
+    void dasReadINDXHDR(DynamicIndices *pindices, char *filename, FILE *file);
 #endif
-/* Callback function for reading .das binary asset file */
-void read_das(Asset *p_asset, char *file_name);
 
+/* Callback function for reading .das binary asset file */
+void dasReadDAS(DENGasset *p_asset, const char *file_name, int tex_mode);
 #endif

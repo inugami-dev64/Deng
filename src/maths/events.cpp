@@ -1,18 +1,20 @@
 #include "../core/deng_core.h"
 
 namespace dengMath {
-    Events::Events(deng::Window *p_win, deng::Camera *p_camera) {
-        this->m_is_key_registered.first = DENG_FALSE;
+    Events::Events(deng::WindowWrap *p_win, deng::Camera *p_camera) {
+        this->m_is_key_registered.first = false;
         this->m_p_camera = p_camera;
-        this->m_p_window = p_win;
+        this->m_p_window_wrap = p_win;
     }
 
     void Events::getMovementType() {
-        if(is_key_active(this->m_p_window->getWindow(), DENG_KEY_W) && !is_key_active(this->m_p_window->getWindow(), DENG_KEY_S)) {
+        if(is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_W) && 
+        !is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_S)) {
             this->m_movements.third = DENG_MOVEMENT_FORWARD;
         }
 
-        else if(!is_key_active(this->m_p_window->getWindow(), DENG_KEY_W) && is_key_active(this->m_p_window->getWindow(), DENG_KEY_S)) {
+        else if(!is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_W) && 
+        is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_S)) {
             this->m_movements.third = DENG_MOVEMENT_BACKWARD;
         }
 
@@ -21,11 +23,13 @@ namespace dengMath {
         }
 
 
-        if(is_key_active(this->m_p_window->getWindow(), DENG_KEY_A) && !is_key_active(this->m_p_window->getWindow(), DENG_KEY_D)) {
+        if(is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_A) && 
+        !is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_D)) {
             this->m_movements.first = DENG_MOVEMENT_LEFTWARD;
         }
 
-        else if(!is_key_active(this->m_p_window->getWindow(), DENG_KEY_A) && is_key_active(this->m_p_window->getWindow(), DENG_KEY_D)) {
+        else if(!is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_A) && 
+        is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_D)) {
             this->m_movements.first = DENG_MOVEMENT_RIGHTWARD;
         }
         else {
@@ -33,11 +37,13 @@ namespace dengMath {
         }
 
 
-        if(is_key_active(this->m_p_window->getWindow(), DENG_KEY_SPACE) && !is_key_active(this->m_p_window->getWindow(), DENG_KEY_LEFT_CTRL)) {
+        if(is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_SPACE) && 
+        !is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_LEFT_CTRL)) {
             this->m_movements.second = DENG_MOVEMENT_UPWARD;
         }
 
-        else if(!is_key_active(this->m_p_window->getWindow(), DENG_KEY_SPACE) && is_key_active(this->m_p_window->getWindow(), DENG_KEY_LEFT_CTRL)) {
+        else if(!is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_SPACE) && 
+        is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_LEFT_CTRL)) {
             this->m_movements.second = DENG_MOVEMENT_DOWNWARD;
         }
 
@@ -47,31 +53,33 @@ namespace dengMath {
     }
 
     void Events::checkForInputModeChange() {
-        if(this->m_p_window->getInputMode() == DENG_INPUT_MOVEMENT) {
+        if(this->m_p_window_wrap->getInputMode() == DENG_INPUT_MOVEMENT) {
             this->getMovementType();
             this->m_p_camera->updateCursorPos();
             this->m_p_camera->setCameraViewRotation();
 
-            if(this->m_input_mode_change_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && is_key_active(this->m_p_window->getWindow(), DENG_KEY_ESCAPE)) {
+            if(this->m_input_mode_change_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && 
+            is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_ESCAPE)) {
 
                 #if CAMERA_MOUSE_DEBUG
                     LOG("frozen_mouse_position x:" + std::to_string(this->m_frozen_mouse_position.first) + "/" + std::to_string(this->m_frozen_mouse_position.second));
                 #endif
                 
-                this->m_p_window->setInputMode(DENG_INPUT_NONMOVEMENT);
+                this->m_p_window_wrap->setInputMode(DENG_INPUT_NONMOVEMENT);
                 this->m_input_mode_change_timer.setNewTimePoint();
                 this->m_p_camera->getMousePosition(&this->m_frozen_mouse_position);
             }
         }
 
-        else if(this->m_p_window->getInputMode() == DENG_INPUT_NONMOVEMENT) {
+        else if(this->m_p_window_wrap->getInputMode() == DENG_INPUT_NONMOVEMENT) {
             this->m_movements.first = DENG_MOVEMENT_NONE;
             this->m_movements.second = DENG_MOVEMENT_NONE;
             this->m_movements.third = DENG_MOVEMENT_NONE;
 
-            if(this->m_input_mode_change_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && is_key_active(this->m_p_window->getWindow(), DENG_KEY_ESCAPE)) {
+            if(this->m_input_mode_change_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && 
+            is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_ESCAPE)) {
                 this->m_p_camera->setMousePosition(this->m_frozen_mouse_position);
-                this->m_p_window->setInputMode(DENG_INPUT_MOVEMENT);
+                this->m_p_window_wrap->setInputMode(DENG_INPUT_MOVEMENT);
                 this->m_input_mode_change_timer.setNewTimePoint();
             }
         }

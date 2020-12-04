@@ -2,7 +2,7 @@
 #define CAMERA_H
 
 #define DENG_CAMERA_DEFAULT_X 0.0f
-#define DENG_CAMERA_DEFAULT_Y 0.8f
+#define DENG_CAMERA_DEFAULT_Y 0.0f
 #define DENG_CAMERA_DEFAULT_Z 1.0f
 
 #define DENG_CAMERA_BASE_SPEED_X 0.0007
@@ -18,7 +18,7 @@ namespace deng {
     {
     private:
         dengMath::vec2<float> m_zero_camera_rotation_mouse_pos;
-        Window *m_p_window;
+        WindowWrap *m_p_window_wrap;
         dengMath::vec2<float> m_mouse_sens;
         dengMath::vec2<float> m_mouse_pos; 
         dengMath::vec4<float> m_movement_speed;
@@ -31,14 +31,15 @@ namespace deng {
         dengMath::vec2<float> m_camera_max_centre_point_coord;
         dengMath::vec2<float> m_camera_max_right_corner_coord;
 
-        dengBool m_is_init;
+        bool m_is_init;
 
     public:
         dengMath::ViewMatrix view_matrix;
         dengMath::ProjectionMatrix *p_projection_matrix;
 
     public:
-        Camera(const dengMath::vec3<float> &camera_movement_speed_multiplier, const dengMath::vec2<float> &mouse_movement_speed_multiplier, const float &FOV, const float &near_plane, const float &far_plane, Window *p_window);
+        Camera(const dengMath::vec3<float> &camera_movement_speed_multiplier, const dengMath::vec2<float> &mouse_movement_speed_multiplier, 
+        const float &FOV, const float &near_plane, const float &far_plane, WindowWrap *p_window);
         ~Camera();
         void updateCursorPos();
         void setCameraViewRotation();

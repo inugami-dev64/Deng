@@ -6,6 +6,7 @@ then
     mkdir $1/obj
     mkdir $1/obj/libsurface
     mkdir $1/obj/libdas
+    mkdir $1/obj/libcommon
     mkdir $1/obj/dam
     mkdir $1/obj/deng
     mkdir $1/deng
@@ -24,6 +25,11 @@ else
     if [ ! -d $1/obj/libdas ] 
     then 
         mkdir $1/obj/libdas 
+    fi
+    
+    if [ ! -d $1/obj/libcommon ]
+    then
+        mkdir $1/obj/libcommon
     fi
 
     if [ ! -d $1/obj/deng ] 

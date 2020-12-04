@@ -1,7 +1,7 @@
 #include "deng_core.h"
 
 namespace deng {
-    Window::Window(const int &x, const int &y, const char *title) {
+    WindowWrap::WindowWrap(const int &x, const int &y, const char *title) {
         this->m_size = {static_cast<uint32_t>(x), static_cast<uint32_t>(y)};
         this->m_title = (char*) title;
         this->m_pixel_size = {2.0 / static_cast<double>(this->m_size.first), 2.0 / static_cast<double>(this->m_size.second)};
@@ -9,27 +9,27 @@ namespace deng {
         this->m_p_game_window = init_window(x, y, this->m_title, DENG_WINDOW_MODE_FIXED);
     }
 
-    Window::~Window() {
+    WindowWrap::~WindowWrap() {
         destroy_window(this->m_p_game_window);
     }
 
-    DENGWindow *Window::getWindow() {
+    DENGWindow *WindowWrap::getWindow() {
         return this->m_p_game_window;
     }
 
-    const char *Window::getTitle() {
+    const char *WindowWrap::getTitle() {
         return this->m_title;
     }
 
-    dengMath::vec2<uint32_t> Window::getSize() {
+    dengMath::vec2<uint32_t> WindowWrap::getSize() {
         return this->m_size;
     }
 
-    dengInputMode Window::getInputMode() {
+    dengInputMode WindowWrap::getInputMode() {
         return this->m_input_mode;
     }
 
-    void Window::setInputMode(const dengInputMode &new_input_mode) {    
+    void WindowWrap::setInputMode(const dengInputMode &new_input_mode) {    
         switch (new_input_mode)
         {
         case DENG_INPUT_MOVEMENT:
@@ -47,7 +47,7 @@ namespace deng {
         this->m_input_mode = new_input_mode;
     }
 
-    dengMath::vec2<double> Window::getPixelSize() {
+    dengMath::vec2<double> WindowWrap::getPixelSize() {
         return this->m_pixel_size;
     }
 }

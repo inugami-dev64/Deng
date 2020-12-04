@@ -9,94 +9,94 @@
     #define DENGUI_PIPELINE_INDEX 1
 #endif
 
-namespace deng {
+/* Generic default settings definitions */
+#define DENG_DEFAULT_NEAR_PLANE 0.1f
+#define DENG_DEFAULT_FAR_PLANE 25.0f
+#define DENG_DEFAULT_MAX_FRAMES_IN_FLIGHT 2
 
+namespace deng {
     class Renderer
     {   
     private:
+        // Render usage specifications
+        dengRendererUsageMode m_usage_mode;
+        bool m_vsync;
+        bool m_count_fps;
+        dengMath::vec3<float> m_clear_color;
+
+        // View distance settings
+        const float m_near_plane = DENG_DEFAULT_NEAR_PLANE;
+        const float m_far_plane = DENG_DEFAULT_FAR_PLANE;
+
+        // Vulkan extension
         std::vector<const char*> m_required_extension_names;
-        std::vector<dengMath::vec3<float>> m_dummy_vertices = {{0.0f, 0.0f, 0.0f}, 
-                                                               {0.0f, 0.0f, 0.0f},
-                                                               {0.0f, 0.0f, 0.0f}};
-
-        const float m_near_plane = 0.1f;
-        const float m_far_plane = 25.0f;
-
         const char *m_p_validation_layer = "VK_LAYER_KHRONOS_validation";
+        const char *m_p_fps_layer = "VK_LAYER_LUNARG_monitor";
 
-        const int m_max_frames_in_flight = 2; 
+        // Synchronisation (semophores and fences)
         size_t m_current_frame = 0;
+        const int m_max_frames_in_flight = DENG_DEFAULT_MAX_FRAMES_IN_FLIGHT;
+        std::vector<VkFence> m_flight_fences;
+        std::vector<VkSemaphore> m_image_available_semaphore_set;
+        std::vector<VkSemaphore> m_render_finished_semaphore_set;
 
-        VkDeviceSize m_maximum_offset = 0;
-
+        // Queues family structs
+        QueueFamilies m_queue_families;
+        Queues m_queues;
+        
+        // Pipelines, samplers and descriptor sets
+        VkRenderPass m_renderpass;
         std::array<PipelineData, DENG_PIPELINE_COUNT> m_pipelines;
-
-        dengMath::vec2<std::pair<dengPipelineType, VkDescriptorPool>> m_descriptor_pool_sets;
-        dengMath::vec2<std::pair<dengPipelineType, VkPipelineLayout>> m_pipeline_layouts;
-        dengMath::vec2<std::pair<dengPipelineType, VkDescriptorSetLayout>> m_descriptor_set_layouts;
-
+        VkPipelineLayout m_unmapped_pipeline_layout;
+        VkPipelineLayout m_texture_mapped_pipeline_layout;
+        VkDescriptorPool m_unmapped_descriptor_pool;
+        VkDescriptorPool m_texture_mapped_descriptor_pool;
+        VkDescriptorSetLayout m_unmapped_descriptor_set_layout;
+        VkDescriptorSetLayout m_texture_mapped_descriptor_set_layout;
         std::vector<VkDescriptorSet> m_unmapped_descriptor_sets;
+        VkSampler m_texture_sampler;
 
+        /* Vulkan instance and surface related objects */
         VkInstance m_instance;
-        VkDebugUtilsMessengerEXT m_debug_messenger;
-
         VkPhysicalDevice m_gpu;
         VkDevice m_device;
         VkSurfaceKHR m_surface;
-        VkSwapchainKHR m_swapchain;
-
-        //swap chain settings
         VkSurfaceFormatKHR m_surface_format;
+        VkDebugUtilsMessengerEXT m_debug_messenger;
+
+        /* Swapchain related objects */
+        VkSwapchainKHR m_swapchain;
         VkPresentModeKHR m_present_mode;
         VkExtent2D m_extent;
-
-        VkRenderPass m_renderpass;
-        
-
-        std::vector<VkFramebuffer> m_swapchain_framebuffers;
-        VkCommandPool m_commandpool;
-
         std::vector<VkImage> m_swapchain_images;
         std::vector<VkImageView> m_swapchain_image_views;
-        std::vector<const char*> m_required_extensions_name;
-        std::vector<dengUtils::GameObject> *m_p_game_objects;
+        std::vector<VkFramebuffer> m_swapchain_framebuffers;
+        SwapChainDetails *m_p_device_swapchain_details;
 
-        std::vector<VkSemaphore> m_image_available_semaphore_set;
-        std::vector<VkSemaphore> m_render_finished_semaphore_set;
-        std::vector<VkFence> m_flight_fences;
-
-        std::vector<VkCommandBuffer> m_commandbuffers;
-
-        dengUtils::BufferData m_buffer_data;
-
+        /* Depth image datas */
         VkImage m_depth_image;
         VkDeviceMemory m_depth_image_memory;
         VkImageView m_depth_image_view;
 
-        SwapChainDetails *m_p_device_swapchain_details;
+        // Commandpools and commandbuffers
+        VkCommandPool m_commandpool;
+        std::vector<VkCommandBuffer> m_commandbuffers;
+        
+        // Assets
+        std::vector<DENGasset> *m_p_game_objects;
+
+        // Asset buffers and texture images
+        BufferData m_buffer_data;
+        std::vector<TextureImageData> m_texture_data;
+
+        // Renderer utilities
         Camera *m_p_camera;
         dengMath::Events *m_p_ev;
         dengUtils::Timer m_timer;
-        Window *m_p_window;
-        QueueFamilies m_queue_families;
-        Queues m_queues;
-        dengUtils::FileManager m_fm;
-        // dengUtils::GridManager *m_p_grid_manager;
-        VkSampler m_sampler;
-
-        // config structs
-        dengUtils::DengUIConf m_dengui_conf;
-        dengUtils::EditorEnvironmentConf m_environment_conf;
-        dengUtils::EditorCameraConf m_camera_conf;
-
-        //game objects (currently just hardcoded, soon to be added from editor in form of objects vector)
-        // dengUI::Window *m_p_dengui_window;
+        WindowWrap *m_p_window_wrap;
         
-        // std::vector<dengUI::UIVerticesData> m_dengui_window_vertices;
-        // std::vector<uint16_t> m_dengui_window_indices;
-
     private:
-        void loadDataFromConf(const dengBool &load_camera_conf, const dengBool &load_environment_conf, const dengBool &load_dengUI_conf);
+        void loadDataFromConf(const bool &load_camera_conf, const bool &load_environment_conf, const bool &load_dengUI_conf);
         void initInstance();
         void initDebugMessenger();
         bool checkValidationLayerSupport();
@@ -118,7 +118,8 @@ namespace deng {
         void initTextureSampler();
         void initBuffers();
         void initDescriptorPool();
-        void initDescriptorSets(dengBool init_texture_mapped_descriptor_sets);
+        void initMemoryOffsets();
+        void initDescriptorSets(bool init_texture_mapped_descriptor_sets);
         void initTextureBuffer();
         void initCommandPool();
         void initCommandBuffers();
@@ -143,7 +144,6 @@ namespace deng {
         void deleteSurface();
         void deleteDevice();
 
-        /* frame update */
         void makeFrame();
         void updateUniformBufferData(const uint32_t &current_image);
 
@@ -152,10 +152,11 @@ namespace deng {
 
     public:
         void run();
-        void initObjects(std::vector<dengUtils::GameObject> *p_game_objects);
+        void submitAssets(std::vector<DENGasset> *p_game_objects);
+        void submitTextures(std::vector<DENGtexture> *p_textures);
         VkDeviceSize getBufferMemoryOffset();
-        void setBufferMemoryOffset(VkDeviceSize size);
-        Renderer(Window &win);
+        void setHints(dengRendererHint hints);        
+        Renderer(WindowWrap &win);
         ~Renderer();
     };
 }

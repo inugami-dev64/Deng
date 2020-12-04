@@ -1,32 +1,23 @@
 #include "../core/deng_core.h"
 
 int main() {
-    deng::Window window(1200, 800, "DENG");
+    std::vector<DENGasset> assets;
+    std::vector<DENGtexture> textures; 
+    assets.resize(1);
+    textures.resize(1);
+    
+    deng::WindowWrap window(1440, 1080, "Game!");
     deng::Renderer rend(window);
-    
-    size_t index;
-    std::vector<dengUtils::GameObject> game_objects;
-    dengMath::ModelMatrix generic_model_matrix;
-    generic_model_matrix.setRotation(180, 0, 0);
-    generic_model_matrix.setScale(2, 2, 2);
-    generic_model_matrix.setTransformation(0, 0, 0);
 
-    // index = model_handler.loadModel("statue", "Statue of liberty", "objects/obj1.obj", {0.0f, 0.7f, 0.0f}, frag_info);
-    // model_handler.initModelMatrix(index, &generic_model_matrix); DENG_PIPELINE_TYPE_TEXTURE_MAPPED;
-    dengUtils::FragInfo frag_info;
-    frag_info.pipeline_type = DENG_PIPELINE_TYPE_TEXTURE_MAPPED;
-    frag_info.texture_file = "textures/small.bmp";
+    // dasReadDAS(&assets[0], "../../assets/statue.das");
+    dasReadDAS(&assets[0], "../../assets/statue.das", 1);
+    assets[0].texture_index = 0;
 
-    dengUtils::ModelHandler model_handler(0);
+    dasLoadTexture(&textures[0], "../../textures/obj1.tga");
+    rend.submitAssets(&assets);
+    rend.submitTextures(&textures);
 
-    LOG("seg test!");
-    index = model_handler.loadModel("box", "Simple box", "objects/obj1.obj", {0.5f, 0.7f, 0.0f}, frag_info);
-    model_handler.initModelMatrix(index, &generic_model_matrix);
-
-    model_handler.getModels(&game_objects);
-
-    rend.initObjects(&game_objects);
     rend.run();
-    
+
     return 0;
 }

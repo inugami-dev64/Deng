@@ -11,23 +11,13 @@
 #define CAMERA_LOCATION_DEBUG 0
 #define CAMERA_MOUSE_DEBUG 0
 
-#define ERR(x) throw std::runtime_error(x)
-
-#ifdef _WIN32
-    #define TERM_ERRME_MODE ""
-    #define TERM_LOG_MODE ""
-    #define TERM_END "\n"
-#else
-    #define TERM_ERRME_MODE "\033[1;31m"
-    #define TERM_LOG_MODE "\033[1;34m"
-    #define TERM_END "\033[0m\n"
-#endif
-#define ERRME(x) std::cout << TERM_ERRME_MODE << x << TERM_END 
+#define ERR(x) throw std::runtime_error(std::string("ERROR: ") + x)
+#define WARNME(x) std::cout << "WARNING: " << x << std::endl
 
 #if GENERIC_DEBUG
     
-    #define LOG(x) std::cout << TERM_LOG_MODE << x << TERM_END
-    #define ERRMEDB(x) std::cout << TERM_ERRME_MODE << x << TERM_END
+    #define LOG(x) std::cout << "LOG: " << x << std::endl
+    #define WARNMEDB(x) std::cout << "WARNING: " << x << std::endl
     const bool enable_validation_layers = true;
 #else
     #define LOG(x)
@@ -35,24 +25,7 @@
     const bool enable_validation_layers = false;
 #endif
 
-#define DISABLE_DENGUI 1
-
-enum dengPipelineDrawMode {
-    DENG_PIPELINE_DRAW_MODE_LINEAR = 0,
-    DENG_PIPELINE_DRAW_MODE_INDEXED = 1
-};
-
-enum dengPipelineBufferMode {
-    DENG_PIPELINE_BUFFER_MODE_TEXTURE_MAPPED_BUFFER = 0,
-    DENG_PIPELINE_BUFFER_MODE_DENGUI_WINDOW_BUFFER = 1,
-    DENG_PIPELINE_BUFFER_MODE_GRID_BUFFER = 2,
-};
-
-enum dengBool {
-    DENG_FALSE = 0,
-    DENG_TRUE = 1
-};
-
+/* Coordinate axis specifier */
 enum dengCoordinateAxisType {
     DENG_COORD_AXIS_UNDEFINED = -1,
     DENG_COORD_AXIS_X = 0,
@@ -60,6 +33,7 @@ enum dengCoordinateAxisType {
     DENG_COORD_AXIS_Z = 2
 };
 
+/* Movement mode specifier */
 enum dengMovementEvent {
     DENG_MOVEMENT_NONE = -1,
     DENG_MOVEMENT_FORWARD = 0,
@@ -70,112 +44,102 @@ enum dengMovementEvent {
     DENG_MOVEMENT_DOWNWARD = 5
 };
 
-enum dengWriteMode {
-    DENG_WRITEMODE_REWRITE = 0,
-    DENG_WRITEMODE_FROM_END = 1
-};
-
-enum dengFolderContentsReadMode {
-    DENG_FOLDER_CONTENTS_READ_MODE_FILES_ONLY = 0,
-    DENG_FOLDER_CONTENTS_READ_MODE_FOLDERS_ONLY = 1,
-    DENG_FOLDER_CONTENTS_READ_MODE_FILES_AND_FOLDERS = 2,
-    DENG_FOLDER_CONTENTS_READ_MODE_RECURSIVE = 3
-};
-
-enum dengFolderContentsSortingMode {
-    DENG_FOLDER_CONTENTS_SORT_STYLE_DONT_CARE = -1,
-    DENG_FOLDER_CONTENTS_SORT_STYLE_ALL_ALPHABETICAL = 0,
-    DENG_FOLDER_CONTENTS_SORT_STYLE_ALPHABETICAL_FOLDERS_FIRST = 1,
-    DENG_FOLDER_CONTENTS_SORT_STYLE_ALPHABETICAL_FILES_FIRST = 2,
-    DENG_FOLDER_CONTENTS_SORT_STYLE_ALL_REVERSE_ALPHABETICAL = 3,
-    DENG_FOLDER_CONTENTS_SORT_STYLE_REVERSE_ALPHABETICAL_FOLDERS_FIRST = 4,
-    DENG_FOLDER_CONTENTS_SORT_STYLE_REVERSE_ALPHABETICAL_FILES_FIRST = 5
-};
-
+/* Pipeline type specifier */
 enum dengPipelineType {
     DENG_PIPELINE_TYPE_UNMAPPED = 0,
     DENG_PIPELINE_TYPE_TEXTURE_MAPPED = 1,
 };
 
+/* Coordinate mode specifier */
 enum dengCoordinateMode {
     DENG_COORDINATE_MODE_DEFAULT = 0,
     DENG_COORDINATE_MODE_REVERSE = 1
 };
 
+/* Coordinate type specifier */
 enum dengCoordinateType {
     DENG_VERTEX_COORD = 0,
     DENG_VERTEX_TEXTURE_COORD = 1,
     DENG_VERTEX_NORMAL_COORD = 2
 };
 
+/* Image type specifier */
 enum dengImageType {
     DENG_IMAGE_TYPE_TEXTURE = 0,
     DENG_IMAGE_TYPE_DEPTH = 1
 };
 
-enum dengTextureFormat {
-    DENG_TEXTURE_FORMAT_BMP = 0,
-    DENG_TEXTURE_FORMAT_TGA = 1,
-    DENG_TEXTURE_FORMAT_PNG = 2,
-    DENG_TEXTURE_FORMAT_JPG = 3,
-    DENG_TEXTURE_FORMAT_UNKNOWN = 4
-};
-
+/* User input specifiers */
 enum dengInputMode {
     DENG_INPUT_NONMOVEMENT = 0,
     DENG_INPUT_MOVEMENT = 1
 };
 
+/* Triangle angle specifier */
 enum dengTriangleAngleType {
     DENG_TRIANGLE_ANGLE_ALPHA = 0,
     DENG_TRIANGLE_ANGLE_BETA = 1,
     DENG_TRIANGLE_ANGLE_GAMMA = 2
 };
 
-enum dengNumeralType {
-    DENG_NUMERAL_TYPE_FLOAT = 0,
-    DENG_NUMERAL_TYPE_DOUBLE = 1,
-    DENG_NUMERAL_TYPE_NON_FLOATING = 2,
-    DENG_NUMERAL_TYPE_BOOL = 3,
-    DENG_NUMERAL_TYPE_DONT_CARE = 4
+/* Renderer usage mode */
+enum dengRendererUsageMode {
+    DENG_RENDERER_USAGE_ASSET_EDITOR = 0,
+    DENG_RENDERER_USAGE_MAP_EDITOR = 1,
+    DENG_RENDERER_USAGE_GAME_MODE = 2,
 };
 
+/* Hints for controlling window with API calls */
+enum dengWindowHint {
+    DENG_WINDOW_HINT_FULL_SCREEN = 2,
+    DENG_WINDOW_HINT_NO_MOUSE_LOCK = 4,
+    DENG_WINDOW_HINT_NO_CURSOR_HIDE = 8
+};
 
-// external dependencies
-#ifdef _WIN32
-    #include "../win32_dirent_dep/dirent.h"
-#else 
-    #include <dirent.h>
-#endif
+/* Hints for controlling renderer with API calls */
+enum dengRendererHint {
+    DENG_RENDERER_HINT_ASSET_EDITOR = 1,
+    DENG_RENDERER_HINT_MAP_EDITOR = 2,
+    DENG_RENDERER_HINT_GAME_MODE = 4,
+    DENG_RENDERER_HINT_ENABLE_VSYNC = 8,
+    DENG_RENDERER_HINT_SHOW_FPS_COUNTER = 16
+};
 
 #include <vulkan/vulkan.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+#ifdef __linux__
+    #include <dirent.h> 
+#endif
+
+#ifdef _WIN32
+    #include "../win32_dirent_dep/dirent.h"
+#endif
+
 #include <cmath>
 #include <chrono>
 #include <type_traits>
 #include <vector>
-#include <fstream>
 #include <string>
 #include <array>
 #include <cstring>
 #include <iostream>
 #include <map>
 #include <unordered_map>
-#include <typeinfo>
+#include <thread>
 
 // local dependencies
 #include "../surface/deng_surface_core.h"
+#include "../dam/das_core.h"
 #include "../maths/deng_math.h"
-#include "../utilities/data_handler/typename_finder.h"
-#include "../utilities/data_handler/files.h"
 #include "../utilities/timer/timer.h"
+#include "../utilities/rend_utils.h"
 #include "window.h"
 #include "camera.h"
-#include "../utilities/data_handler/object_data_structs.h"
 // #include "../utilities/map/grid_generator.h"
 #include "../maths/events.h"
-#include "renderer_utils.h"
-#include "../utilities/assets_handler/texture_loader.h"
-#include "../utilities/assets_handler/object_loader.h"
+#include "rend_helpers.h"
 // #include "../dengui/core/dengui_core.h"
 #include "renderer.h"
 

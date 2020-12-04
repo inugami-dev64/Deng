@@ -19,29 +19,25 @@ typedef struct OBJColorData {
     float col_a;
 } OBJColorData;
 
-typedef struct VERT_UNMAPPED {
-    OBJVerticesData vert_data;
-    OBJColorData color_data;
-} VERT_UNMAPPED;
-
 typedef struct VERT_MAPPED {
     OBJVerticesData vert_data;
     OBJTextureData tex_data;
 } VERT_MAPPED;
 
 typedef struct DynamicVertices {
-    VERT_MAPPED *p_mapped_vertices;
-    VERT_UNMAPPED *p_unmapped_vertices;
+    VERT_MAPPED *p_texture_mapped_vert_data;
+    OBJVerticesData *p_unmapped_vert_data;
     /* Vertices type values define the following: */
     /* 0 - UNMAPPED */
     /* 1 - TEXTURE MAPPED */
-    uint8_t vertices_type;
     size_t size;
+    uint64_t memory_offset;
 } DynamicVertices;
 
 typedef struct DynamicIndices {
     uint32_t *p_indices;
     size_t size;
+    uint64_t memory_offset;
 } DynamicIndices;
 
 typedef struct DynamicPixelData {
@@ -49,22 +45,27 @@ typedef struct DynamicPixelData {
     size_t size;
     uint16_t width;
     uint16_t height;
+    uint64_t memory_offset;
 } DynamicPixelData;
 
-typedef struct Asset {
+typedef struct DENGasset {
     char *name;
     char *description;
     uint64_t time_point; 
+    int tex_mode;
     DynamicVertices vertices;
     DynamicIndices indices;
-    DynamicPixelData pixel_data;
-} Asset;
-
-typedef struct AssetAssemblyInfo {
-    int frag_mode;
-    OBJColorData color_data;
     
-} AssetAssemblyInfo;
+    // For fragment shader
+    OBJColorData solid_fill_color;
+    size_t texture_index;
+} DENGasset;
+
+typedef struct DENGtexture {
+    char *name;
+    char *descritpion;
+    DynamicPixelData pixel_data;
+} DENGtexture;
 
 typedef enum ImageFormat {
     IMAGE_FORMAT_BMP = 0,
@@ -75,29 +76,31 @@ typedef enum ImageFormat {
 } ImageFormat;
 
 /* Image loading */
-
-void load_image(Asset *p_asset, const char *file_name);
-#ifdef LOADER_ONLY
-    static ImageFormat detect_image_format(const char *file_name);
-    static void load_BMP_image(Asset *p_asset, const char *file_name);
-    static void load_TGA_image(Asset *p_asset, const char *file_name);
+void dasLoadTexture(DENGtexture *p_asset, const char *file_name);
+#ifdef DAS_EXT_LOADERS
+    ImageFormat dasDetectImageFormat(const char *file_name);
+    void dasLoadBMPimage(DENGtexture *p_asset, const char *file_name);
+    void dasLoadTGAimage(DENGtexture *p_asset, const char *file_name);
 #endif
 
 /* Vertices data loading */
 /* Vertices type values define the following: */
     /* 0 - UNMAPPED */
     /* 1 - TEXTURE MAPPED */
-void load_model(Asset *p_asset, const char *file_name, OBJColorData *p_color_data, int color_mode);
-#ifdef LOADER_ONLY
-    static void load_OBJ_model_vertices(OBJVerticesData **pp_vert_data, size_t *p_vert_data_size, OBJTextureData **pp_texture_data, size_t *p_tex_data_size, long file_size);
-    static void load_OBJ_indices(uint32_t **pp_vert_indices, size_t *p_vert_indices_size, uint32_t **pp_tex_vert_indices, size_t *p_tex_vert_indices_size, long file_size);
-    static void index_unmapped_vertices(OBJVerticesData **pp_vert_data, size_t vert_size, uint32_t **pp_indices, size_t indices_size, OBJColorData *p_color_data, Asset *p_asset);
+void dasLoadModel(DENGasset *p_asset, const char *file_name);
+#ifdef DAS_EXT_LOADERS
+    void dasLoadOBJmodelVertices(OBJVerticesData **pp_vert_data, size_t *p_vert_data_size, OBJTextureData **pp_texture_data, size_t *p_tex_data_size, long file_size);
+    void dasLoadOBJindices(uint32_t **pp_vert_indices, size_t *p_vert_indices_size, uint32_t **pp_tex_vert_indices, size_t *p_tex_vert_indices_size, long file_size);
+    void dasIndexUnmappedVertices(OBJVerticesData **pp_vert_data, size_t vert_size, uint32_t **pp_indices, size_t indices_size, DENGasset *p_asset);
     
-    static void index_tex_mapped_vertices(OBJVerticesData **pp_vert_data, size_t vert_size, OBJTextureData **pp_tex_data, size_t tex_size, uint32_t **pp_vert_indices, size_t vert_indices_size, uint32_t **pp_tex_indices, 
-    size_t tex_indices_size, Asset *p_asset);
+    void dasIndexTexMappedVertices(OBJVerticesData **pp_vert_data, size_t vert_size, OBJTextureData **pp_tex_data, size_t tex_size, uint32_t **pp_vert_indices, size_t vert_indices_size, uint32_t **pp_tex_indices, 
+    size_t tex_indices_size, DENGasset *p_asset);
 #endif
 
-void clean_buffer(char *buffer, size_t size);
-void check_for_mem_alloc_err(void *mem_addr);
+#ifdef DAS_GENERIC_HELPERS
+    char *dasGetFileExt(const char *file_name);
+    void dasCheckForMemAllocErr(void *mem_addr);
+    void dasCleanCharBuffer(char *buffer, size_t size);
+#endif
 
 #endif
