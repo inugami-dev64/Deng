@@ -326,7 +326,7 @@ namespace dengMath {
         void getProjectionMatrix(mat4<float> *p_matrix);
     };
 
-    struct UniformBufferData {
+    struct UniformMatData{
         mat4<float> view;
         mat4<float> projection;
         // model matrix will be added separately 

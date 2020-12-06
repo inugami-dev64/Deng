@@ -49,7 +49,7 @@ LIBDAS_OBJ = $(BUILD_DIR)/obj/libdas/das_handler.c.o \
 
 LIBCOMMON_OBJ = $(BUILD_DIR)/obj/libcommon/common.c.o
 
-DAM_OBJ = $(BUILD_DIR)/obj/dam/dam.c.o
+DAM_OBJ = $(BUILD_DIR)/obj/das/dam.c.o
 
 
 $(TARGET): .init_build $(LIBCOMMON_TARGET) $(DAM_TARGET) $(LIBDAS_TARGET) $(LIBSURFACE_TARGET) $(OBJ)
@@ -79,14 +79,14 @@ $(LIBDAS_TARGET): $(LIBDAS_OBJ) $(LIBCOMMON_TARGET)
 $(DAM_TARGET): $(LIBDAS_TARGET) $(DAM_OBJ) $(LIBCOMMON_TARGET)
 	$(CC) -o $(DAM_TARGET) $(DAM_OBJ) $(LD_PATH) -ldas -lcommon
 
-$(DAM_OBJ): $(SRC_DIR)/dam/dam.c
-	$(CC) -c $(SRC_DIR)/dam/dam.c -o $(DAM_OBJ) $(CC_FLAGS) $(INCLUDE_PATH) -fPIC
+$(DAM_OBJ): $(SRC_DIR)/das/dam.c
+	$(CC) -c $(SRC_DIR)/das/dam.c -o $(DAM_OBJ) $(CC_FLAGS) $(INCLUDE_PATH) -fPIC
 
-$(BUILD_DIR)/obj/libdas/das_handler.c.o: $(SRC_DIR)/dam/das_handler.c
-	$(CC) -c $(SRC_DIR)/dam/das_handler.c -o $(BUILD_DIR)/obj/libdas/das_handler.c.o $(CC_FLAGS) $(INCLUDE_PATH) -fPIC
+$(BUILD_DIR)/obj/libdas/das_handler.c.o: $(SRC_DIR)/das/das_handler.c
+	$(CC) -c $(SRC_DIR)/das/das_handler.c -o $(BUILD_DIR)/obj/libdas/das_handler.c.o $(CC_FLAGS) $(INCLUDE_PATH) -fPIC
 
-$(BUILD_DIR)/obj/libdas/data_loader.c.o: $(SRC_DIR)/dam/data_loader.c
-	$(CC) -c $(SRC_DIR)/dam/data_loader.c -o $(BUILD_DIR)/obj/libdas/data_loader.c.o $(CC_FLAGS) $(INCLUDE_PATH) -fPIC
+$(BUILD_DIR)/obj/libdas/data_loader.c.o: $(SRC_DIR)/das/data_loader.c
+	$(CC) -c $(SRC_DIR)/das/data_loader.c -o $(BUILD_DIR)/obj/libdas/data_loader.c.o $(CC_FLAGS) $(INCLUDE_PATH) -fPIC
 
 # Surface library build
 $(LIBSURFACE_TARGET): $(LIBSURFACE_OBJ)

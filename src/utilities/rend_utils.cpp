@@ -3,7 +3,7 @@
 
 namespace dengUtils {
 
-    FontManager::FontManager() {
+    FontInstanceCreator::FontInstanceCreator() {
         // Initialize freetype library
         if(FT_Init_FreeType(&this->m_library))
             ERR("Failed to initialise freetype library!");
@@ -14,7 +14,7 @@ namespace dengUtils {
 
 
     /* Search for certain font */
-    bool FontManager::searchFont(std::string font_file, std::string &out_path) {
+    bool FontInstanceCreator::searchFont(std::string font_file, std::string &out_path) {
         size_t index;
         for(index = 0; index < this->m_font_file_data.size(); index++) {
             if(font_file == this->m_font_file_data[index].font_name) {
@@ -29,7 +29,7 @@ namespace dengUtils {
 
 
     /* Create a new pixel based text insance */
-    void FontManager::createNewPixelBasedTextInstance(const char *text, uint16_t font_px_size, const char *font_file, TextInstance &instance) {
+    void FontInstanceCreator::createNewPixelBasedTextInstance(const char *text, uint16_t font_px_size, const char *font_file, TextInstance &instance) {
         // Search the font file given in the method argument 
         FT_New_Face(this->m_library, font_file, 0, &instance.font_face);
 
@@ -42,7 +42,7 @@ namespace dengUtils {
 
 
     /* Load new glyphs */
-    void loadNewGlyphs(const char *text, TextInstance &instance) {
+    void FontInstanceCreator::loadNewGlyphs(const char *text, TextInstance &instance) {
         size_t l_index, r_index;
         uint16_t ch_index;
         bool is_repeated_found = false;
@@ -71,21 +71,44 @@ namespace dengUtils {
         }
     }
 
-    void FontManager::createFontTexture(TextInstance &instance) {
-        size_t index;
+    void FontInstanceCreator::createFontTexture(TextInstance &instance) {
+        size_t index, w_index, h_index;
         for(index = 0; index < instance.glyph_slots.size(); index++) {
             if(instance.glyph_slots[index].second->bitmap.pixel_mode != FT_PIXEL_MODE_GRAY || 
             instance.glyph_slots[index].second->bitmap.num_grays != 256) 
                 ERR("Unsupported font pixel mode for font: " + instance.font_file_data.font_name + "!");
 
             std::vector<uint8_t> pixel_data;
+            uint8_t *src_data_buffer = instance.glyph_slots[index].second->bitmap.buffer; 
+            pixel_data.resize(instance.glyph_slots[index].second->bitmap.width * instance.glyph_slots[index].second->bitmap.rows * 4);
+            size_t pixel_data_index = 0;
+
+            for(h_index = 0; h_index < instance.glyph_slots[index].second->bitmap.rows; h_index++) {
+                for(w_index = 0; w_index < instance.glyph_slots[index].second->bitmap.width; w_index++) {
+                    if(*src_data_buffer == 0) {
+                        pixel_data[pixel_data_index++] = 0xff;
+                        pixel_data[pixel_data_index++] = 0xff;
+                        pixel_data[pixel_data_index++] = 0xff;
+                    }
+
+                    else {
+                        pixel_data[pixel_data_index++] = 0x00;
+                        pixel_data[pixel_data_index++] = 0x00;
+                        pixel_data[pixel_data_index++] = 0x00;
+                    }
+
+                    pixel_data[pixel_data_index++] = (*src_data_buffer);
+                }
+                src_data_buffer += instance.glyph_slots[index].second->bitmap.pitch;
+            }
+
             
         }
     }
 
 
     /* Find all available fonts */
-    void FontManager::findFontFilesRecursively(std::string path, std::vector<FontFileData> &fonts) {
+    void FontInstanceCreator::findFontFilesRecursively(std::string path, std::vector<FontFileData> &fonts) {
         // Check if '/' needs to be added to the end of the path
         if(path[path.size() - 1] != '/') path += '/';
 

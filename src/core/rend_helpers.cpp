@@ -158,25 +158,34 @@ namespace deng {
     }
 
     /* Get vertex input binding description info*/ 
-    VkVertexInputBindingDescription PipelineCreator::getBindingDesc() {
-        VkVertexInputBindingDescription local_input_binding_desc{};
-        local_input_binding_desc.binding = 0;
-
+    std::vector<VkVertexInputBindingDescription> PipelineCreator::getBindingDesc() {
+        std::vector<VkVertexInputBindingDescription> local_input_binding_descs{};
+        
         switch (this->m_p_pipeline_data->pipeline_type)
         {
         case DENG_PIPELINE_TYPE_UNMAPPED:
-            local_input_binding_desc.stride = sizeof(VERT_UNMAPPED);
+            LOG("Test!");
+            local_input_binding_descs.resize(2);
+            
+            local_input_binding_descs[0].binding = 0;
+            local_input_binding_descs[0].stride = sizeof(OBJVerticesData);
+            
+            local_input_binding_descs[1].binding = 1;
+            local_input_binding_descs[1].stride = 0;
             break;
         
         case DENG_PIPELINE_TYPE_TEXTURE_MAPPED:
-            local_input_binding_desc.stride = sizeof(VERT_MAPPED);
+            local_input_binding_descs.resize(1);
+
+            local_input_binding_descs[0].binding = 0;
+            local_input_binding_descs[0].stride = sizeof(VERT_MAPPED);
             break;
-        
+            
         default:
             break;
         }
 
-        return local_input_binding_desc;
+        return local_input_binding_descs;
     } 
 
     /* Get vertex input attribute description info */
@@ -190,12 +199,12 @@ namespace deng {
             local_input_attr_desc[0].binding = 0;
             local_input_attr_desc[0].location = 0;
             local_input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-            local_input_attr_desc[0].offset = offsetof(VERT_UNMAPPED, vert_data);
-
-            local_input_attr_desc[1].binding = 0;
+            local_input_attr_desc[0].offset = 0;
+            
+            local_input_attr_desc[1].binding = 1;
             local_input_attr_desc[1].location = 1;
-            local_input_attr_desc[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-            local_input_attr_desc[1].offset = offsetof(VERT_UNMAPPED, color_data);
+            local_input_attr_desc[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+            local_input_attr_desc[1].offset = 0;
             break;
 
         case DENG_PIPELINE_TYPE_TEXTURE_MAPPED:
@@ -267,14 +276,14 @@ namespace deng {
         this->m_shader_stage_createinfos = {local_vertex_shader_stage_createinfo, local_frag_shader_stage_createinfo};
 
         /* Get descriptions */
-        this->m_input_binding_descriptor = this->getBindingDesc();
+        this->m_input_binding_descriptors = this->getBindingDesc();
         this->m_input_attribute_descriptors = this->getAttributeDesc();
 
         /* Set up vertex input createinfo object */
         this->m_vertex_input_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        this->m_vertex_input_createinfo.vertexBindingDescriptionCount = 1;
+        this->m_vertex_input_createinfo.vertexBindingDescriptionCount = this->m_input_binding_descriptors.size();
         this->m_vertex_input_createinfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(this->m_input_attribute_descriptors.size());
-        this->m_vertex_input_createinfo.pVertexBindingDescriptions = &this->m_input_binding_descriptor;
+        this->m_vertex_input_createinfo.pVertexBindingDescriptions = this->m_input_binding_descriptors.data();
         this->m_vertex_input_createinfo.pVertexAttributeDescriptions = this->m_input_attribute_descriptors.data();
 
         /* Set up input assembly createinfo object */
@@ -412,7 +421,7 @@ namespace deng {
 
 
     /* Generic memory allocation method */
-    void BufferHandler::allocateMemory(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceMemory *p_memory, const VkDeviceSize &size, uint32_t mem_type_bits, VkMemoryPropertyFlags properties) {
+    void BufferCreator::allocateMemory(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceMemory *p_memory, const VkDeviceSize &size, uint32_t mem_type_bits, VkMemoryPropertyFlags properties) {
         VkMemoryAllocateInfo local_allocinfo{};
         local_allocinfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         local_allocinfo.allocationSize = size;
@@ -423,7 +432,7 @@ namespace deng {
     }
 
     /* VkImage related functions */
-    VkMemoryRequirements BufferHandler::makeImage(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkImage *p_image, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage) {
+    VkMemoryRequirements BufferCreator::makeImage(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkImage *p_image, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage) {
         // Set up image createinfo
         VkImageCreateInfo local_image_createInfo{};
         local_image_createInfo.sType  = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -453,10 +462,10 @@ namespace deng {
     
 
     /* Transition image layout into new layout */
-    void BufferHandler::transitionImageLayout(VkDevice *p_device, VkImage *p_image, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout) {
+    void BufferCreator::transitionImageLayout(VkDevice *p_device, VkImage *p_image, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout) {
         // Begin recording commandbuffer
         VkCommandBuffer tmp_commandbuffer;
-        BufferHandler::beginCommandBufferSingleCommand(p_device, p_commandpool, tmp_commandbuffer);
+        CommandBufferRecorder::beginCommandBufferSingleCommand(p_device, p_commandpool, tmp_commandbuffer);
 
         // Set up image memory barrier struct
         VkImageMemoryBarrier local_memory_barrier{};
@@ -497,15 +506,15 @@ namespace deng {
         // Change image layout
         vkCmdPipelineBarrier(tmp_commandbuffer, local_src_stage, local_dst_stage, 0, 0, nullptr, 0, nullptr, 1, &local_memory_barrier);
 
-        BufferHandler::endCommandBufferSingleCommand(p_device, p_graphics_queue, p_commandpool, tmp_commandbuffer);
+        CommandBufferRecorder::endCommandBufferSingleCommand(p_device, p_graphics_queue, p_commandpool, tmp_commandbuffer);
     }
 
 
     /* Copy buffer to image */
-    void BufferHandler::copyBufferToImage(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkImage *p_dst_image, const uint32_t &width, const uint32_t &height) {
+    void BufferCreator::copyBufferToImage(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkImage *p_dst_image, const uint32_t &width, const uint32_t &height) {
         // Begin recording commandbuffer
         VkCommandBuffer tmp_commandbuffer;
-        BufferHandler::beginCommandBufferSingleCommand(p_device, p_commandpool, tmp_commandbuffer);
+        CommandBufferRecorder::beginCommandBufferSingleCommand(p_device, p_commandpool, tmp_commandbuffer);
 
         // Set up buffer image copy struct
         VkBufferImageCopy local_copy_region{};
@@ -523,13 +532,13 @@ namespace deng {
         vkCmdCopyBufferToImage(tmp_commandbuffer, *p_src_buffer, *p_dst_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &local_copy_region);
 
         // End recording commandbuffer
-        BufferHandler::endCommandBufferSingleCommand(p_device, p_graphics_queue, p_commandpool, tmp_commandbuffer);
+        CommandBufferRecorder::endCommandBufferSingleCommand(p_device, p_graphics_queue, p_commandpool, tmp_commandbuffer);
     }
     
 
     /* VkBuffer related functions */
     /* Create new buffer object */
-    VkMemoryRequirements BufferHandler::makeBuffer(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const VkBufferUsageFlags &usage, VkBuffer *p_buffer) {
+    VkMemoryRequirements BufferCreator::makeBuffer(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const VkBufferUsageFlags &usage, VkBuffer *p_buffer) {
         // Set up buffer createinfo struct 
         VkBufferCreateInfo local_buffer_createInfo{};
         local_buffer_createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -550,7 +559,7 @@ namespace deng {
     
 
     /* Populate allocated buffer memory */
-    void BufferHandler::populateBufferMem(VkDevice *p_device, VkDeviceSize *p_size, const void *p_src_data, VkDeviceMemory *p_buffer_memory, VkDeviceSize offset) {
+    void BufferCreator::populateBufferMem(VkDevice *p_device, VkDeviceSize *p_size, const void *p_src_data, VkDeviceMemory *p_buffer_memory, VkDeviceSize offset) {
         LOG("Populating buffer memory!");
         void *local_data;
         vkMapMemory(*p_device, *p_buffer_memory, offset, *p_size, 0, &local_data);
@@ -560,10 +569,10 @@ namespace deng {
     
 
     /* Copy buffer to buffer */
-    void BufferHandler::copyBufferToBuffer(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkBuffer *p_dst_buffer, VkDeviceSize *p_size, const VkDeviceSize &offset) {
+    void BufferCreator::copyBufferToBuffer(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkBuffer *p_dst_buffer, VkDeviceSize *p_size, const VkDeviceSize &offset) {
         // Begin recording commandbuffer
         VkCommandBuffer local_commandbuffer;
-        BufferHandler::beginCommandBufferSingleCommand(p_device, p_commandpool, local_commandbuffer);
+        CommandBufferRecorder::beginCommandBufferSingleCommand(p_device, p_commandpool, local_commandbuffer);
 
         // Set up copy region 
         VkBufferCopy local_copy_region{};
@@ -574,12 +583,12 @@ namespace deng {
         // Call Vulkan buffer copy handler
         vkCmdCopyBuffer(local_commandbuffer, *p_src_buffer, *p_dst_buffer, 1, &local_copy_region);
         // End recording commandbuffer
-        BufferHandler::endCommandBufferSingleCommand(p_device, p_graphics_queue, p_commandpool, local_commandbuffer);
+        CommandBufferRecorder::endCommandBufferSingleCommand(p_device, p_graphics_queue, p_commandpool, local_commandbuffer);
     }
 
 
     /* Single commandbuffer command recorder methods */
-    void BufferHandler::beginCommandBufferSingleCommand(VkDevice *p_device, VkCommandPool *p_commandpool, VkCommandBuffer &commandbuffer) {
+    void CommandBufferRecorder::beginCommandBufferSingleCommand(VkDevice *p_device, VkCommandPool *p_commandpool, VkCommandBuffer &commandbuffer) {
         // Set up commandbuffer allocation info
         VkCommandBufferAllocateInfo local_commandbuffer_allocinfo{};
         local_commandbuffer_allocinfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -602,7 +611,7 @@ namespace deng {
     
 
     /* End recording commandbuffer */
-    void BufferHandler::endCommandBufferSingleCommand(VkDevice *device, VkQueue *graphics_queue, VkCommandPool *commandpool, VkCommandBuffer &commandBuffer) {
+    void CommandBufferRecorder::endCommandBufferSingleCommand(VkDevice *device, VkQueue *graphics_queue, VkCommandPool *commandpool, VkCommandBuffer &commandBuffer) {
         // Call Vulkan command buffer end handler
         vkEndCommandBuffer(commandBuffer);
 

@@ -19,8 +19,8 @@ namespace dengUtils {
 
     /* Struct used to store instance information for rendering text */ 
     struct TextInstance {
-        VkImage font_bitmap_data;
-        VkDeviceMemory font_bitmap_mem;
+        std::vector<VkImage> glyph_image_data;
+        std::vector<VkDeviceMemory> glyph_image_memory;
         FontFileData font_file_data;
         FT_Face font_face;
         std::vector<std::pair<char, FT_GlyphSlot>> glyph_slots;
@@ -29,7 +29,7 @@ namespace dengUtils {
 
 
     /* Class to manage everything related to font rendering */ 
-    class FontManager {
+    class FontInstanceCreator {
     private:
         FT_Library m_library;
         std::vector<FontFileData> m_font_file_data;
@@ -43,7 +43,7 @@ namespace dengUtils {
         void createFontTexture(TextInstance &instance);
 
     public:
-        FontManager();
+        FontInstanceCreator();
         void createNewPixelBasedTextInstance(const char *text, uint16_t font_px_size, const char *font_file, TextInstance &instance);
         void createNewPointBasedTextInstance(const char *text, uint16_t font_pt_size, uint32_t window_width, uint32_t window_height, const char *font_file, TextInstance &instance);
     };

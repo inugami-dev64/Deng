@@ -28,10 +28,16 @@ namespace deng
 
 
     // API callback function to submit assets into renderer 
-    void Renderer::submitAssets(std::vector<DENGasset> *p_game_objects) {
-        size_t index, textures_size;
+    void Renderer::submitAssets(std::vector<DENGasset> *p_game_objects) { 
         this->m_p_game_objects = p_game_objects;
-        
+    }
+
+    void Renderer::submitTextures(std::vector<DENGtexture> *p_textures) {
+        size_t index;
+        this->m_texture_data.resize(p_textures->size());
+
+        for(index = 0; index < p_textures->size(); index++)
+            this->m_texture_data[index].texture = (*p_textures)[index];
     }
     
 
@@ -444,28 +450,28 @@ namespace deng
     /* Create descriptor set layouts */
     void Renderer::initDescriptorSetLayouts() {
         // Set up descriptor set layout bindings for uniform buffers
-        VkDescriptorSetLayoutBinding local_ubo_layout_binding{};
-        local_ubo_layout_binding.binding = 0;
-        local_ubo_layout_binding.descriptorCount = 1;
-        local_ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        local_ubo_layout_binding.pImmutableSamplers = nullptr;
-        local_ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        
-        // Set up descriptor set layout bindings for image sampler
-        VkDescriptorSetLayoutBinding local_sampler_layout_binding{};
-        local_sampler_layout_binding.binding = 1;
-        local_sampler_layout_binding.descriptorCount = 1;
-        local_sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        local_sampler_layout_binding.pImmutableSamplers = nullptr;
-        local_sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT; 
+        VkDescriptorSetLayoutBinding ubo_matrix_layout_binding{};
+        ubo_matrix_layout_binding.binding = 0;
+        ubo_matrix_layout_binding.descriptorCount = 1;
+        ubo_matrix_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        ubo_matrix_layout_binding.pImmutableSamplers = nullptr;
+        ubo_matrix_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        VkDescriptorSetLayoutBinding ubo_color_layout_binding{};
+        ubo_color_layout_binding.binding = 1;
+        ubo_color_layout_binding.descriptorCount = 1;
+        ubo_color_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        ubo_color_layout_binding.pImmutableSamplers = nullptr;
+        ubo_color_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
         // Declare vector for bindings and descriptor set layout info
         std::vector<VkDescriptorSetLayoutBinding> local_bindings;
         VkDescriptorSetLayoutCreateInfo local_layout_createInfo{};
 
         // Use only uniform buffers for unmapped assets
-        local_bindings.resize(1);
-        local_bindings[0] = local_ubo_layout_binding;
+        local_bindings.resize(2);
+        local_bindings[0] = ubo_matrix_layout_binding;
+        local_bindings[1] = ubo_color_layout_binding;
 
         // Set up descriptor set layout info for unmapped assets
         local_layout_createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -478,9 +484,17 @@ namespace deng
 
         else LOG("Successfully created pipeline layout for specific pipelines!");
         
+        // Set up descriptor set layout bindings for image sampler
+        VkDescriptorSetLayoutBinding local_sampler_layout_binding{};
+        local_sampler_layout_binding.binding = 1;
+        local_sampler_layout_binding.descriptorCount = 1;
+        local_sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        local_sampler_layout_binding.pImmutableSamplers = nullptr;
+        local_sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT; 
+
         // Use both bindings for texture mapped vertices
         local_bindings.resize(2);
-        local_bindings[0] = local_ubo_layout_binding;
+        local_bindings[0] = ubo_matrix_layout_binding;
         local_bindings[1] = local_sampler_layout_binding;
         
         // Set up descriptor set layout info for texture mapped assets
@@ -538,29 +552,26 @@ namespace deng
         uint32_t total_unmapped_vertices_count = 0;
         size_t index;
 
-        /* Count the amount of vertices for each type of assets */
+        // Count the amount of vertices for each type of assets
         for(index = 0; index < this->m_p_game_objects->size(); index++) {
-            if((*this->m_p_game_objects)[index].vertices.vertices_type)
+            if((*this->m_p_game_objects)[index].tex_mode)
                 total_texture_mapped_vertices_count += static_cast<uint32_t>((*this->m_p_game_objects)[index].vertices.size);
             
-            else if(!(*this->m_p_game_objects)[index].vertices.vertices_type)
+            else 
                 total_unmapped_vertices_count += static_cast<uint32_t>((*this->m_p_game_objects)[index].vertices.size);
         }
         
-        /* Specify the pipiline type and layout */
+        // Specify the pipiline type and layout
         this->m_pipelines[0].pipeline_type = DENG_PIPELINE_TYPE_UNMAPPED;
         this->m_pipelines[1].pipeline_type = DENG_PIPELINE_TYPE_TEXTURE_MAPPED;
         this->m_pipelines[0].p_pipeline_layout = &this->m_unmapped_pipeline_layout;
         this->m_pipelines[1].p_pipeline_layout = &this->m_texture_mapped_pipeline_layout;
-
-        // this->m_pipelines[1].p_vertices_buffer = &this->m_buffers.grid_buffer;
 
         PipelineCreator unmapped_pipeline(&this->m_pipelines[0], &this->m_device, &this->m_extent, &this->m_renderpass);
         PipelineCreator texture_mapped_pipeline(&this->m_pipelines[1], &this->m_device, &this->m_extent, &this->m_renderpass);
 
         VkGraphicsPipelineCreateInfo local_unmapped_pipeline_createinfo = unmapped_pipeline.getGraphicsPipelineInfo("shaders/bin/deng/specified_vert.spv", "shaders/bin/deng/specified_frag.spv", "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, false, 0);
         VkGraphicsPipelineCreateInfo local_texture_mapped_pipeline_createinfo = texture_mapped_pipeline.getGraphicsPipelineInfo("shaders/bin/deng/object_vert.spv", "shaders/bin/deng/object_frag.spv", "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, false, 0);
-        
         LOG("Pipeline createinfos created!");
 
         std::array<VkGraphicsPipelineCreateInfo, DENG_PIPELINE_COUNT> local_pipeline_createinfos;
@@ -581,8 +592,8 @@ namespace deng
     }
 
     void Renderer::initDepthResources() {
-        VkMemoryRequirements local_memory_requirements = BufferHandler::makeImage(&this->m_device, &this->m_gpu, &this->m_depth_image, this->m_extent.width, this->m_extent.height, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
-        BufferHandler::allocateMemory(&this->m_device, &this->m_gpu, &this->m_depth_image_memory, local_memory_requirements.size, local_memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        VkMemoryRequirements local_memory_requirements = BufferCreator::makeImage(&this->m_device, &this->m_gpu, &this->m_depth_image, this->m_extent.width, this->m_extent.height, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+        BufferCreator::allocateMemory(&this->m_device, &this->m_gpu, &this->m_depth_image_memory, local_memory_requirements.size, local_memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         vkBindImageMemory(this->m_device, this->m_depth_image, this->m_depth_image_memory, 0);
 
         VkImageViewCreateInfo local_image_view_createinfo = this->getImageViewInfo(this->m_depth_image, VK_FORMAT_D32_SFLOAT, VK_IMAGE_ASPECT_DEPTH_BIT);
@@ -614,41 +625,38 @@ namespace deng
     }
 
 
-    /* Create texture image for each asset */
-    // This will soon be deprecated and textures will be separate from asset! 
+    /* Create texture image for each texture */
     void Renderer::initTextureImage() {
         size_t index;
         VkMemoryRequirements memory_requirements;
 
         // Iterate through assets an check if it is texture mapped
         for(index = 0; index < this->m_texture_data.size(); index++) {
-            if((*this->m_p_game_objects)[index].vertices.vertices_type) {
-                // Create new staging buffer and allocate memory for it
-                memory_requirements =  BufferHandler::makeBuffer(&this->m_device, &this->m_gpu, &(*this->m_p_game_objects)[index].pixel_data.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, &this->m_buffer_data.staging_buffer);
-                BufferHandler::allocateMemory(&this->m_device, &this->m_gpu, &this->m_buffer_data.staging_buffer_memory, memory_requirements.size, memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-                vkBindBufferMemory(this->m_device, this->m_buffer_data.staging_buffer, this->m_buffer_data.staging_buffer_memory, 0);
-                BufferHandler::populateBufferMem(&this->m_device, &memory_requirements.size, (void*) (*this->m_p_game_objects)[index].pixel_data.p_pixel_data, &this->m_buffer_data.staging_buffer_memory, 0);
+            // Create new staging buffer and allocate memory for it
+            memory_requirements =  BufferCreator::makeBuffer(&this->m_device, &this->m_gpu, &this->m_texture_data[index].texture.pixel_data.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, &this->m_buffer_data.staging_buffer);
+            BufferCreator::allocateMemory(&this->m_device, &this->m_gpu, &this->m_buffer_data.staging_buffer_memory, memory_requirements.size, memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            vkBindBufferMemory(this->m_device, this->m_buffer_data.staging_buffer, this->m_buffer_data.staging_buffer_memory, 0);
+            BufferCreator::populateBufferMem(&this->m_device, &memory_requirements.size, (void*) this->m_texture_data[index].texture.pixel_data.p_pixel_data, &this->m_buffer_data.staging_buffer_memory, 0);
 
-                // Create new image and populate the memory for it
-                BufferHandler::makeImage(&this->m_device, &this->m_gpu, &this->m_texture_data[index].image, (uint32_t) this->m_texture_data[index].pixel_data.width, (uint32_t) this->m_texture_data[index].pixel_data.height, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-                BufferHandler::allocateMemory(&this->m_device, &this->m_gpu, &this->m_texture_data[index].image_mem, this->m_texture_data[index].pixel_data.size, memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-                vkBindImageMemory(this->m_device, this->m_texture_data[index].image, this->m_texture_data[index].image_mem, 0);
+            // Create new image and populate the memory for it
+            BufferCreator::makeImage(&this->m_device, &this->m_gpu, &this->m_texture_data[index].image, (uint32_t) this->m_texture_data[index].texture.pixel_data.width, (uint32_t) this->m_texture_data[index].texture.pixel_data.height, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+            BufferCreator::allocateMemory(&this->m_device, &this->m_gpu, &this->m_texture_data[index].image_mem, this->m_texture_data[index].texture.pixel_data.size, memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+            vkBindImageMemory(this->m_device, this->m_texture_data[index].image, this->m_texture_data[index].image_mem, 0);
 
-                // Copy data from staging buffer to texture image
-                BufferHandler::transitionImageLayout(&this->m_device, &this->m_texture_data[index].image, &this->m_commandpool, &this->m_queues.graphics_queue, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-                BufferHandler::copyBufferToImage(&this->m_device, &this->m_commandpool, &this->m_queues.graphics_queue, &this->m_buffer_data.staging_buffer, &this->m_texture_data[index].image, this->m_texture_data[index].pixel_data.width, this->m_texture_data[index].pixel_data.height);
-                BufferHandler::transitionImageLayout(&this->m_device, &this->m_texture_data[index].image, &this->m_commandpool, &this->m_queues.graphics_queue, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            // Copy data from staging buffer to texture image
+            BufferCreator::transitionImageLayout(&this->m_device, &this->m_texture_data[index].image, &this->m_commandpool, &this->m_queues.graphics_queue, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            BufferCreator::copyBufferToImage(&this->m_device, &this->m_commandpool, &this->m_queues.graphics_queue, &this->m_buffer_data.staging_buffer, &this->m_texture_data[index].image, this->m_texture_data[index].texture.pixel_data.width, this->m_texture_data[index].texture.pixel_data.height);
+            BufferCreator::transitionImageLayout(&this->m_device, &this->m_texture_data[index].image, &this->m_commandpool, &this->m_queues.graphics_queue, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            
+            // Clean the staging buffer
+            vkDestroyBuffer(this->m_device, this->m_buffer_data.staging_buffer, nullptr);
+            vkFreeMemory(this->m_device, this->m_buffer_data.staging_buffer_memory, nullptr);
                 
-                // Clean the staging buffer
-                vkDestroyBuffer(this->m_device, this->m_buffer_data.staging_buffer, nullptr);
-                vkFreeMemory(this->m_device, this->m_buffer_data.staging_buffer_memory, nullptr);
-                
-                VkImageViewCreateInfo local_viewinfo = this->getImageViewInfo(this->m_texture_data[index].image, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
-                if(vkCreateImageView(this->m_device, &local_viewinfo, nullptr, &this->m_texture_data[index].image_view) != VK_SUCCESS)
-                    ERR("Failed to create texture image view!");
+            VkImageViewCreateInfo local_viewinfo = this->getImageViewInfo(this->m_texture_data[index].image, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+            if(vkCreateImageView(this->m_device, &local_viewinfo, nullptr, &this->m_texture_data[index].image_view) != VK_SUCCESS)
+                ERR("Failed to create texture image view!");
 
-                LOG("Successfully created texture image view!");
-            }
+            LOG("Successfully created texture image view!");
         }
     }
 
@@ -681,91 +689,115 @@ namespace deng
 
     /* Create and allocate buffers */
     void Renderer::initBuffers() {
-        size_t index;
+        size_t l_index, r_index;
         LOG("Initialising main buffer!");
-        VkDeviceSize total_size = 0, data_size = 0;
+        VkDeviceSize total_size = 0, mat_data_size = 256, data_size = 0;
         VkMemoryRequirements memory_requirements;
 
         // Count total amount of bytes needed to allocate for assets 
-        for(index = 0; index < this->m_p_game_objects->size(); index++) {
-            LOG("Counting model bytes of model: " + std::string((*this->m_p_game_objects)[index].name));
-            switch ((*this->m_p_game_objects)[index].vertices.vertices_type)
+        for(l_index = 0; l_index < this->m_p_game_objects->size(); l_index++) {
+            LOG("Counting model bytes of model: " + std::string((*this->m_p_game_objects)[l_index].name));
+            
+            switch ((*this->m_p_game_objects)[l_index].tex_mode)
             {
             case DENG_PIPELINE_TYPE_TEXTURE_MAPPED:
-                total_size += (*this->m_p_game_objects)[index].vertices.size * sizeof((*this->m_p_game_objects)[index].vertices.p_mapped_vertices[0]);
+                total_size += (*this->m_p_game_objects)[l_index].vertices.size * sizeof(VERT_MAPPED);
                 break;
 
-            case DENG_PIPELINE_TYPE_UNMAPPED:
-                LOG("Detected unmapped vertices!");
-                total_size += (*this->m_p_game_objects)[index].vertices.size * sizeof((*this->m_p_game_objects)[index].vertices.p_unmapped_vertices[0]);
+            case DENG_PIPELINE_TYPE_UNMAPPED: {
+                total_size += (*this->m_p_game_objects)[l_index].vertices.size * sizeof(OBJVerticesData);
+                
+                // Allocate memory for uniform color data
+                this->m_buffer_data.uniform_color_spec.resize(this->m_buffer_data.uniform_color_spec.size() + 1);
+                this->m_buffer_data.uniform_color_spec[this->m_buffer_data.uniform_color_spec.size() - 1].offsets.resize(this->m_swapchain_images.size());
+                
+                for(r_index = 0; r_index < this->m_swapchain_images.size(); r_index++) {
+                    this->m_buffer_data.uniform_color_spec[this->m_buffer_data.uniform_color_spec.size() - 1].offsets[r_index] = total_size;
+                    (*this->m_p_game_objects)[l_index].fragment_index = this->m_buffer_data.uniform_color_spec.size() - 1;
+                    total_size += sizeof(OBJColorData);
+                }
+
                 break;
+            }
             
             default:
                 break;
             }
 
-            total_size += (*this->m_p_game_objects)[index].indices.size * sizeof((*this->m_p_game_objects)[index].indices.p_indices[0]);
+            // Add indices to the buffer byte count
+            total_size += (*this->m_p_game_objects)[l_index].indices.size * sizeof(uint32_t);
+        }
+
+        // Count the size of uniform matrix data
+        this->m_buffer_data.mat_uniform_offsets.resize(this->m_swapchain_images.size());
+        for(r_index = 0; r_index < this->m_buffer_data.mat_uniform_offsets.size(); r_index++) {
+            this->m_buffer_data.mat_uniform_offsets[r_index] = mat_data_size;
+            mat_data_size += sizeof(dengMath::UniformMatData);
         }
         
-        LOG("Buffer size is: " + std::to_string(total_size));
+        LOG("Main buffer size is: " + std::to_string(total_size));
         
         // Create staging buffer
-        memory_requirements = BufferHandler::makeBuffer(&this->m_device, &this->m_gpu, &total_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, &this->m_buffer_data.staging_buffer);
-        BufferHandler::allocateMemory(&this->m_device, &this->m_gpu, &this->m_buffer_data.staging_buffer_memory, memory_requirements.size, memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+        memory_requirements = BufferCreator::makeBuffer(&this->m_device, &this->m_gpu, &total_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, &this->m_buffer_data.staging_buffer);
+        BufferCreator::allocateMemory(&this->m_device, &this->m_gpu, &this->m_buffer_data.staging_buffer_memory, memory_requirements.size, memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
         vkBindBufferMemory(this->m_device, this->m_buffer_data.staging_buffer, this->m_buffer_data.staging_buffer_memory, 0);
         
         // Assign coorect offsets for buffers and populate buffer memory
-        for(index = 0, total_size = 0; index < this->m_p_game_objects->size(); index++) {
+        for(l_index = 0, total_size = 0; l_index < this->m_p_game_objects->size(); l_index++) {
             // Populate staging buffer memory with vertices data
-            switch ((*this->m_p_game_objects)[index].vertices.vertices_type)
+            switch ((*this->m_p_game_objects)[l_index].tex_mode)
             {
             case DENG_PIPELINE_TYPE_TEXTURE_MAPPED:
-                data_size = (*this->m_p_game_objects)[index].vertices.size * sizeof((*this->m_p_game_objects)[index].vertices.p_mapped_vertices[0]);
-                BufferHandler::populateBufferMem(&this->m_device, &data_size, (void*) (*this->m_p_game_objects)[index].vertices.p_mapped_vertices, &this->m_buffer_data.staging_buffer_memory, total_size);
-                (*this->m_p_game_objects)[index].vertices.memory_offset = total_size;
+                data_size = (*this->m_p_game_objects)[l_index].vertices.size * sizeof(VERT_MAPPED);
+                BufferCreator::populateBufferMem(&this->m_device, &data_size, (void*) (*this->m_p_game_objects)[l_index].vertices.p_texture_mapped_vert_data, 
+                &this->m_buffer_data.staging_buffer_memory, total_size);
+                (*this->m_p_game_objects)[l_index].vertices.memory_offset = total_size;
                 total_size += data_size;
                 break;
 
-            case DENG_PIPELINE_TYPE_UNMAPPED:
-                data_size = (*this->m_p_game_objects)[index].vertices.size * sizeof((*this->m_p_game_objects)[index].vertices.p_unmapped_vertices[0]);
-                BufferHandler::populateBufferMem(&this->m_device, &data_size, (void*) (*this->m_p_game_objects)[index].vertices.p_unmapped_vertices, &this->m_buffer_data.staging_buffer_memory, total_size);
-                (*this->m_p_game_objects)[index].vertices.memory_offset = total_size;
+            case DENG_PIPELINE_TYPE_UNMAPPED: {
+                data_size = (*this->m_p_game_objects)[l_index].vertices.size * sizeof(OBJVerticesData);
+                BufferCreator::populateBufferMem(&this->m_device, &data_size, (void*) (*this->m_p_game_objects)[l_index].vertices.p_unmapped_vert_data, &this->m_buffer_data.staging_buffer_memory, total_size);
+                (*this->m_p_game_objects)[l_index].vertices.memory_offset = total_size;
                 total_size += data_size;
+
+
+                data_size = sizeof(OBJColorData);
+                for(r_index = 0; r_index < this->m_swapchain_images.size(); r_index++) {
+                    BufferCreator::populateBufferMem(&this->m_device, &data_size, (void*) &(*this->m_p_game_objects)[l_index].solid_fill_color, 
+                    &this->m_buffer_data.staging_buffer_memory, total_size);
+                    total_size += data_size;
+                }
+
                 break;
+            }
             
             default:
                 break;
             }
 
             // Populate staging memory with indices data
-            data_size = (*this->m_p_game_objects)[index].indices.size * sizeof((*this->m_p_game_objects)[index].indices.p_indices[0]);
-            BufferHandler::populateBufferMem(&this->m_device, &data_size, (*this->m_p_game_objects)[index].indices.p_indices, &this->m_buffer_data.staging_buffer_memory, total_size);
-            (*this->m_p_game_objects)[index].indices.memory_offset = total_size;
+            data_size = (*this->m_p_game_objects)[l_index].indices.size * sizeof(uint32_t);
+            BufferCreator::populateBufferMem(&this->m_device, &data_size, (*this->m_p_game_objects)[l_index].indices.p_indices, &this->m_buffer_data.staging_buffer_memory, total_size);
+            (*this->m_p_game_objects)[l_index].indices.memory_offset = total_size;
             total_size += data_size;
         }
 
         // Push data from staging buffer to main buffer
-        memory_requirements = BufferHandler::makeBuffer(&this->m_device, &this->m_gpu, &total_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, &this->m_buffer_data.main_buffer);
-        BufferHandler::allocateMemory(&this->m_device, &this->m_gpu, &this->m_buffer_data.main_buffer_memory, memory_requirements.size, memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        memory_requirements = BufferCreator::makeBuffer(&this->m_device, &this->m_gpu, &total_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, &this->m_buffer_data.main_buffer);
+        BufferCreator::allocateMemory(&this->m_device, &this->m_gpu, &this->m_buffer_data.main_buffer_memory, memory_requirements.size, memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         vkBindBufferMemory(this->m_device, this->m_buffer_data.main_buffer, this->m_buffer_data.main_buffer_memory, 0);
-        BufferHandler::copyBufferToBuffer(&this->m_device, &this->m_commandpool, &this->m_queues.graphics_queue, &this->m_buffer_data.staging_buffer, &this->m_buffer_data.main_buffer, &total_size, 0);
+        BufferCreator::copyBufferToBuffer(&this->m_device, &this->m_commandpool, &this->m_queues.graphics_queue, &this->m_buffer_data.staging_buffer, &this->m_buffer_data.main_buffer, &total_size, 0);
 
         // Perform staging buffer cleanup
         vkDestroyBuffer(this->m_device, this->m_buffer_data.staging_buffer, nullptr);
         vkFreeMemory(this->m_device, this->m_buffer_data.staging_buffer_memory, nullptr);
-
-
-        total_size = sizeof(dengMath::UniformBufferData);
-
-        this->m_buffer_data.uniform_buffers.resize(this->m_swapchain_images.size());
-        this->m_buffer_data.uniform_buffers_memory.resize(this->m_swapchain_images.size());
+    
         
-        // Allocate uniform buffers
-        for(index = 0; index < this->m_swapchain_images.size(); index++) { 
-            memory_requirements = BufferHandler::makeBuffer(&this->m_device, &this->m_gpu, &total_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, &this->m_buffer_data.uniform_buffers[index]);
-            BufferHandler::allocateMemory(&this->m_device, &this->m_gpu, &this->m_buffer_data.uniform_buffers_memory[index], memory_requirements.size, memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-            vkBindBufferMemory(this->m_device, this->m_buffer_data.uniform_buffers[index], this->m_buffer_data.uniform_buffers_memory[index], 0);
-        }
+        // Make uniform buffers
+        memory_requirements = BufferCreator::makeBuffer(&this->m_device, &this->m_gpu, &mat_data_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, &this->m_buffer_data.mat_uniform_buffer);
+        BufferCreator::allocateMemory(&this->m_device, &this->m_gpu, &this->m_buffer_data.mat_uniform_memory, memory_requirements.size, memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        vkBindBufferMemory(this->m_device, this->m_buffer_data.mat_uniform_buffer, this->m_buffer_data.mat_uniform_memory, 0);
     }
 
 
@@ -773,82 +805,98 @@ namespace deng
     void Renderer::initDescriptorPool() {
         // Create and set up descriptor pool size struct for uniform buffers
         std::vector<VkDescriptorPoolSize> local_descriptor_pool_sizes{};
-        local_descriptor_pool_sizes.resize(1);
+        VkDescriptorPoolCreateInfo local_desc_pool_createinfo{};
+
+        local_descriptor_pool_sizes.resize(2);
         local_descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        local_descriptor_pool_sizes[0].descriptorCount = static_cast<uint32_t>(this->m_swapchain_images.size());
+        local_descriptor_pool_sizes[0].descriptorCount = (uint32_t) this->m_swapchain_images.size();
+        local_descriptor_pool_sizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        local_descriptor_pool_sizes[1].descriptorCount = (uint32_t) this->m_swapchain_images.size();
 
         // Set up descriptor pool createinfo 
-        VkDescriptorPoolCreateInfo local_desc_pool_createInfo{};
-        local_desc_pool_createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        local_desc_pool_createInfo.poolSizeCount = static_cast<uint32_t>(local_descriptor_pool_sizes.size());
-        local_desc_pool_createInfo.pPoolSizes = local_descriptor_pool_sizes.data();
-        local_desc_pool_createInfo.maxSets = static_cast<uint32_t>(this->m_swapchain_images.size());
+        local_desc_pool_createinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        local_desc_pool_createinfo.poolSizeCount = (uint32_t) local_descriptor_pool_sizes.size();
+        local_desc_pool_createinfo.pPoolSizes = local_descriptor_pool_sizes.data();
+                local_desc_pool_createinfo.maxSets = (uint32_t) this->m_swapchain_images.size();
 
         // Create descriptor pool for unmapped assets 
-        if(vkCreateDescriptorPool(this->m_device, &local_desc_pool_createInfo, nullptr, &this->m_unmapped_descriptor_pool) != VK_SUCCESS)
+        if(vkCreateDescriptorPool(this->m_device, &local_desc_pool_createinfo, nullptr, &this->m_unmapped_descriptor_pool) != VK_SUCCESS)
             ERR("Failed to create descriptor pool!");
 
         // Set up descriptor pool size struct for uniform buffers and combined image sampler
         local_descriptor_pool_sizes.resize(2);
         local_descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        local_descriptor_pool_sizes[0].descriptorCount = static_cast<uint32_t>(this->m_swapchain_images.size());
+        local_descriptor_pool_sizes[0].descriptorCount = (uint32_t) this->m_swapchain_images.size();
         local_descriptor_pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        local_descriptor_pool_sizes[1].descriptorCount = static_cast<uint32_t>(this->m_swapchain_images.size());
+        local_descriptor_pool_sizes[1].descriptorCount = (uint32_t) this->m_swapchain_images.size();
 
         // Modify descriptor pool createinfo
-        local_desc_pool_createInfo.poolSizeCount = static_cast<uint32_t>(local_descriptor_pool_sizes.size());
-        local_desc_pool_createInfo.pPoolSizes = local_descriptor_pool_sizes.data();
+        local_desc_pool_createinfo.poolSizeCount = (uint32_t) local_descriptor_pool_sizes.size();
+        local_desc_pool_createinfo.pPoolSizes = local_descriptor_pool_sizes.data();
 
         // Create descriptor pool for texture mapped assets
-        if(vkCreateDescriptorPool(this->m_device, &local_desc_pool_createInfo, nullptr, &this->m_texture_mapped_descriptor_pool) != VK_SUCCESS)
+        if(vkCreateDescriptorPool(this->m_device, &local_desc_pool_createinfo, nullptr, &this->m_texture_mapped_descriptor_pool) != VK_SUCCESS)
             ERR("Failed to create descriptor pool!");
     }
 
 
     /* Create descriptor sets */
     void Renderer::initDescriptorSets(bool init_texture_mapped_descriptor_sets) {
-        size_t index, texture_index;
+        size_t l_index, r_index, texture_index;
         // Set up multiple info structures
-        VkDescriptorBufferInfo local_bufferinfo{};
-        std::vector<VkWriteDescriptorSet> local_description_writes{};
+        std::vector<VkDescriptorBufferInfo> local_bufferinfo;
+        std::vector<VkWriteDescriptorSet> local_descriptor_writes{};
         VkDescriptorImageInfo local_desc_imageinfo{};
         VkDescriptorSetAllocateInfo local_allocinfo{};
         local_allocinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 
-        // Create descriptor sets for depth image
+        // Create unmapped asset descriptor sets
         if(!init_texture_mapped_descriptor_sets) {
             std::vector<VkDescriptorSetLayout> local_descriptor_set_layouts(this->m_swapchain_images.size(), this->m_unmapped_descriptor_set_layout);
             // Set up descriptor set allocate info struct for unmapped vertices
             local_allocinfo.descriptorPool = this->m_unmapped_descriptor_pool;
             local_allocinfo.descriptorSetCount = static_cast<uint32_t>(local_descriptor_set_layouts.size());
             local_allocinfo.pSetLayouts = local_descriptor_set_layouts.data();
-            this->m_unmapped_descriptor_sets.resize(local_descriptor_set_layouts.size());
-
-            // Allocate descriptor sets for unmapped vertices
-            if(vkAllocateDescriptorSets(this->m_device, &local_allocinfo, this->m_unmapped_descriptor_sets.data()) != VK_SUCCESS)
-                ERR("Failed to allocate descriptor sets!");
-
-            else LOG("Successfully allocated unmapped descriptor sets!");
-
+            
             // Update every unmapped descriptor set 
-            for(index = 0; index < this->m_swapchain_images.size(); index++) {
-                // Set up descriptor buffer info struct
-                local_bufferinfo.buffer = this->m_buffer_data.uniform_buffers[index];
-                local_bufferinfo.offset = 0;
-                local_bufferinfo.range = sizeof(dengMath::UniformBufferData);
+            for(l_index = 0; l_index < this->m_buffer_data.uniform_color_spec.size(); l_index++) {
+                this->m_buffer_data.uniform_color_spec[l_index].descriptor_sets.resize(this->m_swapchain_images.size());
+                // Allocate descriptor sets for unmapped vertices
+                if(vkAllocateDescriptorSets(this->m_device, &local_allocinfo, this->m_buffer_data.uniform_color_spec[l_index].descriptor_sets.data()) != VK_SUCCESS)
+                    ERR("Failed to allocate descriptor sets!");
+                
+                for(r_index = 0; r_index < this->m_swapchain_images.size(); r_index++) {
+                    // Set up descriptor buffer info struct
+                    local_bufferinfo.resize(2);
+                    local_bufferinfo[0].buffer = this->m_buffer_data.main_buffer;
+                    local_bufferinfo[0].offset = this->m_buffer_data.mat_uniform_offsets[r_index];
+                    local_bufferinfo[0].range = sizeof(dengMath::UniformMatData);
 
-                // Set up descriptor set write 
-                local_description_writes.resize(1);
-                local_description_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                local_description_writes[0].dstSet = this->m_unmapped_descriptor_sets[index];
-                local_description_writes[0].dstBinding = 0;
-                local_description_writes[0].dstArrayElement = 0;
-                local_description_writes[0].descriptorCount = 1;
-                local_description_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                local_description_writes[0].pBufferInfo = &local_bufferinfo;
+                    // Set up descriptor set write 
+                    local_descriptor_writes.resize(2);
+                    local_descriptor_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                    local_descriptor_writes[0].dstSet = this->m_buffer_data.uniform_color_spec[l_index].descriptor_sets[r_index];
+                    local_descriptor_writes[0].dstBinding = 0;
+                    local_descriptor_writes[0].dstArrayElement = 0;
+                    local_descriptor_writes[0].descriptorCount = 1;
+                    local_descriptor_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                    local_descriptor_writes[0].pBufferInfo = &local_bufferinfo[0];
 
-                // Update descriptor sets
-                vkUpdateDescriptorSets(this->m_device, local_description_writes.size(), local_description_writes.data(), 0, nullptr);
+                    local_bufferinfo[1].buffer = this->m_buffer_data.main_buffer;
+                    local_bufferinfo[1].offset = this->m_buffer_data.uniform_color_spec[l_index].offsets[r_index];
+                    local_bufferinfo[1].range = sizeof(OBJColorData);
+
+                    local_descriptor_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                    local_descriptor_writes[1].dstSet = this->m_buffer_data.uniform_color_spec[l_index].descriptor_sets[r_index];
+                    local_descriptor_writes[1].dstBinding = 1;
+                    local_descriptor_writes[1].dstArrayElement = 0;
+                    local_descriptor_writes[1].descriptorCount = 1;
+                    local_descriptor_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                    local_descriptor_writes[1].pBufferInfo = &local_bufferinfo[1];
+
+                    // Update descriptor sets
+                    vkUpdateDescriptorSets(this->m_device, local_descriptor_writes.size(), local_descriptor_writes.data(), 0, nullptr);
+                }
             }
         }
 
@@ -868,14 +916,15 @@ namespace deng
                 if(vkAllocateDescriptorSets(this->m_device, &local_allocinfo, this->m_texture_data[texture_index].descriptor_sets.data()) != VK_SUCCESS)
                     ERR("Failed to allocate descriptor sets!");
 
-                else LOG("Successfully allocated texture mapped descriptor sets for model !");
+                else LOG("Successfully allocated texture mapped descriptor sets!");
 
                 // Iterate through every descriptor set and update it
-                for(size_t index = 0; index < this->m_texture_data[texture_index].descriptor_sets.size(); index++) {
+                for(l_index = 0; l_index < this->m_texture_data[texture_index].descriptor_sets.size(); l_index++) {
                     // Set up descriptor buffer info 
-                    local_bufferinfo.buffer = this->m_buffer_data.uniform_buffers[index];
-                    local_bufferinfo.offset = 0;
-                    local_bufferinfo.range = sizeof(dengMath::UniformBufferData);
+                    local_bufferinfo.resize(1);
+                    local_bufferinfo[0].buffer = this->m_buffer_data.main_buffer;
+                    local_bufferinfo[0].offset = this->m_buffer_data.mat_uniform_offsets[0];
+                    local_bufferinfo[0].range = sizeof(dengMath::UniformMatData);
 
                     // Set up descriptor image info 
                     local_desc_imageinfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -883,25 +932,25 @@ namespace deng
                     local_desc_imageinfo.sampler = this->m_texture_sampler;
 
                     // Set up descriptor writes structs for texture mapped assets
-                    local_description_writes.resize(2);
-                    local_description_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                    local_description_writes[0].dstSet = this->m_texture_data[texture_index].descriptor_sets[index];
-                    local_description_writes[0].dstBinding = 0;
-                    local_description_writes[0].dstArrayElement = 0;
-                    local_description_writes[0].descriptorCount = 1;
-                    local_description_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                    local_description_writes[0].pBufferInfo = &local_bufferinfo;
+                    local_descriptor_writes.resize(2);
+                    local_descriptor_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                    local_descriptor_writes[0].dstSet = this->m_texture_data[texture_index].descriptor_sets[l_index];
+                    local_descriptor_writes[0].dstBinding = 0;
+                    local_descriptor_writes[0].dstArrayElement = 0;
+                    local_descriptor_writes[0].descriptorCount = 1;
+                    local_descriptor_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                    local_descriptor_writes[0].pBufferInfo = &local_bufferinfo[0];
 
-                    local_description_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                    local_description_writes[1].dstSet = this->m_texture_data[texture_index].descriptor_sets[index];
-                    local_description_writes[1].dstBinding = 1;
-                    local_description_writes[1].dstArrayElement = 0;
-                    local_description_writes[1].descriptorCount = 1;
-                    local_description_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                    local_description_writes[1].pImageInfo = &local_desc_imageinfo;
+                    local_descriptor_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                    local_descriptor_writes[1].dstSet = this->m_texture_data[texture_index].descriptor_sets[l_index];
+                    local_descriptor_writes[1].dstBinding = 1;
+                    local_descriptor_writes[1].dstArrayElement = 0;
+                    local_descriptor_writes[1].descriptorCount = 1;
+                    local_descriptor_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                    local_descriptor_writes[1].pImageInfo = &local_desc_imageinfo;
 
                     // Update texture mapped descriptor sets
-                    vkUpdateDescriptorSets(this->m_device, local_description_writes.size(), local_description_writes.data(), 0, nullptr);
+                    vkUpdateDescriptorSets(this->m_device, local_descriptor_writes.size(), local_descriptor_writes.data(), 0, nullptr);
                 }
             }
         }
@@ -970,15 +1019,16 @@ namespace deng
                     vkCmdBindIndexBuffer(this->m_commandbuffers[commandbuffer_index], this->m_buffer_data.main_buffer, (*this->m_p_game_objects)[model_index].indices.memory_offset, VK_INDEX_TYPE_UINT32);
                     
                     // Bind pipelines and descriptor sets according to the vertices type 
-                    if((*this->m_p_game_objects)[model_index].vertices.vertices_type) {
+                    if((*this->m_p_game_objects)[model_index].tex_mode) {
                         vkCmdBindPipeline(this->m_commandbuffers[commandbuffer_index], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipelines[1].pipeline);   
                         vkCmdBindDescriptorSets(this->m_commandbuffers[commandbuffer_index], VK_PIPELINE_BIND_POINT_GRAPHICS, *this->m_pipelines[1].p_pipeline_layout, 0, 
-                        1, &this->m_texture_data[(*this->m_p_game_objects)[model_index].texture_index].descriptor_sets[commandbuffer_index], 0, nullptr);                    
+                        1, &this->m_texture_data[(*this->m_p_game_objects)[model_index].fragment_index].descriptor_sets[commandbuffer_index], 0, nullptr);                    
                     }
 
                     else {
                         vkCmdBindPipeline(this->m_commandbuffers[commandbuffer_index], VK_PIPELINE_BIND_POINT_GRAPHICS, this->m_pipelines[0].pipeline);
-                        vkCmdBindDescriptorSets(this->m_commandbuffers[commandbuffer_index], VK_PIPELINE_BIND_POINT_GRAPHICS, *this->m_pipelines[0].p_pipeline_layout, 0, 1, &this->m_unmapped_descriptor_sets[commandbuffer_index], 0, nullptr);
+                        vkCmdBindDescriptorSets(this->m_commandbuffers[commandbuffer_index], VK_PIPELINE_BIND_POINT_GRAPHICS, *this->m_pipelines[0].p_pipeline_layout, 0, 1, 
+                        &this->m_buffer_data.uniform_color_spec[(*this->m_p_game_objects)[model_index].fragment_index].descriptor_sets[commandbuffer_index], 0, nullptr);
                     }
 
                     // Draw assets
@@ -1076,16 +1126,15 @@ namespace deng
     }
 
     void Renderer::updateUniformBufferData(const uint32_t &current_image) {
-        dengMath::UniformBufferData local_ubo;
-        
+        dengMath::UniformMatData local_ubo;
+
         this->m_p_camera->view_matrix.getViewMatrix(&local_ubo.view);
         this->m_p_camera->p_projection_matrix->getProjectionMatrix(&local_ubo.projection);
 
         void *data;
-        vkMapMemory(this->m_device, this->m_buffer_data.uniform_buffers_memory[current_image], 0, sizeof(local_ubo), 0, &data);
-            memcpy(data, &local_ubo, sizeof(local_ubo));
-        vkUnmapMemory(this->m_device, this->m_buffer_data.uniform_buffers_memory[current_image]);
-
+        vkMapMemory(this->m_device, this->m_buffer_data.mat_uniform_memory, this->m_buffer_data.mat_uniform_offsets[current_image], sizeof(dengMath::UniformMatData), 0, &data);
+            memcpy(data, (void*) &local_ubo, sizeof(dengMath::UniformMatData));
+        vkUnmapMemory(this->m_device, this->m_buffer_data.mat_uniform_memory);
     }
     
     VKAPI_ATTR VkBool32 VKAPI_CALL Renderer::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT *p_callback_data, void *p_user_data) {
@@ -1169,12 +1218,6 @@ namespace deng
 
     void Renderer::deleteSwapChain() {
         vkDestroySwapchainKHR(this->m_device, this->m_swapchain, nullptr);
-
-        for(size_t i = 0; i < this->m_swapchain_images.size(); i++) {
-            vkDestroyBuffer(this->m_device, this->m_buffer_data.uniform_buffers[i], nullptr);
-            vkFreeMemory(this->m_device, this->m_buffer_data.uniform_buffers_memory[i], nullptr);
-        }
-
         vkDestroyDescriptorPool(this->m_device, this->m_unmapped_descriptor_pool, nullptr);
         vkDestroyDescriptorPool(this->m_device, this->m_texture_mapped_descriptor_pool, nullptr);
     }

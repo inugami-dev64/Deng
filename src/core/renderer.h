@@ -53,7 +53,6 @@ namespace deng {
         VkDescriptorPool m_texture_mapped_descriptor_pool;
         VkDescriptorSetLayout m_unmapped_descriptor_set_layout;
         VkDescriptorSetLayout m_texture_mapped_descriptor_set_layout;
-        std::vector<VkDescriptorSet> m_unmapped_descriptor_sets;
         VkSampler m_texture_sampler;
 
         /* Vulkan instance and surface related objects */

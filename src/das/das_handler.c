@@ -114,7 +114,6 @@ void dasReadDAS(DENGasset *p_asset, const char *file_name, int tex_mode) {
     p_asset->tex_mode = tex_mode;
     
     dasReadINDXHDR(&p_asset->indices, (char*) file_name, file);
-    
     fclose(file);
 }
 

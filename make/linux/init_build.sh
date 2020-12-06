@@ -37,9 +37,9 @@ else
         mkdir $1/obj/deng 
     fi
 
-    if [ ! -d $1/obj/dam ] 
+    if [ ! -d $1/obj/das ] 
     then 
-        mkdir $1/obj/dam 
+        mkdir $1/obj/das 
     fi
 
     if [ ! -d $1/deng ] 

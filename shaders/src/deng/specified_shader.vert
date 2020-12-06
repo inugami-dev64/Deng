@@ -6,12 +6,14 @@ layout(binding = 0) uniform UniformBufferObject {
     mat4 projection;
 } ubo;
 
-layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec4 inColor; 
+layout(binding = 1) uniform UniformColor {
+    vec4 objColor;
+} ucolor;
 
-layout(location = 0) out vec4 outColor;
+layout(location = 0) in vec3 inPosition;
+layout(location = 1) out vec4 outColor;
 
 void main() {
     gl_Position = ubo.projection * ubo.view * vec4(inPosition, 1.0f);
-    outColor = inColor;
+    outColor = ucolor.objColor;
 }

@@ -3,6 +3,11 @@
 
 namespace deng {
 
+    struct UniformColorSpecification {
+        std::vector<VkDeviceSize> offsets;
+        std::vector<VkDescriptorSet> descriptor_sets;
+    };
+    
     /* Contains different buffer objects for multiple purposes */
     struct BufferData {
         VkBuffer staging_buffer;
@@ -11,10 +16,13 @@ namespace deng {
         VkBuffer main_buffer;
         VkDeviceMemory main_buffer_memory;
 
-        std::vector<VkBuffer> uniform_buffers;
-        std::vector<VkDeviceMemory> uniform_buffers_memory;
-    };
+        // This uniform data vectory doesn't take the swapchain images count into consideration
+        VkBuffer mat_uniform_buffer;
+        VkDeviceMemory mat_uniform_memory;
 
+        std::vector<VkDeviceSize> mat_uniform_offsets;
+        std::vector<UniformColorSpecification> uniform_color_spec;
+    };
 
     /* Contains texture image objects */
     struct TextureImageData {
@@ -33,7 +41,7 @@ namespace deng {
     };
     
     /* Contains different buffer handling functions */
-    struct BufferHandler {
+    struct BufferCreator {
         static void allocateMemory(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceMemory *p_memory, const VkDeviceSize &size, uint32_t mem_type_bits, VkMemoryPropertyFlags properties);
 
         /* VkImage related functions */
@@ -45,7 +53,10 @@ namespace deng {
         static VkMemoryRequirements makeBuffer(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceSize *p_size, const VkBufferUsageFlags &usage, VkBuffer *p_buffer);
         static void populateBufferMem(VkDevice *p_device, VkDeviceSize *p_size, const void *p_src_data, VkDeviceMemory *p_buffer_memory, VkDeviceSize offset);
         static void copyBufferToBuffer(VkDevice *p_device, VkCommandPool *p_commandpool, VkQueue *p_graphics_queue, VkBuffer *p_src_buffer, VkBuffer *p_dst_buffer, VkDeviceSize *p_size, const VkDeviceSize &offset);
+    };
 
+
+    struct CommandBufferRecorder {
         /* single commandbuffer command recorder function */
         static void beginCommandBufferSingleCommand(VkDevice *device, VkCommandPool *commandpool, VkCommandBuffer &commandbuffer);
         static void endCommandBufferSingleCommand(VkDevice *device, VkQueue *graphics_queue, VkCommandPool *commandpool, VkCommandBuffer &commandBuffer);
@@ -91,7 +102,7 @@ namespace deng {
         VkRenderPass *m_p_renderpass;
 
         std::array<VkPipelineShaderStageCreateInfo, 2> m_shader_stage_createinfos{};
-        VkVertexInputBindingDescription m_input_binding_descriptor{};
+        std::vector<VkVertexInputBindingDescription> m_input_binding_descriptors{};
         std::vector<VkVertexInputAttributeDescription> m_input_attribute_descriptors{};
         std::array<VkShaderModule, 2> m_shader_modules{};
 
@@ -109,7 +120,7 @@ namespace deng {
     private:
         VkShaderModule getShaderModule(std::vector<char> &shader_bins);
 
-        VkVertexInputBindingDescription getBindingDesc();
+        std::vector<VkVertexInputBindingDescription> getBindingDesc();
         std::vector<VkVertexInputAttributeDescription> getAttributeDesc();
         
     public:
@@ -117,7 +128,6 @@ namespace deng {
         ~PipelineCreator();
         VkGraphicsPipelineCreateInfo getGraphicsPipelineInfo(const std::string &vert_shader, const std::string &frag_shader, const char *p_shader_module_name,
         const VkPolygonMode &polygon_mode, const VkCullModeFlagBits &cull_mode, const VkFrontFace &front_face, const VkPrimitiveTopology &primitive_topology, const bool &add_depth_stencil, const bool &add_color_blend, const uint32_t &subpass_index);
-
     };
 
 

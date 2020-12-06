@@ -184,7 +184,6 @@ void dasLoadTexture(DENGtexture *p_texture, const char *file_name) {
 
     fread((void*) &type_header, sizeof(type_header), 1, file);
 
-    printf("Read image type is: %d\n", type_header.image_type);
     // Check the tga image type and exit if image is not supported
     switch (type_header.image_type)
     {

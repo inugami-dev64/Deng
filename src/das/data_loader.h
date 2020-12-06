@@ -58,7 +58,7 @@ typedef struct DENGasset {
     
     // For fragment shader
     OBJColorData solid_fill_color;
-    size_t texture_index;
+    size_t fragment_index;
 } DENGasset;
 
 typedef struct DENGtexture {

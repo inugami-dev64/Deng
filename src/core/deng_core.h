@@ -8,7 +8,7 @@
 
 /*  please do not enable these at the same time, 
     otherwise you won't be able to debug anything */
-#define CAMERA_LOCATION_DEBUG 0
+#define CAMERA_LOCATION_DEBUG 1
 #define CAMERA_MOUSE_DEBUG 0
 
 #define ERR(x) throw std::runtime_error(std::string("ERROR: ") + x)
@@ -131,15 +131,15 @@ enum dengRendererHint {
 
 // local dependencies
 #include "../surface/deng_surface_core.h"
-#include "../dam/das_core.h"
+#include "../das/das_core.h"
 #include "../maths/deng_math.h"
 #include "../utilities/timer/timer.h"
-#include "../utilities/rend_utils.h"
 #include "window.h"
 #include "camera.h"
 // #include "../utilities/map/grid_generator.h"
 #include "../maths/events.h"
 #include "rend_helpers.h"
+#include "../utilities/rend_utils.h"
 // #include "../dengui/core/dengui_core.h"
 #include "renderer.h"
 
