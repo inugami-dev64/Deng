@@ -1,4 +1,4 @@
-#include "../core/deng_core.h"
+#include "../core/api_core.h"
 
 namespace dengMath {
 
@@ -29,7 +29,7 @@ namespace dengMath {
         else return local_current_value;
     }
 
-    vec2<float> getCartesianCoordsPoint(const vec2<float> &centre_position, const int16_t &angle, const float &distance, const dengBool &inverted_y_axis) {
+    vec2<float> getCartesianCoordsPoint(const vec2<float> &centre_position, const int16_t &angle, const float &distance, const bool &inverted_y_axis) {
         vec2<float> local_coords;
         local_coords.first = (sin(Conversion::degToRad(angle)) * distance) + centre_position.first;
         if(!inverted_y_axis) local_coords.second = (cos(Conversion::degToRad(angle)) * distance) + centre_position.second;
@@ -51,18 +51,18 @@ namespace dengMath {
         switch (triangle_angle_type)
         {
         case DENG_TRIANGLE_ANGLE_ALPHA:
-            return Conversion::radToDeg(static_cast<float>(asin(sqrt((triangle_edges.first + triangle_edges.second - triangle_edges.third) * (triangle_edges.first - triangle_edges.second + triangle_edges.third) * (-triangle_edges.first + triangle_edges.second + triangle_edges.third) * (triangle_edges.first + triangle_edges.second + triangle_edges.third))
-            / 2 * triangle_edges.second * triangle_edges.third)));
+            return Conversion::radToDeg(static_cast<float>(asin(sqrt((triangle_edges.first + triangle_edges.second - triangle_edges.third) * (triangle_edges.first - triangle_edges.second + triangle_edges.third) * (-triangle_edges.first + triangle_edges.second + triangle_edges.third) * 
+            (triangle_edges.first + triangle_edges.second + triangle_edges.third)) / 2 * triangle_edges.second * triangle_edges.third)));
             break;
         
         case DENG_TRIANGLE_ANGLE_BETA:
-            return Conversion::radToDeg(static_cast<float>(asin(sqrt((triangle_edges.first + triangle_edges.second - triangle_edges.third) * (triangle_edges.first - triangle_edges.second + triangle_edges.third) * (-triangle_edges.first + triangle_edges.second + triangle_edges.third) * (triangle_edges.first + triangle_edges.second + triangle_edges.third))
-            / 2 * triangle_edges.first * triangle_edges.third)));
+            return Conversion::radToDeg(static_cast<float>(asin(sqrt((triangle_edges.first + triangle_edges.second - triangle_edges.third) * (triangle_edges.first - triangle_edges.second + triangle_edges.third) * (-triangle_edges.first + triangle_edges.second + triangle_edges.third) * 
+            (triangle_edges.first + triangle_edges.second + triangle_edges.third)) / 2 * triangle_edges.first * triangle_edges.third)));
             break;
 
         case DENG_TRIANGLE_ANGLE_GAMMA:
-            return Conversion::radToDeg(static_cast<float>(asin(sqrt((triangle_edges.first + triangle_edges.second - triangle_edges.third) * (triangle_edges.first - triangle_edges.second + triangle_edges.third) * (-triangle_edges.first + triangle_edges.second + triangle_edges.third) * (triangle_edges.first + triangle_edges.second + triangle_edges.third))
-            / 2 * triangle_edges.first * triangle_edges.second)));
+            return Conversion::radToDeg(static_cast<float>(asin(sqrt((triangle_edges.first + triangle_edges.second - triangle_edges.third) * (triangle_edges.first - triangle_edges.second + triangle_edges.third) * (-triangle_edges.first + triangle_edges.second + triangle_edges.third) * 
+            (triangle_edges.first + triangle_edges.second + triangle_edges.third)) / 2 * triangle_edges.first * triangle_edges.second)));
             break;
 
         default:
@@ -207,7 +207,7 @@ namespace dengMath {
         switch (movement_type)
         {
         case DENG_COORD_AXIS_X: {
-            vec2<float> local_movement = getCartesianCoordsPoint({0.0f, 0.0f}, (this->y_rot + 90), movement_speed.first, DENG_FALSE);
+            vec2<float> local_movement = getCartesianCoordsPoint({0.0f, 0.0f}, (this->y_rot + 90), movement_speed.first, false);
 
             if(substract) this->m_camera_position.first -= local_movement.first, this->m_camera_position.third -= local_movement.second ;
             else this->m_camera_position.first += local_movement.first, this->m_camera_position.third += local_movement.second;
@@ -220,7 +220,7 @@ namespace dengMath {
             break;
 
         case DENG_COORD_AXIS_Z: {
-            vec2<float> local_movement = getCartesianCoordsPoint({0.0f, 0.0f}, this->y_rot, movement_speed.third, DENG_FALSE);
+            vec2<float> local_movement = getCartesianCoordsPoint({0.0f, 0.0f}, this->y_rot, movement_speed.third, false);
             
             if(substract) this->m_camera_position.first -= local_movement.first, this->m_camera_position.third -= local_movement.second;
             else this->m_camera_position.first += local_movement.first, this->m_camera_position.third += local_movement.second;

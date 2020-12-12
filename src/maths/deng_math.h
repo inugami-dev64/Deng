@@ -57,16 +57,16 @@ namespace dengMath {
             return local_vec4;
         }
 
-        dengBool operator<(vec4<T> vector) {
-            return static_cast<dengBool>(this->first < vector.first && this->second < vector.second && this->third < vector.third && this->fourth < vector.fourth);
+        bool operator<(vec4<T> vector) {
+            return static_cast<bool>(this->first < vector.first && this->second < vector.second && this->third < vector.third && this->fourth < vector.fourth);
         }
 
-        dengBool operator>(vec4<T> vector) {
-            return static_cast<dengBool>(this->first > vector.first && this->second > vector.second && this->third > vector.third && this->fourth > vector.fourth);
+        bool operator>(vec4<T> vector) {
+            return static_cast<bool>(this->first > vector.first && this->second > vector.second && this->third > vector.third && this->fourth > vector.fourth);
         }
 
-        dengBool operator==(vec4<T> vector) {
-            return static_cast<dengBool>(this->first == vector.first && this->second == vector.second && this->third == vector.third && this->fourth == vector.fourth);
+        bool operator==(vec4<T> vector) {
+            return static_cast<bool>(this->first == vector.first && this->second == vector.second && this->third == vector.third && this->fourth == vector.fourth);
         }
     };
 
@@ -126,16 +126,16 @@ namespace dengMath {
             return vector;
         }
 
-        dengBool operator<(vec3<T> vector) {
-            return static_cast<dengBool>(first < vector.first && second < vector.second && third < vector.third);
+        bool operator<(vec3<T> vector) {
+            return static_cast<bool>(first < vector.first && second < vector.second && third < vector.third);
         }
 
-        dengBool operator>(vec3<T> vector) {
-            return static_cast<dengBool>(first > vector.first && second > vector.second && third > vector.third);
+        bool operator>(vec3<T> vector) {
+            return static_cast<bool>(first > vector.first && second > vector.second && third > vector.third);
         }
 
-        dengBool operator==(vec3<T> vector) {
-            return static_cast<dengBool>(this->first == vector.first && this->second == vector.second && this->third == vector.third);
+        bool operator==(vec3<T> vector) {
+            return static_cast<bool>(this->first == vector.first && this->second == vector.second && this->third == vector.third);
         }
 
     };
@@ -198,16 +198,16 @@ namespace dengMath {
             return vector;
         }
 
-        dengBool operator<(vec2<T> vector) {
-            return static_cast<dengBool>(first < vector.first && second < vector.second);
+        bool operator<(vec2<T> vector) {
+            return static_cast<bool>(first < vector.first && second < vector.second);
         }
 
-        dengBool operator>(vec2<T> vector) {
-            return static_cast<dengBool>(first > vector.first && second > vector.second);
+        bool operator>(vec2<T> vector) {
+            return static_cast<bool>(first > vector.first && second > vector.second);
         }
 
-        dengBool operator==(vec2<T> vector) {
-            return static_cast<dengBool>(this->first == vector.first && this->second == vector.second);
+        bool operator==(vec2<T> vector) {
+            return static_cast<bool>(this->first == vector.first && this->second == vector.second);
         }
     };
 
@@ -326,17 +326,17 @@ namespace dengMath {
         void getProjectionMatrix(mat4<float> *p_matrix);
     };
 
-    struct UniformBufferData {
+    struct UniformData {
         mat4<float> view;
         mat4<float> projection;
-        // model matrix will be added separately 
+        dengCameraUniformFlagBits cam_flag_bits;
     };
 
     // generic math functions
     double exp(double base, int exp);
     float exp(float base, int exp);
 
-    vec2<float> getCartesianCoordsPoint(const vec2<float> &centre, const int16_t &angle, const float &distance, const dengBool &inverted_y_axis);
+    vec2<float> getCartesianCoordsPoint(const vec2<float> &centre, const int16_t &angle, const float &distance, const bool &inverted_y_axis);
     float getFractionNumerator(const float &value_numerator, const float &value_denominator, const float &equivalent_denominator);
     float getVectorLengthFromBounds(vec2<vec2<float>> vector_bounds);
     float getTriangleAnglesFromEdges(const vec3<float> &triangle_edges, const dengTriangleAngleType &triangle_angle_type);

@@ -10,7 +10,7 @@ extern "C" {
 #define ACTIVE_KEYS 0x0001
 #define RELEASE_KEYS 0x0002
 
-#define DENG_REFRESH_INTERVAL 50 // microseconds
+#define DENG_REFRESH_INTERVAL 1 // microseconds
 #define MAX_MOUSE_PTR_DISTANCE_FROM_BORDER 100 
 
 #define DENG_ERR_AUTOREPEAT_DISABLE 0x00000010

@@ -3,7 +3,7 @@
 
 namespace deng {   
 
-    class Window
+    class WindowWrap
     {
     private:
         DENGWindow *m_p_game_window;
@@ -13,8 +13,8 @@ namespace deng {
         dengMath::vec2<double> m_pixel_size;
 
     public:
-        Window(const int &x, const int &y, const char *title);
-        ~Window();
+        WindowWrap(const int &x, const int &y, const char *title);
+        ~WindowWrap();
         DENGWindow *getWindow();
         const char *getTitle();
         dengInputMode getInputMode();

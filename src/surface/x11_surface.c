@@ -206,7 +206,7 @@ void update_window(DENGWindow *p_window) {
             destroy_window(p_window);
     }
 
-    usleep(DENG_REFRESH_INTERVAL);
+    // usleep(DENG_REFRESH_INTERVAL);
 }
 
 void destroy_window(DENGWindow *p_window) {
