@@ -34,7 +34,7 @@ void damListAssets(char **pp_repo_paths, size_t repo_count);
 int damAddRepo(char **pp_repo_path, size_t *p_repo_count, char *new_repo, int default_id);
 void damSetDefaultRepo(char **pp_repo_paths, size_t repo_count, int id);
 void damListLocalRepos(char **pp_repo_paths, size_t repo_count, int default_id);
-void damAssetAssemblyCaller(DENGasset *p_asset, char **pp_repo_paths, int repo_id);
+void damAssetAssemblyCaller(DENGAsset *p_asset, char **pp_repo_paths, int repo_id);
 
 // Date and time formating
 #define SECONDS_PER_YEAR 31536000 

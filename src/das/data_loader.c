@@ -39,7 +39,7 @@ void dasInitTGAimageHeaders(TGATypeHeader *p_type_header, TGAColorMapHeader *p_c
 }
 
 // Callback function to get image data
-void dasLoadTexture(DENGtexture *p_texture, const char *file_name) {
+void dasLoadTexture(DENGTexture *p_texture, const char *file_name) {
     ImageFormat format = dasDetectImageFormat(file_name);
 
     switch (format)
@@ -61,7 +61,7 @@ void dasLoadTexture(DENGtexture *p_texture, const char *file_name) {
 
 
 /* BMP image */
- void dasLoadBMPimage(DENGtexture *p_texture, const char *file_name) {
+ void dasLoadBMPimage(DENGTexture *p_texture, const char *file_name) {
     BMPFileHeader file_header;
     BMPInfoHeader info_header;
     BMPColorHeader color_header;
@@ -169,7 +169,7 @@ void dasLoadTexture(DENGtexture *p_texture, const char *file_name) {
 
 
 /* TGA image */
- void dasLoadTGAimage(DENGtexture *p_asset, const char *file_name) {
+ void dasLoadTGAimage(DENGTexture *p_asset, const char *file_name) {
     TGATypeHeader type_header;
     TGAColorMapHeader color_header;
     TGAInfoHeader info_header;
@@ -291,7 +291,7 @@ void dasLoadTexture(DENGtexture *p_texture, const char *file_name) {
 
 /* 3D model loading */
 // Callback function for loading 3d model data
-void dasLoadModel(DENGasset *p_asset, const char *file_name) {
+void dasLoadModel(DENGAsset *p_asset, const char *file_name) {
     file = fopen(file_name, "rb");
     if(!file) printf("ERROR: Failed to open model file: %s\n", file_name);
 
@@ -322,7 +322,6 @@ void dasLoadModel(DENGasset *p_asset, const char *file_name) {
 
     dasIndexTexMappedVertices(&p_vertices_data, vertices_size, &p_texture_data, texture_size, &p_vertices_indices, vertices_indices_size, &p_tex_vert_indices,
     tex_vert_indices_size, p_asset);
-    p_asset->tex_mode = 1;
     
     fclose(file);
 }
@@ -493,7 +492,7 @@ void dasLoadModel(DENGasset *p_asset, const char *file_name) {
 
 
 // Index unmapped vertices
- void dasIndexUnmappedVertices(OBJVerticesData **pp_vert_data, size_t vert_size, uint32_t **pp_indices, size_t indices_size, DENGasset *p_asset) {
+ void dasIndexUnmappedVertices(OBJVerticesData **pp_vert_data, size_t vert_size, uint32_t **pp_indices, size_t indices_size, DENGAsset *p_asset) {
     p_asset->vertices.p_unmapped_vert_data = (OBJVerticesData*) malloc(vert_size * sizeof(OBJVerticesData));
     p_asset->vertices.size = vert_size;
     
@@ -511,7 +510,7 @@ void dasLoadModel(DENGasset *p_asset, const char *file_name) {
 
 // Index texture mapped vertices
  void dasIndexTexMappedVertices(OBJVerticesData **pp_vert_data, size_t vert_size, OBJTextureData **pp_tex_data, size_t tex_size, uint32_t **pp_vert_indices, size_t vert_indices_size, uint32_t **pp_tex_indices, 
-size_t tex_indices_size, DENGasset *p_asset) {
+size_t tex_indices_size, DENGAsset *p_asset) {
     size_t l_index, r_index;
     int is_found;
     p_asset->vertices.p_texture_mapped_vert_data = (VERT_MAPPED*) malloc(sizeof(VERT_MAPPED));

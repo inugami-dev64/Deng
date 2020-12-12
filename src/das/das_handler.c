@@ -19,7 +19,7 @@ char *dasGetFileExtName(char *file_name) {
 }   
 
 /* das file assembler callback function */
-void dasAssemble(DENGasset *p_asset, const char *file_name) {
+void dasAssemble(DENGAsset *p_asset, const char *file_name) {
     FILE *file;
     char *ext_name = dasGetFileExtName((char*) file_name);
 
@@ -84,7 +84,7 @@ void dasAssembleTPIXHDR(DynamicPixelData *p_pixel_data, FILE *file) {
 
 
 /* das file reader callback function */
-void dasReadDAS(DENGasset *p_asset, const char *file_name, int tex_mode) {
+void dasReadAsset(DENGAsset *p_asset, const char *file_name, AssetMode asset_mode) {
     FILE *file;
     file = fopen(file_name, "rb");
     
@@ -94,27 +94,69 @@ void dasReadDAS(DENGasset *p_asset, const char *file_name, int tex_mode) {
         exit(-1);
     }
 
+    size_t index;
     DynamicVertices tmp_vert;
+    p_asset->asset_mode = asset_mode;
     
     dasReadINFOHDR(&p_asset->name, &p_asset->description, &p_asset->time_point, (char*) file_name, file);
-    if(tex_mode)
+    switch (asset_mode)
+    {
+    case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
         dasReadVERTHDR(&p_asset->vertices, (char*) file_name, file);
-
-    else {
-        size_t index;
+        break;
+    
+    case DENG_ASSET_MODE_3D_UNMAPPED:
         dasReadVERTHDR(&tmp_vert, (char*) file_name, file);
         p_asset->vertices.size = tmp_vert.size;
         p_asset->vertices.p_unmapped_vert_data = (OBJVerticesData*) malloc(p_asset->vertices.size * sizeof(OBJVerticesData));
 
         // Populate asset unmapped vertices
         for(index = 0; index < p_asset->vertices.size; index++)
-            *p_asset->vertices.p_unmapped_vert_data = tmp_vert.p_texture_mapped_vert_data[index].vert_data;
-    }
+            p_asset->vertices.p_unmapped_vert_data[index] = tmp_vert.p_texture_mapped_vert_data[index].vert_data;
+        break;
 
-    p_asset->tex_mode = tex_mode;
+    case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
+        dasReadVERTHDR(&tmp_vert, (char*) file_name, file);
+        p_asset->vertices.size = tmp_vert.size;
+        p_asset->vertices.p_texture_mapped_vert_data_2d = (VERT_MAPPED_2D*) malloc(p_asset->vertices.size * sizeof(VERT_MAPPED_2D));
+
+        // Populate 2D asset textured vertices
+        for(index = 0; index < p_asset->vertices.size; index++) {
+            p_asset->vertices.p_texture_mapped_vert_data_2d[index].vert_data.vert_x = 
+            tmp_vert.p_texture_mapped_vert_data[index].vert_data.vert_x;
+            p_asset->vertices.p_texture_mapped_vert_data_2d[index].vert_data.vert_y =
+            tmp_vert.p_texture_mapped_vert_data[index].vert_data.vert_y;
+            p_asset->vertices.p_texture_mapped_vert_data_2d[index].tex_data = tmp_vert.p_texture_mapped_vert_data[index].tex_data;  
+        }
+        break;
+
+    case DENG_ASSET_MODE_2D_UNMAPPED:
+        dasReadVERTHDR(&tmp_vert, (char*) file_name, file);
+        p_asset->vertices.size = tmp_vert.size;
+        p_asset->vertices.p_unmapped_vert_data_2d = (OBJVerticesData2D*) malloc(p_asset->vertices.size * sizeof(OBJVerticesData2D));
+        
+        // Populate 2D asset unmapped vertices
+        for(index = 0; index < p_asset->vertices.size; index++) {
+            p_asset->vertices.p_unmapped_vert_data_2d[index].vert_x = 
+            tmp_vert.p_texture_mapped_vert_data[index].vert_data.vert_x;
+            p_asset->vertices.p_unmapped_vert_data_2d[index].vert_y = 
+            tmp_vert.p_texture_mapped_vert_data[index].vert_data.vert_y;
+        }
+        break;
+
+
+    default:
+        break;
+    }
     
     dasReadINDXHDR(&p_asset->indices, (char*) file_name, file);
     fclose(file);
+}
+
+
+/* Bind texture index to asset */
+void dasBindTexture(DENGAsset *p_asset, size_t texture_index) {
+    p_asset->fragment_index = texture_index;
 }
 
 

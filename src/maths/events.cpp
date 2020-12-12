@@ -1,4 +1,4 @@
-#include "../core/deng_core.h"
+#include "../core/api_core.h"
 
 namespace dengMath {
     Events::Events(deng::WindowWrap *p_win, deng::Camera *p_camera) {

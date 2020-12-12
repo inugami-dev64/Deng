@@ -17,6 +17,11 @@ else
         mkdir $1/obj 
     fi
 
+    if [ ! -d $1/obj/dam ] 
+    then 
+        mkdir $1/obj/dam
+    fi
+
     if [ ! -d $1/obj/libsurface ] 
     then 
         mkdir $1/obj/libsurface 
@@ -35,11 +40,6 @@ else
     if [ ! -d $1/obj/deng ] 
     then 
         mkdir $1/obj/deng 
-    fi
-
-    if [ ! -d $1/obj/das ] 
-    then 
-        mkdir $1/obj/das 
     fi
 
     if [ ! -d $1/deng ] 

@@ -4,6 +4,7 @@
 #define INDICES_HEADER_NAME "INDX_HDR"
 #define TEXTURE_PIXEL_NAME "TPIX_HDR"
 
+
 /* All structs of subflags that can be used with main flags */
 /* These structs contain oly raw text data and the data needs to be proccessed later */ 
 // All local/assemble flags
@@ -22,7 +23,7 @@ typedef struct Frag {
 #endif
 
 /* Callback function for creating .das binary asset file */
-void dasAssemble(DENGasset *passet, const char *filename);
+void dasAssemble(DENGAsset *passet, const char *filename);
 
 /* das reader functions */
 #ifdef DAS_EXT_HANDLER
@@ -32,5 +33,6 @@ void dasAssemble(DENGasset *passet, const char *filename);
 #endif
 
 /* Callback function for reading .das binary asset file */
-void dasReadDAS(DENGasset *p_asset, const char *file_name, int tex_mode);
+void dasReadAsset(DENGAsset *p_asset, const char *file_name, AssetMode tex_mode);
+void dasBindTexture(DENGAsset *p_asset, size_t texture_index);
 #endif

@@ -1,4 +1,4 @@
-#include "deng_core.h"
+#include "api_core.h"
 
 namespace deng {
 
@@ -103,7 +103,7 @@ namespace deng {
 
 
     /* Graphics queuefamily getter method */
-    uint32_t QueueFamilies::getGraphicsFamily() { return this->m_graphics_family_index; }
+    uint32_t QueueFamilies::getGraphicsFamilyIndex() { return this->m_graphics_family_index; }
 
 
     /* Find correct present queue family */
@@ -131,7 +131,7 @@ namespace deng {
 
 
     /* Present queue family getter method */
-    uint32_t QueueFamilies::getPresentFamily() { return this->m_present_family_index; }
+    uint32_t QueueFamilies::getPresentFamilyIndex() { return this->m_present_family_index; }
 
 
     /* Initialize private variables */
@@ -147,7 +147,7 @@ namespace deng {
     VkShaderModule PipelineCreator::getShaderModule(std::vector<char> &shader_bins) {
         VkShaderModuleCreateInfo local_createinfo{};
         local_createinfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        local_createinfo.codeSize = shader_bins.size();
+        local_createinfo.codeSize = (uint32_t) shader_bins.size();
         local_createinfo.pCode = reinterpret_cast<const uint32_t*>(shader_bins.data());
         VkShaderModule local_shader_module;
 
@@ -158,34 +158,34 @@ namespace deng {
     }
 
     /* Get vertex input binding description info*/ 
-    std::vector<VkVertexInputBindingDescription> PipelineCreator::getBindingDesc() {
-        std::vector<VkVertexInputBindingDescription> local_input_binding_descs{};
-        
+    VkVertexInputBindingDescription PipelineCreator::getBindingDesc() {
+        VkVertexInputBindingDescription local_input_binding_desc;
+        local_input_binding_desc.binding = 0;
+        local_input_binding_desc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
         switch (this->m_p_pipeline_data->pipeline_type)
         {
-        case DENG_PIPELINE_TYPE_UNMAPPED:
-            LOG("Test!");
-            local_input_binding_descs.resize(2);
-            
-            local_input_binding_descs[0].binding = 0;
-            local_input_binding_descs[0].stride = sizeof(OBJVerticesData);
-            
-            local_input_binding_descs[1].binding = 1;
-            local_input_binding_descs[1].stride = 0;
+        case DENG_PIPELINE_TYPE_UNMAPPED_3D:
+            local_input_binding_desc.stride = sizeof(VERT_UNMAPPED);
             break;
         
-        case DENG_PIPELINE_TYPE_TEXTURE_MAPPED:
-            local_input_binding_descs.resize(1);
+        case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D:
+            local_input_binding_desc.stride = sizeof(VERT_MAPPED);
+            break;
 
-            local_input_binding_descs[0].binding = 0;
-            local_input_binding_descs[0].stride = sizeof(VERT_MAPPED);
+        case DENG_PIPELINE_TYPE_UNMAPPED_2D:
+            local_input_binding_desc.stride = sizeof(VERT_UNMAPPED_2D);
+            break;
+
+        case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D:
+            local_input_binding_desc.stride = sizeof(VERT_MAPPED_2D);
             break;
             
         default:
             break;
         }
 
-        return local_input_binding_descs;
+        return local_input_binding_desc;
     } 
 
     /* Get vertex input attribute description info */
@@ -195,19 +195,19 @@ namespace deng {
 
         switch (this->m_p_pipeline_data->pipeline_type)
         {
-        case DENG_PIPELINE_TYPE_UNMAPPED:
+        case DENG_PIPELINE_TYPE_UNMAPPED_3D:
             local_input_attr_desc[0].binding = 0;
             local_input_attr_desc[0].location = 0;
             local_input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-            local_input_attr_desc[0].offset = 0;
-            
-            local_input_attr_desc[1].binding = 1;
+            local_input_attr_desc[0].offset = offsetof(VERT_UNMAPPED, vert_data);
+
+            local_input_attr_desc[1].binding = 0;
             local_input_attr_desc[1].location = 1;
-            local_input_attr_desc[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-            local_input_attr_desc[1].offset = 0;
+            local_input_attr_desc[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            local_input_attr_desc[1].offset = offsetof(VERT_UNMAPPED, color_data);
             break;
 
-        case DENG_PIPELINE_TYPE_TEXTURE_MAPPED:
+        case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D:
             local_input_attr_desc[0].binding = 0;
             local_input_attr_desc[0].location = 0;
             local_input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -217,6 +217,30 @@ namespace deng {
             local_input_attr_desc[1].location = 1;
             local_input_attr_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
             local_input_attr_desc[1].offset = offsetof(VERT_MAPPED, tex_data);
+            break;
+
+        case DENG_PIPELINE_TYPE_UNMAPPED_2D:
+            local_input_attr_desc[0].binding = 0;
+            local_input_attr_desc[0].location = 0;
+            local_input_attr_desc[0].format = VK_FORMAT_R32G32_SFLOAT;
+            local_input_attr_desc[0].offset = offsetof(VERT_UNMAPPED_2D, vert_data);
+
+            local_input_attr_desc[1].binding = 0;
+            local_input_attr_desc[1].location = 1;
+            local_input_attr_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
+            local_input_attr_desc[1].offset = offsetof(VERT_UNMAPPED_2D, color_data);
+            break;
+
+        case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D:
+            local_input_attr_desc[0].binding = 0;
+            local_input_attr_desc[0].location = 0;
+            local_input_attr_desc[0].format = VK_FORMAT_R32G32_SFLOAT;
+            local_input_attr_desc[0].offset = offsetof(VERT_MAPPED_2D, vert_data);
+
+            local_input_attr_desc[1].binding = 0;
+            local_input_attr_desc[1].location = 1;
+            local_input_attr_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
+            local_input_attr_desc[1].offset = offsetof(VERT_MAPPED_2D, tex_data);
             break;
 
         default:
@@ -276,14 +300,14 @@ namespace deng {
         this->m_shader_stage_createinfos = {local_vertex_shader_stage_createinfo, local_frag_shader_stage_createinfo};
 
         /* Get descriptions */
-        this->m_input_binding_descriptors = this->getBindingDesc();
+        this->m_input_binding_descriptor = this->getBindingDesc();
         this->m_input_attribute_descriptors = this->getAttributeDesc();
 
         /* Set up vertex input createinfo object */
         this->m_vertex_input_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        this->m_vertex_input_createinfo.vertexBindingDescriptionCount = this->m_input_binding_descriptors.size();
-        this->m_vertex_input_createinfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(this->m_input_attribute_descriptors.size());
-        this->m_vertex_input_createinfo.pVertexBindingDescriptions = this->m_input_binding_descriptors.data();
+        this->m_vertex_input_createinfo.vertexBindingDescriptionCount = 1;
+        this->m_vertex_input_createinfo.vertexAttributeDescriptionCount = (uint32_t) (this->m_input_attribute_descriptors.size());
+        this->m_vertex_input_createinfo.pVertexBindingDescriptions = &this->m_input_binding_descriptor;
         this->m_vertex_input_createinfo.pVertexAttributeDescriptions = this->m_input_attribute_descriptors.data();
 
         /* Set up input assembly createinfo object */
@@ -331,7 +355,7 @@ namespace deng {
 
         /* Set colorblend options */
         this->m_colorblend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-        if(add_color_blend) this->m_colorblend_attachment.blendEnable =  VK_TRUE;
+        if(add_color_blend) this->m_colorblend_attachment.blendEnable = VK_TRUE;
         else this->m_colorblend_attachment.blendEnable = VK_FALSE;
         
         /* Set depth stencil */
@@ -359,7 +383,7 @@ namespace deng {
         /* Set up graphics pipeline createinfo */
         VkGraphicsPipelineCreateInfo local_graphics_pipeline_createinfo{};
         local_graphics_pipeline_createinfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        local_graphics_pipeline_createinfo.stageCount = this->m_shader_stage_createinfos.size();
+        local_graphics_pipeline_createinfo.stageCount = (uint32_t) this->m_shader_stage_createinfos.size();
         local_graphics_pipeline_createinfo.pStages = this->m_shader_stage_createinfos.data();
         local_graphics_pipeline_createinfo.pVertexInputState = &this->m_vertex_input_createinfo;
         local_graphics_pipeline_createinfo.pInputAssemblyState = &this->m_input_assembly_createinfo;
@@ -369,6 +393,7 @@ namespace deng {
         local_graphics_pipeline_createinfo.pMultisampleState = &this->m_multisample_createinfo;
         local_graphics_pipeline_createinfo.pDepthStencilState = &this->m_depth_stencil;
         local_graphics_pipeline_createinfo.layout = *this->m_p_pipeline_data->p_pipeline_layout;
+
         local_graphics_pipeline_createinfo.renderPass = *this->m_p_renderpass;
         local_graphics_pipeline_createinfo.subpass = subpass_index;
         local_graphics_pipeline_createinfo.basePipelineHandle = VK_NULL_HANDLE;
@@ -386,25 +411,20 @@ namespace deng {
 
     SwapChainDetails::SwapChainDetails(VkPhysicalDevice &gpu, VkSurfaceKHR &surface) {
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(gpu, surface, &this->m_capabilities);
-
         uint32_t format_count;
         vkGetPhysicalDeviceSurfaceFormatsKHR(gpu, surface, &format_count, nullptr);
 
-        if(format_count != 0) {
-            this->m_formats.resize(format_count);
-            vkGetPhysicalDeviceSurfaceFormatsKHR(gpu, surface, &format_count, this->m_formats.data());
-        }
+        if(!format_count) ERR("No surface formats available!");
 
+        this->m_formats.resize(format_count);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(gpu, surface, &format_count, this->m_formats.data());
         uint32_t present_mode_count;
         vkGetPhysicalDeviceSurfacePresentModesKHR(gpu, surface, &present_mode_count, nullptr);
 
-        if(present_mode_count != 0) {
-            this->m_present_modes.resize(present_mode_count);
-            vkGetPhysicalDeviceSurfacePresentModesKHR(gpu, surface, &present_mode_count, this->m_present_modes.data());
-        }
-        else {
-            ERR("No present modes available!");
-        }
+        if(!present_mode_count) ERR("No surface present modes available!");
+
+        this->m_present_modes.resize(present_mode_count);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(gpu, surface, &present_mode_count, this->m_present_modes.data());
     }
 
     VkSurfaceCapabilitiesKHR SwapChainDetails::getCapabilities() {
@@ -458,6 +478,23 @@ namespace deng {
         vkGetImageMemoryRequirements(*p_device, *p_image, &local_memory_requirement);
         
         return local_memory_requirement;
+    }
+
+
+    /* Returns image filled view createinfo struct */
+    VkImageViewCreateInfo BufferCreator::getImageViewInfo(VkImage &image, const VkFormat &format, const VkImageAspectFlags &aspect_flags) {
+        VkImageViewCreateInfo local_createInfo{};
+        local_createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        local_createInfo.image = image;
+        local_createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        local_createInfo.format = format;
+
+        local_createInfo.subresourceRange.aspectMask = aspect_flags;
+        local_createInfo.subresourceRange.baseMipLevel = 0;
+        local_createInfo.subresourceRange.levelCount = 1;
+        local_createInfo.subresourceRange.baseArrayLayer = 0;
+        local_createInfo.subresourceRange.layerCount = 1;
+        return local_createInfo;
     }
     
 

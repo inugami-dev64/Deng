@@ -1,4 +1,4 @@
-#include "deng_core.h"
+#include "api_core.h"
 
 namespace deng {
     Camera::Camera(const dengMath::vec3<float> &camera_movement_speed_multiplier, const dengMath::vec2<float> &mouse_movement_speed_multiplier, const float &FOV, const float &near_plane, const float &far_plane, WindowWrap *window) {

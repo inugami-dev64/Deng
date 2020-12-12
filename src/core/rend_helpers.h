@@ -3,11 +3,6 @@
 
 namespace deng {
 
-    struct UniformColorSpecification {
-        std::vector<VkDeviceSize> offsets;
-        std::vector<VkDescriptorSet> descriptor_sets;
-    };
-    
     /* Contains different buffer objects for multiple purposes */
     struct BufferData {
         VkBuffer staging_buffer;
@@ -15,24 +10,24 @@ namespace deng {
 
         VkBuffer main_buffer;
         VkDeviceMemory main_buffer_memory;
+        
+        std::vector<OBJColorData> colors;
 
-        // This uniform data vectory doesn't take the swapchain images count into consideration
-        VkBuffer mat_uniform_buffer;
-        VkDeviceMemory mat_uniform_memory;
-
-        std::vector<VkDeviceSize> mat_uniform_offsets;
-        std::vector<UniformColorSpecification> uniform_color_spec;
+        std::vector<VkBuffer> mat_uniform_buffers;
+        std::vector<VkDeviceMemory> mat_uniform_buffer_mem;
     };
 
+    
     /* Contains texture image objects */
     struct TextureImageData {
-        DENGtexture texture;
+        DENGTexture texture;
         VkImage image;
         VkImageView image_view;
         VkDeviceMemory image_mem;
         std::vector<VkDescriptorSet> descriptor_sets;
     };
 
+    
     /* Contains different getter functions for hardware specs */
     struct HardwareSpecs {
         static bool getExtensionSupport(const VkPhysicalDevice &gpu, const char *p_extension_name);
@@ -42,6 +37,7 @@ namespace deng {
     
     /* Contains different buffer handling functions */
     struct BufferCreator {
+        static VkImageViewCreateInfo getImageViewInfo(VkImage &image, const VkFormat &format, const VkImageAspectFlags &aspect_flags);
         static void allocateMemory(VkDevice *p_device, VkPhysicalDevice *p_gpu, VkDeviceMemory *p_memory, const VkDeviceSize &size, uint32_t mem_type_bits, VkMemoryPropertyFlags properties);
 
         /* VkImage related functions */
@@ -71,10 +67,10 @@ namespace deng {
     
     public:
         bool findGraphicsFamily(VkPhysicalDevice &gpu);
-        uint32_t getGraphicsFamily();
+        uint32_t getGraphicsFamilyIndex();
 
         bool findPresentSupportFamily(VkPhysicalDevice &gpu, VkSurfaceKHR &surface);
-        uint32_t getPresentFamily();
+        uint32_t getPresentFamilyIndex();
     };
 
     
@@ -102,7 +98,7 @@ namespace deng {
         VkRenderPass *m_p_renderpass;
 
         std::array<VkPipelineShaderStageCreateInfo, 2> m_shader_stage_createinfos{};
-        std::vector<VkVertexInputBindingDescription> m_input_binding_descriptors{};
+        VkVertexInputBindingDescription m_input_binding_descriptor{};
         std::vector<VkVertexInputAttributeDescription> m_input_attribute_descriptors{};
         std::array<VkShaderModule, 2> m_shader_modules{};
 
@@ -120,7 +116,7 @@ namespace deng {
     private:
         VkShaderModule getShaderModule(std::vector<char> &shader_bins);
 
-        std::vector<VkVertexInputBindingDescription> getBindingDesc();
+        VkVertexInputBindingDescription getBindingDesc();
         std::vector<VkVertexInputAttributeDescription> getAttributeDesc();
         
     public:

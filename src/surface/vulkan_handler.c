@@ -44,7 +44,6 @@ VkResult init_surface(DENGWindow *p_window, VkInstance *p_instance, VkSurfaceKHR
         surface_info.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
         surface_info.window = p_window->x11_handler.window;
         surface_info.dpy = p_window->x11_handler.p_display;
-        surface_info.flags = NULL;
         surface_info.pNext = NULL;
 
         PFN_vkCreateXlibSurfaceKHR vkCreateXlibSurfaceKHR;

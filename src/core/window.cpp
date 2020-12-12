@@ -1,4 +1,4 @@
-#include "deng_core.h"
+#include "api_core.h"
 
 namespace deng {
     WindowWrap::WindowWrap(const int &x, const int &y, const char *title) {

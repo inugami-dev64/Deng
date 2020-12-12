@@ -326,10 +326,10 @@ namespace dengMath {
         void getProjectionMatrix(mat4<float> *p_matrix);
     };
 
-    struct UniformMatData{
+    struct UniformData {
         mat4<float> view;
         mat4<float> projection;
-        // model matrix will be added separately 
+        dengCameraUniformFlagBits cam_flag_bits;
     };
 
     // generic math functions

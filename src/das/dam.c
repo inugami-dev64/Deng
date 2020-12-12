@@ -425,7 +425,7 @@ void damListLocalRepos(char **pp_repo_paths, size_t repo_count, int default_id) 
 
 
 /* Assemble name and description to asset file */
-void damAssetAssemblyCaller(DENGasset *p_asset, char **pp_repo_paths, int repo_id) {
+void damAssetAssemblyCaller(DENGAsset *p_asset, char **pp_repo_paths, int repo_id) {
     size_t index;
     char *total_file_name;
     char file_name_buffer[24];
@@ -539,11 +539,9 @@ int main(int argc, char *argv[]) {
             
             // Assemble asset
             if(!strcmp(argv[index], "--assemble")) {
-                char *tex_path;
-                OBJColorData color_data;
                 int is_obj_specified = false;
                 char *obj_path;
-                DENGasset asset;
+                DENGAsset asset;
                 index++;
 
                 // Check is asset object file is specified

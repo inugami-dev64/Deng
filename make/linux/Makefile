@@ -16,11 +16,11 @@ INCLUDE_PATH = -I /usr/include/freetype2 \
 
 CC_FLAGS = -Wall -m64
 CXX_FLAGS = -Wall -m64 -std=c++11
-LD_FLAGS = -lvulkan -lpthread -lsurface -lX11 -lXcursor -ldl -ldas -lcommon -lfreetype
+LD_FLAGS = -lvulkan -lsurface -lX11 -lXcursor -ldl -ldas -lcommon -lfreetype
 
 # Main engine with sample object loading
-MAIN_SRC = $(SRC_DIR)/main/main.cpp
-MAIN_OBJ = $(BUILD_DIR)/obj/deng/main.cpp.o
+MAIN_SRC = $(SRC_DIR)/main/sandbox.cpp
+MAIN_OBJ = $(BUILD_DIR)/obj/deng/sandbox.cpp.o
 
 CORE_OBJ = $(BUILD_DIR)/obj/deng/camera.cpp.o \
 		   $(BUILD_DIR)/obj/deng/rend_helpers.cpp.o \
@@ -31,7 +31,7 @@ MATH_OBJ = $(BUILD_DIR)/obj/deng/deng_math.cpp.o \
 		   $(BUILD_DIR)/obj/deng/events.cpp.o 
 
 UTILITIES_OBJ = $(BUILD_DIR)/obj/deng/timer.cpp.o \
-				$(BUILD_DIR)/obj/deng/rend_utils.cpp.o \
+				$(BUILD_DIR)/obj/deng/font.cpp.o \
 				$(BUILD_DIR)/obj/deng/common.c.o
 				# $(BUILD_DIR)/obj/deng/grid_generator.cpp.o 
 
@@ -47,17 +47,17 @@ LIBSURFACE_OBJ = $(BUILD_DIR)/obj/libsurface/vulkan_handler.c.o \
 LIBDAS_OBJ = $(BUILD_DIR)/obj/libdas/das_handler.c.o \
 			 $(BUILD_DIR)/obj/libdas/data_loader.c.o
 
+# Common functionality library (shared)
 LIBCOMMON_OBJ = $(BUILD_DIR)/obj/libcommon/common.c.o
 
-DAM_OBJ = $(BUILD_DIR)/obj/das/dam.c.o
+DAM_OBJ = $(BUILD_DIR)/obj/dam/dam.c.o
 
 
-$(TARGET): .init_build $(LIBCOMMON_TARGET) $(DAM_TARGET) $(LIBDAS_TARGET) $(LIBSURFACE_TARGET) $(OBJ)
+$(TARGET): .init_build $(LIBDAS_TARGET) $(LIBCOMMON_TARGET) $(DAM_TARGET) $(LIBDAS_TARGET) $(LIBSURFACE_TARGET) $(OBJ)
 	$(CXX) -o $(BUILD_DIR)/deng/$(TARGET) $(OBJ) $(LD_PATH) $(LD_FLAGS)
 	cp -r ../../objects $(BUILD_DIR)/deng/
 	cp -r ../../textures $(BUILD_DIR)/deng/
 	cp -r ../../shaders $(BUILD_DIR)/deng/shaders
-	cp -r ../../config $(BUILD_DIR)/deng/
 	cp -r $(SRC_DIR)/dengui/css $(BUILD_DIR)/deng/ui_styling
 	cp -r $(SRC_DIR)/surface/xcursor $(BUILD_DIR)/deng/
 
@@ -66,27 +66,29 @@ $(TARGET): .init_build $(LIBCOMMON_TARGET) $(DAM_TARGET) $(LIBDAS_TARGET) $(LIBS
 	./init_build.sh $(BUILD_DIR)
 
 # DENG common library build
-$(LIBCOMMON_TARGET): $(LIBCOMMON_OBJ)
+$(LIBCOMMON_TARGET): .init_build $(LIBCOMMON_OBJ)
 	$(CC) -shared -o $(LIBCOMMON_TARGET) $(LIBCOMMON_OBJ)  
 
 $(BUILD_DIR)/obj/libcommon/common.c.o: $(SRC_DIR)/common/common.c
 	$(CC) -c $(SRC_DIR)/common/common.c -o $(BUILD_DIR)/obj/libcommon/common.c.o
 
+
 # libdas library build
-$(LIBDAS_TARGET): $(LIBDAS_OBJ) $(LIBCOMMON_TARGET)
+$(LIBDAS_TARGET): .init_build $(LIBDAS_OBJ) $(LIBCOMMON_TARGET)
 	$(CC) -shared -o $(LIBDAS_TARGET) $(LIBDAS_OBJ)
 
-$(DAM_TARGET): $(LIBDAS_TARGET) $(DAM_OBJ) $(LIBCOMMON_TARGET)
+$(DAM_TARGET): .init_build $(LIBDAS_TARGET) $(DAM_OBJ) $(LIBCOMMON_TARGET)
 	$(CC) -o $(DAM_TARGET) $(DAM_OBJ) $(LD_PATH) -ldas -lcommon
 
-$(DAM_OBJ): $(SRC_DIR)/das/dam.c
+$(DAM_OBJ): .init_build $(SRC_DIR)/das/dam.c
 	$(CC) -c $(SRC_DIR)/das/dam.c -o $(DAM_OBJ) $(CC_FLAGS) $(INCLUDE_PATH) -fPIC
 
-$(BUILD_DIR)/obj/libdas/das_handler.c.o: $(SRC_DIR)/das/das_handler.c
+$(BUILD_DIR)/obj/libdas/das_handler.c.o: .init_build $(SRC_DIR)/das/das_handler.c
 	$(CC) -c $(SRC_DIR)/das/das_handler.c -o $(BUILD_DIR)/obj/libdas/das_handler.c.o $(CC_FLAGS) $(INCLUDE_PATH) -fPIC
 
-$(BUILD_DIR)/obj/libdas/data_loader.c.o: $(SRC_DIR)/das/data_loader.c
+$(BUILD_DIR)/obj/libdas/data_loader.c.o: .init_build $(SRC_DIR)/das/data_loader.c
 	$(CC) -c $(SRC_DIR)/das/data_loader.c -o $(BUILD_DIR)/obj/libdas/data_loader.c.o $(CC_FLAGS) $(INCLUDE_PATH) -fPIC
+
 
 # Surface library build
 $(LIBSURFACE_TARGET): $(LIBSURFACE_OBJ)
@@ -157,11 +159,12 @@ $(BUILD_DIR)/obj/deng/grid_generator.cpp.o: $(SRC_DIR)/utilities/map/grid_genera
 $(BUILD_DIR)/obj/deng/timer.cpp.o: $(SRC_DIR)/utilities/timer/timer.cpp
 	$(CXX) -c $(SRC_DIR)/utilities/timer/timer.cpp -o $(BUILD_DIR)/obj/deng/timer.cpp.o $(INCLUDE_PATH) $(CXX_FLAGS)
 
-$(BUILD_DIR)/obj/deng/rend_utils.cpp.o: $(SRC_DIR)/utilities/rend_utils.cpp
-	$(CXX) -c $(SRC_DIR)/utilities/rend_utils.cpp -o $(BUILD_DIR)/obj/deng/rend_utils.cpp.o $(INCLUDE_PATH) $(CXX_FLAGS)
+$(BUILD_DIR)/obj/deng/font.cpp.o: $(SRC_DIR)/utilities/font.cpp
+	$(CXX) -c $(SRC_DIR)/utilities/font.cpp -o $(BUILD_DIR)/obj/deng/font.cpp.o $(INCLUDE_PATH) $(CXX_FLAGS)
 
 $(BUILD_DIR)/obj/deng/common.c.o: $(SRC_DIR)/common/common.c
 	$(CC) -c $(SRC_DIR)/common/common.c -o $(BUILD_DIR)/obj/deng/common.c.o $(INCLUDE_PATH) $(CC_FLAGS)
+
 
 # Main object file
 $(MAIN_OBJ): $(MAIN_SRC)
@@ -170,8 +173,5 @@ $(MAIN_OBJ): $(MAIN_SRC)
 
 .PHONY: clean
 clean:
-	rm -rf $(BUILD_DIR)/obj
-	rm $(BUILD_DIR)/deng/deng
-	rm $(BUILD_DIR)/deng/dam
-	rm -rf $(BUILD_DIR)/deng/lib
+	rm -rf $(BUILD_DIR)
 

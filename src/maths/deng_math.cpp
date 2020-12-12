@@ -1,4 +1,4 @@
-#include "../core/deng_core.h"
+#include "../core/api_core.h"
 
 namespace dengMath {
 
@@ -51,18 +51,18 @@ namespace dengMath {
         switch (triangle_angle_type)
         {
         case DENG_TRIANGLE_ANGLE_ALPHA:
-            return Conversion::radToDeg(static_cast<float>(asin(sqrt((triangle_edges.first + triangle_edges.second - triangle_edges.third) * (triangle_edges.first - triangle_edges.second + triangle_edges.third) * (-triangle_edges.first + triangle_edges.second + triangle_edges.third) * (triangle_edges.first + triangle_edges.second + triangle_edges.third))
-            / 2 * triangle_edges.second * triangle_edges.third)));
+            return Conversion::radToDeg(static_cast<float>(asin(sqrt((triangle_edges.first + triangle_edges.second - triangle_edges.third) * (triangle_edges.first - triangle_edges.second + triangle_edges.third) * (-triangle_edges.first + triangle_edges.second + triangle_edges.third) * 
+            (triangle_edges.first + triangle_edges.second + triangle_edges.third)) / 2 * triangle_edges.second * triangle_edges.third)));
             break;
         
         case DENG_TRIANGLE_ANGLE_BETA:
-            return Conversion::radToDeg(static_cast<float>(asin(sqrt((triangle_edges.first + triangle_edges.second - triangle_edges.third) * (triangle_edges.first - triangle_edges.second + triangle_edges.third) * (-triangle_edges.first + triangle_edges.second + triangle_edges.third) * (triangle_edges.first + triangle_edges.second + triangle_edges.third))
-            / 2 * triangle_edges.first * triangle_edges.third)));
+            return Conversion::radToDeg(static_cast<float>(asin(sqrt((triangle_edges.first + triangle_edges.second - triangle_edges.third) * (triangle_edges.first - triangle_edges.second + triangle_edges.third) * (-triangle_edges.first + triangle_edges.second + triangle_edges.third) * 
+            (triangle_edges.first + triangle_edges.second + triangle_edges.third)) / 2 * triangle_edges.first * triangle_edges.third)));
             break;
 
         case DENG_TRIANGLE_ANGLE_GAMMA:
-            return Conversion::radToDeg(static_cast<float>(asin(sqrt((triangle_edges.first + triangle_edges.second - triangle_edges.third) * (triangle_edges.first - triangle_edges.second + triangle_edges.third) * (-triangle_edges.first + triangle_edges.second + triangle_edges.third) * (triangle_edges.first + triangle_edges.second + triangle_edges.third))
-            / 2 * triangle_edges.first * triangle_edges.second)));
+            return Conversion::radToDeg(static_cast<float>(asin(sqrt((triangle_edges.first + triangle_edges.second - triangle_edges.third) * (triangle_edges.first - triangle_edges.second + triangle_edges.third) * (-triangle_edges.first + triangle_edges.second + triangle_edges.third) * 
+            (triangle_edges.first + triangle_edges.second + triangle_edges.third)) / 2 * triangle_edges.first * triangle_edges.second)));
             break;
 
         default:
