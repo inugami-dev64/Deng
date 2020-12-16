@@ -623,7 +623,7 @@ namespace deng
 
         pipeline_infos[2] = unmapped_pipeline_2d.getGraphicsPipelineInfo("shaders/bin/2d_unmapped_vert.spv", "shaders/bin/2d_unmapped_frag.spv", 
         "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, false, false, 0);
-        pipeline_infos[3] = texture_mapped_pipeline_3d.getGraphicsPipelineInfo("shaders/bin/3d_tex_mapped_vert.spv", "shaders/bin/3d_tex_mapped_frag.spv", 
+        pipeline_infos[3] = texture_mapped_pipeline_2d.getGraphicsPipelineInfo("shaders/bin/2d_tex_mapped_vert.spv", "shaders/bin/2d_tex_mapped_frag.spv", 
         "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, false, 0);
 
         std::array<VkPipeline, DENG_PIPELINE_COUNT> local_pipelines;
@@ -1085,6 +1085,8 @@ namespace deng
         p_camera->view_matrix.getViewMatrix(&local_ubo.view);
         p_camera->p_projection_matrix->getProjectionMatrix(&local_ubo.projection);
 
+        local_ubo.cam_flag_bits = DENG_CAMERA_UNIFORM_NO_CAMERA_MODE_2D | DENG_CAMERA_UNIFORM_PERSPECTIVE_CAMERA_MODE_3D;
+
         void *data;
         vkMapMemory(device, m_buffer_data.mat_uniform_buffer_mem[current_image], 0, sizeof(dengMath::UniformData), 0, &data);
             memcpy(data, (void*) &local_ubo, sizeof(dengMath::UniformData));
@@ -1298,14 +1300,14 @@ namespace deng
 
 
     /* Submit text instances to renderer and make them into DENGAsset objects */ 
-    void Renderer::submitText(dengUtils::TextInstance *text_instances, size_t size) {
+    void Renderer::submitRendStr(dengUtils::dengRendStr *rend_strs, size_t size) {
         size_t asset_index = m_assets.size();
         size_t tex_index = m_textures.size();
         size_t r_index;
 
         m_assets.resize(asset_index + size);
         m_textures.resize(tex_index + size);
-        
+
         for(r_index = 0; r_index < size; asset_index++, tex_index++, r_index++) {
             // Create new asset for text box
             m_assets[asset_index].asset_mode = DENG_ASSET_MODE_2D_TEXTURE_MAPPED;
@@ -1313,17 +1315,18 @@ namespace deng
             m_assets[asset_index].description = (char*) "Text instance";
             m_assets[asset_index].time_point = time(NULL);
             m_assets[asset_index].fragment_index = tex_index;
-            m_assets[asset_index].vertices.p_texture_mapped_vert_data_2d = text_instances[r_index].text_box_vertices.data();
-            m_assets[asset_index].vertices.size = text_instances[r_index].text_box_vertices.size();
-            m_assets[asset_index].indices.p_indices = text_instances[r_index].text_box_indices.data();
-            m_assets[asset_index].indices.size = text_instances[r_index].text_box_indices.size();
-
+            m_assets[asset_index].vertices.p_texture_mapped_vert_data_2d = rend_strs[r_index].vert_pos.data();
+            m_assets[asset_index].vertices.size = rend_strs[r_index].vert_pos.size();
+            m_assets[asset_index].indices.p_indices = rend_strs[r_index].vert_indices.data();
+            m_assets[asset_index].indices.size = rend_strs[r_index].vert_indices.size();
+ 
             // Create new texture for text box
             m_textures[tex_index].texture.name = (char*) "Text instance";
             m_textures[tex_index].texture.descritpion = (char*) "Text instance";
-            m_textures[tex_index].texture.pixel_data.width = text_instances[r_index].texture_bounds.first;
-            m_textures[tex_index].texture.pixel_data.height = text_instances[r_index].texture_bounds.second;
-            m_textures[tex_index].texture.pixel_data.size = text_instances[r_index].uni_text_box_texture_data.size();
+            m_textures[tex_index].texture.pixel_data.width = rend_strs[r_index].box_size.first;
+            m_textures[tex_index].texture.pixel_data.height = rend_strs[r_index].box_size.second;
+            m_textures[tex_index].texture.pixel_data.p_pixel_data = rend_strs[r_index].tex_data.data();
+            m_textures[tex_index].texture.pixel_data.size = rend_strs[r_index].tex_data.size();
         }
     }
 
@@ -1423,6 +1426,7 @@ namespace deng
         // Call Vulkan next image acquire method
         uint32_t image_index;
         VkResult result = vkAcquireNextImageKHR(m_p_ic->getDev(), m_p_scc->getSC(), UINT64_MAX, m_p_dc->image_available_semaphore_set[m_p_dc->current_frame], VK_NULL_HANDLE, &image_index);
+        
         if(result == VK_ERROR_OUT_OF_DATE_KHR) {
             LOG("Image acquiring timed out!");
             return;

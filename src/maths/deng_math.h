@@ -57,17 +57,11 @@ namespace dengMath {
             return local_vec4;
         }
 
-        bool operator<(vec4<T> vector) {
-            return static_cast<bool>(this->first < vector.first && this->second < vector.second && this->third < vector.third && this->fourth < vector.fourth);
-        }
+        bool operator<(vec4<T> vector) { return this->first < vector.first && this->second < vector.second && this->third < vector.third && this->fourth < vector.fourth; }
+        bool operator>(vec4<T> vector) { return this->first > vector.first && this->second > vector.second && this->third > vector.third && this->fourth > vector.fourth; }
+        bool operator==(vec4<T> vector) { return this->first == vector.first && this->second == vector.second && this->third == vector.third && this->fourth == vector.fourth; }
 
-        bool operator>(vec4<T> vector) {
-            return static_cast<bool>(this->first > vector.first && this->second > vector.second && this->third > vector.third && this->fourth > vector.fourth);
-        }
-
-        bool operator==(vec4<T> vector) {
-            return static_cast<bool>(this->first == vector.first && this->second == vector.second && this->third == vector.third && this->fourth == vector.fourth);
-        }
+        T *data() { return &this->first; }
     };
 
     template<typename T>
@@ -126,18 +120,11 @@ namespace dengMath {
             return vector;
         }
 
-        bool operator<(vec3<T> vector) {
-            return static_cast<bool>(first < vector.first && second < vector.second && third < vector.third);
-        }
+        bool operator<(vec3<T> vector) { return first < vector.first && second < vector.second && third < vector.third; }
+        bool operator>(vec3<T> vector) { return first > vector.first && second > vector.second && third > vector.third; }
+        bool operator==(vec3<T> vector) { return this->first == vector.first && this->second == vector.second && this->third == vector.third; }
 
-        bool operator>(vec3<T> vector) {
-            return static_cast<bool>(first > vector.first && second > vector.second && third > vector.third);
-        }
-
-        bool operator==(vec3<T> vector) {
-            return static_cast<bool>(this->first == vector.first && this->second == vector.second && this->third == vector.third);
-        }
-
+        T *data() { return &this->first; }
     };
 
     template<typename T>
@@ -198,23 +185,17 @@ namespace dengMath {
             return vector;
         }
 
-        bool operator<(vec2<T> vector) {
-            return static_cast<bool>(first < vector.first && second < vector.second);
-        }
-
-        bool operator>(vec2<T> vector) {
-            return static_cast<bool>(first > vector.first && second > vector.second);
-        }
-
-        bool operator==(vec2<T> vector) {
-            return static_cast<bool>(this->first == vector.first && this->second == vector.second);
-        }
+        bool operator<(vec2<T> vector) { return first < vector.first && second < vector.second; }
+        bool operator>(vec2<T> vector) { return first > vector.first && second > vector.second; }
+        bool operator==(vec2<T> vector) { return this->first == vector.first && this->second == vector.second; }
+        T *data() { return &this->first; }
     };
 
     template<typename T>
     struct mat2 {
         vec2<T> row1;
         vec2<T> row2;
+        T *data() { return &this->row1.first; }
     };
     
     template<typename T>
@@ -222,6 +203,8 @@ namespace dengMath {
         vec2<T> row1;
         vec2<T> row2;
         vec2<T> row3;
+
+        T *data() { return &this->row1.first; }
     };
 
     template<typename T>
@@ -238,6 +221,8 @@ namespace dengMath {
 
             return newMat;
         }
+
+        T *data() { return &this->row1.first; }
     };
 
     template<typename T>
@@ -267,6 +252,8 @@ namespace dengMath {
 
             return newVec;
         }
+
+        T *data() { return &this->row1.first; }
     };
 
     class ModelMatrix {
@@ -279,10 +266,14 @@ namespace dengMath {
         mat4<float> m_scale_mat;
 
     public:
+        ModelMatrix();
+
         void setRotation(const float &x_rot, const float &y_rot, const float &z_rot);
         void setTransformation(const float &transform_x, const float &transform_y, const float &transform_z);
         void setScale(const float &scale_x, const float &scale_y, const float &scale_z);
-        void getModelMatrix(mat4<float> *p_model);
+        mat4<float> getModelMatrix() { 
+            return m_transformation_mat * m_rot_x_mat * m_rot_y_mat * m_rot_z_mat * m_scale_mat;
+        }
     };
 
     class ViewMatrix {
@@ -378,173 +369,27 @@ namespace dengMath {
         uint32_t hexToDec(const std::string &hex_value);
     };
 
-    // data handling algorithms 
-    struct HandleData {
-        template<typename T>
-        static T getSmallestElement(std::vector<T> *p_elements_vector);
-        template<typename T>
-        static T getLargestElement(std::vector<T> *p_elements_vector);
-
-        template<typename T>
-        static void sortInGrowingOrder(std::vector<T> *p_elements_vector);
-        template<typename T>
-        static void sortInDecliningOrder(std::vector<T> *p_elements_vector);
-
-        template<typename T>
-        static void sortVectorInGrowingOrder(std::vector<T> *p_elements_vector, dengCoordinateAxisType coord_axis_type);
-        template<typename T>
-        static void sortVectorInDecliningOrder(std::vector<T> *p_elements_vector, dengCoordinateAxisType coord_axis_type);
-
-        // in order to use this function the class used in std::vector must have const char *description as a public class variable
-        template<typename T>
-        static T *findElementByDescription(std::vector<T> *p_vector, const char *description);
-
-    };
+    // data handling methods 
+    template<typename T>
+    static T getSmallestElement(std::vector<T> *p_elements_vector);
+    template<typename T>
+    static T getLargestElement(std::vector<T> *p_elements_vector);
 
     template<typename T>
-    T HandleData::getSmallestElement(std::vector<T> *p_elements_vector) {
-        T local_smallest_element = (*p_elements_vector)[0];
-        for(size_t i = 0; i < p_elements_vector->size(); i++)
-            if(local_smallest_element > (*p_elements_vector)[i]) local_smallest_element = (*p_elements_vector)[i];
-    
-        return local_smallest_element;
-    }
+    static void sortInGrowingOrder(std::vector<T> *p_elements_vector);
+    template<typename T>
+    static void sortInDecliningOrder(std::vector<T> *p_elements_vector);
 
     template<typename T>
-    T HandleData::getLargestElement(std::vector<T> *p_elements_vector) {
-        T local_largest_element = (*p_elements_vector)[0];
-        for(size_t i = 0; i < p_elements_vector->size(); i++)
-            if(local_largest_element < (*p_elements_vector)[i]) local_largest_element = (*p_elements_vector)[i];
-    
-        return local_largest_element;
-    }
-
+    static void sortVectorInGrowingOrder(std::vector<T> *p_elements_vector, dengCoordinateAxisType coord_axis_type);
     template<typename T>
-    void HandleData::sortInGrowingOrder(std::vector<T> *p_elements_vector) {
-        vec2<T> local_sorting_buffer;
+    static void sortVectorInDecliningOrder(std::vector<T> *p_elements_vector, dengCoordinateAxisType coord_axis_type);
 
-        for(size_t i = 0; i < p_elements_vector->size() - 1; i++) {
-            if((*p_elements_vector)[i] > (*p_elements_vector)[i + 1]) {
-                local_sorting_buffer.second = (*p_elements_vector)[i];
-                local_sorting_buffer.first = (*p_elements_vector)[i + 1];
-
-                (*p_elements_vector)[i] = local_sorting_buffer.first;
-                (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
-            }
-        }
-    }
-
+    // in order to use this function the class used in std::vector must have const char *description as a public class variable
     template<typename T>
-    void HandleData::sortInDecliningOrder(std::vector<T> *p_elements_vector) {
-        vec2<T> local_sorting_buffer;
+    static T *findElementByDescription(std::vector<T> *p_vector, const char *description);
 
-        for(size_t i = 0; i < p_elements_vector->size() - 1; i++) {
-            if((*p_elements_vector)[i] < (*p_elements_vector)[i + 1]) {
-                local_sorting_buffer.second = (*p_elements_vector)[i];
-                local_sorting_buffer.first = (*p_elements_vector)[i + 1];
-
-                (*p_elements_vector)[i] = local_sorting_buffer.first;
-                (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
-            }
-        }
-    }
-
-    template<typename T>
-    void HandleData::sortVectorInGrowingOrder(std::vector<T> *p_elements_vector, dengCoordinateAxisType coord_axis_type) {
-        vec2<T> local_sorting_buffer;
-
-        for(size_t i = 0; i < p_elements_vector->size() - 1; i++) {
-            switch (coord_axis_type)
-            {
-            case DENG_COORD_AXIS_X:
-                if((*p_elements_vector)[i].position_vec.first > (*p_elements_vector)[i + 1].position_vec.first) {
-                    local_sorting_buffer.second = (*p_elements_vector)[i];
-                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
-
-                    (*p_elements_vector)[i] = local_sorting_buffer.first;
-                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
-                }
-                break;
-
-            case DENG_COORD_AXIS_Y:
-                if((*p_elements_vector)[i].position_vec.second > (*p_elements_vector)[i + 1].position_vec.second) {
-                    local_sorting_buffer.second = (*p_elements_vector)[i];
-                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
-
-                    (*p_elements_vector)[i] = local_sorting_buffer.first;
-                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
-                }
-                break;
-
-            case DENG_COORD_AXIS_Z:
-                if((*p_elements_vector)[i].position_vec.third > (*p_elements_vector)[i + 1].position_vec.third) {
-                    local_sorting_buffer.second = (*p_elements_vector)[i];
-                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
-
-                    (*p_elements_vector)[i] = local_sorting_buffer.first;
-                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
-                }
-                break;
-            
-            default:
-                break;
-            }
-        }
-    }
-
-    template<typename T>
-    void HandleData::sortVectorInDecliningOrder(std::vector<T> *p_elements_vector, dengCoordinateAxisType coord_axis_type) {
-        vec2<T> local_sorting_buffer;
-
-        for(size_t i = 0; i < p_elements_vector->size() - 1; i++) {
-            switch (coord_axis_type)
-            {
-            case DENG_COORD_AXIS_X:
-                if((*p_elements_vector)[i].position_vec.first < (*p_elements_vector)[i + 1].position_vec.first) {
-                    local_sorting_buffer.second = (*p_elements_vector)[i];
-                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
-
-                    (*p_elements_vector)[i] = local_sorting_buffer.first;
-                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
-                }
-                break;
-
-            case DENG_COORD_AXIS_Y:
-                if((*p_elements_vector)[i].position_vec.second < (*p_elements_vector)[i + 1].position_vec.second) {
-                    local_sorting_buffer.second = (*p_elements_vector)[i];
-                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
-
-                    (*p_elements_vector)[i] = local_sorting_buffer.first;
-                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
-                }
-                break;
-
-            case DENG_COORD_AXIS_Z:
-                if((*p_elements_vector)[i].position_vec.third < (*p_elements_vector)[i + 1].position_vec.third) {
-                    local_sorting_buffer.second = (*p_elements_vector)[i];
-                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
-
-                    (*p_elements_vector)[i] = local_sorting_buffer.first;
-                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
-                }
-                break;
-            
-            default:
-                break;
-            }
-        }
-    }
-
-    template<typename T>
-    T *HandleData::findElementByDescription(std::vector<T> *p_elements, const char *description) {
-        for(size_t i = 0; i < p_elements->size(); i++) {
-            LOG("findElementByDescription description is: " + std::string((*p_elements)[i].description));
-            if((*p_elements)[i].description == description) {
-                return &p_elements->at(i);
-            } 
-        }
-        return &p_elements->at(0);
-    }
+    void applyModelMatrix(DENGAsset &asset, mat4<float> matrix);
 }
 
 #endif

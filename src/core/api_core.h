@@ -23,8 +23,6 @@
 #endif
 
 #include <vulkan/vulkan.h>
-#include <ft2build.h>
-#include FT_FREETYPE_H
 
 #ifdef __linux__
     #include <dirent.h> 
@@ -45,6 +43,17 @@
 #include <map>
 #include <unordered_map>
 #include <thread>
+
+
+/* Universal deng error return type */ 
+enum dengError {
+    DENG_NO_ERRORS = 0,
+    DENG_ERROR_TYPE_GENERAL_ERROR = 1,
+    DENG_ERROR_TYPE_GENERAL_THIRD_PARTY_LIB_CALLBACK_ERROR = 2,
+    DENG_ERROR_TYPE_INVALID_PATH = 3,
+    DENG_ERROR_TYPE_INVALID_ASSET_DATA = 4,
+    DENG_ERROR_TYPE_INVALID_TEXTURE_DATA = 5
+};
 
 /* Coordinate axis specifier */
 enum dengCoordinateAxisType {
@@ -139,6 +148,7 @@ typedef uint32_t dengRendererHintBits;
 #include "../surface/deng_surface_core.h"
 #include "../das/das_core.h"
 #include "../maths/deng_math.h"
+
 #include "../utilities/timer/timer.h"
 #include "window.h"
 #include "camera.h"

@@ -244,7 +244,7 @@ namespace deng {
     public:
         void submitAssets(DENGAsset *p_game_objects, size_t size);
         void submitTextures(DENGTexture *p_textures, size_t size);
-        void submitText(dengUtils::TextInstance *text_instances, size_t size);
+        void submitRendStr(dengUtils::dengRendStr *rend_strs, size_t size);
         void setHints(dengRendererHintBits hints);
         void initRenderer(WindowWrap *p_ww);
         void run();        
