@@ -70,7 +70,7 @@ $(LIBCOMMON_TARGET): .init_build $(LIBCOMMON_OBJ)
 	$(CC) -shared -o $(LIBCOMMON_TARGET) $(LIBCOMMON_OBJ)  
 
 $(BUILD_DIR)/obj/libcommon/common.c.o: $(SRC_DIR)/common/common.c
-	$(CC) -c $(SRC_DIR)/common/common.c -o $(BUILD_DIR)/obj/libcommon/common.c.o
+	$(CC) -c $(SRC_DIR)/common/common.c -o $(BUILD_DIR)/obj/libcommon/common.c.o -fPIC
 
 
 # libdas library build

@@ -152,6 +152,12 @@ namespace dengMath {
         return 0.0f;
     }
 
+    ModelMatrix::ModelMatrix() {
+        setTransformation(0.0f, 0.0f, 0.0f);
+        setRotation(0.0f, 0.0f, 0.0f);
+        setScale(1.0f, 1.0f, 1.0f);
+    }
+
     void ModelMatrix::setRotation(const float &x_rot, const float &y_rot, const float &z_rot) {
         this->m_rot_x_mat = {{1.0f, 0.0f, 0.0f, 0.0f},
                         {0.0f, static_cast<float>(cos(Conversion::degToRad(x_rot))), static_cast<float>(-sin(Conversion::degToRad(x_rot))), 0.0f},
@@ -183,9 +189,6 @@ namespace dengMath {
                             {0, 0, 0, 1}};
     }
 
-    void ModelMatrix::getModelMatrix(mat4<float> *p_model) {
-        *p_model = this->m_transformation_mat * this->m_rot_x_mat * this->m_rot_y_mat * this->m_rot_z_mat * this->m_scale_mat;
-    }
 
     ViewMatrix::ViewMatrix() {
         this->x_rot = 0.0f;
@@ -289,5 +292,191 @@ namespace dengMath {
         // matrix->row2 = {0, 1, 0, 0};
         // matrix->row3 = {0, 0, 1, 0};
         // matrix->row4 = {0, 0, 0, 1};
+    }
+
+    template<typename T>
+    T getSmallestElement(std::vector<T> *p_elements_vector) {
+        T local_smallest_element = (*p_elements_vector)[0];
+        for(size_t i = 0; i < p_elements_vector->size(); i++)
+            if(local_smallest_element > (*p_elements_vector)[i]) local_smallest_element = (*p_elements_vector)[i];
+    
+        return local_smallest_element;
+    }
+
+    template<typename T>
+    T getLargestElement(std::vector<T> *p_elements_vector) {
+        T local_largest_element = (*p_elements_vector)[0];
+        for(size_t i = 0; i < p_elements_vector->size(); i++)
+            if(local_largest_element < (*p_elements_vector)[i]) local_largest_element = (*p_elements_vector)[i];
+    
+        return local_largest_element;
+    }
+
+    template<typename T>
+    void sortInGrowingOrder(std::vector<T> *p_elements_vector) {
+        vec2<T> local_sorting_buffer;
+
+        for(size_t i = 0; i < p_elements_vector->size() - 1; i++) {
+            if((*p_elements_vector)[i] > (*p_elements_vector)[i + 1]) {
+                local_sorting_buffer.second = (*p_elements_vector)[i];
+                local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+
+                (*p_elements_vector)[i] = local_sorting_buffer.first;
+                (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+            }
+        }
+    }
+
+    template<typename T>
+    void sortInDecliningOrder(std::vector<T> *p_elements_vector) {
+        vec2<T> local_sorting_buffer;
+
+        for(size_t i = 0; i < p_elements_vector->size() - 1; i++) {
+            if((*p_elements_vector)[i] < (*p_elements_vector)[i + 1]) {
+                local_sorting_buffer.second = (*p_elements_vector)[i];
+                local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+
+                (*p_elements_vector)[i] = local_sorting_buffer.first;
+                (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+            }
+        }
+    }
+
+    template<typename T>
+    void sortVectorInGrowingOrder(std::vector<T> *p_elements_vector, dengCoordinateAxisType coord_axis_type) {
+        vec2<T> local_sorting_buffer;
+
+        for(size_t i = 0; i < p_elements_vector->size() - 1; i++) {
+            switch (coord_axis_type)
+            {
+            case DENG_COORD_AXIS_X:
+                if((*p_elements_vector)[i].position_vec.first > (*p_elements_vector)[i + 1].position_vec.first) {
+                    local_sorting_buffer.second = (*p_elements_vector)[i];
+                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+
+                    (*p_elements_vector)[i] = local_sorting_buffer.first;
+                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                }
+                break;
+
+            case DENG_COORD_AXIS_Y:
+                if((*p_elements_vector)[i].position_vec.second > (*p_elements_vector)[i + 1].position_vec.second) {
+                    local_sorting_buffer.second = (*p_elements_vector)[i];
+                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+
+                    (*p_elements_vector)[i] = local_sorting_buffer.first;
+                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                }
+                break;
+
+            case DENG_COORD_AXIS_Z:
+                if((*p_elements_vector)[i].position_vec.third > (*p_elements_vector)[i + 1].position_vec.third) {
+                    local_sorting_buffer.second = (*p_elements_vector)[i];
+                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+
+                    (*p_elements_vector)[i] = local_sorting_buffer.first;
+                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                }
+                break;
+            
+            default:
+                break;
+            }
+        }
+    }
+
+    template<typename T>
+    void sortVectorInDecliningOrder(std::vector<T> *p_elements_vector, dengCoordinateAxisType coord_axis_type) {
+        vec2<T> local_sorting_buffer;
+
+        for(size_t i = 0; i < p_elements_vector->size() - 1; i++) {
+            switch (coord_axis_type)
+            {
+            case DENG_COORD_AXIS_X:
+                if((*p_elements_vector)[i].position_vec.first < (*p_elements_vector)[i + 1].position_vec.first) {
+                    local_sorting_buffer.second = (*p_elements_vector)[i];
+                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+
+                    (*p_elements_vector)[i] = local_sorting_buffer.first;
+                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                }
+                break;
+
+            case DENG_COORD_AXIS_Y:
+                if((*p_elements_vector)[i].position_vec.second < (*p_elements_vector)[i + 1].position_vec.second) {
+                    local_sorting_buffer.second = (*p_elements_vector)[i];
+                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+
+                    (*p_elements_vector)[i] = local_sorting_buffer.first;
+                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                }
+                break;
+
+            case DENG_COORD_AXIS_Z:
+                if((*p_elements_vector)[i].position_vec.third < (*p_elements_vector)[i + 1].position_vec.third) {
+                    local_sorting_buffer.second = (*p_elements_vector)[i];
+                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+
+                    (*p_elements_vector)[i] = local_sorting_buffer.first;
+                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                }
+                break;
+            
+            default:
+                break;
+            }
+        }
+    }
+
+    template<typename T>
+    T *findElementByDescription(std::vector<T> *p_elements, const char *description) {
+        for(size_t i = 0; i < p_elements->size(); i++) {
+            LOG("findElementByDescription description is: " + std::string((*p_elements)[i].description));
+            if((*p_elements)[i].description == description) {
+                return &p_elements->at(i);
+            } 
+        }
+        return &p_elements->at(0);
+    }
+    
+
+    // Apply model matrix for 3d asset
+    void applyModelMatrix(DENGAsset &asset, mat4<float> matrix) {
+        size_t index;
+        dengMath::vec3<float> *p_tmp_in;
+        dengMath::vec4<float> tmp_out;
+        LOG("|" + std::to_string(matrix.row1.first) + "," + std::to_string(matrix.row1.second) + "," + std::to_string(matrix.row1.third) + "," + std::to_string(matrix.row1.fourth) + "|");
+        LOG("|" + std::to_string(matrix.row2.first) + "," + std::to_string(matrix.row2.second) + "," + std::to_string(matrix.row2.third) + "," + std::to_string(matrix.row2.fourth) + "|");
+        LOG("|" + std::to_string(matrix.row3.first) + "," + std::to_string(matrix.row3.second) + "," + std::to_string(matrix.row3.third) + "," + std::to_string(matrix.row3.fourth) + "|");
+        LOG("|" + std::to_string(matrix.row4.first) + "," + std::to_string(matrix.row4.second) + "," + std::to_string(matrix.row4.third) + "," + std::to_string(matrix.row4.fourth) + "|");
+
+        for(index = 0; index < asset.vertices.size; index++) {
+            switch (asset.asset_mode)
+            {
+            case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
+                p_tmp_in = (dengMath::vec3<float>*) &asset.vertices.p_texture_mapped_vert_data[index].vert_data;
+                tmp_out = matrix * (*p_tmp_in);
+                asset.vertices.p_texture_mapped_vert_data[index].vert_data.vert_x = tmp_out.first;
+                asset.vertices.p_texture_mapped_vert_data[index].vert_data.vert_y = tmp_out.second;
+                asset.vertices.p_texture_mapped_vert_data[index].vert_data.vert_z = tmp_out.third;
+                break;
+
+            case DENG_ASSET_MODE_3D_UNMAPPED:
+                p_tmp_in = (dengMath::vec3<float>*) &asset.vertices.p_unmapped_vert_data[index]; 
+                tmp_out = matrix * (*p_tmp_in);
+                asset.vertices.p_unmapped_vert_data[index].vert_x = tmp_out.first;
+                asset.vertices.p_unmapped_vert_data[index].vert_y = tmp_out.second;
+                asset.vertices.p_unmapped_vert_data[index].vert_z = tmp_out.third;
+                break;
+
+            case DENG_ASSET_MODE_2D_UNMAPPED:
+            case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
+                WARNME("2D assets are not supported in applyModelMatrix()!");
+                WARNME("Use applyModelMatrix2D() instead!");
+                return;
+            default:
+                break;
+            }
+        }
     }
 }  

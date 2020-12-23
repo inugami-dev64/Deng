@@ -21,6 +21,9 @@ extern "C" {
     // Sort all the strings in alphabetical order
     void cm_SortAlphabetically(char **buffer, size_t buffer_count);
 
+    // Log writer
+    void cm_LogWrite(const char *file_name, const char *content, int rewrite);
+
 #ifdef __cplusplus
 }
 #endif

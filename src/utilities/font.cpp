@@ -2,227 +2,50 @@
 
 namespace dengUtils {
 
-    FontInstanceCreator::FontInstanceCreator(deng::WindowWrap &window_wrap) {
-        // Initialize freetype library
-        m_p_window_wrapper = &window_wrap;
-        if(FT_Init_FreeType(&m_library))
-            ERR("Failed to initialise freetype library!");
-        
-        // Find all available font files 
-        findFontFilesRecursively(DEFAULT_FONT_PATH, m_font_file_data);
-    }
+    /* Search for certain font and return true if found */
+    // Untested!
+    bool FontManager::verifyFont(dengRendStr &str, std::string &out_path) {
+        size_t l_index, r_index, path_index;
+        std::string list_font_name = "";
 
+        for(l_index = 0; l_index < m_fonts.size(); l_index++) {
+            // Extract font name from the font file path
+            // Find last instance of slash
+            for(r_index = 0; r_index < m_fonts[l_index].size(); r_index++)
+                if(m_fonts[l_index][r_index] == 0x2F) path_index = r_index; 
 
-    /* Search for certain font */
-    bool FontInstanceCreator::searchFont(std::string font_file, std::string &out_path) {
-        size_t index;
-        for(index = 0; index < m_font_file_data.size(); index++) {
-            if(font_file == m_font_file_data[index].font_name) {
-                out_path = m_font_file_data[index].font_path;
+            // Populate list_font_name string with found font file
+            path_index++;
+            for(r_index = path_index; r_index < m_fonts[l_index].size(); r_index++)
+                list_font_name += m_fonts[l_index][r_index];
+
+            if(str.font_file == list_font_name) {
+                out_path = m_fonts[l_index];
                 return true;
             }
+
+            list_font_name = "";
         }
 
         return false;
     }
 
 
-    /* Create a new pixel based text insance */
-    void FontInstanceCreator::createPixelBasedFontInstance(const char *text, uint16_t font_px_size, const char *font_file, dengMath::vec2<float> text_coords, TextInstance &instance) {
-        // Search the font file given in the method argument 
-        std::string file_path;
-        if(!searchFont(font_file, file_path))
-            ERR("Failed to create font face for font: " + std::string(font_file));
-
-        LOG("Found font path: " + file_path);
-
-        FT_Error res;
-        res = FT_New_Face(m_library, file_path.c_str(), 0, &instance.font_face);
-        if(res) ERR("Failed to create font face for font: " + std::string(font_file));        
-        res = FT_Set_Pixel_Sizes(instance.font_face, 10, font_px_size);
-        if(res) ERR("Failed to set char size for font: " + std::string(font_file));
-
-        instance.text = text;
-        loadNewGlyphs(instance);
-        createFontTexture(instance);
-        createTextBox(instance, text_coords);
-    }
-
-
-    void FontInstanceCreator::createPtBasedFontInstance(const char *text, int32_t font_pt_size, uint32_t window_width, uint32_t window_height, dengMath::vec2<float> text_coords, 
-    const char *font_file, TextInstance &instance) {
-        
-        std::string file_path;
-        instance.font_file_data.font_path = font_file;
-
-        if(!searchFont(font_file, file_path))
-            ERR("Failed to find font name: " + std::string(font_file));
-        
-        FT_Error res;
-        res = FT_New_Face(m_library, file_path.c_str(), 0, &instance.font_face);
-        if(res) ERR("Failed to create font face for font: " + std::string(font_file));
-        
-        res = FT_Set_Char_Size(instance.font_face, 0, font_pt_size, (FT_UInt) m_p_window_wrapper->getSize().first, (FT_UInt) m_p_window_wrapper->getSize().second);
-        if(res) ERR("Failed to set char size for font: " + std::string(font_file));
-
-        instance.text = text;
-        loadNewGlyphs(instance);
-        createFontTexture(instance);
-        createTextBox(instance, text_coords);
-    }
-
-
-    /* Load new glyphs */
-    void FontInstanceCreator::loadNewGlyphs(TextInstance &instance) {
-        size_t l_index, r_index, unique_ch_count;
-        uint16_t ch_index;
-        FT_Error res;
-        bool is_repeated_found = false;
-        instance.glyph_indices.resize(strlen(instance.text));
-
-        // Get all glyph indices and load them
-        for(l_index = 0, unique_ch_count = 0; l_index < strlen(instance.text); l_index++) {
-            ch_index = FT_Get_Char_Index(instance.font_face, instance.text[l_index]);
-            // Find if char index is repeating with already converted ones
-            for(r_index = 0; r_index < instance.glyph_indices.size(); r_index++) {
-                if(ch_index == instance.glyph_indices[r_index]) {
-                    is_repeated_found = true;
-                    break;
-                }
-            }
-
-            if(!is_repeated_found) {
-                unique_ch_count++;
-                instance.glyph_indices[l_index] = unique_ch_count - 1;
-                instance.glyph_indices.push_back(ch_index);
-                instance.glyph_infos.resize(instance.glyph_indices.size());
-                
-                res = FT_Load_Glyph(instance.font_face, instance.glyph_indices[instance.glyph_indices.size() - 1], FT_LOAD_DEFAULT);
-                if(res) ERR("Failed to load glyphs for font: " + std::string(instance.font_file_data.font_name));
-
-                instance.glyph_infos[instance.glyph_infos.size() - 1].glyph = instance.text[l_index];
-                instance.glyph_infos[instance.glyph_infos.size() - 1].glyph_slot =  instance.font_face->glyph;
-
-                res = FT_Render_Glyph(instance.glyph_infos[instance.glyph_infos.size() - 1].glyph_slot, FT_RENDER_MODE_NORMAL);
-                if(res) ERR("Failed to render glyphs for font: " + std::string(instance.font_file_data.font_name));
-            }
-
-            else {
-                instance.glyph_indices[l_index] = r_index;
-                is_repeated_found = false;
-            }
-        }
-    }
-    
-
-    /* Create texture buffer for every character */
-    void FontInstanceCreator::createFontTexture(TextInstance &instance) {
-        size_t index, w_index, h_index;
-        for(index = 0; index < instance.glyph_infos.size(); index++) {
-            // Check if bitmap pixel mode is grayscale (only supported option)
-            if(!instance.glyph_infos[index].glyph_slot)
-                ERR("NULLPTR");
-
-            if(instance.glyph_infos[index].glyph_slot->bitmap.pixel_mode != FT_PIXEL_MODE_GRAY || 
-            instance.glyph_infos[index].glyph_slot->bitmap.num_grays != 256) 
-                ERR("Unsupported font pixel mode for font: " + instance.font_file_data.font_name + "!");
-
-            LOG("Seg test!");
-            // Get the buffer pointer and resize glyph pixel data to 32bit bit mode format 
-            uint8_t *src_data_buffer = instance.glyph_infos[index].glyph_slot->bitmap.buffer; 
-            instance.glyph_infos[index].pixel_data.resize(instance.glyph_infos[index].glyph_slot->bitmap.width * instance.glyph_infos[index].glyph_slot->bitmap.rows * 4);
-            size_t pixel_data_index = 0;
-            
-            LOG("Bitmap pitch is: " + std::to_string(instance.glyph_infos[index].glyph_slot->bitmap.pitch));
-            for(h_index = 0; h_index < instance.glyph_infos[index].glyph_slot->bitmap.rows; h_index++) {
-                for(w_index = 0; w_index < instance.glyph_infos[index].glyph_slot->bitmap.width; w_index++) {
-                    // Make white opaque background for now 
-                    if(*src_data_buffer == 0) {
-                        instance.glyph_infos[index].pixel_data[pixel_data_index++] = 0xff;
-                        instance.glyph_infos[index].pixel_data[pixel_data_index++] = 0xff;
-                        instance.glyph_infos[index].pixel_data[pixel_data_index++] = 0xff;
-                    }
-
-                    else {
-                        instance.glyph_infos[index].pixel_data[pixel_data_index++] = 0x00;
-                        instance.glyph_infos[index].pixel_data[pixel_data_index++] = 0x00;
-                        instance.glyph_infos[index].pixel_data[pixel_data_index++] = 0x00;
-                    }
-
-                    instance.glyph_infos[index].pixel_data[pixel_data_index++] = (*src_data_buffer);
-                }
-                src_data_buffer += (uint64_t) instance.glyph_infos[index].glyph_slot->bitmap.pitch;
-            }
-        }
-    }
-
-
-    /* Calculate text box vertices and create buffers */
-    void FontInstanceCreator::createTextBox(TextInstance &instance, dengMath::vec2<float> text_box_positions) {
-        size_t g_index, x1_index, x2_index, y1_index;
-        dengMath::vec2<double> box_dimentions_px = {0.0f, (double) instance.glyph_infos[0].glyph_slot->bitmap.rows}; // In pixels
-        dengMath::vec2<float> box_dimentions_vec = {0.0f, 0.0f};
-
-        // Find the glyph with the largest height while summarizing the width of glyphs
-        for(x1_index = 0; x1_index < strlen(instance.text); x1_index++) {
-            if(instance.glyph_infos[instance.glyph_indices[x1_index]].glyph_slot->bitmap.rows > (double) box_dimentions_px.second)
-                ERR("Incorrect font glyph heights");
-
-            box_dimentions_px.first += (double) instance.glyph_infos[x1_index].glyph_slot->bitmap.width;
-        }
-
-        instance.uni_text_box_texture_data.resize(box_dimentions_px.first * box_dimentions_px.second * 4);
-
-        box_dimentions_vec.first = dengMath::Conversion::pixelSizeToVector2DSize(box_dimentions_px.first, 
-        m_p_window_wrapper->getSize(), DENG_COORD_AXIS_X);
-
-        box_dimentions_vec.second = dengMath::Conversion::pixelSizeToVector2DSize(box_dimentions_px.second, 
-        m_p_window_wrapper->getSize(), DENG_COORD_AXIS_Y);
-
-        // Assign vertices data values
-        instance.text_box_vertices[0].vert_data = {text_box_positions.first, text_box_positions.second};
-        instance.text_box_vertices[0].tex_data = {0.0f, 0.0f};
-        instance.text_box_vertices[1].vert_data = {text_box_positions.first + box_dimentions_vec.first, 
-        text_box_positions.second};
-        instance.text_box_vertices[1].tex_data = {1.0f, 0.0f};
-        instance.text_box_vertices[2].vert_data = {text_box_positions.first + box_dimentions_vec.first,
-        text_box_positions.second + box_dimentions_vec.second};
-        instance.text_box_vertices[2].tex_data = {1.0f, 1.0f};
-        instance.text_box_vertices[3].vert_data = {text_box_positions.first, 
-        text_box_positions.second + box_dimentions_vec.second};
-        instance.text_box_vertices[3].tex_data = {0.0f, 1.0f};
-        
-        // Copy values from individual glyph texture arrays into one big array
-        for(y1_index = 0, x1_index = 0; y1_index < (size_t) box_dimentions_px.second; y1_index++) {
-            for(g_index = 0, x1_index = 0; g_index < strlen(instance.text); g_index++) {
-                for(x2_index = 0; x2_index < instance.glyph_infos[instance.glyph_indices[g_index]].glyph_slot->bitmap.width; 
-                x2_index++, x1_index++) {
-                    instance.uni_text_box_texture_data[x1_index] = 
-                    instance.glyph_infos[g_index].pixel_data[(y1_index * instance.glyph_infos[g_index].glyph_slot->bitmap.width) + x2_index];
-                }
-
-                instance.glyph_infos[g_index].pixel_data.clear();
-            }
-        }
-
-        instance.texture_bounds.first = (uint16_t) box_dimentions_vec.first;
-        instance.texture_bounds.second = (uint16_t) box_dimentions_vec.second;
-        instance.text_box_indices = {0, 1, 2, 2, 3, 0};
-    }
-
-
     /* Find all available fonts */
-    void FontInstanceCreator::findFontFilesRecursively(std::string path, std::vector<FontFileData> &fonts) {
+    // Untested
+    void FontManager::findFontFiles(std::string base_path) {
         // Check if '/' needs to be added to the end of the path
-        if(path[path.size() - 1] != '/') path += '/';
+        if(base_path[base_path.size() - 1] != '/') base_path += '/';
 
         // Open directory
         DIR *dir;
-        dir = opendir(path.c_str());
+        dir = opendir(base_path.c_str());
+        if(!dir) WARNME("Invalid font path: " + base_path);
         char *file_ext;
         
         // Read directory contents 
         struct dirent *contents;
+        std::string tmp;
 
         while((contents = readdir(dir))) {
             switch (contents->d_type)
@@ -230,9 +53,8 @@ namespace dengUtils {
             case DT_REG:
                 file_ext = cm_GetFileExtName(contents->d_name);
                 if(file_ext && !strcmp(file_ext, "ttf")) { 
-                    fonts.resize(fonts.size() + 1);
-                    fonts[fonts.size() - 1].font_name = (char*) std::string(contents->d_name).c_str();
-                    fonts[fonts.size() - 1].font_path = (char*) std::string(path + contents->d_name).c_str();
+                    m_fonts.resize(m_fonts.size() + 1);
+                    m_fonts[m_fonts.size() - 1] = base_path + contents->d_name;
                 }
                 
                 if(file_ext) free(file_ext);
@@ -240,14 +62,220 @@ namespace dengUtils {
 
             case DT_DIR:
                 if(std::string(contents->d_name) != "." && std::string(contents->d_name) != "..")
-                    findFontFilesRecursively(path + contents->d_name, fonts);
+                    findFontFiles(base_path + contents->d_name);
                 break;
 
             default:
                 break;
             }
         }
-
         closedir(dir);
+    }
+
+
+    // Find unique glyphs and index them according to the text
+    std::vector<char> FontManager::indexGlyphs(dengRendStr &str) {
+        std::vector<char> unique_chars;
+        str.rend_text = (dengRendChar*) malloc(sizeof(dengRendChar) * strlen(str.text));
+        
+        size_t l_index, r_index;
+        bool is_found = false;
+
+        // Find if chars repeat in text, sort and index them
+        for(l_index = 0; l_index < strlen(str.text); l_index++) {
+            // Find if char exists in unique chars
+            for(r_index = 0; r_index < unique_chars.size(); r_index++) {
+                if(str.text[l_index] == unique_chars[r_index]) {
+                    is_found = true;
+                    break;
+                }
+            }
+
+            if(!is_found) {
+                unique_chars.push_back(str.text[l_index]);
+                str.rend_text[l_index].glyph_id = (uint16_t) unique_chars.size() - 1;
+            }
+            else {
+                is_found = false;
+                str.rend_text[l_index].glyph_id = (uint16_t) r_index;
+            }
+            
+            str.rend_text[l_index].ascii_ch = str.text[l_index];
+        }
+
+        return unique_chars;
+    }
+
+
+    FontManager::FontManager(const char *custom_font_path, deng::WindowWrap *p_window_wrap) {
+        FT_Error res;
+        m_p_window_wrap = p_window_wrap;
+        findFontFiles(DEFAULT_FONT_PATH);
+        if(custom_font_path) findFontFiles(custom_font_path);
+        res = FT_Init_FreeType(&m_library_instance);
+        if(res) ERR("Failed to initialise freetype library instance!");
+    }
+
+    FontManager::~FontManager() {
+        FT_Done_FreeType(m_library_instance);
+    }
+
+
+    /* Create new drawable string */
+    dengError FontManager::newStr(dengRendStr &str, const char *font_name, uint16_t px_size, dengMath::vec2<float> pos, dengMath::vec3<unsigned char> color) {
+        size_t index;
+        std::string tmp_path_str;
+        str.font_file = font_name;
+        if(!verifyFont(str, tmp_path_str)) WARNME("Failed to find font file!");
+        str.font_file = tmp_path_str.c_str();
+
+        // Set up new freetype font face        
+        FT_Error res;
+        res = FT_New_Face(m_library_instance, str.font_file, 0, &str.font_face);
+        if(res) {
+            WARNME("Failed to create new font face!");
+            return DENG_ERROR_TYPE_GENERAL_THIRD_PARTY_LIB_CALLBACK_ERROR;
+        }
+
+        // Set sizes for glyphs
+        res = FT_Set_Pixel_Sizes(str.font_face, 0, px_size);
+        if(res) return DENG_ERROR_TYPE_GENERAL_THIRD_PARTY_LIB_CALLBACK_ERROR;
+        
+        // Index chars and get unique vector characters
+        std::vector<char> unique_ch = indexGlyphs(str);
+        str.unique_glyphs.resize(unique_ch.size());
+        
+        for(index = 0; index < unique_ch.size(); index++) {
+            res = FT_Load_Char(str.font_face, unique_ch[index], FT_LOAD_RENDER);    
+            if(res) return DENG_ERROR_TYPE_GENERAL_THIRD_PARTY_LIB_CALLBACK_ERROR;
+
+            str.unique_glyphs[index].advance.first = (int32_t) str.font_face->glyph->advance.x / 64;
+            str.unique_glyphs[index].advance.second = (int32_t) str.font_face->glyph->advance.y / 64;
+
+            str.unique_glyphs[index].bearings.first = (int32_t) str.font_face->glyph->bitmap_left;
+            str.unique_glyphs[index].bearings.second = (int32_t) str.font_face->glyph->bitmap_top;
+
+            res = FT_Bitmap_Copy(m_library_instance, &str.font_face->glyph->bitmap, &str.unique_glyphs[index].bitmap);
+            if(res) return DENG_ERROR_TYPE_GENERAL_THIRD_PARTY_LIB_CALLBACK_ERROR;
+        }
+        
+
+        // Glyph data logging
+        for(index = 0; index < str.unique_glyphs.size(); index++) {
+            LOG("Width: " + std::to_string(str.unique_glyphs[index].bitmap.width) + "; Height: " + std::to_string(str.unique_glyphs[index].bitmap.rows) + 
+            "; Bearing X: " + std::to_string(str.unique_glyphs[index].bearings.first) + "; Bearing Y:" + std::to_string(str.unique_glyphs[index].bearings.second));
+            LOG("Advance step: " + std::to_string(str.unique_glyphs[index].advance.first));
+        }
+
+        LOG("ID:");
+        for(index = 0; index < strlen(str.text); index++)
+            LOG(std::to_string(str.rend_text[index].glyph_id));
+
+        mkTextbox(str, color);
+
+        str.vert_pos[0] = {0.0f + pos.first, 0.0f + pos.second};
+        str.vert_pos[0].tex_data = {0.0f, 0.0f};
+        
+        str.vert_pos[1].vert_data.vert_x = dengMath::Conversion::pixelSizeToVector2DSize((double) str.box_size.first, m_p_window_wrap->getSize(), DENG_COORD_AXIS_X) + pos.first;
+        str.vert_pos[1].vert_data.vert_y = 0.0f + pos.second;
+        str.vert_pos[1].tex_data = {1.0f, 0.0f};
+        
+        str.vert_pos[2].vert_data.vert_x = dengMath::Conversion::pixelSizeToVector2DSize((double) str.box_size.first, m_p_window_wrap->getSize(), DENG_COORD_AXIS_X) + pos.first;
+        str.vert_pos[2].vert_data.vert_y = dengMath::Conversion::pixelSizeToVector2DSize((double) str.box_size.second, m_p_window_wrap->getSize(), DENG_COORD_AXIS_Y) + pos.second;
+        str.vert_pos[2].tex_data = {1.0f, 1.0f};
+        
+        str.vert_pos[3].vert_data.vert_x = 0.0f + pos.first;
+        str.vert_pos[3].vert_data.vert_y = dengMath::Conversion::pixelSizeToVector2DSize((double) str.box_size.second + (double) pos.second, m_p_window_wrap->getSize(), DENG_COORD_AXIS_Y) + pos.second;
+        str.vert_pos[3].tex_data = {0.0f, 1.0f};
+
+        str.vert_indices = {0, 1, 2, 2, 3, 0};
+
+        return DENG_NO_ERRORS;
+    }
+
+
+    /* Create textbox from glyphs */
+    void FontManager::mkTextbox(dengRendStr &str, dengMath::vec3<unsigned char> color) {
+        int32_t ln_bearing = 0; 
+        int32_t l_bearing = 0;
+        dengMath::vec2<int32_t> origin_offset;
+
+        int32_t l_index, r_index, t_index, g_index;
+
+        // Find the height of textbox and verify colormode
+        for(l_index = 0, str.box_size.second = 0; l_index < (int32_t) str.unique_glyphs.size(); l_index++) {
+            if(l_bearing < str.unique_glyphs[str.rend_text[l_index].glyph_id].bearings.second)
+                l_bearing = str.unique_glyphs[str.rend_text[l_index].glyph_id].bearings.second;
+
+            // Check for the maximum negative bearing
+            if(ln_bearing < ((int32_t) str.unique_glyphs[str.rend_text[l_index].glyph_id].bitmap.rows) - str.unique_glyphs[str.rend_text[l_index].glyph_id].bearings.second)
+                ln_bearing = ((int32_t) (str.unique_glyphs[str.rend_text[l_index].glyph_id].bitmap.rows) - str.unique_glyphs[str.rend_text[l_index].glyph_id].bearings.second);
+        }   
+        
+        str.box_size.second = ln_bearing + l_bearing;
+        
+        // Find the width of textbox
+        for(l_index = 0, str.box_size.first = 0; l_index < (int32_t) strlen(str.text); l_index++)
+            str.box_size.first += (int32_t) str.unique_glyphs[str.rend_text[l_index].glyph_id].advance.first;
+
+        str.tex_data.resize(str.box_size.first * str.box_size.second * 4);
+        origin_offset.first = 0;
+        origin_offset.second = ln_bearing;
+        
+        dengMath::vec2<int32_t> gl_rel_draw_coords;
+        int32_t gl_index;
+        bool draw_width, draw_height;
+        
+        // y axis iteration
+        for(l_index = 0, t_index = 0, g_index = 0; l_index < str.box_size.second; l_index++) {
+            g_index = 0;
+            origin_offset.first = 0;
+            // x axis iteration
+            for(r_index = 0; r_index < str.box_size.first; r_index++, t_index += 4) {
+                // Get the relative coordinates of the nearest glyphs
+                gl_rel_draw_coords.first = r_index - origin_offset.first - str.unique_glyphs[str.rend_text[g_index].glyph_id].bearings.first; 
+                gl_rel_draw_coords.second = l_index - (str.box_size.second - (str.unique_glyphs[str.rend_text[g_index].glyph_id].bearings.second + 
+                origin_offset.second));
+
+                draw_width = gl_rel_draw_coords.first >= 0 && gl_rel_draw_coords.first < (int32_t) str.unique_glyphs[str.rend_text[g_index].glyph_id].bitmap.width;
+                draw_height = gl_rel_draw_coords.second >= 0 && gl_rel_draw_coords.second < (int32_t) str.unique_glyphs[str.rend_text[g_index].glyph_id].bitmap.rows;
+                if(draw_width && draw_height) {
+                    gl_index = gl_rel_draw_coords.first + 
+                    (gl_rel_draw_coords.second * str.unique_glyphs[str.rend_text[g_index].glyph_id].bitmap.width);
+
+                    // Actual glyph pixel (user defined)
+                    if(str.unique_glyphs[str.rend_text[g_index].glyph_id].bitmap.buffer[gl_index]) {
+                        // Pixel data is inBGR 
+                        str.tex_data[t_index] = color.third;
+                        str.tex_data[t_index + 1] = color.second;
+                        str.tex_data[t_index + 2] = color.first;
+                        str.tex_data[t_index + 3] = 0xff; 
+                    }
+                    // Foreground pixel (white/transparent)
+                    else {
+                        str.tex_data[t_index] = 0xff;
+                        str.tex_data[t_index + 1] = 0xff;
+                        str.tex_data[t_index + 2] = 0xff;
+                        str.tex_data[t_index + 3] = 0x00;
+                    }
+                }
+
+                // Foreground pixel (white/transparent)
+                else {
+                    str.tex_data[t_index] = 0xff;
+                    str.tex_data[t_index + 1] = 0xff;
+                    str.tex_data[t_index + 2] = 0xff;
+                    str.tex_data[t_index + 3] = 0x00;
+                }
+
+
+                // Check if glyph index should be incremented
+                if(gl_rel_draw_coords.first >= (int32_t) str.unique_glyphs[str.rend_text[g_index].glyph_id].bitmap.width
+                && g_index != (int32_t) strlen(str.text) - 1){
+                    origin_offset.first += str.unique_glyphs[str.rend_text[g_index].glyph_id].advance.first;
+                    g_index++;
+                }
+            }
+        }
     }
 }
