@@ -59,7 +59,6 @@ namespace dengUtils {
         FontManager(const char *custom_font_path, deng::WindowWrap *p_window_wrap);
         ~FontManager();
         dengError newStr(dengRendStr &str, const char *font_name, uint16_t px_size, dengMath::vec2<float> pos, dengMath::vec3<unsigned char> color);
-
     };
 }
 

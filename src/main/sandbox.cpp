@@ -10,17 +10,17 @@ int main() {
     deng::Renderer rend;
     dengUtils::FontManager fm(nullptr, &window);
 
-    rend.setHints(DENG_RENDERER_HINT_GAME_MODE);
+    rend.setHints(DENG_RENDERER_HINT_GAME_MODE | DENG_RENDERER_HINT_SHOW_FPS_COUNTER);
 
     dengUtils::dengRendStr str;
-    str.text = "Hello world!";
+    str.text = "Welcome to DENG!";
     dengError res;
-    res = fm.newStr(str, "SourceCodePro-Regular.ttf", 30, {0.0f, 0.0f}, {0x00, 0x00, 0x00});
+    res = fm.newStr(str, "FreeMono.ttf", 45, {0.0f, 0.0f}, {0x00, 0x00, 0x00});
     if(res != DENG_NO_ERRORS) ERR("Failed to create render string!");
 
     // Load textures
     dasLoadTexture(&textures[0], "../../textures/statue.tga");
-    dasLoadTexture(&textures[1], "../../textures/10x10.bmp");
+    dasLoadTexture(&textures[1], "../../textures/transparent_bricks.tga");
     
     // Read assets
     dasReadAsset(&assets[0], "../../assets/statue.das", DENG_ASSET_MODE_3D_TEXTURE_MAPPED);

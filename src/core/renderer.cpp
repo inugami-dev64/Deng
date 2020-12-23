@@ -226,7 +226,6 @@ namespace deng
 
 
     /************ SwapChainCreator class *************/
-
     SwapChainCreator::SwapChainCreator(WindowWrap *p_window_wrap, VkDevice device, VkPhysicalDevice gpu, VkSurfaceKHR surface, uint32_t g_queue_i, uint32_t p_queue_i) {        
         m_p_device_swapchain_details = new SwapChainDetails(gpu, surface);
         m_device = device;
@@ -345,7 +344,7 @@ namespace deng
         
 
         local_swapchain_createinfo.preTransform = m_p_device_swapchain_details->getCapabilities().currentTransform;
-        local_swapchain_createinfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+        local_swapchain_createinfo.compositeAlpha = VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR;
         local_swapchain_createinfo.presentMode = m_present_mode;
         local_swapchain_createinfo.clipped = VK_TRUE;
 
@@ -474,7 +473,6 @@ namespace deng
 
     
     /********** DescriptorCreator class ************/
-    
     DescriptorCreator::DescriptorCreator(VkDevice device, VkExtent2D extent, VkRenderPass renderpass, std::vector<DENGAsset> *p_assets, std::vector<TextureImageData> *p_textures, size_t sc_img_size) {
         m_p_assets = p_assets;
         m_p_textures = p_textures;
@@ -617,9 +615,9 @@ namespace deng
 
         std::array<VkGraphicsPipelineCreateInfo, DENG_PIPELINE_COUNT> pipeline_infos{};
         pipeline_infos[0] = unmapped_pipeline_3d.getGraphicsPipelineInfo("shaders/bin/3d_unmapped_vert.spv", "shaders/bin/3d_unmapped_frag.spv", 
-        "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, false, 0);
+        "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, false, 0);
         pipeline_infos[1] = texture_mapped_pipeline_3d.getGraphicsPipelineInfo("shaders/bin/3d_tex_mapped_vert.spv", "shaders/bin/3d_tex_mapped_frag.spv", 
-        "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, false, 0);
+        "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, false, 0);
 
         pipeline_infos[2] = unmapped_pipeline_2d.getGraphicsPipelineInfo("shaders/bin/2d_unmapped_vert.spv", "shaders/bin/2d_unmapped_frag.spv", 
         "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, false, false, 0);
@@ -1105,7 +1103,6 @@ namespace deng
 
 
     /********** DrawCaller class methods **********/
-
     DrawCaller::DrawCaller(VkDevice device, uint32_t g_queue_i) {
         mkCommandPool(device, g_queue_i);
         mkSynchronisation(device);

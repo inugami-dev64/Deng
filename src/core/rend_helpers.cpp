@@ -92,8 +92,8 @@ namespace deng {
         // Check which family is graphics family
         for(index = 0; index < family_count; index++) {
             if(queue_family_properties[index].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-                this->m_graphics_family_index = index;
-                LOG("Graphics queue family index: " + std::to_string(this->m_graphics_family_index));
+                m_graphics_family_index = index;
+                LOG("Graphics queue family index: " + std::to_string(m_graphics_family_index));
                 return true;
             }
         }
@@ -103,7 +103,7 @@ namespace deng {
 
 
     /* Graphics queuefamily getter method */
-    uint32_t QueueFamilies::getGraphicsFamilyIndex() { return this->m_graphics_family_index; }
+    uint32_t QueueFamilies::getGraphicsFamilyIndex() { return m_graphics_family_index; }
 
 
     /* Find correct present queue family */
@@ -120,9 +120,9 @@ namespace deng {
 
         for(index = 0; index < family_count; index++) {
             vkGetPhysicalDeviceSurfaceSupportKHR(gpu, index, surface, &support);
-            if(support && this->m_graphics_family_index != index) {
-                this->m_present_family_index = index; 
-                LOG("Presentation queue family index: " + this->m_present_family_index);
+            if(support && m_graphics_family_index != index) {
+                m_present_family_index = index; 
+                LOG("Presentation queue family index: " + m_present_family_index);
                 return true;
             }
         }
@@ -131,15 +131,15 @@ namespace deng {
 
 
     /* Present queue family getter method */
-    uint32_t QueueFamilies::getPresentFamilyIndex() { return this->m_present_family_index; }
+    uint32_t QueueFamilies::getPresentFamilyIndex() { return m_present_family_index; }
 
 
     /* Initialize private variables */
     PipelineCreator::PipelineCreator(PipelineData *p_pipeline_data, VkDevice *device, VkExtent2D *extent, VkRenderPass *renderpass) {
-        this->m_p_pipeline_data = p_pipeline_data;
-        this->m_p_device = device;
-        this->m_p_extent = extent;
-        this->m_p_renderpass = renderpass;
+        m_p_pipeline_data = p_pipeline_data;
+        m_p_device = device;
+        m_p_extent = extent;
+        m_p_renderpass = renderpass;
     }
 
 
@@ -151,7 +151,7 @@ namespace deng {
         local_createinfo.pCode = reinterpret_cast<const uint32_t*>(shader_bins.data());
         VkShaderModule local_shader_module;
 
-        if(vkCreateShaderModule(*this->m_p_device, &local_createinfo, nullptr, &local_shader_module) != VK_SUCCESS)
+        if(vkCreateShaderModule(*m_p_device, &local_createinfo, nullptr, &local_shader_module) != VK_SUCCESS)
             ERR("Failed to create shader module!");
 
         return local_shader_module;
@@ -163,7 +163,7 @@ namespace deng {
         local_input_binding_desc.binding = 0;
         local_input_binding_desc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-        switch (this->m_p_pipeline_data->pipeline_type)
+        switch (m_p_pipeline_data->pipeline_type)
         {
         case DENG_PIPELINE_TYPE_UNMAPPED_3D:
             local_input_binding_desc.stride = sizeof(VERT_UNMAPPED);
@@ -193,7 +193,7 @@ namespace deng {
         std::vector<VkVertexInputAttributeDescription> local_input_attr_desc{};
         local_input_attr_desc.resize(2);
 
-        switch (this->m_p_pipeline_data->pipeline_type)
+        switch (m_p_pipeline_data->pipeline_type)
         {
         case DENG_PIPELINE_TYPE_UNMAPPED_3D:
             local_input_attr_desc[0].binding = 0;
@@ -281,120 +281,128 @@ namespace deng {
         fread(frag_shader_binary_vector.data(), sizeof(char), file_size, file);
 
         /* Call shader module handler */
-        this->m_shader_modules[0] = this->getShaderModule(vert_shader_binary_vector);
-        this->m_shader_modules[1] = this->getShaderModule(frag_shader_binary_vector);
+        m_shader_modules[0] = getShaderModule(vert_shader_binary_vector);
+        m_shader_modules[1] = getShaderModule(frag_shader_binary_vector);
 
         /* Create vertex shader stage createinfo */
         VkPipelineShaderStageCreateInfo local_vertex_shader_stage_createinfo{};
         local_vertex_shader_stage_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         local_vertex_shader_stage_createinfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        local_vertex_shader_stage_createinfo.module = this->m_shader_modules[0];
+        local_vertex_shader_stage_createinfo.module = m_shader_modules[0];
         local_vertex_shader_stage_createinfo.pName = p_shader_module_name;
 
         /* Create fragment shader stage createinfo */
         VkPipelineShaderStageCreateInfo local_frag_shader_stage_createinfo{};
         local_frag_shader_stage_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         local_frag_shader_stage_createinfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        local_frag_shader_stage_createinfo.module = this->m_shader_modules[1];
+        local_frag_shader_stage_createinfo.module = m_shader_modules[1];
         local_frag_shader_stage_createinfo.pName = p_shader_module_name;
-        this->m_shader_stage_createinfos = {local_vertex_shader_stage_createinfo, local_frag_shader_stage_createinfo};
+        m_shader_stage_createinfos = {local_vertex_shader_stage_createinfo, local_frag_shader_stage_createinfo};
 
         /* Get descriptions */
-        this->m_input_binding_descriptor = this->getBindingDesc();
-        this->m_input_attribute_descriptors = this->getAttributeDesc();
+        m_input_binding_descriptor = getBindingDesc();
+        m_input_attribute_descriptors = getAttributeDesc();
 
         /* Set up vertex input createinfo object */
-        this->m_vertex_input_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        this->m_vertex_input_createinfo.vertexBindingDescriptionCount = 1;
-        this->m_vertex_input_createinfo.vertexAttributeDescriptionCount = (uint32_t) (this->m_input_attribute_descriptors.size());
-        this->m_vertex_input_createinfo.pVertexBindingDescriptions = &this->m_input_binding_descriptor;
-        this->m_vertex_input_createinfo.pVertexAttributeDescriptions = this->m_input_attribute_descriptors.data();
+        m_vertex_input_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        m_vertex_input_createinfo.vertexBindingDescriptionCount = 1;
+        m_vertex_input_createinfo.vertexAttributeDescriptionCount = (uint32_t) (m_input_attribute_descriptors.size());
+        m_vertex_input_createinfo.pVertexBindingDescriptions = &m_input_binding_descriptor;
+        m_vertex_input_createinfo.pVertexAttributeDescriptions = m_input_attribute_descriptors.data();
 
         /* Set up input assembly createinfo object */
-        this->m_input_assembly_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        this->m_input_assembly_createinfo.topology = primitive_topology;
-        this->m_input_assembly_createinfo.primitiveRestartEnable = VK_FALSE;
+        m_input_assembly_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+        m_input_assembly_createinfo.topology = primitive_topology;
+        m_input_assembly_createinfo.primitiveRestartEnable = VK_FALSE;
 
         /* Set viewport values */
-        this->m_viewport.x = 0.0f;
-        this->m_viewport.y = 0.0f;
-        this->m_viewport.width = static_cast<float>(this->m_p_extent->width);
-        this->m_viewport.height = static_cast<float>(this->m_p_extent->height);
-        this->m_viewport.minDepth = 0.0f;
-        this->m_viewport.maxDepth = 1.0f;
+        m_viewport.x = 0.0f;
+        m_viewport.y = 0.0f;
+        m_viewport.width = static_cast<float>(m_p_extent->width);
+        m_viewport.height = static_cast<float>(m_p_extent->height);
+        m_viewport.minDepth = 0.0f;
+        m_viewport.maxDepth = 1.0f;
 
         /* Set scissor values */
-        this->m_scissor.offset = {0, 0};
-        this->m_scissor.extent = *this->m_p_extent;
+        m_scissor.offset = {0, 0};
+        m_scissor.extent = *m_p_extent;
 
         /* Set up viewport state createinfo object */
-        this->m_viewport_state_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-        this->m_viewport_state_createinfo.viewportCount = 1;
-        this->m_viewport_state_createinfo.pViewports = &this->m_viewport;
-        this->m_viewport_state_createinfo.scissorCount = 1;
-        this->m_viewport_state_createinfo.pScissors = &this->m_scissor;
+        m_viewport_state_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+        m_viewport_state_createinfo.viewportCount = 1;
+        m_viewport_state_createinfo.pViewports = &m_viewport;
+        m_viewport_state_createinfo.scissorCount = 1;
+        m_viewport_state_createinfo.pScissors = &m_scissor;
 
         /* Set up rasterization create info */
-        this->m_rasterization_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        this->m_rasterization_createinfo.depthClampEnable = VK_FALSE;
-        this->m_rasterization_createinfo.rasterizerDiscardEnable = VK_FALSE;
-        this->m_rasterization_createinfo.polygonMode = polygon_mode;
-        this->m_rasterization_createinfo.lineWidth = 1.0f;
-        this->m_rasterization_createinfo.cullMode = cull_mode;
+        m_rasterization_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+        m_rasterization_createinfo.depthClampEnable = VK_FALSE;
+        m_rasterization_createinfo.rasterizerDiscardEnable = VK_FALSE;
+        m_rasterization_createinfo.polygonMode = polygon_mode;
+        m_rasterization_createinfo.lineWidth = 1.0f;
+        m_rasterization_createinfo.cullMode = cull_mode;
 
         if(cull_mode != VK_CULL_MODE_NONE) {
-            this->m_rasterization_createinfo.frontFace = front_face;
-            this->m_rasterization_createinfo.depthBiasEnable = VK_TRUE;
+            m_rasterization_createinfo.frontFace = front_face;
+            m_rasterization_createinfo.depthBiasEnable = VK_TRUE;
         }
 
 
         /* Set up multisampling createinfo */
-        this->m_multisample_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        this->m_multisample_createinfo.sampleShadingEnable = VK_FALSE;
-        this->m_multisample_createinfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+        m_multisample_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+        m_multisample_createinfo.sampleShadingEnable = VK_FALSE;
+        m_multisample_createinfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
         /* Set colorblend options */
-        this->m_colorblend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-        if(add_color_blend) this->m_colorblend_attachment.blendEnable = VK_TRUE;
-        else this->m_colorblend_attachment.blendEnable = VK_FALSE;
+        m_colorblend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        if(add_color_blend) m_colorblend_attachment.blendEnable = VK_TRUE;
+        else m_colorblend_attachment.blendEnable = VK_FALSE;
+        m_colorblend_attachment.alphaBlendOp = VK_BLEND_OP_SUBTRACT;
+        m_colorblend_attachment.blendEnable = VK_TRUE;
+        m_colorblend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        m_colorblend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        m_colorblend_attachment.colorBlendOp = VK_BLEND_OP_ADD;
+        m_colorblend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        m_colorblend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        m_colorblend_attachment.alphaBlendOp = VK_BLEND_OP_SUBTRACT;
         
         /* Set depth stencil */
-        this->m_depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        m_depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         if(add_depth_stencil) {
-            this->m_depth_stencil.depthTestEnable = VK_TRUE;
-            this->m_depth_stencil.depthWriteEnable = VK_TRUE;
-            this->m_depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS;
-            this->m_depth_stencil.depthBoundsTestEnable = VK_FALSE;
-            this->m_depth_stencil.stencilTestEnable = VK_FALSE;
+            m_depth_stencil.depthTestEnable = VK_TRUE;
+            m_depth_stencil.depthWriteEnable = VK_TRUE;
+            m_depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS;
+            m_depth_stencil.depthBoundsTestEnable = VK_FALSE;
+            m_depth_stencil.stencilTestEnable = VK_FALSE;
         }
         else {
-            this->m_depth_stencil.depthTestEnable = VK_FALSE;
-            this->m_depth_stencil.depthWriteEnable = VK_FALSE;
-            this->m_depth_stencil.depthBoundsTestEnable = VK_FALSE;
-            this->m_depth_stencil.stencilTestEnable = VK_FALSE;
+            m_depth_stencil.depthTestEnable = VK_FALSE;
+            m_depth_stencil.depthWriteEnable = VK_FALSE;
+            m_depth_stencil.depthBoundsTestEnable = VK_FALSE;
+            m_depth_stencil.stencilTestEnable = VK_FALSE;
         }
         
         /* Set up colorblend state createinfo */
-        this->m_colorblend_state_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-        this->m_colorblend_state_createinfo.logicOpEnable = VK_FALSE;
-        this->m_colorblend_state_createinfo.attachmentCount = 1;
-        this->m_colorblend_state_createinfo.pAttachments = &this->m_colorblend_attachment;
+        m_colorblend_state_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+        m_colorblend_state_createinfo.logicOpEnable = VK_FALSE;
+        m_colorblend_state_createinfo.attachmentCount = 1;
+        m_colorblend_state_createinfo.pAttachments = &m_colorblend_attachment;
 
         /* Set up graphics pipeline createinfo */
         VkGraphicsPipelineCreateInfo local_graphics_pipeline_createinfo{};
         local_graphics_pipeline_createinfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        local_graphics_pipeline_createinfo.stageCount = (uint32_t) this->m_shader_stage_createinfos.size();
-        local_graphics_pipeline_createinfo.pStages = this->m_shader_stage_createinfos.data();
-        local_graphics_pipeline_createinfo.pVertexInputState = &this->m_vertex_input_createinfo;
-        local_graphics_pipeline_createinfo.pInputAssemblyState = &this->m_input_assembly_createinfo;
-        local_graphics_pipeline_createinfo.pViewportState = &this->m_viewport_state_createinfo;
-        local_graphics_pipeline_createinfo.pColorBlendState = &this->m_colorblend_state_createinfo;
-        local_graphics_pipeline_createinfo.pRasterizationState = &this->m_rasterization_createinfo;
-        local_graphics_pipeline_createinfo.pMultisampleState = &this->m_multisample_createinfo;
-        local_graphics_pipeline_createinfo.pDepthStencilState = &this->m_depth_stencil;
-        local_graphics_pipeline_createinfo.layout = *this->m_p_pipeline_data->p_pipeline_layout;
+        local_graphics_pipeline_createinfo.stageCount = (uint32_t) m_shader_stage_createinfos.size();
+        local_graphics_pipeline_createinfo.pStages = m_shader_stage_createinfos.data();
+        local_graphics_pipeline_createinfo.pVertexInputState = &m_vertex_input_createinfo;
+        local_graphics_pipeline_createinfo.pInputAssemblyState = &m_input_assembly_createinfo;
+        local_graphics_pipeline_createinfo.pViewportState = &m_viewport_state_createinfo;
+        local_graphics_pipeline_createinfo.pColorBlendState = &m_colorblend_state_createinfo;
+        local_graphics_pipeline_createinfo.pRasterizationState = &m_rasterization_createinfo;
+        local_graphics_pipeline_createinfo.pMultisampleState = &m_multisample_createinfo;
+        local_graphics_pipeline_createinfo.pDepthStencilState = &m_depth_stencil;
+        local_graphics_pipeline_createinfo.layout = *m_p_pipeline_data->p_pipeline_layout;
 
-        local_graphics_pipeline_createinfo.renderPass = *this->m_p_renderpass;
+        local_graphics_pipeline_createinfo.renderPass = *m_p_renderpass;
         local_graphics_pipeline_createinfo.subpass = subpass_index;
         local_graphics_pipeline_createinfo.basePipelineHandle = VK_NULL_HANDLE;
 
@@ -404,39 +412,39 @@ namespace deng {
 
     /* Generic cleanup */
     PipelineCreator::~PipelineCreator() {
-        vkDestroyShaderModule(*this->m_p_device, this->m_shader_modules[0], nullptr);
-        vkDestroyShaderModule(*this->m_p_device, this->m_shader_modules[1], nullptr);
+        vkDestroyShaderModule(*m_p_device, m_shader_modules[0], nullptr);
+        vkDestroyShaderModule(*m_p_device, m_shader_modules[1], nullptr);
     }
 
 
     SwapChainDetails::SwapChainDetails(VkPhysicalDevice &gpu, VkSurfaceKHR &surface) {
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(gpu, surface, &this->m_capabilities);
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(gpu, surface, &m_capabilities);
         uint32_t format_count;
         vkGetPhysicalDeviceSurfaceFormatsKHR(gpu, surface, &format_count, nullptr);
 
         if(!format_count) ERR("No surface formats available!");
 
-        this->m_formats.resize(format_count);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(gpu, surface, &format_count, this->m_formats.data());
+        m_formats.resize(format_count);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(gpu, surface, &format_count, m_formats.data());
         uint32_t present_mode_count;
         vkGetPhysicalDeviceSurfacePresentModesKHR(gpu, surface, &present_mode_count, nullptr);
 
         if(!present_mode_count) ERR("No surface present modes available!");
 
-        this->m_present_modes.resize(present_mode_count);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(gpu, surface, &present_mode_count, this->m_present_modes.data());
+        m_present_modes.resize(present_mode_count);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(gpu, surface, &present_mode_count, m_present_modes.data());
     }
 
     VkSurfaceCapabilitiesKHR SwapChainDetails::getCapabilities() {
-        return this->m_capabilities;
+        return m_capabilities;
     }
 
     std::vector<VkSurfaceFormatKHR> SwapChainDetails::getFormats() {
-        return this->m_formats;
+        return m_formats;
     }
 
     std::vector<VkPresentModeKHR> SwapChainDetails::getPresentModes() {
-        return this->m_present_modes;
+        return m_present_modes;
     }
 
 
