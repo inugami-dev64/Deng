@@ -1,0 +1,87 @@
+premake:
+  cc: gcc 
+  cxx: g++ 
+  cc_flags: 
+    - Wall 
+    - m64 
+  cxx_flags: 
+    - Wall 
+    - m64 
+    - std=c++11
+  include_path:
+    linux:
+      - "/usr/include/freetype2"
+      - "/usr/include/freetype2/freetype"
+    windows:
+      - "C:/VulkanSDK/1.*"
+      - "C:/freetype"
+  src_dir: src/
+  build_dir: build/
+  project_name: deng
+
+tasks: 
+  libsurface:
+    type: static_lib
+    src:
+      - surface/key_translation.c
+      - surface/key_vector.c
+      - surface/vulkan_handler.c
+      linux:
+        - surface/x11_surface.c
+      windows:
+        - surface/win32_surface.c  
+    
+  libdas:
+    type: dynamic_lib
+    src:
+      - das/das_handler.c
+      - das/data_loader.c
+
+  libcommon:
+    type: dynamic_lib
+    src:
+      - common/common.c
+
+  dam:
+    type: exec
+    src:
+      - das/dam.c
+    deps:
+      - ldas
+      - lcommon
+  
+  deng:
+    type: exec
+    src: 
+      - main/sandbox.cpp
+      - core/camera.cpp
+      - core/rend_helpers.cpp
+      - core/renderer.cpp
+      - core/window.cpp
+      - maths/deng_math.cpp
+      - maths/events.cpp
+      - utilities/font.cpp
+      - utilities/timer/timer.cpp
+    deps:
+      - ldas
+      - lsurface
+      - lcommon
+      - lfreetype
+      linux:
+        - lvulkan
+        - lX11
+        - lXcursor
+        - ldl
+      windows:
+        - lcomctl32
+        - "lvulkan-1"
+link:
+  shaders: shaders/
+  assets: assets/
+  textures: textures/
+
+cpy:
+  objects: objects
+  ui_styling: src/dengui/css
+  linux:
+    xcursor: src/surface/xcursor
