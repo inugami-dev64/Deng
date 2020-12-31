@@ -1,3 +1,4 @@
+import: modules/freetype2/build.yml
 premake:
   cc: gcc 
   cxx: g++ 
@@ -13,8 +14,9 @@ premake:
       - "/usr/include/freetype2"
       - "/usr/include/freetype2/freetype"
     windows:
-      - "C:/VulkanSDK/1.*"
-      - "C:/freetype"
+      - "C:/VulkanSDK/1.2.154.1/Include"
+      - "modules/freetype2/include"
+      - "modules/freetype2/include/freetype"
   src_dir: src/
   build_dir: build/
   project_name: deng
@@ -36,6 +38,8 @@ tasks:
     src:
       - das/das_handler.c
       - das/data_loader.c
+      windows:
+        - common/common.c
 
   libcommon:
     type: dynamic_lib
@@ -76,12 +80,17 @@ tasks:
         - lcomctl32
         - "lvulkan-1"
 link:
-  shaders: shaders/
-  assets: assets/
-  textures: textures/
+  linux:
+    shaders: shaders/
+    assets: assets/
+    textures: textures/
 
 cpy:
   objects: objects
   ui_styling: src/dengui/css
   linux:
     xcursor: src/surface/xcursor
+  windows:
+    shaders: shaders/
+    assets: assets/
+    textures: textures/

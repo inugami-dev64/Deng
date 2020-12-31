@@ -1,0 +1,3 @@
+[submodule "modules/freetype2"]
+	path = modules/freetype2
+	url = https://github.com/inugami-dev64/freetype2
