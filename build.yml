@@ -1,4 +1,6 @@
-import: modules/freetype2/build.yml
+import: 
+  windows: 
+    - modules/freetype2/build.yml
 premake:
   cc: gcc 
   cxx: g++ 
@@ -11,10 +13,6 @@ premake:
     - std=c++11
   include_path:
     linux:
-      - "/usr/include/freetype2"
-      - "/usr/include/freetype2/freetype"
-    windows:
-      - "C:/VulkanSDK/1.2.154.1/Include"
       - "modules/freetype2/include"
       - "modules/freetype2/include/freetype"
   src_dir: src/
@@ -80,17 +78,12 @@ tasks:
         - lcomctl32
         - "lvulkan-1"
 link:
-  linux:
-    shaders: shaders/
-    assets: assets/
-    textures: textures/
+  shaders: shaders/
+  assets: assets/
+  textures: textures/
 
 cpy:
   objects: objects
   ui_styling: src/dengui/css
   linux:
     xcursor: src/surface/xcursor
-  windows:
-    shaders: shaders/
-    assets: assets/
-    textures: textures/

@@ -1,5 +1,8 @@
 .vscode/
 .stfolder/
+Makefile
+init.sh
+init.bat
 make/
 build/
 rgbbitmap.log
