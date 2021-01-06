@@ -168,9 +168,16 @@ namespace dengMath {
 
         vec2<T> operator-(vec2<T> vector) {
             vec2<T> local_vec2;
-            if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(uint8_t).name() || typeid(T).name() == typeid(uint16_t).name() || typeid(T).name() == typeid(uint32_t).name() || typeid(T).name() == typeid(uint64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
-                local_vec2 = {(first - vector.first), (second - vector.second)};
-            }
+            if
+            (
+                typeid(T).name() == typeid(float).name() || 
+                typeid(T).name() == typeid(uint8_t).name() || 
+                typeid(T).name() == typeid(uint16_t).name() || 
+                typeid(T).name() == typeid(uint32_t).name() || 
+                typeid(T).name() == typeid(uint64_t).name() || 
+                typeid(T).name() == typeid(int).name() || 
+                typeid(T).name() == typeid(double).name()
+            ) local_vec2 = {(first - vector.first), (second - vector.second)};
             
             return local_vec2;
         }
@@ -389,7 +396,11 @@ namespace dengMath {
     template<typename T>
     static T *findElementByDescription(std::vector<T> *p_vector, const char *description);
 
+    // Calculate new asset vertices according to model matrix
     void applyModelMatrix(DENGAsset &asset, mat4<float> matrix);
+
+    // Generic trigonometric calculation functions
+    float trSurface2D(std::array<vec2<float>, 3> tr_verts);
 }
 
 #endif

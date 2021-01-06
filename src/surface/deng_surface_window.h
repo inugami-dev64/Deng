@@ -18,7 +18,7 @@ extern "C" {
 #define X11_WINDOW 0x01
 #define WIN32_WINDOW 0x02 
 
-#define bool_t int
+#define bool_t uint8_t
 #define true 1
 #define false 0
 
@@ -82,7 +82,7 @@ typedef struct VirtualMousePosition {
         LONG mouse_y_pos;
     } WIN32Handler;
 
-    #ifndef DENG_VULKAN
+    #ifndef __DENG_API_CORE
         #define DENG_WIN32_CLASS_NAME L"DENG_WINDOW"
     #else 
         #define DENG_WIN32_CLASS_NAME "DENG_WINDOW"

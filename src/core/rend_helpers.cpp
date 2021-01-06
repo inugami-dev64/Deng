@@ -227,7 +227,7 @@ namespace deng {
 
             local_input_attr_desc[1].binding = 0;
             local_input_attr_desc[1].location = 1;
-            local_input_attr_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
+            local_input_attr_desc[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
             local_input_attr_desc[1].offset = offsetof(VERT_UNMAPPED_2D, color_data);
             break;
 
@@ -607,9 +607,20 @@ namespace deng {
     void BufferCreator::populateBufferMem(VkDevice *p_device, VkDeviceSize *p_size, const void *p_src_data, VkDeviceMemory *p_buffer_memory, VkDeviceSize offset) {
         LOG("Populating buffer memory!");
         void *local_data;
-        vkMapMemory(*p_device, *p_buffer_memory, offset, *p_size, 0, &local_data);
-            memcpy(local_data, p_src_data, static_cast<size_t>(*p_size));
-        vkUnmapMemory(*p_device, *p_buffer_memory);
+        vkMapMemory (
+            *p_device, 
+            *p_buffer_memory, 
+            offset, 
+            *p_size, 
+            0, 
+            &local_data
+        );
+            memcpy(local_data, p_src_data, (*p_size));
+        vkUnmapMemory (
+            *p_device, 
+            *p_buffer_memory
+        );
+        LOG("Populated buffer memory");
     }
     
 

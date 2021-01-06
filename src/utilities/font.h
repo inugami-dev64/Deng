@@ -13,28 +13,28 @@
 #endif
 
 namespace dengUtils {
-    struct dengRendChar {
+    struct bitmapChar {
         char ascii_ch;
         uint16_t glyph_id; // ID of glyph texture
     };
 
-    struct dengRendUniGl {
+    struct bitmapGlyphData {
         dengMath::vec2<int32_t> bearings;
         dengMath::vec2<int32_t> advance;
         FT_Bitmap bitmap;
     };
     
-    struct dengRendStr {
+    struct bitmapStr {
         const char *text;
         const char *font_file;
         
-        std::vector<dengRendUniGl> unique_glyphs;
+        std::vector<bitmapGlyphData> unique_glyphs;
         std::vector<uint8_t> tex_data;
         std::array<VERT_MAPPED_2D, 4> vert_pos;
         std::array<uint32_t, 6> vert_indices;
         dengMath::vec2<int32_t> box_size;
 
-        dengRendChar *rend_text;
+        bitmapChar *rend_text;
         FT_Face font_face;
 
         void operator=(const char* input) { text = input; }
@@ -49,16 +49,40 @@ namespace dengUtils {
         std::vector<std::string> m_fonts;
 
     private:
-        bool verifyFont(dengRendStr &str, std::string &out_path);
-        std::vector<char> indexGlyphs(dengRendStr &str);
-        void findFontFiles(std::string base_path);
-        void mkTextbox(dengRendStr &str, dengMath::vec3<unsigned char> color);
+        bool verifyFont(bitmapStr &str, std::string &out_path);
+        std::vector<char> indexGlyphs(bitmapStr &str);
+        void findFontFiles(std::string custom_path);
+        void mkTextbox(bitmapStr &str, dengMath::vec3<unsigned char> color);
+        // Generic text box creationg function
+        dengError mkNewStr (
+            bitmapStr &str, 
+            uint16_t px_size,
+            dengMath::vec2<float> pos, 
+            dengMath::vec3<unsigned char> color
+        );
 
     public:
         // If custom font path is not needed then just pass nullptr
-        FontManager(const char *custom_font_path, deng::WindowWrap *p_window_wrap);
+        FontManager(std::string custom_font_path, deng::WindowWrap *p_window_wrap);
         ~FontManager();
-        dengError newStr(dengRendStr &str, const char *font_name, uint16_t px_size, dengMath::vec2<float> pos, dengMath::vec3<unsigned char> color);
+        
+        /* Create new text box instance from pixel size */
+        dengError newPxStr ( 
+            bitmapStr &str,
+            const char *font_name,
+            uint16_t px_size,
+            dengMath::vec2<float> pos,
+            dengMath::vec3<unsigned char> color
+        );
+        
+        /* Create new text box instance from vector size */
+        dengError newVecStr (
+            bitmapStr &str,
+            const char *font_name,
+            float vec_size,
+            dengMath::vec2<float> pos,
+            dengMath::vec3<unsigned char> color  
+        );
     };
 }
 

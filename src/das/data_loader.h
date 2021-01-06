@@ -43,18 +43,25 @@ typedef struct VERT_MAPPED_2D {
 } VERT_MAPPED_2D;
 
 
-typedef struct VERT_UNAMPPED_2D {
+typedef struct VERT_UNMAPPED_2D {
     OBJVerticesData2D vert_data;
     OBJColorData color_data;
 } VERT_UNMAPPED_2D;
 
 
+/* Vertices and indices offsets combined */
+typedef struct UNI_OFFSET {
+    uint64_t vert_offset;
+    uint64_t ind_offset;
+} UNI_OFFSET;
+
+
 typedef struct DynamicVertices {
     VERT_MAPPED *p_texture_mapped_vert_data;
-    OBJVerticesData *p_unmapped_vert_data;
+    VERT_UNMAPPED *p_unmapped_vert_data;
 
     VERT_MAPPED_2D *p_texture_mapped_vert_data_2d;
-    OBJVerticesData2D *p_unmapped_vert_data_2d;
+    VERT_UNMAPPED_2D *p_unmapped_vert_data_2d;
 
     /* Vertices type values define the following: */
     /* 0 - UNMAPPED */
@@ -86,20 +93,22 @@ typedef enum AssetMode {
 
 typedef struct DENGAsset {
     char *name;
+    char *tex_id;
     char *description;
     uint64_t time_point; 
     AssetMode asset_mode;
+    uint8_t is_text;
     DynamicVertices vertices;
     DynamicIndices indices;
     
     // For fragment shader
     OBJColorData solid_fill_color;
-    size_t fragment_index;
 } DENGAsset;
 
 
 typedef struct DENGTexture {
     char *name;
+    char *id;
     char *descritpion;
     DynamicPixelData pixel_data;
 } DENGTexture;
@@ -126,6 +135,7 @@ void dasLoadTexture(DENGTexture *p_asset, const char *file_name);
     /* 1 - TEXTURE MAPPED */
 void dasLoadModel(DENGAsset *p_asset, const char *file_name);
 #ifdef DAS_EXT_LOADERS
+    int32_t dasGetIndex(char *buffer, size_t cur_index);
     void dasLoadOBJmodelVertices(OBJVerticesData **pp_vert_data, size_t *p_vert_data_size, OBJTextureData **pp_texture_data, size_t *p_tex_data_size, long file_size);
     void dasLoadOBJindices(uint32_t **pp_vert_indices, size_t *p_vert_indices_size, uint32_t **pp_tex_vert_indices, size_t *p_tex_vert_indices_size, long file_size);
     void dasIndexUnmappedVertices(OBJVerticesData **pp_vert_data, size_t vert_size, uint32_t **pp_indices, size_t indices_size, DENGAsset *p_asset);

@@ -2,7 +2,7 @@
 
 static void handle_key_events();
 static void handle_mouse_events();
-static void set_cursor(DENGWindow *p_window, const char *cursor_path, int is_library_cur);
+static void set_cursor(DENGWindow *p_window, const char *cursor_path, bool_t is_library_cur);
 
 static bool_t is_running_var;
 static DENGKey recent_press_key;
@@ -99,7 +99,17 @@ static void handle_mouse_events(DENGWindow *p_window) {
     case ButtonPress: {
         recent_press_btn = translateX11Btn(p_window->x11_handler.event.xbutton.button);
 
-        if((key_index = get_key_index(p_window, DENG_KEY_UNKNOWN, recent_press_btn, MOUSE_BUTTON, ACTIVE_KEYS)) == p_window->active_keys.btn_count)
+        if
+        (
+            (
+                key_index = get_key_index (
+                    p_window, 
+                    DENG_KEY_UNKNOWN, 
+                    recent_press_btn, 
+                    MOUSE_BUTTON, 
+                    ACTIVE_KEYS)
+            ) == p_window->active_keys.btn_count
+        )
             add_key(p_window, NULL, &recent_press_btn, MOUSE_BUTTON, ACTIVE_KEYS);
         
         break;
@@ -206,7 +216,7 @@ void update_window(DENGWindow *p_window) {
             destroy_window(p_window);
     }
 
-    // usleep(DENG_REFRESH_INTERVAL);
+    usleep(DENG_REFRESH_INTERVAL);
 }
 
 void destroy_window(DENGWindow *p_window) {

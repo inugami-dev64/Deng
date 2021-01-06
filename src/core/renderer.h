@@ -1,15 +1,16 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#define DENG_PIPELINE_COUNT 4
-
-/* Generic default settings definitions */
-#define DENG_DEFAULT_NEAR_PLANE 0.1f
-#define DENG_DEFAULT_FAR_PLANE 25.0f
-#define DENG_MAX_FRAMES_IN_FLIGHT 3
-
 namespace deng {
 
+    #ifdef __DENG_API_CORE
+        #define DENG_PIPELINE_COUNT 4
+        
+        /* Generic default settings definitions */
+        #define DENG_DEFAULT_NEAR_PLANE 0.1f
+        #define DENG_DEFAULT_FAR_PLANE 25.0f
+        #define DENG_MAX_FRAMES_IN_FLIGHT 3
+    #endif
     /* Picking appropriate physical device, creating logical    *
      * device and creating new instance for Vulkan              */
     class InstanceCreator {
@@ -188,6 +189,7 @@ namespace deng {
     private:
         void mkCommandPool(VkDevice &device, uint32_t &g_queue_i);
         void mkSynchronisation(VkDevice &device);
+        TextureImageData findTextureImageDataByID(char *id);
 
     public:
         // Needed for synchronising frames
@@ -197,10 +199,27 @@ namespace deng {
         std::vector<VkSemaphore> render_finished_semaphore_set;
 
     public:
-        DrawCaller(VkDevice device, uint32_t g_queue_i);
-        void setAssetsData(std::vector<DENGAsset> *p_assets, std::vector<TextureImageData> *p_textures);
-        void setMiscData(std::array<PipelineData, DENG_PIPELINE_COUNT> pl_data, std::vector<VkFramebuffer> fb, std::vector<VkDescriptorSet> unmapped_ds, BufferData bd);
-        void recordDrawCommands(VkDevice device, VkQueue g_queue, VkRenderPass renderpass, VkExtent2D extent);
+        DrawCaller (
+            VkDevice device, 
+            uint32_t g_queue_i
+        );
+        void setAssetsData (
+            std::vector<DENGAsset> *p_assets, 
+            std::vector<TextureImageData> *p_textures
+        );
+        void setMiscData (
+            std::array<PipelineData, DENG_PIPELINE_COUNT> pl_data, 
+            std::vector<VkFramebuffer> fb, 
+            std::vector<VkDescriptorSet> unmapped_ds, 
+            BufferData bd
+        );
+        void recordDrawCommands (
+            VkDevice device, 
+            VkQueue g_queue, 
+            VkRenderPass renderpass, 
+            VkExtent2D extent,
+            dengMath::vec4<float> background
+        );
     
     public:
         VkCommandPool getComPool();
@@ -215,6 +234,7 @@ namespace deng {
         DescriptorCreator *m_p_desc_c;
         ResourceAllocator *m_p_ra;
         DrawCaller *m_p_dc;
+        dengUtils::FontManager *m_p_fm;
         
         // Render usage specifications
         dengRendererUsageMode m_usage_mode;
@@ -237,16 +257,21 @@ namespace deng {
         dengUtils::Timer m_timer;
         WindowWrap *m_p_ww;
 
+        // GUI windows 
+        dengui::Window *m_p_map_gui;
+        dengui::Events *m_p_gui_ev;
+
     private:
         void cleanup();
         void makeFrame();
+        void initMapEditor();
 
     public:
         void submitAssets(DENGAsset *p_game_objects, size_t size);
-        void submitTextures(DENGTexture *p_textures, size_t size);
-        void submitRendStr(dengUtils::dengRendStr *rend_strs, size_t size);
+        void submitTexture(std::string tex_file, std::string id);
+        void submitRendStr(dengUtils::bitmapStr *rend_strs, size_t size);
         void setHints(dengRendererHintBits hints);
-        void initRenderer(WindowWrap *p_ww);
+        void initRenderer(WindowWrap *p_ww, dengRendererUsageMode usage, dengMath::vec4<float> background);
         void run();        
     };
 }

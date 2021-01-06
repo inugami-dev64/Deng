@@ -29,12 +29,13 @@ char *help_text =
 char *repo_conf_path = "local_repos.conf";
 
 // Method declarations
-void damReadLocalRepoConf(char ***ppp_repo_paths, size_t *p_repo_count, int *p_write_repo_id);
-void damListAssets(char **pp_repo_paths, size_t repo_count);
-int damAddRepo(char **pp_repo_path, size_t *p_repo_count, char *new_repo, int default_id);
+void damReadLocalRepoConf(char ***p_repo_paths, size_t *p_repo_count, int *p_wri);
+void damListAssets(char **repo_paths, size_t repo_count);
+int damAddRepo(char **repo_path, size_t *p_repo_count, char *new_repo, int default_id);
 void damSetDefaultRepo(char **pp_repo_paths, size_t repo_count, int id);
 void damListLocalRepos(char **pp_repo_paths, size_t repo_count, int default_id);
 void damAssetAssemblyCaller(DENGAsset *p_asset, char **pp_repo_paths, int repo_id);
+// void damRemoveAsset(char *file_name);
 
 // Date and time formating
 #define SECONDS_PER_YEAR 31536000 

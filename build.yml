@@ -6,15 +6,21 @@ premake:
   cxx: g++ 
   cc_flags: 
     - Wall 
-    - m64 
+    - m64
+    - g 
   cxx_flags: 
     - Wall 
     - m64 
     - std=c++11
+    - g
   include_path:
     linux:
+      - "/usr/include/freetype2"
+      - "/usr/include/freetype2/include"
+    windows:
       - "modules/freetype2/include"
       - "modules/freetype2/include/freetype"
+      - "C:/VulkanSDK/[VERSION]"
   src_dir: src/
   build_dir: build/
   project_name: deng
@@ -64,11 +70,14 @@ tasks:
       - maths/events.cpp
       - utilities/font.cpp
       - utilities/timer/timer.cpp
+      - dengui/main/gui_events.cpp
+      - dengui/main/gui_window.cpp
     deps:
       - ldas
       - lsurface
       - lcommon
       - lfreetype
+      - lpthread
       linux:
         - lvulkan
         - lX11
@@ -81,9 +90,8 @@ link:
   shaders: shaders/
   assets: assets/
   textures: textures/
+  objects: objects/
 
 cpy:
-  objects: objects
-  ui_styling: src/dengui/css
   linux:
     xcursor: src/surface/xcursor

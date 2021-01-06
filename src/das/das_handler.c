@@ -21,15 +21,22 @@ char *dasGetFileExtName(char *file_name) {
 /* das file assembler callback function */
 void dasAssemble(DENGAsset *p_asset, const char *file_name) {
     FILE *file;
-    char *ext_name = dasGetFileExtName((char*) file_name);
+    file = fopen(file_name, "wb");
+    if(!file) {
+        fprintf (
+            stderr,
+            "Failed to open file: %s\n",
+            file_name
+        );
 
-    file = fopen((const char*) ext_name, "wb");
+        exit(-1);
+    }
+    
     dasAssembleINFOHDR(p_asset->name, p_asset->description, file);
     dasAssembleVERTHDR(&p_asset->vertices, file);
     dasAssembleINDXHDR(&p_asset->indices, file);
 
     fclose(file);
-    free(ext_name);
 }
 
 
@@ -98,21 +105,35 @@ void dasReadAsset(DENGAsset *p_asset, const char *file_name, AssetMode asset_mod
     DynamicVertices tmp_vert;
     p_asset->asset_mode = asset_mode;
     
-    dasReadINFOHDR(&p_asset->name, &p_asset->description, &p_asset->time_point, (char*) file_name, file);
+    dasReadINFOHDR (
+        &p_asset->name, 
+        &p_asset->description, 
+        &p_asset->time_point, 
+        (char*) file_name, 
+        file
+    );
+
     switch (asset_mode)
     {
     case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
-        dasReadVERTHDR(&p_asset->vertices, (char*) file_name, file);
+        dasReadVERTHDR (
+            &p_asset->vertices, 
+            (char*) file_name, 
+            file
+        );
         break;
     
     case DENG_ASSET_MODE_3D_UNMAPPED:
         dasReadVERTHDR(&tmp_vert, (char*) file_name, file);
         p_asset->vertices.size = tmp_vert.size;
-        p_asset->vertices.p_unmapped_vert_data = (OBJVerticesData*) malloc(p_asset->vertices.size * sizeof(OBJVerticesData));
+        p_asset->vertices.p_unmapped_vert_data = (VERT_UNMAPPED*) malloc (
+            p_asset->vertices.size * sizeof(VERT_UNMAPPED)
+        );
 
         // Populate asset unmapped vertices
         for(index = 0; index < p_asset->vertices.size; index++)
-            p_asset->vertices.p_unmapped_vert_data[index] = tmp_vert.p_texture_mapped_vert_data[index].vert_data;
+            p_asset->vertices.p_unmapped_vert_data[index].vert_data = tmp_vert.p_texture_mapped_vert_data[index].vert_data;
+        
         break;
 
     case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
@@ -133,13 +154,16 @@ void dasReadAsset(DENGAsset *p_asset, const char *file_name, AssetMode asset_mod
     case DENG_ASSET_MODE_2D_UNMAPPED:
         dasReadVERTHDR(&tmp_vert, (char*) file_name, file);
         p_asset->vertices.size = tmp_vert.size;
-        p_asset->vertices.p_unmapped_vert_data_2d = (OBJVerticesData2D*) malloc(p_asset->vertices.size * sizeof(OBJVerticesData2D));
+        p_asset->vertices.p_unmapped_vert_data_2d = (VERT_UNMAPPED_2D*) malloc (
+            p_asset->vertices.size * 
+            sizeof(VERT_UNMAPPED_2D)
+        );
         
         // Populate 2D asset unmapped vertices
         for(index = 0; index < p_asset->vertices.size; index++) {
-            p_asset->vertices.p_unmapped_vert_data_2d[index].vert_x = 
+            p_asset->vertices.p_unmapped_vert_data_2d[index].vert_data.vert_x = 
             tmp_vert.p_texture_mapped_vert_data[index].vert_data.vert_x;
-            p_asset->vertices.p_unmapped_vert_data_2d[index].vert_y = 
+            p_asset->vertices.p_unmapped_vert_data_2d[index].vert_data.vert_y = 
             tmp_vert.p_texture_mapped_vert_data[index].vert_data.vert_y;
         }
         break;
@@ -154,34 +178,34 @@ void dasReadAsset(DENGAsset *p_asset, const char *file_name, AssetMode asset_mod
 }
 
 
-/* Bind texture index to asset */
-void dasBindTexture(DENGAsset *p_asset, size_t texture_index) {
-    p_asset->fragment_index = texture_index;
-}
-
-
 /* Read das INFO_HDR information */
 void dasReadINFOHDR(char **asset_name, char **description, uint64_t *p_time_point, char *file_name, FILE *file) {
     uint32_t hdr_size;
     uint8_t name_size, desc_size;
     char hdr_name[8];
-    fread(hdr_name, 8 * sizeof(char), 1, file);
+    size_t res;
+    res = fread(hdr_name, 8 * sizeof(char), 1, file);
     
     if(strncmp(hdr_name, INFO_HEADER_NAME, 8)) {
         printf("ERROR: Failed to verify INFO_HDR in asset file %s!\n", file_name);
         return;
     }
 
-    fread(p_time_point, sizeof(uint64_t), 1, file);
-    fread(&hdr_size, sizeof(uint32_t), 1, file);
+    res = fread(p_time_point, sizeof(uint64_t), 1, file);
+    res = fread(&hdr_size, sizeof(uint32_t), 1, file);
 
-    fread(&name_size, sizeof(uint8_t), 1, file);
+    res = fread(&name_size, sizeof(uint8_t), 1, file);
     *asset_name = (char*) calloc((size_t) name_size, sizeof(char));
-    fread(*asset_name, sizeof(char), (size_t) name_size, file);
+    res = fread(*asset_name, sizeof(char), (size_t) name_size, file);
 
-    fread(&desc_size, sizeof(uint8_t), 1, file);
+    res = fread(&desc_size, sizeof(uint8_t), 1, file);
     *description = (char*) calloc((size_t) desc_size, sizeof(char));
-    fread(*description, sizeof(char), (size_t) desc_size, file);
+    res = fread(*description, sizeof(char), (size_t) desc_size, file);
+
+    if(!res) {
+        perror("Failed to read INFO_HDR\n");
+        exit(-1);
+    }
 }
 
 void dasReadVERTHDR(DynamicVertices *p_vertices, char *file_name, FILE *file) {
@@ -189,38 +213,62 @@ void dasReadVERTHDR(DynamicVertices *p_vertices, char *file_name, FILE *file) {
     uint32_t hdr_size;
     uint32_t vert_count;
 
-    fread(hdr_name, 8, 1, file);
-    printf("%s\n", hdr_name);
+    size_t res;
+    res = fread(hdr_name, 8, 1, file);
 
     if(strncmp(hdr_name, VERTICES_HEADER_NAME, 8)) {
         printf("ERROR: Failed to verify VERT_HDR in asset file %s!\n", file_name);
         return;
     }
 
-    fread(&hdr_size, sizeof(uint32_t), 1, file);
-    fread(&vert_count, sizeof(uint32_t), 1, file);
+    res = fread(&hdr_size, sizeof(uint32_t), 1, file);
+    res = fread(&vert_count, sizeof(uint32_t), 1, file);
     p_vertices->size = vert_count;
 
-    p_vertices->p_texture_mapped_vert_data = (VERT_MAPPED*) malloc(p_vertices->size * sizeof(VERT_MAPPED));
-    fread(p_vertices->p_texture_mapped_vert_data, sizeof(VERT_MAPPED), p_vertices->size, file);
+    p_vertices->p_texture_mapped_vert_data = (VERT_MAPPED*) malloc (
+        p_vertices->size * sizeof(VERT_MAPPED)
+    );
+
+    res = fread (
+        p_vertices->p_texture_mapped_vert_data, 
+        sizeof(VERT_MAPPED), 
+        p_vertices->size, 
+        file
+    );
+
+    if(!res) {
+        perror("Failed to read VERT_HDR\n");
+        exit(-1);
+    }
 }
 
 void dasReadINDXHDR(DynamicIndices *p_indices, char *file_name, FILE *file) {
     char hdr_name[8];
     uint32_t hdr_size, indices_count;
 
-    fread(hdr_name, 8, 1, file);
+    size_t res;
+    res = fread(hdr_name, 8, 1, file);
     printf("%s\n", hdr_name);
     
     if(strncmp(hdr_name, INDICES_HEADER_NAME, 8)) {
-        printf("ERROR: Failed to verify INDX_HDR in asset file %s!\n", file_name);
+        printf (
+            "ERROR: Failed to verify INDX_HDR in asset file %s!\n", 
+            file_name
+        );
         return;
     }
 
-    fread(&hdr_size, sizeof(uint32_t), 1, file);
-    fread(&indices_count, sizeof(uint32_t), 1, file);
+    res = fread(&hdr_size, sizeof(uint32_t), 1, file);
+    res = fread(&indices_count, sizeof(uint32_t), 1, file);
     
     p_indices->size = indices_count;
-    p_indices->p_indices = (uint32_t*) malloc(p_indices->size * sizeof(uint32_t));
-    fread(p_indices->p_indices, sizeof(uint32_t), p_indices->size, file);
+    p_indices->p_indices = (uint32_t*) malloc (
+        p_indices->size * sizeof(uint32_t)
+    );
+    res = fread(p_indices->p_indices, sizeof(uint32_t), p_indices->size, file);
+
+    if(!res) {
+        perror("Failed to read INDX_HDR\n");
+        exit(-1);
+    }
 }

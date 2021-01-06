@@ -98,7 +98,8 @@ namespace dengMath {
         return 0.0f;
     }
 
-    // generic conversion methods
+
+    /* Generic conversion methods */
     float Conversion::degToRad(const float &deg) {
         return static_cast<float>(deg/180 * PI);
     }
@@ -445,10 +446,6 @@ namespace dengMath {
         size_t index;
         dengMath::vec3<float> *p_tmp_in;
         dengMath::vec4<float> tmp_out;
-        LOG("|" + std::to_string(matrix.row1.first) + "," + std::to_string(matrix.row1.second) + "," + std::to_string(matrix.row1.third) + "," + std::to_string(matrix.row1.fourth) + "|");
-        LOG("|" + std::to_string(matrix.row2.first) + "," + std::to_string(matrix.row2.second) + "," + std::to_string(matrix.row2.third) + "," + std::to_string(matrix.row2.fourth) + "|");
-        LOG("|" + std::to_string(matrix.row3.first) + "," + std::to_string(matrix.row3.second) + "," + std::to_string(matrix.row3.third) + "," + std::to_string(matrix.row3.fourth) + "|");
-        LOG("|" + std::to_string(matrix.row4.first) + "," + std::to_string(matrix.row4.second) + "," + std::to_string(matrix.row4.third) + "," + std::to_string(matrix.row4.fourth) + "|");
 
         for(index = 0; index < asset.vertices.size; index++) {
             switch (asset.asset_mode)
@@ -464,9 +461,9 @@ namespace dengMath {
             case DENG_ASSET_MODE_3D_UNMAPPED:
                 p_tmp_in = (dengMath::vec3<float>*) &asset.vertices.p_unmapped_vert_data[index]; 
                 tmp_out = matrix * (*p_tmp_in);
-                asset.vertices.p_unmapped_vert_data[index].vert_x = tmp_out.first;
-                asset.vertices.p_unmapped_vert_data[index].vert_y = tmp_out.second;
-                asset.vertices.p_unmapped_vert_data[index].vert_z = tmp_out.third;
+                asset.vertices.p_unmapped_vert_data[index].vert_data.vert_x = tmp_out.first;
+                asset.vertices.p_unmapped_vert_data[index].vert_data.vert_y = tmp_out.second;
+                asset.vertices.p_unmapped_vert_data[index].vert_data.vert_z = tmp_out.third;
                 break;
 
             case DENG_ASSET_MODE_2D_UNMAPPED:
@@ -478,5 +475,33 @@ namespace dengMath {
                 break;
             }
         }
+    }
+
+    
+    /* Calculate triangle surface area based on triangle vertices */
+    float trSurface2D(std::array<vec2<float>, 3> tr_verts) {
+        // Find triangle sides
+        float a = 
+            sqrt (
+                (tr_verts[1].first - tr_verts[0].first) * (tr_verts[1].first - tr_verts[0].first) + 
+                (tr_verts[1].second - tr_verts[0].second) * (tr_verts[1].second - tr_verts[0].second)
+            );
+
+        float b =
+            sqrt (
+                (tr_verts[2].first - tr_verts[1].first) * (tr_verts[2].first - tr_verts[1].first) +
+                (tr_verts[2].second - tr_verts[1].second) * (tr_verts[2].second - tr_verts[1].second)
+            );
+
+        float c =
+            sqrt (
+                (tr_verts[2].first - tr_verts[0].first) * (tr_verts[2].first - tr_verts[0].first) +
+                (tr_verts[2].second - tr_verts[0].second) * (tr_verts[2].second - tr_verts[0].second)
+            );
+
+        // Triangle semi perimeter
+        float s = (a + b + c) / 2;
+
+        return std::sqrt((s * (s - a) * (s - b) * (s - c)));
     }
 }  

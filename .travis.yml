@@ -6,6 +6,11 @@ before_install:
   - sudo apt-get -y install make cmake xorg xorg-dev libc6-dev libvulkan1 libvulkan-dev vulkan-utils libxcursor1 libx11-dev
   - git clone https://github.com/KhronosGroup/Vulkan-Headers
   - sudo cp -r Vulkan-Headers/include/vulkan /usr/include
+  - git clone https://github.com/inugami-dev64/saucer
+  - cd saucer
+  - sudo make clean install
+  - cd ..
+
 addons:
   apt:
     update: true
@@ -13,12 +18,13 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-9
-      - cmake
 env: COMPILER=g++-9
 
 language:
   - "c++"
 
 script:
-  - cd make/linux
+  - git submodule init
+  - git submodule update
+  - saucer build.yml
   - make

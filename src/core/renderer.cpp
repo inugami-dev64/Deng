@@ -1,9 +1,20 @@
+#define __DENG_API_CORE
 #include "api_core.h"
 
-namespace deng
-{
+// Shared data
+dengui::MouseInputInfo mii;
 
+namespace deng {
+
+    static uint16_t text_box_c = 0;
+    static uint16_t texture_c = 0;
+    static uint16_t asset_c = 0; 
+
+    /************************************************/
+    /************************************************/
     /************ InstanceCreator class *************/
+    /************************************************/
+    /************************************************/
 
     InstanceCreator::InstanceCreator(WindowWrap *p_window_wrap, bool enable_validation_layers) {
         m_required_extension_names.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
@@ -37,7 +48,11 @@ namespace deng
 
         // Get all required extensions
         uint32_t local_extension_count;
-        const char **local_extensions = get_required_surface_extensions(m_p_window_wrap->getWindow(), &local_extension_count, static_cast<int>(enable_validation_layers));
+        const char **local_extensions = get_required_surface_extensions (
+            m_p_window_wrap->getWindow(), 
+            &local_extension_count, 
+            static_cast<int>(enable_validation_layers)
+        );
         local_instance_createInfo.enabledExtensionCount = local_extension_count;
         local_instance_createInfo.ppEnabledExtensionNames = local_extensions;
         LOG("Required extensions count is: " + std::to_string(local_instance_createInfo.enabledExtensionCount));
@@ -86,7 +101,7 @@ namespace deng
         bool isLayer = false;
 
         for(const VkLayerProperties &properties : local_available_layers) {
-            if(strcmp(m_p_validation_layer, properties.layerName) == 0) {
+            if(!strcmp(m_p_validation_layer, properties.layerName)) {
                 isLayer = true;
                 break;
             }
@@ -512,7 +527,15 @@ namespace deng
         layout_createinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layout_createinfo.bindingCount = bindings.size();
         layout_createinfo.pBindings = bindings.data();
-        if(vkCreateDescriptorSetLayout(device, &layout_createinfo, nullptr, &m_unmapped_descriptor_set_layout))
+        if
+        (
+            vkCreateDescriptorSetLayout (
+                device, 
+                &layout_createinfo, 
+                nullptr, 
+                &m_unmapped_descriptor_set_layout
+            )
+        )
             ERR("Failed to create descriptor set layout for unmapped assets!");
 
         else LOG("Successfully created pipeline layout for unmapped assets");
@@ -615,9 +638,9 @@ namespace deng
 
         std::array<VkGraphicsPipelineCreateInfo, DENG_PIPELINE_COUNT> pipeline_infos{};
         pipeline_infos[0] = unmapped_pipeline_3d.getGraphicsPipelineInfo("shaders/bin/3d_unmapped_vert.spv", "shaders/bin/3d_unmapped_frag.spv", 
-        "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, false, 0);
+        "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, false, 0);
         pipeline_infos[1] = texture_mapped_pipeline_3d.getGraphicsPipelineInfo("shaders/bin/3d_tex_mapped_vert.spv", "shaders/bin/3d_tex_mapped_frag.spv", 
-        "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, false, 0);
+        "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, false, 0);
 
         pipeline_infos[2] = unmapped_pipeline_2d.getGraphicsPipelineInfo("shaders/bin/2d_unmapped_vert.spv", "shaders/bin/2d_unmapped_frag.spv", 
         "main", VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, false, false, 0);
@@ -833,9 +856,28 @@ namespace deng
         // Allocate space for perspective uniform data
         data_size = sizeof(dengMath::UniformData);
         for(index = 0; index < sc_img_size; index++) {
-            memory_requirements = BufferCreator::makeBuffer(&device, &gpu, &data_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, &m_buffer_data.mat_uniform_buffers[index]);
-            BufferCreator::allocateMemory(&device, &gpu, &m_buffer_data.mat_uniform_buffer_mem[index], memory_requirements.size, memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-            vkBindBufferMemory(device, m_buffer_data.mat_uniform_buffers[index], m_buffer_data.mat_uniform_buffer_mem[index], 0);
+            memory_requirements = BufferCreator::makeBuffer (
+                &device, 
+                &gpu, 
+                &data_size, 
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
+                &m_buffer_data.mat_uniform_buffers[index]
+            );
+            BufferCreator::allocateMemory (
+                &device, 
+                &gpu, 
+                &m_buffer_data.mat_uniform_buffer_mem[index], 
+                memory_requirements.size, 
+                memory_requirements.memoryTypeBits, 
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
+                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+            );
+            vkBindBufferMemory (
+                device, 
+                m_buffer_data.mat_uniform_buffers[index], 
+                m_buffer_data.mat_uniform_buffer_mem[index], 
+                0
+            );
         }
     }
 
@@ -913,35 +955,133 @@ namespace deng
 
 
     /* Create image buffers for every texture */
-    void ResourceAllocator::mkTextureImages(VkDevice device, VkPhysicalDevice gpu, VkCommandPool command_pool, VkQueue g_queue, size_t sc_img_size) {
+    void ResourceAllocator::mkTextureImages (
+        VkDevice device, 
+        VkPhysicalDevice gpu, 
+        VkCommandPool command_pool, 
+        VkQueue g_queue, 
+        size_t sc_img_size
+    ) {
         size_t index;
         VkMemoryRequirements memory_requirements;
 
         // Iterate through assets an check if it is texture mapped
         for(index = 0; index < m_p_textures->size(); index++) {
             (*m_p_textures)[index].descriptor_sets.resize(sc_img_size);
+            
             // Create new staging buffer and allocate memory for it
-            memory_requirements =  BufferCreator::makeBuffer(&device, &gpu, &(*m_p_textures)[index].texture.pixel_data.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, &m_buffer_data.staging_buffer);
-            BufferCreator::allocateMemory(&device, &gpu, &m_buffer_data.staging_buffer_memory, memory_requirements.size, memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-            vkBindBufferMemory(device, m_buffer_data.staging_buffer, m_buffer_data.staging_buffer_memory, 0);
-            BufferCreator::populateBufferMem(&device, &memory_requirements.size, (void*) (*m_p_textures)[index].texture.pixel_data.p_pixel_data, &m_buffer_data.staging_buffer_memory, 0);
+            memory_requirements =  BufferCreator::makeBuffer (
+                &device, 
+                &gpu, 
+                &(*m_p_textures)[index].texture.pixel_data.size, 
+                VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+                &m_buffer_data.staging_buffer
+            );
+            BufferCreator::allocateMemory (
+                &device, 
+                &gpu, 
+                &m_buffer_data.staging_buffer_memory, 
+                memory_requirements.size, 
+                memory_requirements.memoryTypeBits, 
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
+                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+            );
+            vkBindBufferMemory (
+                device, 
+                m_buffer_data.staging_buffer, 
+                m_buffer_data.staging_buffer_memory, 
+                0
+            );
+            BufferCreator::populateBufferMem (
+                &device, 
+                &memory_requirements.size, 
+                (*m_p_textures)[index].texture.pixel_data.p_pixel_data, 
+                &m_buffer_data.staging_buffer_memory, 
+                0
+            );
 
             // Create new image and populate the memory for it
-            BufferCreator::makeImage(&device, &gpu, &(*m_p_textures)[index].image, (uint32_t) (*m_p_textures)[index].texture.pixel_data.width, (uint32_t) (*m_p_textures)[index].texture.pixel_data.height, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-            BufferCreator::allocateMemory(&device, &gpu, &(*m_p_textures)[index].image_mem, (*m_p_textures)[index].texture.pixel_data.size, memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-            vkBindImageMemory(device, (*m_p_textures)[index].image, (*m_p_textures)[index].image_mem, 0);
+            BufferCreator::makeImage (
+                &device, 
+                &gpu, 
+                &(*m_p_textures)[index].image, 
+                (uint32_t) (*m_p_textures)[index].texture.pixel_data.width, 
+                (uint32_t) (*m_p_textures)[index].texture.pixel_data.height, 
+                VK_FORMAT_B8G8R8A8_SRGB, 
+                VK_IMAGE_TILING_OPTIMAL, 
+                VK_IMAGE_USAGE_SAMPLED_BIT | 
+                VK_IMAGE_USAGE_TRANSFER_DST_BIT
+            );
+            BufferCreator::allocateMemory (
+                &device, 
+                &gpu, 
+                &(*m_p_textures)[index].image_mem, 
+                (*m_p_textures)[index].texture.pixel_data.size, 
+                memory_requirements.memoryTypeBits, 
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+            );
+            vkBindImageMemory (
+                device, 
+                (*m_p_textures)[index].image, 
+                (*m_p_textures)[index].image_mem, 
+                0
+            );
 
             // Copy data from staging buffer to texture image
-            BufferCreator::transitionImageLayout(&device, &(*m_p_textures)[index].image, &command_pool, &g_queue, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-            BufferCreator::copyBufferToImage(&device, &command_pool, &g_queue, &m_buffer_data.staging_buffer, &(*m_p_textures)[index].image, (*m_p_textures)[index].texture.pixel_data.width, (*m_p_textures)[index].texture.pixel_data.height);
-            BufferCreator::transitionImageLayout(&device, &(*m_p_textures)[index].image, &command_pool, &g_queue, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            BufferCreator::transitionImageLayout (
+                &device, 
+                &(*m_p_textures)[index].image, 
+                &command_pool, 
+                &g_queue, 
+                VK_FORMAT_B8G8R8A8_SRGB, 
+                VK_IMAGE_LAYOUT_UNDEFINED, 
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+            );
+            BufferCreator::copyBufferToImage (
+                &device, 
+                &command_pool, 
+                &g_queue, 
+                &m_buffer_data.staging_buffer, 
+                &(*m_p_textures)[index].image, 
+                (*m_p_textures)[index].texture.pixel_data.width, 
+                (*m_p_textures)[index].texture.pixel_data.height
+            );
+            BufferCreator::transitionImageLayout (
+                &device, 
+                &(*m_p_textures)[index].image, 
+                &command_pool, 
+                &g_queue, 
+                VK_FORMAT_B8G8R8A8_SRGB, 
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            );
             
             // Clean the staging buffer
-            vkDestroyBuffer(device, m_buffer_data.staging_buffer, nullptr);
-            vkFreeMemory(device, m_buffer_data.staging_buffer_memory, nullptr);
+            vkDestroyBuffer (
+                device, 
+                m_buffer_data.staging_buffer, 
+                nullptr
+            );
+            vkFreeMemory (
+                device, 
+                m_buffer_data.staging_buffer_memory, 
+                nullptr
+            );
                 
-            VkImageViewCreateInfo local_viewinfo = BufferCreator::getImageViewInfo((*m_p_textures)[index].image, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
-            if(vkCreateImageView(device, &local_viewinfo, nullptr, &(*m_p_textures)[index].image_view) != VK_SUCCESS)
+            VkImageViewCreateInfo local_viewinfo = BufferCreator::getImageViewInfo (
+                (*m_p_textures)[index].image, 
+                VK_FORMAT_B8G8R8A8_SRGB, 
+                VK_IMAGE_ASPECT_COLOR_BIT
+            );
+            if
+            (
+                vkCreateImageView (
+                    device, 
+                    &local_viewinfo, 
+                    nullptr, 
+                    &(*m_p_textures)[index].image_view
+                ) != VK_SUCCESS
+            )
                 ERR("Failed to create texture image view!");
 
             LOG("Successfully created texture image view!");
@@ -951,7 +1091,7 @@ namespace deng
 
     /* Create and populate main data buffer */
     void ResourceAllocator::mkBuffers(VkDevice device, VkPhysicalDevice gpu, VkCommandPool command_pool, VkQueue g_queue) {
-        size_t l_index, r_index;
+        size_t l_index;
         LOG("Initialising main buffer!");
         VkDeviceSize total_size = 0, data_size = 0;
         VkMemoryRequirements memory_requirements;
@@ -998,9 +1138,28 @@ namespace deng
         LOG("Main buffer size is: " + std::to_string(total_size));
         
         // Create staging buffer
-        memory_requirements = BufferCreator::makeBuffer(&device, &gpu, &total_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, &m_buffer_data.staging_buffer);
-        BufferCreator::allocateMemory(&device, &gpu, &m_buffer_data.staging_buffer_memory, memory_requirements.size, memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-        vkBindBufferMemory(device, m_buffer_data.staging_buffer, m_buffer_data.staging_buffer_memory, 0);
+        memory_requirements = BufferCreator::makeBuffer (
+            &device, 
+            &gpu, 
+            &total_size, 
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+            &m_buffer_data.staging_buffer
+        );
+        BufferCreator::allocateMemory (
+            &device, 
+            &gpu, 
+            &m_buffer_data.staging_buffer_memory, 
+            memory_requirements.size, 
+            memory_requirements.memoryTypeBits, 
+            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | 
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+        );
+        vkBindBufferMemory (
+            device, 
+            m_buffer_data.staging_buffer, 
+            m_buffer_data.staging_buffer_memory, 
+            0
+        );
         
         // Assign correct offsets for buffers and populate buffer memory
         for(l_index = 0, total_size = 0; l_index < m_p_assets->size(); l_index++) {
@@ -1009,44 +1168,47 @@ namespace deng
             {
             case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
                 data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED);
-                BufferCreator::populateBufferMem(&device, &data_size, (void*) (*m_p_assets)[l_index].vertices.p_texture_mapped_vert_data, 
-                &m_buffer_data.staging_buffer_memory, total_size);
+                BufferCreator::populateBufferMem (
+                    &device, 
+                    &data_size, 
+                    (*m_p_assets)[l_index].vertices.p_texture_mapped_vert_data, 
+                    &m_buffer_data.staging_buffer_memory, 
+                    total_size
+                );
                 break;
 
             case DENG_ASSET_MODE_3D_UNMAPPED: {
-                // Copy data into VERT_UNMAPPED vector for coloring purposes
-                std::vector<VERT_UNMAPPED> tmp_data;
-                tmp_data.resize((*m_p_assets)[l_index].vertices.size);
-                
-                for(r_index = 0; r_index < (*m_p_assets)[l_index].vertices.size; r_index++) {
-                    tmp_data[r_index].vert_data= (*m_p_assets)[l_index].vertices.p_unmapped_vert_data[r_index];
-                    tmp_data[r_index].color_data = (*m_p_assets)[l_index].solid_fill_color;
-                }
-
-                data_size = tmp_data.size() * sizeof(VERT_UNMAPPED);
-                BufferCreator::populateBufferMem(&device, &data_size, tmp_data.data(), 
-                &m_buffer_data.staging_buffer_memory, total_size);
+                data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED);
+                BufferCreator::populateBufferMem (
+                    &device, 
+                    &data_size, 
+                    (*m_p_assets)[l_index].vertices.p_unmapped_vert_data, 
+                    &m_buffer_data.staging_buffer_memory, 
+                    total_size
+                );
                 break;
             }
 
             case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
                 data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_2D);
-                BufferCreator::populateBufferMem(&device, &data_size, (void*) (*m_p_assets)[l_index].vertices.p_texture_mapped_vert_data_2d, 
-                &m_buffer_data.staging_buffer_memory, total_size);
+                BufferCreator::populateBufferMem (
+                    &device, 
+                    &data_size, 
+                    (*m_p_assets)[l_index].vertices.p_texture_mapped_vert_data_2d, 
+                    &m_buffer_data.staging_buffer_memory, 
+                    total_size
+                );
                 break;
 
             case DENG_ASSET_MODE_2D_UNMAPPED: {
-                std::vector<VERT_UNMAPPED_2D> tmp_data;
-                tmp_data.resize((*m_p_assets)[l_index].vertices.size);
-
-                for(r_index = 0; r_index < tmp_data.size(); r_index++) {
-                    tmp_data[r_index].vert_data = (*m_p_assets)[l_index].vertices.p_unmapped_vert_data_2d[r_index];
-                    tmp_data[r_index].color_data = (*m_p_assets)[l_index].solid_fill_color;
-                }
-
                 data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED_2D);
-                BufferCreator::populateBufferMem(&device, &data_size, (void*) (*m_p_assets)[l_index].vertices.p_texture_mapped_vert_data_2d,
-                &m_buffer_data.staging_buffer_memory, total_size);
+                BufferCreator::populateBufferMem (
+                    &device, 
+                    &data_size, 
+                    (*m_p_assets)[l_index].vertices.p_unmapped_vert_data_2d,
+                    &m_buffer_data.staging_buffer_memory, 
+                    total_size
+                );
                 break;
             }
 
@@ -1058,16 +1220,50 @@ namespace deng
 
             // Populate staging memory with indices data
             data_size = (*m_p_assets)[l_index].indices.size * sizeof(uint32_t);
-            BufferCreator::populateBufferMem(&device, &data_size, (*m_p_assets)[l_index].indices.p_indices, &m_buffer_data.staging_buffer_memory, total_size);
+            BufferCreator::populateBufferMem (
+                &device, 
+                &data_size, 
+                (*m_p_assets)[l_index].indices.p_indices, 
+                &m_buffer_data.staging_buffer_memory, 
+                total_size
+            );
+
             total_size += data_size;
         }
 
         // Push data from staging buffer to main buffer
-        memory_requirements = BufferCreator::makeBuffer(&device, &gpu, &total_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | 
-        VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, &m_buffer_data.main_buffer);
-        BufferCreator::allocateMemory(&device, &gpu, &m_buffer_data.main_buffer_memory, memory_requirements.size, memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        vkBindBufferMemory(device, m_buffer_data.main_buffer, m_buffer_data.main_buffer_memory, 0);
-        BufferCreator::copyBufferToBuffer(&device, &command_pool, &g_queue, &m_buffer_data.staging_buffer, &m_buffer_data.main_buffer, &total_size, 0);
+        memory_requirements = BufferCreator::makeBuffer (
+            &device, 
+            &gpu, 
+            &total_size, 
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | 
+            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | 
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT, 
+            &m_buffer_data.main_buffer
+        );
+        BufferCreator::allocateMemory (
+            &device, 
+            &gpu, 
+            &m_buffer_data.main_buffer_memory, 
+            memory_requirements.size, 
+            memory_requirements.memoryTypeBits, 
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+        );
+        vkBindBufferMemory (
+            device, 
+            m_buffer_data.main_buffer, 
+            m_buffer_data.main_buffer_memory, 
+            0
+        );
+        BufferCreator::copyBufferToBuffer (
+            &device, 
+            &command_pool, 
+            &g_queue, 
+            &m_buffer_data.staging_buffer, 
+            &m_buffer_data.main_buffer, 
+            &total_size, 
+            0
+        );
 
         // Perform staging buffer cleanup
         vkDestroyBuffer(device, m_buffer_data.staging_buffer, nullptr);
@@ -1123,6 +1319,19 @@ namespace deng
     }
 
 
+    /* Find correct texture by ID specified by the asset */
+    TextureImageData DrawCaller::findTextureImageDataByID(char *id) {
+        size_t l_index;
+        for(l_index = 0; l_index < m_p_textures->size(); l_index++) {
+            if(!strcmp(id, (*m_p_textures)[l_index].texture.id))
+                return (*m_p_textures)[l_index];    
+        }
+
+        // Error not found
+        ERR("Couldn't find texture with id: " + std::string(id));
+    }
+
+
     /* Create semaphores and fences for synchronising frames */
     void DrawCaller::mkSynchronisation(VkDevice &device) {
         // Resize semaphores 
@@ -1156,7 +1365,10 @@ namespace deng
 
 
     /* Set miscellanious data arrays */
-    void DrawCaller::setMiscData(std::array<PipelineData, DENG_PIPELINE_COUNT> pl_data, std::vector<VkFramebuffer> fb, std::vector<VkDescriptorSet> unmapped_ds, BufferData bd) {
+    void DrawCaller::setMiscData (
+        std::array<PipelineData, DENG_PIPELINE_COUNT> pl_data, 
+        std::vector<VkFramebuffer> fb, 
+        std::vector<VkDescriptorSet> unmapped_ds, BufferData bd) {
         m_pl_data = pl_data;
         m_framebuffers = fb;
         m_unmapped_ds = unmapped_ds;
@@ -1165,7 +1377,13 @@ namespace deng
 
 
     /* Record draw command buffers for assets */ 
-    void DrawCaller::recordDrawCommands(VkDevice device, VkQueue g_queue, VkRenderPass renderpass, VkExtent2D extent) {
+    void DrawCaller::recordDrawCommands (
+        VkDevice device, 
+        VkQueue g_queue, 
+        VkRenderPass renderpass, 
+        VkExtent2D extent,
+        dengMath::vec4<float> background
+    ) {
         size_t l_index, r_index;
 
         m_commandbuffers.resize(m_framebuffers.size());
@@ -1178,7 +1396,14 @@ namespace deng
         local_commandbuffer_allocation_info.commandBufferCount = static_cast<uint32_t>(m_commandbuffers.size());
 
         // Allocate command buffers
-        if(vkAllocateCommandBuffers(device, &local_commandbuffer_allocation_info, m_commandbuffers.data()))
+        if
+        (
+            vkAllocateCommandBuffers (
+                device, 
+                &local_commandbuffer_allocation_info, 
+                m_commandbuffers.data()
+            )
+        )
             ERR("Failed to allocate command buffers!");
         
         else LOG("Successfully allocated command buffers!");
@@ -1204,55 +1429,125 @@ namespace deng
 
             // Set up clear values
             std::array<VkClearValue, 2> local_clear_values;
-            local_clear_values[0].color = {0.1411765f, 0.0431372f, 0.2313725f, 1.0f};
+            local_clear_values[0].color = 
+            {background.first, background.second, background.third, background.fourth};
             local_clear_values[1].depthStencil = {1.0f, 0};
 
             // Add clear values to renderpass begin info
-            local_renderpass_begininfo.clearValueCount = (uint32_t) local_clear_values.size();
+            local_renderpass_begininfo.clearValueCount = 
+            (uint32_t) local_clear_values.size();
             local_renderpass_begininfo.pClearValues = local_clear_values.data();
             
             // Start a new render pass
-            vkCmdBeginRenderPass(m_commandbuffers[l_index], &local_renderpass_begininfo, VK_SUBPASS_CONTENTS_INLINE);
+            vkCmdBeginRenderPass (
+                m_commandbuffers[l_index], 
+                &local_renderpass_begininfo, 
+                VK_SUBPASS_CONTENTS_INLINE
+            );
                 LOG("Successfully began renderpass!");
                 
                 // Iterate through every asset and submit a draw call
                 for(r_index = 0; r_index < m_p_assets->size(); r_index++) {
-                    LOG("Vertices offset for model " + std::string((*m_p_assets)[r_index].name) + " is: " + std::to_string((*m_p_assets)[r_index].vertices.memory_offset));
-                    LOG("Indices offset for model " + std::string((*m_p_assets)[r_index].name) + " is: " + std::to_string((*m_p_assets)[r_index].indices.memory_offset));
-                    
-                    vkCmdBindVertexBuffers(m_commandbuffers[l_index], 0, 1, &m_buffer_data.main_buffer, &(*m_p_assets)[r_index].vertices.memory_offset);
-                    vkCmdBindIndexBuffer(m_commandbuffers[l_index], m_buffer_data.main_buffer, (*m_p_assets)[r_index].indices.memory_offset, VK_INDEX_TYPE_UINT32);
+                    LOG("Creating command buffers for asset: " + std::string((*m_p_assets)[r_index].name));
+                    vkCmdBindVertexBuffers (
+                        m_commandbuffers[l_index], 
+                        0, 
+                        1, 
+                        &m_buffer_data.main_buffer, 
+                        &(*m_p_assets)[r_index].vertices.memory_offset
+                    );
+                    vkCmdBindIndexBuffer (
+                        m_commandbuffers[l_index], 
+                        m_buffer_data.main_buffer, 
+                        (*m_p_assets)[r_index].indices.memory_offset, 
+                        VK_INDEX_TYPE_UINT32
+                    );
 
                     // Bind pipelines and descriptor sets according to the vertices type 
                     switch((*m_p_assets)[r_index].asset_mode) 
                     {
                     case DENG_ASSET_MODE_3D_UNMAPPED:
-                        vkCmdBindPipeline(m_commandbuffers[l_index], VK_PIPELINE_BIND_POINT_GRAPHICS, m_pl_data[0].pipeline);
-                        vkCmdBindDescriptorSets(m_commandbuffers[l_index], VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pl_data[0].p_pipeline_layout, 0, 1, 
-                        &m_unmapped_ds[l_index], 0, nullptr);
+                        vkCmdBindPipeline (
+                            m_commandbuffers[l_index], 
+                            VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                            m_pl_data[0].pipeline
+                        );
+                        vkCmdBindDescriptorSets (
+                            m_commandbuffers[l_index], 
+                            VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                            *m_pl_data[0].p_pipeline_layout, 
+                            0, 
+                            1, 
+                            &m_unmapped_ds[l_index], 
+                            0, 
+                            nullptr
+                        );
                         break;
 
                     case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
-                        vkCmdBindPipeline(m_commandbuffers[l_index], VK_PIPELINE_BIND_POINT_GRAPHICS, m_pl_data[1].pipeline);   
-                        vkCmdBindDescriptorSets(m_commandbuffers[l_index], VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pl_data[1].p_pipeline_layout, 0, 1,
-                        &(*m_p_textures)[(*m_p_assets)[r_index].fragment_index].descriptor_sets[l_index], 0, nullptr);                    
+                        vkCmdBindPipeline (
+                            m_commandbuffers[l_index], 
+                            VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                            m_pl_data[1].pipeline
+                        );   
+                        vkCmdBindDescriptorSets (
+                            m_commandbuffers[l_index], 
+                            VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                            *m_pl_data[1].p_pipeline_layout, 
+                            0, 
+                            1,
+                            &findTextureImageDataByID((*m_p_assets)[r_index].tex_id).descriptor_sets[l_index], 
+                            0, 
+                            nullptr
+                        );                    
                         break;
 
                     case DENG_ASSET_MODE_2D_UNMAPPED:
-                        vkCmdBindPipeline(m_commandbuffers[l_index], VK_PIPELINE_BIND_POINT_GRAPHICS, m_pl_data[2].pipeline);
-                        vkCmdBindDescriptorSets(m_commandbuffers[l_index], VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pl_data[2].p_pipeline_layout, 0, 1, 
-                        &m_unmapped_ds[l_index], 0, nullptr);
+                        vkCmdBindPipeline (
+                            m_commandbuffers[l_index], 
+                            VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                            m_pl_data[2].pipeline
+                        );
+                        vkCmdBindDescriptorSets (
+                            m_commandbuffers[l_index], 
+                            VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                            *m_pl_data[2].p_pipeline_layout, 
+                            0, 
+                            1, 
+                            &m_unmapped_ds[l_index], 
+                            0, 
+                            nullptr
+                        );
                         break;
 
                     case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
-                        vkCmdBindPipeline(m_commandbuffers[l_index], VK_PIPELINE_BIND_POINT_GRAPHICS, m_pl_data[3].pipeline);
-                        vkCmdBindDescriptorSets(m_commandbuffers[l_index], VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pl_data[3].p_pipeline_layout, 0, 1, 
-                        &(*m_p_textures)[(*m_p_assets)[r_index].fragment_index].descriptor_sets[l_index], 0, nullptr);
+                        vkCmdBindPipeline (
+                            m_commandbuffers[l_index], 
+                            VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                            m_pl_data[3].pipeline
+                        );
+                        vkCmdBindDescriptorSets (
+                            m_commandbuffers[l_index], 
+                            VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                            *m_pl_data[3].p_pipeline_layout, 
+                            0, 
+                            1, 
+                            &findTextureImageDataByID((*m_p_assets)[r_index].tex_id).descriptor_sets[l_index], 
+                            0, 
+                            nullptr
+                        );
                         break;
                     }
 
                     // Draw assets
-                    vkCmdDrawIndexed(m_commandbuffers[l_index], (*m_p_assets)[r_index].indices.size, 1, 0, 0, 0);
+                    vkCmdDrawIndexed (
+                        m_commandbuffers[l_index], 
+                        (*m_p_assets)[r_index].indices.size, 
+                        1, 
+                        0, 
+                        0, 
+                        0
+                    );
                 }
 
             // End render pass
@@ -1286,44 +1581,71 @@ namespace deng
 
 
     /* Submit textures for mapping assets */
-    void Renderer::submitTextures(DENGTexture *p_textures, size_t size) {
-        size_t l_index = m_textures.size();
-        size_t r_index;
-        m_textures.resize(l_index + size);
+    void Renderer::submitTexture(std::string tex_file, std::string id) {
+        size_t cur_index = m_textures.size();
+        m_textures.resize(cur_index + 1);
+        // Load all texture image information
+        dasLoadTexture(&m_textures[cur_index].texture, tex_file.c_str());
+        m_textures[cur_index].texture.id = (char*) calloc (
+            id.size() + 1,
+            sizeof(char)
+        );
 
-        for(r_index = 0; r_index < size; l_index++, r_index++)
-            m_textures[l_index].texture = p_textures[r_index];
+        strncpy (
+            m_textures[cur_index].texture.id,
+            id.c_str(),
+            id.size()
+        );
     }
 
 
     /* Submit text instances to renderer and make them into DENGAsset objects */ 
-    void Renderer::submitRendStr(dengUtils::dengRendStr *rend_strs, size_t size) {
+    void Renderer::submitRendStr(dengUtils::bitmapStr *rend_strs, size_t size) {
         size_t asset_index = m_assets.size();
         size_t tex_index = m_textures.size();
-        size_t r_index;
+        size_t l_index;
 
+        char *id_str;
         m_assets.resize(asset_index + size);
         m_textures.resize(tex_index + size);
 
-        for(r_index = 0; r_index < size; asset_index++, tex_index++, r_index++) {
+        for(l_index = 0; l_index < size; asset_index++, tex_index++, l_index++) {
+            text_box_c++;
+            texture_c++;
+            asset_c++;
+
+            // Allocate memory for textbox texture id
+            id_str = (char*) calloc (
+                20,
+                sizeof(char)
+            );  
+
+            sprintf (
+                id_str,
+                "Text Instance %d",
+                text_box_c
+            );
+
             // Create new asset for text box
             m_assets[asset_index].asset_mode = DENG_ASSET_MODE_2D_TEXTURE_MAPPED;
-            m_assets[asset_index].name = (char*) "Text instance";
-            m_assets[asset_index].description = (char*) "Text instance";
+            m_assets[asset_index].name = id_str;
+            m_assets[asset_index].description = (char*) rend_strs[l_index].text;
+            m_assets[asset_index].tex_id = id_str;
+            m_assets[asset_index].is_text = true;
             m_assets[asset_index].time_point = time(NULL);
-            m_assets[asset_index].fragment_index = tex_index;
-            m_assets[asset_index].vertices.p_texture_mapped_vert_data_2d = rend_strs[r_index].vert_pos.data();
-            m_assets[asset_index].vertices.size = rend_strs[r_index].vert_pos.size();
-            m_assets[asset_index].indices.p_indices = rend_strs[r_index].vert_indices.data();
-            m_assets[asset_index].indices.size = rend_strs[r_index].vert_indices.size();
+            m_assets[asset_index].vertices.p_texture_mapped_vert_data_2d = rend_strs[l_index].vert_pos.data();
+            m_assets[asset_index].vertices.size = rend_strs[l_index].vert_pos.size();
+            m_assets[asset_index].indices.p_indices = rend_strs[l_index].vert_indices.data();
+            m_assets[asset_index].indices.size = rend_strs[l_index].vert_indices.size();
  
             // Create new texture for text box
-            m_textures[tex_index].texture.name = (char*) "Text instance";
-            m_textures[tex_index].texture.descritpion = (char*) "Text instance";
-            m_textures[tex_index].texture.pixel_data.width = rend_strs[r_index].box_size.first;
-            m_textures[tex_index].texture.pixel_data.height = rend_strs[r_index].box_size.second;
-            m_textures[tex_index].texture.pixel_data.p_pixel_data = rend_strs[r_index].tex_data.data();
-            m_textures[tex_index].texture.pixel_data.size = rend_strs[r_index].tex_data.size();
+            m_textures[tex_index].texture.name = (char*) rend_strs[l_index].text;
+            m_textures[tex_index].texture.descritpion = (char*) rend_strs[l_index].text;
+            m_textures[tex_index].texture.pixel_data.width = rend_strs[l_index].box_size.first;
+            m_textures[tex_index].texture.pixel_data.height = rend_strs[l_index].box_size.second;
+            m_textures[tex_index].texture.pixel_data.p_pixel_data = rend_strs[l_index].tex_data.data();
+            m_textures[tex_index].texture.pixel_data.size = rend_strs[l_index].tex_data.size();
+            m_textures[tex_index].texture.id = id_str;
         }
     }
 
@@ -1353,34 +1675,166 @@ namespace deng
         else m_enable_validation_layers = false;
     }
 
-    
+
+    /* Setup map editor gui system */
+    void Renderer::initMapEditor() {
+        dengui::WindowInfo wi;
+        wi.pos = {-0.5f, -0.5f};
+        wi.size = {0.6f, 1.0f};
+        wi.title = "My GUI Window";
+        wi.wt = dengui::WINDOW_TYPE_STATIC_RIGHT;
+        wi.pc = DEFAULT_PRIMARY_COLOR;
+        wi.sc = DEFAULT_SECONDARY_COLOR;
+        wi.tc = DEFAULT_TERTIARY_COLOR;
+
+        dengui::beginWindow (
+            &m_p_map_gui, 
+            &wi, 
+            {(float) m_p_ww->getSize().first, (float) m_p_ww->getSize().second},
+            m_p_gui_ev, 
+            m_p_fm
+        );
+
+        // Local asset arrays
+        DENGAsset *assets = nullptr;
+        int32_t asset_c = 0;
+
+        dengUtils::bitmapStr *bm_strs = nullptr;
+        int32_t bm_str_c = 0;
+
+        // Get all the window element assets
+        dengui::getAssets (
+            m_p_map_gui,
+            1,
+            &assets,
+            &asset_c,
+            &bm_strs,
+            &bm_str_c
+        );
+
+        submitAssets(assets, asset_c);
+        submitRendStr(bm_strs, bm_str_c);
+    }
+
+
     /* Setup renderer for new rendering task */
-    void Renderer::initRenderer(WindowWrap *p_ww) {
+    void Renderer::initRenderer (
+        WindowWrap *p_ww, 
+        dengRendererUsageMode usage,
+        dengMath::vec4<float> background
+    ) {
         m_p_ww = p_ww;
-        
-        m_p_camera = new Camera({1.2f, 1.2f, 1.2f}, {0.2f, 0.2f}, 65.0f, DENG_DEFAULT_NEAR_PLANE, DENG_DEFAULT_FAR_PLANE, m_p_ww);
+        m_p_fm = new dengUtils::FontManager("", m_p_ww);
+        m_usage_mode = usage;
+
+        // Default shared data initialisation
+        mii.active_btn = m_p_ww->getWindow()->active_keys.p_btn;
+        mii.active_btn_c = m_p_ww->getWindow()->active_keys.btn_count;
+        mii.mouse_coords = {0, 0};
+        mii.mouse_input = DENG_INPUT_MOVEMENT;
+
+        if(m_usage_mode == DENG_RENDERER_USAGE_MAP_EDITOR)
+            initMapEditor();
+
+        m_p_camera = new Camera (
+            {1.2f, 1.2f, 1.2f}, 
+            {0.2f, 0.2f}, 
+            65.0f, 
+            DENG_DEFAULT_NEAR_PLANE, 
+            DENG_DEFAULT_FAR_PLANE, 
+            m_p_ww
+        );
+
         m_p_ev = new dengMath::Events(m_p_ww, m_p_camera);
 
         // Create new renderer creator objects
         m_p_ic = new InstanceCreator(m_p_ww, m_enable_validation_layers);
-        m_p_scc = new SwapChainCreator(m_p_ww, m_p_ic->getDev(), m_p_ic->getGpu(), m_p_ic->getSu(), m_p_ic->getGQi(), m_p_ic->getPQi());
-        m_p_desc_c = new DescriptorCreator(m_p_ic->getDev(), m_p_scc->getExt(), m_p_scc->getRp(), &m_assets, &m_textures, m_p_scc->getSCImg().size());
-        m_p_ra = new ResourceAllocator(m_p_ic->getDev(), m_p_ic->getGpu(), m_p_scc->getExt(), m_p_scc->getRp(), m_p_scc->getSCImgViews());
-        m_p_dc = new DrawCaller(m_p_ic->getDev(), m_p_ic->getGQi());
+        m_p_scc = new SwapChainCreator (
+            m_p_ww, 
+            m_p_ic->getDev(), 
+            m_p_ic->getGpu(), 
+            m_p_ic->getSu(), 
+            m_p_ic->getGQi(), 
+            m_p_ic->getPQi()
+        );
+
+        m_p_desc_c = new DescriptorCreator (
+            m_p_ic->getDev(), 
+            m_p_scc->getExt(), 
+            m_p_scc->getRp(), 
+            &m_assets, 
+            &m_textures, 
+            m_p_scc->getSCImg().size()
+        );
+
+        m_p_ra = new ResourceAllocator (
+            m_p_ic->getDev(), 
+            m_p_ic->getGpu(), 
+            m_p_scc->getExt(), 
+            m_p_scc->getRp(), 
+            m_p_scc->getSCImgViews()
+        );
+
+        m_p_dc = new DrawCaller (
+            m_p_ic->getDev(), 
+            m_p_ic->getGQi()
+        );
 
         // Create buffer resources
-        m_p_ra->setAssetsData(&m_assets, &m_textures);
-        m_p_ra->mkTextureImages(m_p_ic->getDev(), m_p_ic->getGpu(), m_p_dc->getComPool(), m_p_ic->getGQ(), m_p_scc->getSCImg().size());
-        m_p_ra->mkBuffers(m_p_ic->getDev(), m_p_ic->getGpu(), m_p_dc->getComPool(), m_p_ic->getGQ());
+        m_p_ra->setAssetsData (
+            &m_assets, 
+            &m_textures
+        );
+
+        m_p_ra->mkTextureImages (
+            m_p_ic->getDev(), 
+            m_p_ic->getGpu(), 
+            m_p_dc->getComPool(), 
+            m_p_ic->getGQ(), 
+            m_p_scc->getSCImg().size()
+        );
+
+        m_p_ra->mkBuffers (
+            m_p_ic->getDev(), 
+            m_p_ic->getGpu(), 
+            m_p_dc->getComPool(), 
+            m_p_ic->getGQ()
+        );
 
         // Make descriptor sets
-        m_p_desc_c->mkUnmappedDS(m_p_ic->getDev(), m_p_scc->getSCImg().size(), m_p_ra->getBD());
-        m_p_desc_c->mkTexMappedDS(m_p_ic->getDev(), m_p_scc->getSCImg().size(), m_p_ra->getSamp(), m_p_ra->getBD());
+        m_p_desc_c->mkUnmappedDS (
+            m_p_ic->getDev(), 
+            m_p_scc->getSCImg().size(), 
+            m_p_ra->getBD()
+        );
+
+        m_p_desc_c->mkTexMappedDS (
+            m_p_ic->getDev(), 
+            m_p_scc->getSCImg().size(), 
+            m_p_ra->getSamp(), 
+            m_p_ra->getBD()
+        );
 
         // Record draw calls to command buffers 
-        m_p_dc->setAssetsData(&m_assets, &m_textures);
-        m_p_dc->setMiscData(m_p_desc_c->getPipelines(), m_p_ra->getFB(), m_p_desc_c->getUnmappedDS(), m_p_ra->getBD());
-        m_p_dc->recordDrawCommands(m_p_ic->getDev(), m_p_ic->getGQ(), m_p_scc->getRp(), m_p_scc->getExt());
+        m_p_dc->setAssetsData (
+            &m_assets, 
+            &m_textures
+        );
+        
+        m_p_dc->setMiscData (
+            m_p_desc_c->getPipelines(), 
+            m_p_ra->getFB(), 
+            m_p_desc_c->getUnmappedDS(), 
+            m_p_ra->getBD()
+        );
+        
+        m_p_dc->recordDrawCommands (
+            m_p_ic->getDev(), 
+            m_p_ic->getGQ(), 
+            m_p_scc->getRp(), 
+            m_p_scc->getExt(),
+            background
+        );
     }
 
 
@@ -1422,10 +1876,17 @@ namespace deng
         vkWaitForFences(m_p_ic->getDev(), 1, &m_p_dc->flight_fences[m_p_dc->current_frame], VK_TRUE, UINT64_MAX);
         // Call Vulkan next image acquire method
         uint32_t image_index;
-        VkResult result = vkAcquireNextImageKHR(m_p_ic->getDev(), m_p_scc->getSC(), UINT64_MAX, m_p_dc->image_available_semaphore_set[m_p_dc->current_frame], VK_NULL_HANDLE, &image_index);
+        VkResult result = vkAcquireNextImageKHR (
+            m_p_ic->getDev(), 
+            m_p_scc->getSC(), 
+            UINT64_MAX, 
+            m_p_dc->image_available_semaphore_set[m_p_dc->current_frame], 
+            VK_NULL_HANDLE, 
+            &image_index
+        );
         
         if(result == VK_ERROR_OUT_OF_DATE_KHR) {
-            LOG("Image acquiring timed out!");
+            ERR("Image acquiring timed out!");
             return;
         }
         
@@ -1433,10 +1894,18 @@ namespace deng
             ERR("Error acquiring swap chain image!");
 
         // Update uniform data buffer
-        m_p_ra->updateUniformBufferData(m_p_ic->getDev(), m_p_dc->current_frame, m_p_camera, DENG_CAMERA_UNIFORM_NO_CAMERA_MODE_2D | DENG_CAMERA_UNIFORM_PERSPECTIVE_CAMERA_MODE_3D);
+        m_p_ra->updateUniformBufferData (
+            m_p_ic->getDev(), 
+            m_p_dc->current_frame, 
+            m_p_camera, 
+            DENG_CAMERA_UNIFORM_NO_CAMERA_MODE_2D | 
+            DENG_CAMERA_UNIFORM_PERSPECTIVE_CAMERA_MODE_3D
+        );
 
-        VkSemaphore local_wait_semaphores[] = {m_p_dc->image_available_semaphore_set[m_p_dc->current_frame]};
-        VkSemaphore local_signal_semaphores[] = {m_p_dc->render_finished_semaphore_set[m_p_dc->current_frame]};
+        VkSemaphore local_wait_semaphores[] = 
+        {m_p_dc->image_available_semaphore_set[m_p_dc->current_frame]};
+        VkSemaphore local_signal_semaphores[] = 
+        {m_p_dc->render_finished_semaphore_set[m_p_dc->current_frame]};
 
         VkSubmitInfo local_submitinfo{};
         local_submitinfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1476,16 +1945,33 @@ namespace deng
         size_t index;
         // Clean framebuffers
         for(index = 0; index < m_p_ra->getFB().size(); index++) 
-            vkDestroyFramebuffer(m_p_ic->getDev(), m_p_ra->getFB()[index], nullptr);
+            vkDestroyFramebuffer (
+                m_p_ic->getDev(), 
+                m_p_ra->getFB()[index], 
+                nullptr
+            );
 
         // Clean commandbuffers and commandpools
-        vkFreeCommandBuffers(m_p_ic->getDev(), m_p_dc->getComPool(), m_p_dc->getComBufs()->size(), m_p_dc->getComBufs()->data());
-        vkDestroyCommandPool(m_p_ic->getDev(), m_p_dc->getComPool(), nullptr);
+        vkFreeCommandBuffers (
+            m_p_ic->getDev(), 
+            m_p_dc->getComPool(), 
+            m_p_dc->getComBufs()->size(), 
+            m_p_dc->getComBufs()->data()
+        );
+        vkDestroyCommandPool (
+            m_p_ic->getDev(), 
+            m_p_dc->getComPool(), 
+            nullptr
+        );
 
         // Clean pipeline related data
         std::array<PipelineData, DENG_PIPELINE_COUNT> local_pipeline_data = m_p_desc_c->getPipelines();
         for(index = 0; index < local_pipeline_data.size(); index++) { 
-            vkDestroyPipeline(m_p_ic->getDev(), local_pipeline_data[index].pipeline, nullptr);
+            vkDestroyPipeline (
+                m_p_ic->getDev(), 
+                local_pipeline_data[index].pipeline, 
+                nullptr
+            );
             if(local_pipeline_data[index].p_pipeline_layout) {
                 vkDestroyPipelineLayout(m_p_ic->getDev(), *local_pipeline_data[index].p_pipeline_layout, nullptr);
                 local_pipeline_data[index].p_pipeline_layout = nullptr;

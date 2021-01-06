@@ -34,5 +34,4 @@ void dasAssemble(DENGAsset *passet, const char *filename);
 
 /* Callback function for reading .das binary asset file */
 void dasReadAsset(DENGAsset *p_asset, const char *file_name, AssetMode tex_mode);
-void dasBindTexture(DENGAsset *p_asset, size_t texture_index);
 #endif

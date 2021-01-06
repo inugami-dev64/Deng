@@ -2,14 +2,24 @@
 
 void init_key_vectors(DENGWindow *p_window) {
     p_window->active_keys.key_count = 0;
-    p_window->active_keys.p_keys = (DENGKey*) malloc(sizeof(DENGKey));
+    p_window->active_keys.p_keys = (DENGKey*) malloc (
+        sizeof(DENGKey)
+    );
+    
     p_window->active_keys.btn_count = 0;
-    p_window->active_keys.p_btn = (DENGMouseButton*) malloc(sizeof(DENGMouseButton));
+    p_window->active_keys.p_btn = (DENGMouseButton*) malloc (
+        sizeof(DENGMouseButton)
+    );
 
     p_window->released_keys.key_count = 0;
-    p_window->released_keys.p_keys = (DENGKey*) malloc(sizeof(DENGKey));
+    p_window->released_keys.p_keys = (DENGKey*) malloc (
+        sizeof(DENGKey)
+    );
+
     p_window->released_keys.btn_count = 0;
-    p_window->released_keys.p_btn = (DENGMouseButton*) malloc(sizeof(DENGMouseButton));
+    p_window->released_keys.p_btn = (DENGMouseButton*) malloc (
+        sizeof(DENGMouseButton)
+    );
 }
 
 void add_key(DENGWindow *p_window, DENGKey *p_key, DENGMouseButton *p_btn, int key_type, int array_type) {
@@ -18,14 +28,20 @@ void add_key(DENGWindow *p_window, DENGKey *p_key, DENGMouseButton *p_btn, int k
     case MOUSE_BUTTON:
         if(array_type & ACTIVE_KEYS) {
             p_window->active_keys.btn_count++;
-            p_window->active_keys.p_btn = realloc(p_window->active_keys.p_btn, p_window->active_keys.btn_count * sizeof(DENGMouseButton));
+            p_window->active_keys.p_btn = realloc (
+                p_window->active_keys.p_btn, 
+                p_window->active_keys.btn_count * sizeof(DENGMouseButton)
+            );
         
             p_window->active_keys.p_btn[p_window->active_keys.btn_count - 1] = *p_btn;
         }
         
         if(array_type & RELEASE_KEYS) {
             p_window->released_keys.btn_count++;
-            p_window->released_keys.p_btn = realloc(p_window->released_keys.p_btn, p_window->released_keys.btn_count * sizeof(DENGMouseButton));
+            p_window->released_keys.p_btn = realloc (
+                p_window->released_keys.p_btn, 
+                p_window->released_keys.btn_count * sizeof(DENGMouseButton)
+            );
 
             p_window->released_keys.p_btn[p_window->released_keys.btn_count - 1] = *p_btn;
         }
@@ -35,14 +51,20 @@ void add_key(DENGWindow *p_window, DENGKey *p_key, DENGMouseButton *p_btn, int k
     case KB_KEY:
         if(array_type & ACTIVE_KEYS) {
             p_window->active_keys.key_count++;
-            p_window->active_keys.p_keys = realloc(p_window->active_keys.p_keys, p_window->active_keys.key_count * sizeof(DENGKey));
+            p_window->active_keys.p_keys = realloc (
+                p_window->active_keys.p_keys, 
+                p_window->active_keys.key_count * sizeof(DENGKey)
+            );
 
             p_window->active_keys.p_keys[p_window->active_keys.key_count - 1] = *p_key;
         }
 
         if(array_type & RELEASE_KEYS) {
             p_window->released_keys.key_count++;
-            p_window->released_keys.p_keys = realloc(p_window->released_keys.p_keys, p_window->released_keys.key_count * sizeof(DENGKey));
+            p_window->released_keys.p_keys = realloc (
+                p_window->released_keys.p_keys, 
+                p_window->released_keys.key_count * sizeof(DENGKey)
+            );
 
             p_window->released_keys.p_keys[p_window->released_keys.key_count - 1] = *p_key;
         }
@@ -165,7 +187,10 @@ void remove_key(DENGWindow *p_window, size_t index, int key_type, int array_type
             }
 
             free(p_window->active_keys.p_keys);
-            p_window->active_keys.p_keys = malloc(p_window->active_keys.key_count * sizeof(DENGKey));
+            p_window->active_keys.p_keys = malloc (
+                p_window->active_keys.key_count * 
+                sizeof(DENGKey)
+            );
 
             for(l_index = 0; l_index < p_window->active_keys.key_count; l_index++)
                 p_window->active_keys.p_keys[l_index] = tmp[l_index];
@@ -176,7 +201,8 @@ void remove_key(DENGWindow *p_window, size_t index, int key_type, int array_type
             DENGKey tmp[p_window->released_keys.key_count--];
 
             for(l_index = 0, r_index = 0; l_index < p_window->released_keys.key_count; l_index++, r_index++) {
-                if(r_index != index) tmp[l_index] = p_window->released_keys.p_keys[r_index];
+                if(r_index != index) 
+                    tmp[l_index] = p_window->released_keys.p_keys[r_index];
                 else { 
                     r_index++;
                     tmp[l_index] = p_window->released_keys.p_keys[r_index];
@@ -184,7 +210,10 @@ void remove_key(DENGWindow *p_window, size_t index, int key_type, int array_type
             }
 
             free(p_window->released_keys.p_keys);
-            p_window->released_keys.p_keys = malloc(p_window->released_keys.key_count * sizeof(DENGKey));
+            p_window->released_keys.p_keys = malloc (
+                p_window->released_keys.key_count * 
+                sizeof(DENGKey)
+            );
 
             for(l_index = 0; l_index < p_window->released_keys.key_count; l_index++)
                 p_window->released_keys.p_keys[l_index] = tmp[l_index];

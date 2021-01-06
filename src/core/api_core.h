@@ -3,18 +3,18 @@
 
 /*  BEFORE EVERY GIT COMMIT SET GENERIC_DEBUG VALUE TO 0!!!     */
 /*  Debug will need to be defined by the programmer and not by the libarary */ 
-#define DENG_VULKAN
-#define GENERIC_DEBUG 1
+#define __GENERIC_DEBUG 1
+#define __DENG_API_CORE
 
 /*  please do not enable these at the same time, 
     otherwise you won't be able to debug anything */
-#define CAMERA_LOCATION_DEBUG 0
-#define CAMERA_MOUSE_DEBUG 0
+#define __CAMERA_LOCATION_DEBUG 0
+#define __CAMERA_MOUSE_DEBUG 0
 
 #define ERR(x) throw std::runtime_error(std::string("ERROR: ") + x)
 #define WARNME(x) std::cout << "WARNING: " << x << std::endl
 
-#if GENERIC_DEBUG
+#if __GENERIC_DEBUG
     #define LOG(x) std::cout << "LOG: " << x << std::endl
     #define WARNMEDB(x) std::cout << "WARNING: " << x << std::endl
 #else
@@ -37,12 +37,14 @@
 #include <type_traits>
 #include <vector>
 #include <string>
+#include <string.h>
 #include <array>
 #include <cstring>
 #include <iostream>
 #include <map>
 #include <unordered_map>
 #include <thread>
+#include <mutex>
 
 
 /* Universal deng error return type */ 
@@ -152,11 +154,12 @@ typedef uint32_t dengRendererHintBits;
 #include "../utilities/timer/timer.h"
 #include "window.h"
 #include "camera.h"
-// #include "../utilities/map/grid_generator.h"
+
 #include "../maths/events.h"
 #include "rend_helpers.h"
 #include "../utilities/font.h"
-// #include "../dengui/core/dengui_core.h"
+#include "../dengui/main/dengui.h"
+
 #include "renderer.h"
 
 #endif
