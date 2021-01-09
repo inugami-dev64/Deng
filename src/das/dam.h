@@ -26,7 +26,7 @@ char *help_text =
     "   --assemble	   Assemble asset\n"
     "     -o / --obj-path    Specify the path to the model file\n";
 
-char *repo_conf_path = "local_repos.conf";
+char *repo_conf_path = "repos.conf";
 
 // Method declarations
 void damReadLocalRepoConf(char ***p_repo_paths, size_t *p_repo_count, int *p_wri);
@@ -34,7 +34,7 @@ void damListAssets(char **repo_paths, size_t repo_count);
 int damAddRepo(char **repo_path, size_t *p_repo_count, char *new_repo, int default_id);
 void damSetDefaultRepo(char **pp_repo_paths, size_t repo_count, int id);
 void damListLocalRepos(char **pp_repo_paths, size_t repo_count, int default_id);
-void damAssetAssemblyCaller(DENGAsset *p_asset, char **pp_repo_paths, int repo_id);
+void damAssetAssemblyCaller(deng_Asset *p_asset, char **pp_repo_paths, int repo_id);
 // void damRemoveAsset(char *file_name);
 
 // Date and time formating

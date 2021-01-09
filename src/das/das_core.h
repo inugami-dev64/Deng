@@ -16,6 +16,7 @@ extern "C" {
 #define false 0
 
 #include "../common/common.h"
+#include "assets.h"
 #include "data_loader.h"
 #include "hdr_data.h"
 #include "das_handler.h"

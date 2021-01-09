@@ -25,11 +25,11 @@ namespace deng {
         return this->m_size;
     }
 
-    dengInputMode WindowWrap::getInputMode() {
+    deng_InputMode WindowWrap::getInputMode() {
         return this->m_input_mode;
     }
 
-    void WindowWrap::setInputMode(const dengInputMode &new_input_mode) {    
+    void WindowWrap::setInputMode(const deng_InputMode &new_input_mode) {    
         switch (new_input_mode)
         {
         case DENG_INPUT_MOVEMENT:

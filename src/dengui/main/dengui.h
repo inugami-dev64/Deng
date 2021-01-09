@@ -19,8 +19,18 @@
 // Window description flags
 typedef unsigned char denguiWindowFlagBits; 
 
+namespace dengui {
+    class Events;
+    struct WindowElement;
+}
+
+namespace deng {
+    class ResourceAllocator;
+    class DescriptorCreator;
+    class DrawCaller;
+}
+
 #include "gui_events.h"
 #include "gui_window.h"
-#include "../map_editor/map_windows.h"
 
 #endif

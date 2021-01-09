@@ -437,7 +437,7 @@ void damSetDefaultRepo(char **pp_repo_paths, size_t repo_count, int id) {
 
     if(id > repo_count) {
         printf("ID is out of available repositories bounds!\n");
-        printf("Update local_repos.conf or select different ID!\n");
+        printf("Update repos.conf or select different ID!\n");
         return;
     }
 
@@ -472,7 +472,7 @@ void damListLocalRepos(char **pp_repo_paths, size_t repo_count, int default_id) 
 
 
 /* Assemble name and description to asset file */
-void damAssetAssemblyCaller(DENGAsset *p_asset, char **repo_paths, int repo_id) {
+void damAssetAssemblyCaller(deng_Asset *p_asset, char **repo_paths, int repo_id) {
     size_t index;
     char *total_file_name;
     char file_name_buffer[24];
@@ -591,7 +591,7 @@ int main(int argc, char *argv[]) {
         else if(!strcmp(argv[index], "--assemble")) {
             int is_obj_specified = false;
             char *obj_path;
-            DENGAsset asset;
+            deng_Asset asset;
             index++;
 
             // Check is asset object file is specified

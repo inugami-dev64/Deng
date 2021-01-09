@@ -1,7 +1,7 @@
 #include "api_core.h"
 
 // Shared data
-extern dengui::MouseInputInfo mii;
+extern dengui::MouseInputInfo ext_mii;
 
 namespace deng {
     Camera::Camera(const dengMath::vec3<float> &camera_movement_speed_multiplier, const dengMath::vec2<float> &mouse_movement_speed_multiplier, const float &FOV, const float &near_plane, const float &far_plane, WindowWrap *window) {
@@ -147,22 +147,39 @@ namespace deng {
     }
 
     void Camera::updateCursorPos() {
-        std::lock_guard<std::mutex> lck(mii.mouse_input_mut);
+        std::lock_guard<std::mutex> lck(ext_mii.mut);
         get_mouse_pos (
             this->m_p_window_wrap->getWindow(), 
-            &mii.mouse_coords.first, 
-            &mii.mouse_coords.second, 
+            &ext_mii.mouse_coords.first, 
+            &ext_mii.mouse_coords.second, 
             0
         );
 
-        mii.active_btn_c = m_p_window_wrap->getWindow()->active_keys.btn_count;
+        ext_mii.active_btn_c = m_p_window_wrap->getWindow()->active_keys.btn_count;
+        if(ext_mii.active_btn_c) {
+            DENGMouseButton *tmp = (DENGMouseButton*) realloc (
+                ext_mii.active_btn,
+                sizeof(DENGMouseButton) * ext_mii.active_btn_c
+            );
+
+            // Check for memory allocation error
+            if(!tmp)
+                MEM_ERR("could not reallocate memory for active buttons");
+            
+            ext_mii.active_btn = tmp;
+            memcpy (
+                ext_mii.active_btn,
+                m_p_window_wrap->getWindow()->active_keys.p_btn,
+                sizeof(DENGMouseButton) * ext_mii.active_btn_c
+            );
+        }
 
         this->m_mouse_pos.first = 
-        (mii.mouse_coords.first * 2) / (this->m_mouse_sens.first * 
+        (ext_mii.mouse_coords.first * 2) / (this->m_mouse_sens.first * 
         this->m_p_window_wrap->getSize().first);
 
         this->m_mouse_pos.second = 
-        (mii.mouse_coords.second * 2) / (this->m_mouse_sens.second * 
+        (ext_mii.mouse_coords.second * 2) / (this->m_mouse_sens.second * 
         this->m_p_window_wrap->getSize().second);
     }
 }

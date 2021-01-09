@@ -7,9 +7,7 @@ namespace dengUtils {
         size_t l_index, r_index, path_index;
         std::string list_font_name = "";
 
-        printf("FONT FILE: %s\n", str.font_file);
         for(l_index = 0; l_index < m_fonts.size(); l_index++) {
-            printf("seg test\n");
             // Extract font name from the font file path
             // Find last instance of slash
             for(r_index = 0; r_index < m_fonts[l_index].size(); r_index++)
@@ -117,14 +115,14 @@ namespace dengUtils {
         findFontFiles(custom_font_path);
 
         res = FT_Init_FreeType(&m_library_instance);
-        if(res) ERR("Failed to initialise freetype library instance!");
+        if(res) FONT_ERR("Failed to initialise freetype library instance!");
     }
 
     FontManager::~FontManager() { FT_Done_FreeType(m_library_instance); }
 
 
     /* Create new drawable string */
-    dengError FontManager::mkNewStr (
+    deng_Error FontManager::mkNewStr (
         bitmapStr &str, 
         uint16_t px_size, 
         dengMath::vec2<float> pos, 
@@ -202,7 +200,7 @@ namespace dengUtils {
 
 
     /* Callback function for creating new text box instance based on pixel size */
-    dengError FontManager::newPxStr (
+    deng_Error FontManager::newPxStr (
         bitmapStr &str,
         const char *font_name,
         uint16_t px_size,
@@ -213,11 +211,11 @@ namespace dengUtils {
         str.font_file = font_name;
         // Check if font file exists
         if(!verifyFont(str, path_str))
-            ERR("Failed to find font file!");
+            FONT_ERR("Failed to find font file!");
 
         str.font_file = path_str.c_str();
 
-        dengError res;
+        deng_Error res;
         res = mkNewStr (
             str,
             px_size,
@@ -230,7 +228,7 @@ namespace dengUtils {
 
 
     /* Callback function for creating new text box instance based on vector size */
-    dengError FontManager::newVecStr (
+    deng_Error FontManager::newVecStr (
         bitmapStr &str,
         const char *font_name,
         float vec_size,
@@ -241,7 +239,7 @@ namespace dengUtils {
         str.font_file = font_name;
         // Check if font file exists
         if(!verifyFont(str, path_str))
-            ERR("Failed to find font file!");
+            FONT_ERR("Failed to find font file!");
         
         str.font_file = path_str.c_str();
         float px_size = (float) dengMath::Conversion::vector2DSizeToPixelSize (
@@ -250,7 +248,7 @@ namespace dengUtils {
             DENG_COORD_AXIS_Y
         );
 
-        dengError res;
+        deng_Error res;
         res = mkNewStr (
             str,
             (uint16_t) px_size,

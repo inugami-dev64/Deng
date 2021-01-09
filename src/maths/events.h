@@ -14,7 +14,7 @@ namespace dengMath {
         std::pair<bool, DENGKey> m_is_key_registered;
         deng::Camera *m_p_camera;
         deng::WindowWrap *m_p_window_wrap;
-        vec3<dengMovementEvent> m_movements;
+        vec3<deng_MovementEvent> m_movements;
         vec2<float> m_frozen_mouse_position;
 
     private:
@@ -25,7 +25,7 @@ namespace dengMath {
 
     public:
         Events(deng::WindowWrap *p_win_wrap, deng::Camera *p_camera);
-        dengMovementEvent getMovement();
+        deng_MovementEvent getMovement();
         void handleExit();
         void update();
     };

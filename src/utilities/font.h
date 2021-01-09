@@ -54,7 +54,7 @@ namespace dengUtils {
         void findFontFiles(std::string custom_path);
         void mkTextbox(bitmapStr &str, dengMath::vec3<unsigned char> color);
         // Generic text box creationg function
-        dengError mkNewStr (
+        deng_Error mkNewStr (
             bitmapStr &str, 
             uint16_t px_size,
             dengMath::vec2<float> pos, 
@@ -67,7 +67,7 @@ namespace dengUtils {
         ~FontManager();
         
         /* Create new text box instance from pixel size */
-        dengError newPxStr ( 
+        deng_Error newPxStr ( 
             bitmapStr &str,
             const char *font_name,
             uint16_t px_size,
@@ -76,7 +76,7 @@ namespace dengUtils {
         );
         
         /* Create new text box instance from vector size */
-        dengError newVecStr (
+        deng_Error newVecStr (
             bitmapStr &str,
             const char *font_name,
             float vec_size,

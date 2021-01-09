@@ -6,159 +6,203 @@ namespace dengui {
     void beginWindow (
         Window **pp_window,
         WindowInfo *p_wi,
-        dengMath::vec2<float> draw_bounds,
-        Events *p_ev,
-        dengUtils::FontManager *p_fm
+        dengMath::vec2<uint32_t> draw_bounds,
+        dengUtils::FontManager *p_fm,
+        Events *p_ev
     ) {
-        LOG("seg test");
-        (*pp_window) = new Window(p_wi->wt, p_wi->title, p_fm);
+        (*pp_window) = new Window(p_wi->wt, p_wi->id, p_fm);
         (*pp_window)->setPos(p_wi->pos);
         (*pp_window)->setSize(p_wi->size);
         (*pp_window)->setMB(p_wi->p_mb);
         (*pp_window)->setPC(&p_wi->pc);
         (*pp_window)->setSC(&p_wi->sc);
         (*pp_window)->setTC(&p_wi->tc);
-        LOG("seg test");
 
-        std::vector<ElementInfo> elems;
-        elems = (*pp_window)->makeWindow(p_wi, draw_bounds);
-        LOG("elem_c: " + std::to_string(elems.size()));
-        p_ev = new Events(elems, {(uint32_t) draw_bounds.first, (uint32_t) draw_bounds.second});
+        std::vector<WindowElement> elems;
+        (*pp_window)->makeWindow(p_wi, draw_bounds);
+        elems = (*pp_window)->getWindowElements();
+        p_ev->pushWindowElements(elems);
+
     }
 
 
-    /* Make all window elements into DENGAssets */
+    /* Start new DENGUI events thread */
+    void beginEventHandler (
+        Events *p_ev,
+        std::vector<deng_Asset> *p_assets,
+        std::vector<deng::TextureImageData> *p_textures,
+        std::mutex *p_asset_mut,
+        deng::DrawCaller *p_dc,
+        deng::ResourceAllocator *p_ra,
+        deng::DescriptorCreator *p_desc_c,
+        VkDevice device,
+        VkQueue g_queue,
+        VkRenderPass renderpass,
+        VkExtent2D extent,
+        dengMath::vec4<float> background,
+        dengMath::vec2<uint32_t> draw_area
+    ) {
+        EventInfo ev_info;
+        ev_info.background = background;
+        ev_info.deng_window_area = draw_area;
+        ev_info.device = device;
+        ev_info.extent = extent;
+        ev_info.g_queue = g_queue;
+        ev_info.p_assets = p_assets;
+        ev_info.p_dc = p_dc;
+        ev_info.p_res_mut = p_asset_mut;
+        ev_info.p_textures = p_textures;
+        ev_info.renderpass = renderpass;
+        p_ev = new Events(ev_info);
+    }
+
+
+    /* Make all window elements into deng_Assets */
     void getAssets (
         Window *windows,
         int32_t window_c,
-        DENGAsset **p_assets,
+        deng_Asset **p_assets,
         int32_t *p_asset_c,
-        dengUtils::bitmapStr **p_bm_strs,
-        int32_t *p_bm_str_c
+        deng_Texture **p_textures,
+        int32_t *p_tex_c
     ) {
         int32_t l_index; 
-        size_t r_index, asset_index, bm_index;
+        size_t r_index, asset_index, tex_index;
+        std::vector<WindowElement> win_elems;
+
         (*p_asset_c) = 0;
-        (*p_bm_str_c) = 0;
-
-        std::vector<VERT_UNMAPPED_2D> vert;
-        std::vector<uint32_t> indices;
-        std::vector<dengUtils::bitmapStr> bm_strs;
-        std::vector<UNI_OFFSET> offsets;
-
-        LOG("WINDOW_C: " + std::to_string(window_c));
+        (*p_tex_c) = 0;
         // Find the total count off assets
         for(l_index = 0; l_index < window_c; l_index++) {
-            offsets = windows[l_index].getOffsets();
-            bm_strs = windows[l_index].getTextBoxes();
-            (*p_asset_c) += offsets.size();
-            (*p_bm_str_c) += bm_strs.size();
+            win_elems = windows[l_index].getWindowElements();
+
+            for(r_index = 0; r_index < win_elems.size(); r_index++) {
+                if(win_elems[r_index].color_mode == ELEMENT_COLOR_MODE_TEXTURE_MAPPED)
+                    (*p_tex_c)++;
+
+                (*p_asset_c)++;
+            }
         }
 
+        LOG("TEX_C: " + std::to_string((*p_tex_c)));
         // Allocate memory for assets
-        (*p_assets) = (DENGAsset*) calloc (
-            (*p_asset_c),
-            sizeof(DENGAsset)
-        );
+        if((*p_asset_c)) {
+            (*p_assets) = (deng_Asset*) calloc (
+                (*p_asset_c),
+                sizeof(deng_Asset)
+            );
+        }
 
-        // Allocate memory for bitmap strings
-        (*p_bm_strs) = (dengUtils::bitmapStr*) calloc (
-            (*p_bm_str_c),
-            sizeof(dengUtils::bitmapStr)
-        );
+        // Allocate memory for textures
+        if((*p_tex_c)) {
+            (*p_textures) = (deng_Texture*) calloc (
+                (*p_tex_c),
+                sizeof(deng_Texture)
+            );
+        }
 
         // Create assets from window elements
         asset_index = 0;
-        bm_index = 0;
+        tex_index = 0;
         for(l_index = 0; l_index < window_c; l_index++) {
-            vert = windows[l_index].getVerts();
-            indices = windows[l_index].getInds();
-            offsets = windows[l_index].getOffsets();
-            bm_strs = windows[l_index].getTextBoxes();
-
-            for(r_index = 0; r_index < bm_strs.size(); r_index++, bm_index++)
-                (*p_bm_strs)[bm_index] = bm_strs[r_index];
-                
-            // Copy all unmapped vertices data to DENGasset
-            for(r_index = 0; r_index < offsets.size(); r_index++, asset_index++) {
-                (*p_assets)[asset_index].asset_mode = DENG_ASSET_MODE_2D_UNMAPPED;
-                (*p_assets)[asset_index].name = (char*) calloc (
-                    strlen(windows[l_index].getTitle().c_str()) + 4,
+            win_elems = windows[l_index].getWindowElements();
+            
+            // Iterate through elements
+            for(r_index = 0; r_index < win_elems.size(); r_index++) {
+                // Create ID string
+                win_elems[r_index].asset_id = (char*) calloc (
+                    win_elems[r_index].child_id.size() + win_elems[r_index].parent_id.size() + 5,
                     sizeof(char)
                 );
 
-                // Allocate memory for asset vertices and indices
-                if(r_index != offsets.size() - 1) {
-                    (*p_assets)[asset_index].vertices.p_unmapped_vert_data_2d = (VERT_UNMAPPED_2D*) calloc (
-                        offsets[r_index + 1].vert_offset - offsets[r_index].vert_offset,
-                        sizeof(VERT_UNMAPPED_2D)
-                    );
-                    (*p_assets)[asset_index].vertices.size = 
-                    offsets[r_index + 1].vert_offset - offsets[r_index].vert_offset;
-
-                    (*p_assets)[asset_index].indices.p_indices = (uint32_t*) calloc (
-                        offsets[r_index + 1].ind_offset - offsets[r_index].ind_offset,
-                        sizeof(uint32_t)
-                    );
-                    (*p_assets)[asset_index].indices.size = 
-                    offsets[r_index + 1].ind_offset - offsets[r_index].ind_offset;
-                }
-
-                else {
-                    (*p_assets)[asset_index].vertices.p_unmapped_vert_data_2d = (VERT_UNMAPPED_2D*) calloc (
-                        vert.size() - offsets[r_index].vert_offset,
-                        sizeof(VERT_UNMAPPED_2D)
-                    );
-                    (*p_assets)[asset_index].vertices.size = 
-                    vert.size() - offsets[r_index].vert_offset;
-
-                    (*p_assets)[asset_index].indices.p_indices = (uint32_t*) calloc (
-                        indices.size() - offsets[r_index].ind_offset,
-                        sizeof(uint32_t)
-                    );
-                    (*p_assets)[asset_index].indices.size = 
-                    indices.size() - offsets[r_index].ind_offset;
-                }
-
-                // Write asset description W(DESC)
                 sprintf (
-                    (*p_assets)[asset_index].name,
-                    "W(%s)",
-                    windows[l_index].getTitle().c_str()
+                    win_elems[r_index].asset_id,
+                    "W(%s/%s)",
+                    win_elems[r_index].child_id.c_str(),
+                    win_elems[r_index].parent_id.c_str()
                 );
 
-                // Populate indices and vertices
-                if(r_index != offsets.size() - 1) {
-                    // Copy vertices
-                    memcpy (
-                        (*p_assets)[asset_index].vertices.p_unmapped_vert_data_2d,
-                        &vert[offsets[r_index].vert_offset],
-                        sizeof(VERT_UNMAPPED_2D) * (offsets[r_index + 1].vert_offset - offsets[r_index].vert_offset)
+                switch (win_elems[r_index].color_mode)
+                {
+                case ELEMENT_COLOR_MODE_TEXTURE_MAPPED:
+                    // Populate texture information
+                    (*p_textures)[tex_index].pixel_data.width = win_elems[r_index].tex_box.first;
+                    (*p_textures)[tex_index].pixel_data.height = win_elems[r_index].tex_box.second;
+                    (*p_textures)[tex_index].pixel_data.size = 
+                    win_elems[r_index].tex_box.first * win_elems[r_index].tex_box.second * 4;
+                    (*p_textures)[tex_index].id = win_elems[r_index].asset_id;
+                    
+                    // Allocate memory for texture data and copy all pixels over
+                    LOG("tex_size: " + std::to_string(win_elems[r_index].texture.size()));
+                    (*p_textures)[tex_index].pixel_data.p_pixel_data = (uint8_t*) calloc (
+                        win_elems[r_index].texture.size(),
+                        sizeof(uint8_t)
                     );
                     
-                    // Copy indices
                     memcpy (
-                        (*p_assets)[asset_index].indices.p_indices,
-                        &indices[offsets[r_index].ind_offset],
-                        sizeof(uint32_t) * (offsets[r_index + 1].ind_offset - offsets[r_index].ind_offset)
+                        (*p_textures)[tex_index].pixel_data.p_pixel_data,
+                        win_elems[r_index].texture.data(),
+                        win_elems[r_index].texture.size() * sizeof(uint8_t)
                     );
-                }
 
-                else {
-                    // Copy vertices
+
+                    // Populate texture mapped asset vertices
+                    (*p_assets)[asset_index].id = win_elems[r_index].asset_id;
+                    (*p_assets)[asset_index].name = win_elems[r_index].asset_id;
+                    (*p_assets)[asset_index].asset_mode = DENG_ASSET_MODE_2D_TEXTURE_MAPPED;
+                    (*p_assets)[asset_index].is_shown = win_elems[r_index].is_visible;
+                    (*p_assets)[asset_index].vertices.size = win_elems[r_index].mapped_vert.size();
+                    (*p_assets)[asset_index].vertices.p_texture_mapped_vert_data_2d = (VERT_MAPPED_2D*) calloc (
+                        (*p_assets)[asset_index].vertices.size,
+                        sizeof(VERT_MAPPED_2D)
+                    );
+
+                    memcpy (
+                        (*p_assets)[asset_index].vertices.p_texture_mapped_vert_data_2d,
+                        win_elems[r_index].mapped_vert.data(),
+                        sizeof(VERT_MAPPED_2D) * (*p_assets)[asset_index].vertices.size
+                    );
+
+                    tex_index++;
+                    break;
+
+                case ELEMENT_COLOR_MODE_UNMAPPED:
+                    // Populate unmapped asset vertices
+                    (*p_assets)[asset_index].id = win_elems[r_index].asset_id;
+                    (*p_assets)[asset_index].name = (*p_assets)[asset_index].id;
+                    (*p_assets)[asset_index].asset_mode = DENG_ASSET_MODE_2D_UNMAPPED;
+                    (*p_assets)[asset_index].is_shown = win_elems[r_index].is_visible;
+                    (*p_assets)[asset_index].vertices.size = win_elems[r_index].unmapped_vert.size();
+                    (*p_assets)[asset_index].vertices.p_unmapped_vert_data_2d = (VERT_UNMAPPED_2D*) calloc (
+                        (*p_assets)[asset_index].vertices.size,
+                        sizeof(VERT_UNMAPPED_2D)
+                    );
+
                     memcpy (
                         (*p_assets)[asset_index].vertices.p_unmapped_vert_data_2d,
-                        &vert[offsets[r_index].vert_offset],
-                        sizeof(VERT_UNMAPPED_2D) * (vert.size() - offsets[r_index].vert_offset)
+                        win_elems[r_index].unmapped_vert.data(),
+                        sizeof(VERT_UNMAPPED_2D) * (*p_assets)[asset_index].vertices.size
                     );
-
-                    // Copy indices
-                    memcpy (
-                        (*p_assets)[asset_index].indices.p_indices,
-                        &indices[offsets[r_index].ind_offset],
-                        sizeof(uint32_t) * (indices.size() - offsets[r_index].ind_offset)
-                    );
+                    break;
+                
+                default:
+                    break;
                 }
+
+                // Populate asset indices
+                (*p_assets)[asset_index].indices.size = win_elems[r_index].indices.size();
+                (*p_assets)[asset_index].indices.p_indices = (uint32_t*) calloc (
+                    (*p_assets)[asset_index].indices.size,
+                    sizeof(uint32_t)
+                );
+
+                memcpy (
+                    (*p_assets)[asset_index].indices.p_indices,
+                    win_elems[r_index].indices.data(),
+                    sizeof(uint32_t) * (*p_assets)[asset_index].indices.size
+                );
+
+                asset_index++;
             }
         }
     }
@@ -167,25 +211,25 @@ namespace dengui {
     /* Initialise default values to windowinfo */
     WindowInfo::WindowInfo() {
         p_mb = NULL;
-        pc = DEFAULT_PRIMARY_COLOR;
-        sc = DEFAULT_SECONDARY_COLOR;
-        tc = DEFAULT_TERTIARY_COLOR;
-        title = "Hello world!";
+        pc = DENGUI_DEFAULT_PRIMARY_COLOR;
+        sc = DENGUI_DEFAULT_SECONDARY_COLOR;
+        tc = DENGUI_DEFAULT_TERTIARY_COLOR;
+        id = "Hello world!";
         wt = WINDOW_TYPE_FLOATING;
-        fl_b = WINDOW_FLAG_NULL;
-        pos = DEFAULT_POS;
-        size = DEFAULT_SIZE;
+        fl_b = DENGUI_WINDOW_FLAG_NULL;
+        pos = DENGUI_DEFAULT_POS;
+        size = DENGUI_DEFAULT_SIZE;
     }
 
     
     /* Window constructor */
     Window::Window (
         WindowType wt, 
-        std::string title,
+        std::string id,
         dengUtils::FontManager *p_fm
     ) {
         m_wt = wt;
-        m_title = title;
+        m_id = id;
         m_p_fm = p_fm;
     }
 
@@ -195,85 +239,85 @@ namespace dengui {
         dengMath::vec2<float> pos, 
         dengMath::vec2<float> size,
         RectangleOrigin rec_origin, 
-        OBJColorData color
+        deng_ObjColorData color,
+        std::vector<VERT_UNMAPPED_2D> &vert,
+        std::vector<uint32_t> &indices
     ) { 
-        // Push offsets to offsets' vector
-        UNI_OFFSET offset;
-        offset.vert_offset = m_vertices.size();
-        offset.ind_offset = m_indices.size();
-        m_offsets.push_back(offset);
-        
         // Calculate all vertices
-        m_vertices.resize(offset.vert_offset + 4);
-        m_indices.resize(offset.ind_offset + 6);
+        UNI_OFFSET offset;
+        offset.vert_offset = vert.size();
+        offset.ind_offset = indices.size();
+
+        vert.resize(offset.vert_offset + 4);
+        indices.resize(offset.ind_offset + 6);
         switch (rec_origin)
         {
         case REC_ORIGIN_VERTEX_TOP_LEFT:
-            m_vertices[offset.vert_offset].vert_data = *(OBJVerticesData2D*) &pos;
-            m_vertices[offset.vert_offset].color_data = color;
+            vert[offset.vert_offset].vert_data = *(deng_ObjVertData2D*) &pos;
+            vert[offset.vert_offset].color_data = color;
             
-            m_vertices[offset.vert_offset + 1].vert_data.vert_x = pos.first + size.first;
-            m_vertices[offset.vert_offset + 1].vert_data.vert_y = pos.second;
-            m_vertices[offset.vert_offset + 1].color_data = color;
+            vert[offset.vert_offset + 1].vert_data.vert_x = pos.first + size.first;
+            vert[offset.vert_offset + 1].vert_data.vert_y = pos.second;
+            vert[offset.vert_offset + 1].color_data = color;
             
-            m_vertices[offset.vert_offset + 2].vert_data.vert_x = pos.first + size.first;
-            m_vertices[offset.vert_offset + 2].vert_data.vert_y = pos.second + size.second;
-            m_vertices[offset.vert_offset + 2].color_data = color;
+            vert[offset.vert_offset + 2].vert_data.vert_x = pos.first + size.first;
+            vert[offset.vert_offset + 2].vert_data.vert_y = pos.second + size.second;
+            vert[offset.vert_offset + 2].color_data = color;
             
-            m_vertices[offset.vert_offset + 3].vert_data.vert_x = pos.first;
-            m_vertices[offset.vert_offset + 3].vert_data.vert_y = pos.second + size.second;
-            m_vertices[offset.vert_offset + 3].color_data = color;
+            vert[offset.vert_offset + 3].vert_data.vert_x = pos.first;
+            vert[offset.vert_offset + 3].vert_data.vert_y = pos.second + size.second;
+            vert[offset.vert_offset + 3].color_data = color;
             break;
 
         case REC_ORIGIN_VERTEX_TOP_RIGHT:
-            m_vertices[offset.vert_offset].vert_data.vert_x = pos.first - size.first;
-            m_vertices[offset.vert_offset].vert_data.vert_y = pos.second;
-            m_vertices[offset.vert_offset].color_data = color;
+            vert[offset.vert_offset].vert_data.vert_x = pos.first - size.first;
+            vert[offset.vert_offset].vert_data.vert_y = pos.second;
+            vert[offset.vert_offset].color_data = color;
             
-            m_vertices[offset.vert_offset + 1].vert_data = *(OBJVerticesData2D*) &pos;
-            m_vertices[offset.vert_offset + 1].color_data = color;
+            vert[offset.vert_offset + 1].vert_data = *(deng_ObjVertData2D*) &pos;
+            vert[offset.vert_offset + 1].color_data = color;
             
-            m_vertices[offset.vert_offset + 2].vert_data.vert_x = pos.first;
-            m_vertices[offset.vert_offset + 2].vert_data.vert_y = pos.second + size.second;
-            m_vertices[offset.vert_offset + 2].color_data = color;
+            vert[offset.vert_offset + 2].vert_data.vert_x = pos.first;
+            vert[offset.vert_offset + 2].vert_data.vert_y = pos.second + size.second;
+            vert[offset.vert_offset + 2].color_data = color;
             
-            m_vertices[offset.vert_offset + 3].vert_data.vert_x = pos.first - size.first;
-            m_vertices[offset.vert_offset + 3].vert_data.vert_y = pos.second + size.second;
-            m_vertices[offset.vert_offset + 3].color_data = color;
+            vert[offset.vert_offset + 3].vert_data.vert_x = pos.first - size.first;
+            vert[offset.vert_offset + 3].vert_data.vert_y = pos.second + size.second;
+            vert[offset.vert_offset + 3].color_data = color;
             break;
 
         case REC_ORIGIN_VERTEX_BOTTOM_LEFT:
-            m_vertices[offset.vert_offset].vert_data.vert_x = pos.first;
-            m_vertices[offset.vert_offset].vert_data.vert_y = pos.second - size.second;
-            m_vertices[offset.vert_offset].color_data = color;
+            vert[offset.vert_offset].vert_data.vert_x = pos.first;
+            vert[offset.vert_offset].vert_data.vert_y = pos.second - size.second;
+            vert[offset.vert_offset].color_data = color;
             
-            m_vertices[offset.vert_offset + 1].vert_data.vert_x = pos.first + size.first;
-            m_vertices[offset.vert_offset + 1].vert_data.vert_y = pos.second - size.second;
-            m_vertices[offset.vert_offset + 1].color_data = color;
+            vert[offset.vert_offset + 1].vert_data.vert_x = pos.first + size.first;
+            vert[offset.vert_offset + 1].vert_data.vert_y = pos.second - size.second;
+            vert[offset.vert_offset + 1].color_data = color;
             
-            m_vertices[offset.vert_offset + 2].vert_data.vert_x = pos.first + size.first;
-            m_vertices[offset.vert_offset + 2].vert_data.vert_y = pos.second;
-            m_vertices[offset.vert_offset + 2].color_data = color;
+            vert[offset.vert_offset + 2].vert_data.vert_x = pos.first + size.first;
+            vert[offset.vert_offset + 2].vert_data.vert_y = pos.second;
+            vert[offset.vert_offset + 2].color_data = color;
             
-            m_vertices[offset.vert_offset + 3].vert_data = *(OBJVerticesData2D*) &pos;
-            m_vertices[offset.vert_offset + 3].color_data = color;
+            vert[offset.vert_offset + 3].vert_data = *(deng_ObjVertData2D*) &pos;
+            vert[offset.vert_offset + 3].color_data = color;
             break;
 
         case REC_ORIGIN_VERTEX_BOTTOM_RIGHT:
-            m_vertices[offset.vert_offset].vert_data.vert_x = pos.first - size.first;
-            m_vertices[offset.vert_offset].vert_data.vert_y = pos.second - size.second;
-            m_vertices[offset.vert_offset].color_data = color;
+            vert[offset.vert_offset].vert_data.vert_x = pos.first - size.first;
+            vert[offset.vert_offset].vert_data.vert_y = pos.second - size.second;
+            vert[offset.vert_offset].color_data = color;
             
-            m_vertices[offset.vert_offset + 1].vert_data.vert_x = pos.first;
-            m_vertices[offset.vert_offset + 1].vert_data.vert_y = pos.second - size.second;
-            m_vertices[offset.vert_offset + 1].color_data = color;
+            vert[offset.vert_offset + 1].vert_data.vert_x = pos.first;
+            vert[offset.vert_offset + 1].vert_data.vert_y = pos.second - size.second;
+            vert[offset.vert_offset + 1].color_data = color;
             
-            m_vertices[offset.vert_offset + 2].vert_data = *(OBJVerticesData2D*) &pos;
-            m_vertices[offset.vert_offset + 2].color_data = color;
+            vert[offset.vert_offset + 2].vert_data = *(deng_ObjVertData2D*) &pos;
+            vert[offset.vert_offset + 2].color_data = color;
             
-            m_vertices[offset.vert_offset + 3].vert_data.vert_x = pos.first - size.first;
-            m_vertices[offset.vert_offset + 3].vert_data.vert_y = pos.second;
-            m_vertices[offset.vert_offset + 3].color_data = color;
+            vert[offset.vert_offset + 3].vert_data.vert_x = pos.first - size.first;
+            vert[offset.vert_offset + 3].vert_data.vert_y = pos.second;
+            vert[offset.vert_offset + 3].color_data = color;
             break;
         
         default:
@@ -281,12 +325,12 @@ namespace dengui {
         }
 
         // Set all indices
-        m_indices[offset.ind_offset] = 0;
-        m_indices[offset.ind_offset + 1] = 1;
-        m_indices[offset.ind_offset + 2] = 2;
-        m_indices[offset.ind_offset + 3] = 2;
-        m_indices[offset.ind_offset + 4] = 3;
-        m_indices[offset.ind_offset + 5] = 0;
+        indices[offset.ind_offset] = 0;
+        indices[offset.ind_offset + 1] = 1;
+        indices[offset.ind_offset + 2] = 2;
+        indices[offset.ind_offset + 3] = 2;
+        indices[offset.ind_offset + 4] = 3;
+        indices[offset.ind_offset + 5] = 0;
     }
 
 
@@ -296,162 +340,159 @@ namespace dengui {
         dengMath::vec2<float> size,
         bool is_abs_height,
         RectangleOrigin rec_origin,
-        OBJColorData color
+        deng_ObjColorData color,
+        std::array<deng_ObjVertData2D, 4> &form_vert,
+        std::vector<VERT_UNMAPPED_2D> &vert,
+        std::vector<uint32_t> &indices
     ) {
-        OBJVerticesData2D window_top_left = m_vertices[0].vert_data;
-        OBJVerticesData2D window_top_right = m_vertices[1].vert_data;
-        OBJVerticesData2D window_bottom_left = m_vertices[2].vert_data;
-        OBJVerticesData2D window_bottom_right = m_vertices[3].vert_data;
-
-        float window_width = window_top_right.vert_x - window_top_left.vert_x;
-        float window_height = window_bottom_left.vert_y - window_top_left.vert_y;
+        float window_width = form_vert[1].vert_x - form_vert[0].vert_x;
+        float window_height = form_vert[3].vert_y - form_vert[0].vert_y;
 
         // Push new offsets to offsets' vector
         UNI_OFFSET offset;
-        offset.vert_offset = m_vertices.size();
-        offset.ind_offset = m_indices.size();
-        m_offsets.push_back(offset);
+        offset.vert_offset = vert.size();
+        offset.ind_offset = indices.size();
 
         // Calculate all vertices
-        m_vertices.resize(offset.vert_offset + 4);
-        m_indices.resize(offset.ind_offset + 6);
-        m_vertices[offset.vert_offset].color_data = color;
-        m_vertices[offset.vert_offset + 1].color_data = color;
-        m_vertices[offset.vert_offset + 2].color_data = color;
-        m_vertices[offset.vert_offset + 3].color_data = color;
+        vert.resize(offset.vert_offset + 4);
+        indices.resize(offset.ind_offset + 6);
+        vert[offset.vert_offset].color_data = color;
+        vert[offset.vert_offset + 1].color_data = color;
+        vert[offset.vert_offset + 2].color_data = color;
+        vert[offset.vert_offset + 3].color_data = color;
 
         switch (rec_origin)
         {
         case REC_ORIGIN_VERTEX_TOP_LEFT:
-            m_vertices[offset.vert_offset].vert_data.vert_x = 
-            window_top_left.vert_x + ((pos.first + 1.0f) / 2 * window_width);
-            m_vertices[offset.vert_offset + 1].vert_data.vert_x = 
-            window_top_left.vert_x + ((pos.first + size.first + 1.0f) / 2 * window_width);
-            m_vertices[offset.vert_offset + 2].vert_data.vert_x = 
-            window_top_left.vert_x + ((pos.first + size.first + 1.0f) / 2 * window_width);
-            m_vertices[offset.vert_offset + 3].vert_data.vert_x = 
-            window_top_left.vert_x + ((pos.first + 1.0f) / 2 * window_width);
+            vert[offset.vert_offset].vert_data.vert_x = 
+            form_vert[0].vert_x + ((pos.first + 1.0f) / 2 * window_width);
+            vert[offset.vert_offset + 1].vert_data.vert_x = 
+            form_vert[0].vert_x + ((pos.first + size.first + 1.0f) / 2 * window_width);
+            vert[offset.vert_offset + 2].vert_data.vert_x = 
+            form_vert[0].vert_x + ((pos.first + size.first + 1.0f) / 2 * window_width);
+            vert[offset.vert_offset + 3].vert_data.vert_x = 
+            form_vert[0].vert_x + ((pos.first + 1.0f) / 2 * window_width);
 
             if(!is_abs_height) {
-                m_vertices[offset.vert_offset].vert_data.vert_y = 
-                window_top_left.vert_y + ((pos.second + 1.0f) / 2 * window_height);
-                m_vertices[offset.vert_offset + 1].vert_data.vert_y = 
-                window_top_left.vert_y + ((pos.second + 1.0f) / 2 * window_height);
-                m_vertices[offset.vert_offset + 2].vert_data.vert_y = 
-                window_top_left.vert_y + ((pos.second + size.second + 1.0f) / 2 * window_height);
-                m_vertices[offset.vert_offset + 3].vert_data.vert_y = 
-                window_top_left.vert_y + ((pos.second + size.second + 1.0f) / 2 * window_height);
+                vert[offset.vert_offset].vert_data.vert_y = 
+                form_vert[0].vert_y + ((pos.second + 1.0f) / 2 * window_height);
+                vert[offset.vert_offset + 1].vert_data.vert_y = 
+                form_vert[0].vert_y + ((pos.second + 1.0f) / 2 * window_height);
+                vert[offset.vert_offset + 2].vert_data.vert_y = 
+                form_vert[0].vert_y + ((pos.second + size.second + 1.0f) / 2 * window_height);
+                vert[offset.vert_offset + 3].vert_data.vert_y = 
+                form_vert[0].vert_y + ((pos.second + size.second + 1.0f) / 2 * window_height);
             }
 
             else {
-                m_vertices[offset.vert_offset].vert_data.vert_y =
-                window_top_left.vert_y + (pos.second + 1.0f) / 2 * window_height;
-                m_vertices[offset.vert_offset + 1].vert_data.vert_y =
-                window_top_left.vert_y + (pos.second + 1.0f) / 2 * window_height;
-                m_vertices[offset.vert_offset + 2].vert_data.vert_y =
-                window_top_left.vert_y + (pos.second + 1.0f) / 2 * window_height + size.second;
-                m_vertices[offset.vert_offset + 3].vert_data.vert_y =
-                window_top_left.vert_y + (pos.second + 1.0f) / 2 * window_height + size.second;
+                vert[offset.vert_offset].vert_data.vert_y =
+                form_vert[0].vert_y + (pos.second + 1.0f) / 2 * window_height;
+                vert[offset.vert_offset + 1].vert_data.vert_y =
+                form_vert[0].vert_y + (pos.second + 1.0f) / 2 * window_height;
+                vert[offset.vert_offset + 2].vert_data.vert_y =
+                form_vert[0].vert_y + (pos.second + 1.0f) / 2 * window_height + size.second;
+                vert[offset.vert_offset + 3].vert_data.vert_y =
+                form_vert[0].vert_y + (pos.second + 1.0f) / 2 * window_height + size.second;
             }
             break;
 
         case REC_ORIGIN_VERTEX_TOP_RIGHT:
-            m_vertices[offset.vert_offset].vert_data.vert_x = 
-            window_top_right.vert_x - ((pos.first - size.first + 1.0f) / 2 * window_width);
-            m_vertices[offset.vert_offset + 1].vert_data.vert_x = 
-            window_top_right.vert_x - ((pos.first + 1.0f) / 2 * window_width);
-            m_vertices[offset.vert_offset + 2].vert_data.vert_x = 
-            window_top_right.vert_x - ((pos.first + 1.0f) / 2 * window_width);
-            m_vertices[offset.vert_offset + 3].vert_data.vert_x = 
-            window_top_right.vert_x - ((pos.first - size.first + 1.0f) / 2 * window_width);
+            vert[offset.vert_offset].vert_data.vert_x = 
+            form_vert[1].vert_x - ((pos.first - size.first + 1.0f) / 2 * window_width);
+            vert[offset.vert_offset + 1].vert_data.vert_x = 
+            form_vert[1].vert_x - ((pos.first + 1.0f) / 2 * window_width);
+            vert[offset.vert_offset + 2].vert_data.vert_x = 
+            form_vert[1].vert_x - ((pos.first + 1.0f) / 2 * window_width);
+            vert[offset.vert_offset + 3].vert_data.vert_x = 
+            form_vert[1].vert_x - ((pos.first - size.first + 1.0f) / 2 * window_width);
             
             if(!is_abs_height) {
-                m_vertices[offset.vert_offset].vert_data.vert_y = 
-                window_top_right.vert_y + ((pos.second + 1.0f) / 2 * window_height);
-                m_vertices[offset.vert_offset + 1].vert_data.vert_y = 
-                window_top_right.vert_y + ((pos.second + 1.0f) / 2 * window_height);
-                m_vertices[offset.vert_offset + 2].vert_data.vert_y = 
-                window_top_right.vert_x + ((pos.second + size.second + 1.0f) / 2 * window_height);
-                m_vertices[offset.vert_offset + 3].vert_data.vert_y = 
-                window_top_right.vert_x + ((pos.second + size.second + 1.0f) / 2 * window_height);
+                vert[offset.vert_offset].vert_data.vert_y = 
+                form_vert[1].vert_y + ((pos.second + 1.0f) / 2 * window_height);
+                vert[offset.vert_offset + 1].vert_data.vert_y = 
+                form_vert[1].vert_y + ((pos.second + 1.0f) / 2 * window_height);
+                vert[offset.vert_offset + 2].vert_data.vert_y = 
+                form_vert[1].vert_x + ((pos.second + size.second + 1.0f) / 2 * window_height);
+                vert[offset.vert_offset + 3].vert_data.vert_y = 
+                form_vert[1].vert_x + ((pos.second + size.second + 1.0f) / 2 * window_height);
             }
 
             else {
-                m_vertices[offset.vert_offset].vert_data.vert_y =
-                window_top_right.vert_y + (pos.second + 1.0f) / 2 * window_height;
-                m_vertices[offset.vert_offset + 1].vert_data.vert_y =
-                window_top_right.vert_y + (pos.second + 1.0f) / 2 * window_height;
-                m_vertices[offset.vert_offset + 2].vert_data.vert_y =
-                window_top_right.vert_y + (pos.second + 1.0f) / 2 * window_height + size.second;
-                m_vertices[offset.vert_offset + 3].vert_data.vert_y =
-                window_top_right.vert_y + (pos.second + 1.0f) / 2 * window_height + size.second;
+                vert[offset.vert_offset].vert_data.vert_y =
+                form_vert[1].vert_y + (pos.second + 1.0f) / 2 * window_height;
+                vert[offset.vert_offset + 1].vert_data.vert_y =
+                form_vert[1].vert_y + (pos.second + 1.0f) / 2 * window_height;
+                vert[offset.vert_offset + 2].vert_data.vert_y =
+                form_vert[1].vert_y + (pos.second + 1.0f) / 2 * window_height + size.second;
+                vert[offset.vert_offset + 3].vert_data.vert_y =
+                form_vert[1].vert_y + (pos.second + 1.0f) / 2 * window_height + size.second;
             }
             break;
         
         case REC_ORIGIN_VERTEX_BOTTOM_RIGHT:
-            m_vertices[offset.vert_offset].vert_data.vert_x = 
-            window_bottom_left.vert_x - ((pos.first - size.first + 1.0f) / 2 * window_width);
-            m_vertices[offset.vert_offset + 1].vert_data.vert_x = 
-            window_bottom_left.vert_x - ((pos.first + 1.0f) / 2 * window_width);
-            m_vertices[offset.vert_offset + 2].vert_data.vert_x = 
-            window_bottom_left.vert_x - ((pos.first + 1.0f) / 2 * window_width);
-            m_vertices[offset.vert_offset + 3].vert_data.vert_x = 
-            window_bottom_left.vert_x - ((pos.first - size.first + 1.0f) / 2 * window_width);
+            vert[offset.vert_offset].vert_data.vert_x = 
+            form_vert[3].vert_x - ((pos.first - size.first + 1.0f) / 2 * window_width);
+            vert[offset.vert_offset + 1].vert_data.vert_x = 
+            form_vert[3].vert_x - ((pos.first + 1.0f) / 2 * window_width);
+            vert[offset.vert_offset + 2].vert_data.vert_x = 
+            form_vert[3].vert_x - ((pos.first + 1.0f) / 2 * window_width);
+            vert[offset.vert_offset + 3].vert_data.vert_x = 
+            form_vert[3].vert_x - ((pos.first - size.first + 1.0f) / 2 * window_width);
 
             if(!is_abs_height) {
-                m_vertices[offset.vert_offset].vert_data.vert_y = 
-                window_bottom_left.vert_y - ((pos.second - size.second + 1.0f) / 2 * window_height);
-                m_vertices[offset.vert_offset + 1].vert_data.vert_y = 
-                window_bottom_left.vert_y - ((pos.second - size.second + 1.0f) / 2 * window_height);
-                m_vertices[offset.vert_offset + 2].vert_data.vert_y = 
-                window_bottom_left.vert_y - ((pos.second + 1.0f) / 2 * window_height);
-                m_vertices[offset.vert_offset + 3].vert_data.vert_y = 
-                window_bottom_left.vert_y - ((pos.second + 1.0f) / 2 * window_height);
+                vert[offset.vert_offset].vert_data.vert_y = 
+                form_vert[3].vert_y - ((pos.second - size.second + 1.0f) / 2 * window_height);
+                vert[offset.vert_offset + 1].vert_data.vert_y = 
+                form_vert[3].vert_y - ((pos.second - size.second + 1.0f) / 2 * window_height);
+                vert[offset.vert_offset + 2].vert_data.vert_y = 
+                form_vert[3].vert_y - ((pos.second + 1.0f) / 2 * window_height);
+                vert[offset.vert_offset + 3].vert_data.vert_y = 
+                form_vert[3].vert_y - ((pos.second + 1.0f) / 2 * window_height);
             }
 
             else {
-                m_vertices[offset.vert_offset].vert_data.vert_y =
-                window_bottom_left.vert_y - (pos.second + 1.0f) / 2 * window_height - size.second;
-                m_vertices[offset.vert_offset + 1].vert_data.vert_y =
-                window_bottom_left.vert_y - (pos.second + 1.0f) / 2 * window_height - size.second;
-                m_vertices[offset.vert_offset + 2].vert_data.vert_y =
-                window_bottom_left.vert_y - (pos.second + 1.0f) / 2 * window_height;
-                m_vertices[offset.vert_offset + 3].vert_data.vert_y =
-                window_bottom_left.vert_y - (pos.second + 1.0f) / 2 * window_height;
+                vert[offset.vert_offset].vert_data.vert_y =
+                form_vert[3].vert_y - (pos.second + 1.0f) / 2 * window_height - size.second;
+                vert[offset.vert_offset + 1].vert_data.vert_y =
+                form_vert[3].vert_y - (pos.second + 1.0f) / 2 * window_height - size.second;
+                vert[offset.vert_offset + 2].vert_data.vert_y =
+                form_vert[3].vert_y - (pos.second + 1.0f) / 2 * window_height;
+                vert[offset.vert_offset + 3].vert_data.vert_y =
+                form_vert[3].vert_y - (pos.second + 1.0f) / 2 * window_height;
             }
             break;
 
         case REC_ORIGIN_VERTEX_BOTTOM_LEFT:
-            m_vertices[offset.vert_offset].vert_data.vert_x = 
-            window_bottom_right.vert_x + ((pos.first + 1.0f) / 2 * window_width);
-            m_vertices[offset.vert_offset + 1].vert_data.vert_x = 
-            window_bottom_right.vert_x + ((pos.first + size.first + 1.0f) / 2 * window_width);
-            m_vertices[offset.vert_offset + 2].vert_data.vert_x = 
-            window_bottom_right.vert_x + ((pos.first + size.first + 1.0f) / 2 * window_width);
-            m_vertices[offset.vert_offset + 3].vert_data.vert_x = 
-            window_bottom_right.vert_x + ((pos.first + 1.0f) / 2 * window_width);
+            vert[offset.vert_offset].vert_data.vert_x = 
+            form_vert[2].vert_x + ((pos.first + 1.0f) / 2 * window_width);
+            vert[offset.vert_offset + 1].vert_data.vert_x = 
+            form_vert[2].vert_x + ((pos.first + size.first + 1.0f) / 2 * window_width);
+            vert[offset.vert_offset + 2].vert_data.vert_x = 
+            form_vert[2].vert_x + ((pos.first + size.first + 1.0f) / 2 * window_width);
+            vert[offset.vert_offset + 3].vert_data.vert_x = 
+            form_vert[2].vert_x + ((pos.first + 1.0f) / 2 * window_width);
             
             
             if(!is_abs_height) {
-                m_vertices[offset.vert_offset].vert_data.vert_y = 
-                window_bottom_right.vert_y - ((pos.second - size.second + 1.0f) / 2 * window_height);
-                m_vertices[offset.vert_offset + 1].vert_data.vert_y = 
-                window_bottom_right.vert_y - ((pos.second - size.second + 1.0f) / 2 * window_height);
-                m_vertices[offset.vert_offset + 2].vert_data.vert_y = 
-                window_bottom_right.vert_y - ((pos.second + 1.0f) / 2 * window_height);
-                m_vertices[offset.vert_offset + 3].vert_data.vert_y = 
-                window_bottom_right.vert_y - ((pos.second + 1.0f) / 2 * window_height);
+                vert[offset.vert_offset].vert_data.vert_y = 
+                form_vert[2].vert_y - ((pos.second - size.second + 1.0f) / 2 * window_height);
+                vert[offset.vert_offset + 1].vert_data.vert_y = 
+                form_vert[2].vert_y - ((pos.second - size.second + 1.0f) / 2 * window_height);
+                vert[offset.vert_offset + 2].vert_data.vert_y = 
+                form_vert[2].vert_y - ((pos.second + 1.0f) / 2 * window_height);
+                vert[offset.vert_offset + 3].vert_data.vert_y = 
+                form_vert[2].vert_y - ((pos.second + 1.0f) / 2 * window_height);
             }
 
             else {
-                m_vertices[offset.vert_offset].vert_data.vert_y =
-                window_bottom_right.vert_y - (pos.second + 1.0f) / 2 * window_height - size.second;
-                m_vertices[offset.vert_offset + 1].vert_data.vert_y =
-                window_bottom_right.vert_y - (pos.second + 1.0f) / 2 * window_height - size.second;
-                m_vertices[offset.vert_offset + 2].vert_data.vert_y =
-                window_bottom_right.vert_y - (pos.second + 1.0f) / 2 * window_height;
-                m_vertices[offset.vert_offset + 3].vert_data.vert_y =
-                window_bottom_right.vert_y - (pos.second + 1.0f) / 2 * window_height;
+                vert[offset.vert_offset].vert_data.vert_y =
+                form_vert[2].vert_y - (pos.second + 1.0f) / 2 * window_height - size.second;
+                vert[offset.vert_offset + 1].vert_data.vert_y =
+                form_vert[2].vert_y - (pos.second + 1.0f) / 2 * window_height - size.second;
+                vert[offset.vert_offset + 2].vert_data.vert_y =
+                form_vert[2].vert_y - (pos.second + 1.0f) / 2 * window_height;
+                vert[offset.vert_offset + 3].vert_data.vert_y =
+                form_vert[2].vert_y - (pos.second + 1.0f) / 2 * window_height;
             }
             break;
 
@@ -460,12 +501,12 @@ namespace dengui {
         }
 
         // Add indices
-        m_indices[offset.ind_offset] = 0;
-        m_indices[offset.ind_offset + 1] = 1;
-        m_indices[offset.ind_offset + 2] = 2;
-        m_indices[offset.ind_offset + 3] = 2;
-        m_indices[offset.ind_offset + 4] = 3;
-        m_indices[offset.ind_offset + 5] = 0;
+        indices[offset.ind_offset] = 0;
+        indices[offset.ind_offset + 1] = 1;
+        indices[offset.ind_offset + 2] = 2;
+        indices[offset.ind_offset + 3] = 2;
+        indices[offset.ind_offset + 4] = 3;
+        indices[offset.ind_offset + 5] = 0;
     }
 
 
@@ -476,19 +517,17 @@ namespace dengui {
         std::array<dengMath::vec2<float>, 3> rel_tri_coords,
         bool is_abs_size,
         RectangleOrigin rec_origin,
-        OBJColorData color
+        deng_ObjColorData color,
+        std::array<deng_ObjVertData2D, 4> &form_vert,
+        std::vector<VERT_UNMAPPED_2D> &vert,
+        std::vector<uint32_t> &indices
     ) {
         UNI_OFFSET offset;
-        offset.ind_offset = m_indices.size();
-        offset.vert_offset = m_vertices.size();
-        m_offsets.push_back(offset);
+        offset.ind_offset = indices.size();
+        offset.vert_offset = vert.size();
 
-        const float window_width = m_vertices[1].vert_data.vert_x - m_vertices[0].vert_data.vert_x;
-        const float window_height = m_vertices[3].vert_data.vert_y - m_vertices[0].vert_data.vert_y;
-        const OBJVerticesData2D window_top_left = m_vertices[0].vert_data;
-        const OBJVerticesData2D window_top_right = m_vertices[1].vert_data;
-        const OBJVerticesData2D window_bottom_left = m_vertices[2].vert_data;
-        const OBJVerticesData2D window_bottom_right = m_vertices[3].vert_data;
+        const float window_width = form_vert[1].vert_x - form_vert[0].vert_x;
+        const float window_height = form_vert[3].vert_y - form_vert[0].vert_y;
         
         dengMath::vec2<float> surround_rec_coords;
         if(!is_abs_size) {
@@ -496,68 +535,68 @@ namespace dengui {
             surround_rec_size.second = surround_rec_size.second / 2 * window_height;
         }
 
-        m_vertices.resize(offset.vert_offset + 3);
-        m_indices.resize(offset.ind_offset + 3);
+        vert.resize(offset.vert_offset + 3);
+        indices.resize(offset.ind_offset + 3);
 
         // Find the surround rectangle coordinates
         switch (rec_origin)
         {
         case REC_ORIGIN_VERTEX_TOP_LEFT:
             surround_rec_coords.first = 
-            window_top_left.vert_x + (pos.first + 1.0f) / 2 * window_width;
+            form_vert[0].vert_x + (pos.first + 1.0f) / 2 * window_width;
             surround_rec_coords.second = 
-            window_top_left.vert_y + (pos.second + 1.0f) / 2 * window_height;
+            form_vert[0].vert_y + (pos.second + 1.0f) / 2 * window_height;
 
             break;
 
         case REC_ORIGIN_VERTEX_TOP_RIGHT:
             surround_rec_coords.first = 
-            window_top_right.vert_x - (pos.first + 1.0f) / 2 * window_width - surround_rec_size.first;
+            form_vert[1].vert_x - (pos.first + 1.0f) / 2 * window_width - surround_rec_size.first;
             surround_rec_coords.second = 
-            window_top_right.vert_y + (pos.second + 1.0f) / 2 * window_height;
+            form_vert[1].vert_y + (pos.second + 1.0f) / 2 * window_height;
             break;
 
         case REC_ORIGIN_VERTEX_BOTTOM_LEFT:
             surround_rec_coords.first = 
-            window_bottom_left.vert_x + (pos.first + 1.0f) / 2 * window_width;
+            form_vert[3].vert_x + (pos.first + 1.0f) / 2 * window_width;
             surround_rec_coords.second = 
-            window_bottom_left.vert_y - (pos.second + 1.0f) / 2 * window_height - surround_rec_size.second;
+            form_vert[3].vert_y - (pos.second + 1.0f) / 2 * window_height - surround_rec_size.second;
             break;
 
         case REC_ORIGIN_VERTEX_BOTTOM_RIGHT:    
             surround_rec_coords.first = 
-            window_bottom_right.vert_x - (pos.first + 1.0f) / 2 * window_width - surround_rec_size.first;
+            form_vert[2].vert_x - (pos.first + 1.0f) / 2 * window_width - surround_rec_size.first;
             surround_rec_coords.second = 
-            window_bottom_right.vert_y - (pos.second + 1.0f) / 2 * window_height - surround_rec_size.second;
+            form_vert[2].vert_y - (pos.second + 1.0f) / 2 * window_height - surround_rec_size.second;
             break;
         
         default:
             break;
         }
 
-        m_vertices[offset.vert_offset].vert_data.vert_x = 
+        vert[offset.vert_offset].vert_data.vert_x = 
         surround_rec_coords.first + (rel_tri_coords[0].first + 1.0f) / 2 * surround_rec_size.first;
-        m_vertices[offset.vert_offset].vert_data.vert_y = 
+        vert[offset.vert_offset].vert_data.vert_y = 
         surround_rec_coords.second + (rel_tri_coords[0].second + 1.0f) / 2 * surround_rec_size.second;
         
-        m_vertices[offset.vert_offset + 1].vert_data.vert_x = 
+        vert[offset.vert_offset + 1].vert_data.vert_x = 
         surround_rec_coords.first + (rel_tri_coords[1].first + 1.0f) / 2 * surround_rec_size.first;
-        m_vertices[offset.vert_offset + 1].vert_data.vert_y = 
+        vert[offset.vert_offset + 1].vert_data.vert_y = 
         surround_rec_coords.second + (rel_tri_coords[1].second + 1.0f) / 2 * surround_rec_size.second;
 
-        m_vertices[offset.vert_offset + 2].vert_data.vert_x = 
+        vert[offset.vert_offset + 2].vert_data.vert_x = 
         surround_rec_coords.first + (rel_tri_coords[2].first + 1.0f) / 2 * surround_rec_size.first;
-        m_vertices[offset.vert_offset + 2].vert_data.vert_y = 
+        vert[offset.vert_offset + 2].vert_data.vert_y = 
         surround_rec_coords.second + (rel_tri_coords[2].second + 1.0f) / 2 * surround_rec_size.second;
 
-        m_vertices[offset.vert_offset].color_data = color;
-        m_vertices[offset.vert_offset + 1].color_data = color;
-        m_vertices[offset.vert_offset + 2].color_data = color;
+        vert[offset.vert_offset].color_data = color;
+        vert[offset.vert_offset + 1].color_data = color;
+        vert[offset.vert_offset + 2].color_data = color;
         
         // Add all triangle indices
-        m_indices[offset.ind_offset] = 0;
-        m_indices[offset.ind_offset + 1] = 1;
-        m_indices[offset.ind_offset + 2] = 2;
+        indices[offset.ind_offset] = 0;
+        indices[offset.ind_offset + 1] = 1;
+        indices[offset.ind_offset + 2] = 2;
     }
 
 
@@ -565,153 +604,170 @@ namespace dengui {
     void Window::addText (
         dengMath::vec2<float> pos,
         float text_size,
-        dengMath::vec2<float> draw_bounds,
+        dengMath::vec2<uint32_t> draw_bounds,
         RectangleOrigin rec_origin,
         dengUtils::bitmapStr text,
-        dengMath::vec3<unsigned char> color
+        dengMath::vec3<unsigned char> color,
+        std::array<deng_ObjVertData2D, 4> &form_vert,
+        std::vector<VERT_MAPPED_2D> &vert,
+        std::vector<uint32_t> &indices,
+        std::vector<uint8_t> &tex,
+        dengMath::vec2<int32_t> &tex_size
     ) {
-        dengError res;
+        deng_Error res;
         res = m_p_fm->newVecStr (
             text,
-            DEFAULT_FONT_FILE,
+            DENGUI_DEFAULT_FONT_FILE,
             text_size,
             {0.0f, 0.0f},
             color
         );
 
         if(res != DENG_NO_ERRORS)
-            ERR("Failed to create bitmap string for window");
+            FONT_ERR("failed to create text bitmap for DENGUI window");
 
-        OBJVerticesData2D window_top_left = m_vertices[0].vert_data;
-        OBJVerticesData2D window_top_right = m_vertices[1].vert_data;
-        OBJVerticesData2D window_bottom_left = m_vertices[2].vert_data;
-        OBJVerticesData2D window_bottom_right = m_vertices[3].vert_data;
-        float window_width = window_top_right.vert_x - window_top_left.vert_x;
-        float window_height = window_bottom_left.vert_y - window_top_left.vert_y;
+        float window_width = form_vert[1].vert_x - form_vert[0].vert_x;
+        float window_height = form_vert[3].vert_y - form_vert[0].vert_y;
 
         float rec_width = dengMath::Conversion::pixelSizeToVector2DSize (
             (double) text.box_size.first,
-            {(uint32_t) draw_bounds.first, (uint32_t) draw_bounds.second},
+            {draw_bounds.first, (uint32_t) draw_bounds.second},
             DENG_COORD_AXIS_X
         );
 
         float rec_height = dengMath::Conversion::pixelSizeToVector2DSize (
             (double) text.box_size.second,
-            {(uint32_t) draw_bounds.first, (uint32_t) draw_bounds.second},
+            {draw_bounds.first, (uint32_t) draw_bounds.second},
             DENG_COORD_AXIS_Y
         );
-
-        LOG("TEXT_BOX_SIZE: {" + std::to_string(text.box_size.first) + "," + std::to_string(text.box_size.second));
-        LOG("WIDTH, HEIGHT: " + std::to_string(rec_width) + ", " + std::to_string(rec_height));
 
         switch (rec_origin)
         {
         case REC_ORIGIN_VERTEX_TOP_LEFT:
             text.vert_pos[0].vert_data.vert_x += 
-            window_top_left.vert_x + ((pos.first + 1.0f) / 2) * window_width;
+            form_vert[0].vert_x + ((pos.first + 1.0f) / 2) * window_width;
             text.vert_pos[0].vert_data.vert_y += 
-            window_top_left.vert_y + ((pos.second + 1.0f) / 2) * window_height;
+            form_vert[0].vert_y + ((pos.second + 1.0f) / 2) * window_height;
 
             text.vert_pos[1].vert_data.vert_x += 
-            window_top_left.vert_x + ((pos.first + 1.0f) / 2) * window_width;
+            form_vert[0].vert_x + ((pos.first + 1.0f) / 2) * window_width;
             text.vert_pos[1].vert_data.vert_y += 
-            window_top_left.vert_y + ((pos.second + 1.0f) / 2) * window_height;
+            form_vert[0].vert_y + ((pos.second + 1.0f) / 2) * window_height;
 
             text.vert_pos[2].vert_data.vert_x += 
-            window_top_left.vert_x + ((pos.first + 1.0f) / 2) * window_width;
+            form_vert[0].vert_x + ((pos.first + 1.0f) / 2) * window_width;
             text.vert_pos[2].vert_data.vert_y += 
-            window_top_left.vert_y + ((pos.second + 1.0f) / 2) * window_height;
+            form_vert[0].vert_y + ((pos.second + 1.0f) / 2) * window_height;
+
 
             text.vert_pos[3].vert_data.vert_x += 
-            window_top_left.vert_x + ((pos.first + 1.0f) / 2) * window_width;
+            form_vert[0].vert_x + ((pos.first + 1.0f) / 2) * window_width;
             text.vert_pos[3].vert_data.vert_y += 
-            window_top_left.vert_y + ((pos.second + 1.0f) / 2) * window_height;
+            form_vert[0].vert_y + ((pos.second + 1.0f) / 2) * window_height;
             break;
 
         case REC_ORIGIN_VERTEX_TOP_RIGHT:
             text.vert_pos[0].vert_data.vert_x += 
-            window_top_right.vert_x - ((pos.first + 1.0f) / 2) * window_width - rec_width;
+            form_vert[1].vert_x - ((pos.first + 1.0f) / 2) * window_width - rec_width;
             text.vert_pos[0].vert_data.vert_y += 
-            window_top_right.vert_y + ((pos.second + 1.0f) / 2) * window_height;
+            form_vert[1].vert_y + ((pos.second + 1.0f) / 2) * window_height;
 
             text.vert_pos[1].vert_data.vert_x += 
-            window_top_right.vert_x - ((pos.first + 1.0f) / 2) * window_width - rec_width;
+            form_vert[1].vert_x - ((pos.first + 1.0f) / 2) * window_width - rec_width;
             text.vert_pos[1].vert_data.vert_y += 
-            window_top_right.vert_y + ((pos.second + 1.0f) / 2) * window_height;
+            form_vert[1].vert_y + ((pos.second + 1.0f) / 2) * window_height;
 
             text.vert_pos[2].vert_data.vert_x += 
-            window_top_right.vert_x - ((pos.first + 1.0f) / 2) * window_width - rec_width;
+            form_vert[1].vert_x - ((pos.first + 1.0f) / 2) * window_width - rec_width;
             text.vert_pos[2].vert_data.vert_y += 
-            window_top_right.vert_y + ((pos.second + 1.0f) / 2) * window_height;
+            form_vert[1].vert_y + ((pos.second + 1.0f) / 2) * window_height;
 
             text.vert_pos[3].vert_data.vert_x += 
-            window_top_right.vert_x - ((pos.first + 1.0f) / 2) * window_width - rec_width;
+            form_vert[1].vert_x - ((pos.first + 1.0f) / 2) * window_width - rec_width;
             text.vert_pos[3].vert_data.vert_y += 
-            window_top_right.vert_y + ((pos.second + 1.0f) / 2) * window_height;
+            form_vert[1].vert_y + ((pos.second + 1.0f) / 2) * window_height;
             break;
 
         case REC_ORIGIN_VERTEX_BOTTOM_LEFT:
             text.vert_pos[0].vert_data.vert_x += 
-            window_bottom_left.vert_x + ((pos.first + 1.0f) / 2) * window_width - rec_width;
+            form_vert[3].vert_x + ((pos.first + 1.0f) / 2) * window_width - rec_width;
             text.vert_pos[0].vert_data.vert_y += 
-            window_bottom_left.vert_y - ((pos.second + 1.0f) / 2) * window_height + rec_height;
+            form_vert[3].vert_y - ((pos.second + 1.0f) / 2) * window_height + rec_height;
 
             text.vert_pos[1].vert_data.vert_x += 
-            window_bottom_left.vert_x + ((pos.first + 1.0f) / 2) * window_width - rec_width;
+            form_vert[3].vert_x + ((pos.first + 1.0f) / 2) * window_width - rec_width;
             text.vert_pos[1].vert_data.vert_y += 
-            window_bottom_left.vert_y - ((pos.second + 1.0f) / 2) * window_height + rec_height;
+            form_vert[3].vert_y - ((pos.second + 1.0f) / 2) * window_height + rec_height;
 
             text.vert_pos[2].vert_data.vert_x += 
-            window_bottom_left.vert_x + ((pos.first + 1.0f) / 2) * window_width - rec_width;
+            form_vert[3].vert_x + ((pos.first + 1.0f) / 2) * window_width - rec_width;
             text.vert_pos[2].vert_data.vert_y += 
-            window_bottom_left.vert_y - ((pos.second + 1.0f) / 2) * window_height + rec_height;
+            form_vert[3].vert_y - ((pos.second + 1.0f) / 2) * window_height + rec_height;
 
             text.vert_pos[3].vert_data.vert_x += 
-            window_bottom_left.vert_x + ((pos.first + 1.0f) / 2) * window_width - rec_width;
+            form_vert[3].vert_x + ((pos.first + 1.0f) / 2) * window_width - rec_width;
             text.vert_pos[3].vert_data.vert_y += 
-            window_bottom_left.vert_y - ((pos.second + 1.0f) / 2) * window_height + rec_height;
+            form_vert[3].vert_y - ((pos.second + 1.0f) / 2) * window_height + rec_height;
             break;
 
         case REC_ORIGIN_VERTEX_BOTTOM_RIGHT:
             text.vert_pos[0].vert_data.vert_x += 
-            window_bottom_right.vert_x - ((pos.first + 1.0f) / 2) * window_width - rec_width;
+            form_vert[2].vert_x - ((pos.first + 1.0f) / 2) * window_width - rec_width;
             text.vert_pos[0].vert_data.vert_y += 
-            window_bottom_right.vert_y - ((pos.second + 1.0f) / 2) * window_height - rec_height;
+            form_vert[2].vert_y - ((pos.second + 1.0f) / 2) * window_height - rec_height;
 
             text.vert_pos[1].vert_data.vert_x += 
-            window_bottom_right.vert_x - ((pos.first + 1.0f) / 2) * window_width - rec_width;
+            form_vert[2].vert_x - ((pos.first + 1.0f) / 2) * window_width - rec_width;
             text.vert_pos[1].vert_data.vert_y += 
-            window_bottom_right.vert_y - ((pos.second + 1.0f) / 2) * window_height - rec_height;
+            form_vert[2].vert_y - ((pos.second + 1.0f) / 2) * window_height - rec_height;
 
             text.vert_pos[2].vert_data.vert_x += 
-            window_bottom_right.vert_x - ((pos.first + 1.0f) / 2) * window_width - rec_width;
+            form_vert[2].vert_x - ((pos.first + 1.0f) / 2) * window_width - rec_width;
             text.vert_pos[2].vert_data.vert_y += 
-            window_bottom_right.vert_y - ((pos.second + 1.0f) / 2) * window_height - rec_height;
+            form_vert[2].vert_y - ((pos.second + 1.0f) / 2) * window_height - rec_height;
 
             text.vert_pos[3].vert_data.vert_x += 
-            window_bottom_right.vert_x - ((pos.first + 1.0f) / 2) * window_width - rec_width;
+            form_vert[2].vert_x - ((pos.first + 1.0f) / 2) * window_width - rec_width;
             text.vert_pos[3].vert_data.vert_y += 
-            window_bottom_right.vert_y - ((pos.second + 1.0f) / 2) * window_height - rec_height;
+            form_vert[2].vert_y - ((pos.second + 1.0f) / 2) * window_height - rec_height;
             break;
         
         default:
             break;
         }
+        
+        vert.insert (
+            vert.end(),
+            text.vert_pos.begin(),
+            text.vert_pos.end()
+        );
 
-        m_rend_text.push_back(text);
+        indices.insert (
+            indices.end(),
+            text.vert_indices.begin(),
+            text.vert_indices.end()
+        );
+
+        tex.insert (
+            tex.end(),
+            text.tex_data.begin(),
+            text.tex_data.end()
+        );
+
+        tex_size = text.box_size;
     }
 
 
     /* Calculate all window vertices information */
-    std::vector<ElementInfo> Window::makeWindow (
+    void Window::makeWindow (
         WindowInfo *p_wi,
-        dengMath::vec2<float> draw_bounds
+        dengMath::vec2<uint32_t> draw_bounds
     ) {
         // Check for window type and create main window rectangle
         dengMath::vec2<float> tmp_pos;
         dengMath::vec2<float> tmp_size;
         std::array<dengMath::vec2<float>, 3> rel_tri_pos;
-        std::vector<ElementInfo> elems;
+        m_win_elems.resize(m_win_elems.size() + 1);
 
         switch (p_wi->wt)
         {
@@ -721,7 +777,9 @@ namespace dengui {
                 p_wi->pos, 
                 p_wi->size, 
                 REC_ORIGIN_VERTEX_TOP_LEFT, 
-                {p_wi->pc.first, p_wi->pc.second, p_wi->pc.third, p_wi->pc.fourth}
+                {p_wi->pc.first, p_wi->pc.second, p_wi->pc.third, p_wi->pc.fourth},
+                m_win_elems[m_win_elems.size() - 1].unmapped_vert,
+                m_win_elems[m_win_elems.size() - 1].indices
             );
 
             rel_tri_pos[0] = {-1.0f, -1.0f};
@@ -739,7 +797,9 @@ namespace dengui {
                 tmp_pos, 
                 tmp_size, 
                 REC_ORIGIN_VERTEX_TOP_LEFT, 
-                {p_wi->pc.first, p_wi->pc.second, p_wi->pc.third, p_wi->pc.fourth}
+                {p_wi->pc.first, p_wi->pc.second, p_wi->pc.third, p_wi->pc.fourth},
+                m_win_elems[m_win_elems.size() - 1].unmapped_vert,
+                m_win_elems[m_win_elems.size() - 1].indices
             );
 
             rel_tri_pos[0] = {-1.0f, -1.0f};
@@ -756,7 +816,9 @@ namespace dengui {
                 tmp_pos, 
                 tmp_size, 
                 REC_ORIGIN_VERTEX_TOP_LEFT, 
-                {p_wi->pc.first, p_wi->pc.second, p_wi->pc.third, p_wi->pc.fourth}
+                {p_wi->pc.first, p_wi->pc.second, p_wi->pc.third, p_wi->pc.fourth},
+                m_win_elems[m_win_elems.size() - 1].unmapped_vert,
+                m_win_elems[m_win_elems.size() - 1].indices
             );
 
             rel_tri_pos[0] = {-1.0f, -1.0f};
@@ -773,7 +835,9 @@ namespace dengui {
                 tmp_pos, 
                 tmp_size, 
                 REC_ORIGIN_VERTEX_TOP_LEFT, 
-                {p_wi->pc.first, p_wi->pc.second, p_wi->pc.third, p_wi->pc.fourth}
+                {p_wi->pc.first, p_wi->pc.second, p_wi->pc.third, p_wi->pc.fourth},
+                m_win_elems[m_win_elems.size() - 1].unmapped_vert,
+                m_win_elems[m_win_elems.size() - 1].indices
             );
 
             rel_tri_pos[0] = {1.0f, -1.0f};
@@ -790,7 +854,9 @@ namespace dengui {
                 tmp_pos, 
                 tmp_size, 
                 REC_ORIGIN_VERTEX_TOP_LEFT, 
-                {p_wi->pc.first, p_wi->pc.second, p_wi->pc.third, p_wi->pc.fourth}
+                {p_wi->pc.first, p_wi->pc.second, p_wi->pc.third, p_wi->pc.fourth},
+                m_win_elems[m_win_elems.size() - 1].unmapped_vert,
+                m_win_elems[m_win_elems.size() - 1].indices
             );
 
             rel_tri_pos[0] = {-1.0f, -1.0f};
@@ -802,105 +868,196 @@ namespace dengui {
             break;
         }
 
+        m_win_elems[m_win_elems.size() - 1].parent_id = p_wi->id;
+        m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_FORM_ID;
+        m_win_elems[m_win_elems.size() - 1].is_visible = true;
+        m_win_elems[m_win_elems.size() - 1].is_interactive = false;
+        m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
+        m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onRMBClickFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onScrUpFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onScrDownFunc = NULL;
+        std::array<deng_ObjVertData2D, 4> form_vert;
+        form_vert[0] = m_win_elems[m_win_elems.size() - 1].unmapped_vert[0].vert_data;
+        form_vert[1] = m_win_elems[m_win_elems.size() - 1].unmapped_vert[1].vert_data;
+        form_vert[2] = m_win_elems[m_win_elems.size() - 1].unmapped_vert[2].vert_data;
+        form_vert[3] = m_win_elems[m_win_elems.size() - 1].unmapped_vert[3].vert_data;
+
         // Add titlebar to window
-        if(!(p_wi->fl_b & WINDOW_FLAG_NO_TITLEBAR)) {
+        if(!(p_wi->fl_b & DENGUI_WINDOW_FLAG_NO_TITLEBAR)) {
             tmp_pos.first = -1.0f;
             tmp_pos.second = -1.0f;
             tmp_size.first = 2.0f;
-            tmp_size.second = TITLEBAR_HEIGHT;
+            tmp_size.second = DENGUI_TITLEBAR_HEIGHT;
+            m_win_elems.resize(m_win_elems.size() + 1);
+
             addRelUnmappedRec (
                 tmp_pos, 
                 tmp_size,
                 true, 
                 REC_ORIGIN_VERTEX_TOP_LEFT,
-                *(OBJColorData*) &p_wi->tc
+                *(deng_ObjColorData*) &p_wi->tc,
+                form_vert,
+                m_win_elems[m_win_elems.size() - 1].unmapped_vert,
+                m_win_elems[m_win_elems.size() - 1].indices
             );
 
-            // Add triangle to minimise if needed
-            if(!(p_wi->fl_b & WINDOW_FLAG_NO_COLLAPSE)) {
-                tmp_pos.first = -1.0f + (2 * TITLEBAR_ELEM_MARGIN);
-                tmp_pos.second = -1.0f + TITLEBAR_ELEM_MARGIN;
-                tmp_size.first = TITLEBAR_HEIGHT - (2 * TITLEBAR_ELEM_MARGIN);
-                tmp_size.second = TITLEBAR_HEIGHT - (2 * TITLEBAR_ELEM_MARGIN);
+            m_win_elems[m_win_elems.size() - 1].parent_id = p_wi->id;
+            m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_TITLEBAR_ID;
+            m_win_elems[m_win_elems.size() - 1].is_visible = true;
+            m_win_elems[m_win_elems.size() - 1].is_interactive = false;
+            m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
+            m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = NULL;
+            m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
+            m_win_elems[m_win_elems.size() - 1].onRMBClickFunc = NULL;
+            m_win_elems[m_win_elems.size() - 1].onScrDownFunc = NULL;
+            m_win_elems[m_win_elems.size() - 1].onScrUpFunc = NULL;
+            
 
+            // Add minimise and maximise triangles if needed
+            if(!(p_wi->fl_b & DENGUI_WINDOW_FLAG_NO_COLLAPSE)) {
+                tmp_pos.first = -1.0f + (2 * DENGUI_TITLEBAR_ELEM_MARGIN);
+                tmp_pos.second = -1.0f + DENGUI_TITLEBAR_ELEM_MARGIN;
+                tmp_size.first = DENGUI_TITLEBAR_HEIGHT - (2 * DENGUI_TITLEBAR_ELEM_MARGIN);
+                tmp_size.second = DENGUI_TITLEBAR_HEIGHT - (2 * DENGUI_TITLEBAR_ELEM_MARGIN);
+
+                m_win_elems.resize(m_win_elems.size() + 1);
                 // Add minimizable triangle
-                if(p_wi->wt != WINDOW_TYPE_STATIC_LEFT) {
+                addGenTriangle (
+                    tmp_pos, 
+                    tmp_size,
+                    rel_tri_pos,
+                    true,
+                    REC_ORIGIN_VERTEX_TOP_LEFT,
+                    *(deng_ObjColorData*) &p_wi->sc,
+                    form_vert,
+                    m_win_elems[m_win_elems.size() - 1].unmapped_vert,
+                    m_win_elems[m_win_elems.size() - 1].indices
+                );
+
+                m_win_elems[m_win_elems.size() - 1].parent_id = p_wi->id;
+                m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_MINIMISE_TRIANGLE_ID;
+                m_win_elems[m_win_elems.size() - 1].is_visible = true;
+                m_win_elems[m_win_elems.size() - 1].is_interactive = true;
+                m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
+                m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = minTriangleCallback;
+                m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
+                m_win_elems[m_win_elems.size() - 1].onRMBClickFunc = NULL;
+                m_win_elems[m_win_elems.size() - 1].onScrUpFunc = NULL;
+                m_win_elems[m_win_elems.size() - 1].onScrDownFunc = NULL;
+
+                // Add maximise triangle
+                m_win_elems.resize(m_win_elems.size() + 1);
+                switch (p_wi->wt)
+                {
+                case WINDOW_TYPE_FLOATING:
+                case WINDOW_TYPE_STATIC_TOP:
+                    rel_tri_pos[0] = {0.0f, -1.0f};
+                    rel_tri_pos[1] = {1.0f, 1.0f};
+                    rel_tri_pos[2] = {-1.0f, 1.0f};
+
                     addGenTriangle (
-                        tmp_pos, 
+                        tmp_pos,
                         tmp_size,
                         rel_tri_pos,
                         true,
                         REC_ORIGIN_VERTEX_TOP_LEFT,
-                        *(OBJColorData*) &p_wi->sc
+                        *(deng_ObjColorData*) &p_wi->sc,
+                        form_vert,
+                        m_win_elems[m_win_elems.size() - 1].unmapped_vert,
+                        m_win_elems[m_win_elems.size() - 1].indices
                     );
-                }
+                    break;
+                
+                case WINDOW_TYPE_STATIC_RIGHT:
+                    rel_tri_pos[0] = {-1.0f, 0.0f};
+                    rel_tri_pos[1] = {1.0f, -1.0f};
+                    rel_tri_pos[2] = {1.0f, 1.0f};
 
-                else {
                     addGenTriangle (
-                        tmp_pos, 
+                        tmp_pos,
                         tmp_size,
                         rel_tri_pos,
                         true,
                         REC_ORIGIN_VERTEX_TOP_RIGHT,
-                        *(OBJColorData*) &p_wi->sc
+                        *(deng_ObjColorData*) &p_wi->sc,
+                        form_vert,
+                        m_win_elems[m_win_elems.size() - 1].unmapped_vert,
+                        m_win_elems[m_win_elems.size() - 1].indices
                     );
+                    break; 
+                
+                case WINDOW_TYPE_STATIC_LEFT:
+                    rel_tri_pos[0] = {-1.0f, -1.0f};
+                    rel_tri_pos[1] = {1.0f, 0.0f};
+                    rel_tri_pos[2] = {-1.0f, 1.0f};
+
+                    addGenTriangle (
+                        tmp_pos,
+                        tmp_size,
+                        rel_tri_pos,
+                        true,
+                        REC_ORIGIN_VERTEX_TOP_LEFT,
+                        *(deng_ObjColorData*) &p_wi->sc,
+                        form_vert,
+                        m_win_elems[m_win_elems.size() - 1].unmapped_vert,
+                        m_win_elems[m_win_elems.size() - 1].indices
+                    );
+
+                    break;
+
+                default:
+                    break;
                 }
 
-                elems.resize(elems.size() + 1);
-                elems[elems.size() - 1].element_name = "Minimize triangle";
-                elems[elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
-                elems[elems.size() - 1].onLMBClickFunc = minTriangleCallback;
-
-                elems[elems.size() - 1].unmapped_vert.insert ( 
-                    elems[elems.size() - 1].unmapped_vert.end(),
-                    m_vertices.end() - 3,
-                    m_vertices.end()
-                );
-
-                elems[elems.size() - 1].indices.insert (
-                    elems[elems.size() - 1].indices.end(),
-                    m_indices.end() - 3,
-                    m_indices.end()
-                );
+                m_win_elems[m_win_elems.size() - 1].parent_id = p_wi->id;
+                m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_MAXIMISE_TRIANGLE_ID;
+                m_win_elems[m_win_elems.size() - 1].is_visible = false;
+                m_win_elems[m_win_elems.size() - 1].is_interactive = true;
+                m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
+                m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = maxTriangleCallback;
+                m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
+                m_win_elems[m_win_elems.size() - 1].onRMBClickFunc = NULL;
+                m_win_elems[m_win_elems.size() - 1].onScrUpFunc = NULL;
+                m_win_elems[m_win_elems.size() - 1].onScrDownFunc = NULL;
             }
 
-            // // Add close button if needed ([X])
-            if(!(p_wi->fl_b & WINDOW_FLAG_NO_CLOSE)) {
+            // Add close button if needed ([X])
+            if(!(p_wi->fl_b & DENGUI_WINDOW_FLAG_NO_CLOSE)) {
                 dengUtils::bitmapStr str;
                 str.text = "[X]";
-                tmp_pos.first = -1.0f + (2 * TITLEBAR_ELEM_MARGIN);
-                tmp_pos.second = -1.0f + TITLEBAR_ELEM_MARGIN;
+                tmp_pos.first = -1.0f + (2 * DENGUI_TITLEBAR_ELEM_MARGIN);
+                tmp_pos.second = -1.0f + DENGUI_TITLEBAR_ELEM_MARGIN;
                 
+                m_win_elems.resize(m_win_elems.size() + 1);
                 // Add closing button as a text box
                 addText (
                     tmp_pos,
-                    TITLEBAR_HEIGHT - (2 * TITLEBAR_ELEM_MARGIN),
+                    DENGUI_TITLEBAR_HEIGHT - (2 * DENGUI_TITLEBAR_ELEM_MARGIN),
                     draw_bounds,
                     REC_ORIGIN_VERTEX_TOP_RIGHT,
                     str,
-                    {(unsigned char) (p_wi->sc.first * 255), (unsigned char) (p_wi->sc.second * 255), (unsigned char) (p_wi->sc.third * 255)}
+                    {(unsigned char) (p_wi->sc.first * 255), (unsigned char) (p_wi->sc.second * 255), (unsigned char) (p_wi->sc.third * 255)},
+                    form_vert,
+                    m_win_elems[m_win_elems.size() - 1].mapped_vert,
+                    m_win_elems[m_win_elems.size() - 1].indices,
+                    m_win_elems[m_win_elems.size() - 1].texture,
+                    m_win_elems[m_win_elems.size() - 1].tex_box
                 );
 
-                elems.resize(elems.size() + 1);
-                elems[elems.size() - 1].element_name = "Close btn";
-                elems[elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_TEXTURE_MAPPED;
-                elems[elems.size() - 1].onLMBClickFunc = closeBtnCallback;
-                
-                elems[elems.size() - 1].mapped_vert.insert (
-                    elems[elems.size() - 1].mapped_vert.end(),
-                    m_rend_text[m_rend_text.size() - 1].vert_pos.begin(),
-                    m_rend_text[m_rend_text.size() - 1].vert_pos.end()
-                );
-
-                elems[elems.size() - 1].indices.insert (
-                    elems[elems.size() - 1].indices.end(),
-                    m_rend_text[m_rend_text.size() - 1].vert_indices.begin(),
-                    m_rend_text[m_rend_text.size() - 1].vert_indices.end()
-                );
+                m_win_elems[m_win_elems.size() - 1].parent_id = p_wi->id;
+                m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_CLOSE_BTN_ID;
+                m_win_elems[m_win_elems.size() - 1].is_visible = true;
+                m_win_elems[m_win_elems.size() - 1].is_interactive = true;
+                m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_TEXTURE_MAPPED;
+                m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = closeBtnCallback;
+                m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
+                m_win_elems[m_win_elems.size() - 1].onRMBClickFunc = NULL;
+                m_win_elems[m_win_elems.size() - 1].onScrUpFunc = NULL;
+                m_win_elems[m_win_elems.size() - 1].onScrDownFunc = NULL;
             }
         }
-
-        return elems;
     }
 
 
@@ -909,12 +1066,8 @@ namespace dengui {
     dengMath::vec4<float> Window::getSC() { return m_secondary_color; }
     dengMath::vec4<float> Window::getTC() { return m_tertiary_color; }
 
-    std::vector<VERT_UNMAPPED_2D> Window::getVerts() { return m_vertices; }
-    std::vector<uint32_t> Window::getInds() { return m_indices; }
-    std::vector<UNI_OFFSET> Window::getOffsets() { return m_offsets; }
-    std::string Window::getTitle() { return m_title; }
-    std::vector<dengUtils::bitmapStr> Window::getTextBoxes() { return m_rend_text; }
-
+    std::vector<WindowElement> Window::getWindowElements() { return m_win_elems; }
+    std::string Window::getId() { return m_id; }
 
     // Window class setters
     void Window::setPC(dengMath::vec4<float> *p_pc) { m_primary_color = *p_pc; }

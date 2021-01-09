@@ -19,7 +19,7 @@ char *dasGetFileExtName(char *file_name) {
 }   
 
 /* das file assembler callback function */
-void dasAssemble(DENGAsset *p_asset, const char *file_name) {
+void dasAssemble(deng_Asset *p_asset, const char *file_name) {
     FILE *file;
     file = fopen(file_name, "wb");
     if(!file) {
@@ -41,7 +41,11 @@ void dasAssemble(DENGAsset *p_asset, const char *file_name) {
 
 
 /* das INFO_HDR assembler */
-void dasAssembleINFOHDR(char *asset_name, char *description, FILE *file) {
+void dasAssembleINFOHDR (
+    char *asset_name, 
+    char *description, 
+    FILE *file
+) {
     uint8_t asset_name_size, desc_size;
     uint64_t time_point = (uint64_t) time(NULL);
     asset_name_size = strlen(asset_name);
@@ -59,7 +63,10 @@ void dasAssembleINFOHDR(char *asset_name, char *description, FILE *file) {
 
 
 /* das VERT_HDR assembler */
-void dasAssembleVERTHDR(DynamicVertices *p_vertices, FILE *file) {
+void dasAssembleVERTHDR (
+    deng_VertDynamic *p_vertices, 
+    FILE *file
+) {
     uint32_t hdr_size, vert_size;
     fwrite(VERTICES_HEADER_NAME, 1, strlen(VERTICES_HEADER_NAME), file);
     hdr_size = 17;
@@ -71,7 +78,10 @@ void dasAssembleVERTHDR(DynamicVertices *p_vertices, FILE *file) {
     fwrite(p_vertices->p_texture_mapped_vert_data, sizeof(VERT_MAPPED), p_vertices->size, file); 
 }
 
-void dasAssembleINDXHDR(DynamicIndices *p_indices, FILE *file) {
+void dasAssembleINDXHDR (
+    deng_IndicesDynamic *p_indices, 
+    FILE *file
+) {
     uint32_t hdr_size = 16 + (p_indices->size * sizeof(uint32_t));
     uint32_t indices_count = (uint32_t) p_indices->size;
     fwrite(INDICES_HEADER_NAME, strlen(INDICES_HEADER_NAME), 1, file);
@@ -80,7 +90,10 @@ void dasAssembleINDXHDR(DynamicIndices *p_indices, FILE *file) {
     fwrite(p_indices->p_indices, p_indices->size * sizeof(uint32_t), 1, file);
 }
 
-void dasAssembleTPIXHDR(DynamicPixelData *p_pixel_data, FILE *file) {
+void dasAssembleTPIXHDR (
+    deng_PixelDataDynamic *p_pixel_data, 
+    FILE *file
+) {
     uint32_t hdr_size = 16 + p_pixel_data->size;
     fwrite(TEXTURE_PIXEL_NAME, strlen(TEXTURE_PIXEL_NAME), 1, file);
     fwrite(&hdr_size, sizeof(uint32_t), 1, file);
@@ -91,7 +104,11 @@ void dasAssembleTPIXHDR(DynamicPixelData *p_pixel_data, FILE *file) {
 
 
 /* das file reader callback function */
-void dasReadAsset(DENGAsset *p_asset, const char *file_name, AssetMode asset_mode) {
+void dasReadAsset (
+    deng_Asset *p_asset, 
+    const char *file_name, 
+    deng_AssetMode asset_mode
+) {
     FILE *file;
     file = fopen(file_name, "rb");
     
@@ -102,7 +119,7 @@ void dasReadAsset(DENGAsset *p_asset, const char *file_name, AssetMode asset_mod
     }
 
     size_t index;
-    DynamicVertices tmp_vert;
+    deng_VertDynamic tmp_vert;
     p_asset->asset_mode = asset_mode;
     
     dasReadINFOHDR (
@@ -178,8 +195,61 @@ void dasReadAsset(DENGAsset *p_asset, const char *file_name, AssetMode asset_mod
 }
 
 
+/* Destroy all allocated assets */
+void dasDestroyAssets (
+    deng_Asset *assets,
+    int32_t asset_c
+) {
+    int32_t l_index;
+    for(l_index = 0; l_index < asset_c; l_index++) {
+        switch (assets[l_index].asset_mode)
+        {
+        case DENG_ASSET_MODE_2D_UNMAPPED:
+            free(assets[l_index].vertices.p_unmapped_vert_data_2d);
+            break;
+        
+        case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
+            free(assets[l_index].vertices.p_texture_mapped_vert_data_2d);
+            break;
+
+        case DENG_ASSET_MODE_3D_UNMAPPED:
+            free(assets[l_index].vertices.p_unmapped_vert_data);
+            break;
+
+        case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
+            free(assets[l_index].vertices.p_texture_mapped_vert_data);
+            break;
+        
+        default:
+            break;
+        }
+    }
+
+    if(asset_c) free(assets);
+}
+
+
+/* Destroy all allocated textures */
+void dasDestroyTextures (
+    deng_Texture *textures,
+    int32_t tex_c
+) {
+    int32_t l_index;
+    for(l_index = 0; l_index < tex_c; l_index++) 
+        free(textures[l_index].pixel_data.p_pixel_data);
+
+    if(tex_c) free(textures);
+}
+
+
 /* Read das INFO_HDR information */
-void dasReadINFOHDR(char **asset_name, char **description, uint64_t *p_time_point, char *file_name, FILE *file) {
+void dasReadINFOHDR (
+    char **asset_name, 
+    char **description, 
+    uint64_t *p_time_point, 
+    char *file_name, 
+    FILE *file
+) {
     uint32_t hdr_size;
     uint8_t name_size, desc_size;
     char hdr_name[8];
@@ -208,7 +278,11 @@ void dasReadINFOHDR(char **asset_name, char **description, uint64_t *p_time_poin
     }
 }
 
-void dasReadVERTHDR(DynamicVertices *p_vertices, char *file_name, FILE *file) {
+void dasReadVERTHDR (
+    deng_VertDynamic *p_vertices, 
+    char *file_name, 
+    FILE *file
+) {
     char hdr_name[8];
     uint32_t hdr_size;
     uint32_t vert_count;
@@ -242,7 +316,11 @@ void dasReadVERTHDR(DynamicVertices *p_vertices, char *file_name, FILE *file) {
     }
 }
 
-void dasReadINDXHDR(DynamicIndices *p_indices, char *file_name, FILE *file) {
+void dasReadINDXHDR (
+    deng_IndicesDynamic *p_indices, 
+    char *file_name, 
+    FILE *file
+) {
     char hdr_name[8];
     uint32_t hdr_size, indices_count;
 

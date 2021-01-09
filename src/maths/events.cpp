@@ -1,7 +1,7 @@
 #include "../core/api_core.h"
 
 // Shared data
-extern dengui::MouseInputInfo mii;
+extern dengui::MouseInputInfo ext_mii;
 
 namespace dengMath {
     Events::Events(deng::WindowWrap *p_win, deng::Camera *p_camera) {
@@ -59,9 +59,9 @@ namespace dengMath {
 
     void Events::checkForInputModeChange() {
         m_p_camera->updateCursorPos();
-        mii.mouse_input = m_p_window_wrap->getInputMode();
+        ext_mii.mouse_input = m_p_window_wrap->getInputMode();
         
-        if(mii.mouse_input == DENG_INPUT_MOVEMENT) {
+        if(ext_mii.mouse_input == DENG_INPUT_MOVEMENT) {
             getMovementType();
             m_p_camera->setCameraViewRotation();
 
@@ -78,7 +78,7 @@ namespace dengMath {
             }
         }
 
-        else if(mii.mouse_input == DENG_INPUT_NONMOVEMENT) {
+        else if(ext_mii.mouse_input == DENG_INPUT_NONMOVEMENT) {
             m_movements.first = DENG_MOVEMENT_NONE;
             m_movements.second = DENG_MOVEMENT_NONE;
             m_movements.third = DENG_MOVEMENT_NONE;

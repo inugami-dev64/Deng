@@ -72,6 +72,7 @@ tasks:
       - utilities/timer/timer.cpp
       - dengui/main/gui_events.cpp
       - dengui/main/gui_window.cpp
+      - dengui/editor_uis/map_editor_ui.cpp
     deps:
       - ldas
       - lsurface
