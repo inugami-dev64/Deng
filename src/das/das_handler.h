@@ -18,21 +18,22 @@ typedef struct Frag {
     // Generic file extension name adder
     char *dasGetFileExtName(char *file_name); 
     void dasAssembleINFOHDR(char *asset_name, char *description, FILE *file);
-    void dasAssembleVERTHDR(DynamicVertices *p_vertices, FILE *file);
-    void dasAssembleINDXHDR(DynamicIndices *p_indices, FILE *file);
+    void dasAssembleVERTHDR(deng_VertDynamic *p_vertices, FILE *file);
+    void dasAssembleINDXHDR(deng_IndicesDynamic *p_indices, FILE *file);
 #endif
 
 /* Callback function for creating .das binary asset file */
-void dasAssemble(DENGAsset *passet, const char *filename);
+void dasAssemble(deng_Asset *passet, const char *filename);
 
 /* das reader functions */
 #ifdef DAS_EXT_HANDLER
     void dasReadINFOHDR(char **assetname, char **description, uint64_t *ptimepoint, char *filename, FILE *file);
-    void dasReadVERTHDR(DynamicVertices *pvertices, char *filename, FILE *file);
-    void dasReadINDXHDR(DynamicIndices *pindices, char *filename, FILE *file);
+    void dasReadVERTHDR(deng_VertDynamic *pvertices, char *filename, FILE *file);
+    void dasReadINDXHDR(deng_IndicesDynamic *pindices, char *filename, FILE *file);
 #endif
 
 /* Callback function for reading .das binary asset file */
-void dasReadAsset(DENGAsset *p_asset, const char *file_name, AssetMode tex_mode);
-void dasBindTexture(DENGAsset *p_asset, size_t texture_index);
+void dasReadAsset(deng_Asset *p_asset, const char *file_name, deng_AssetMode tex_mode);
+void dasDestroyAssets(deng_Asset *assets, int32_t asset_c);
+void dasDestroyTextures(deng_Texture *textures, int32_t tex_c);
 #endif

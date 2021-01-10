@@ -1,103 +1,109 @@
 #include "../core/api_core.h"
 
+// Shared data
+extern dengui::MouseInputInfo ext_mii;
+
 namespace dengMath {
     Events::Events(deng::WindowWrap *p_win, deng::Camera *p_camera) {
-        this->m_is_key_registered.first = false;
-        this->m_p_camera = p_camera;
-        this->m_p_window_wrap = p_win;
+        m_is_key_registered.first = false;
+        m_p_camera = p_camera;
+        m_p_window_wrap = p_win;
     }
 
     void Events::getMovementType() {
-        if(is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_W) && 
-        !is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_S)) {
-            this->m_movements.third = DENG_MOVEMENT_FORWARD;
+        if
+        (
+            is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_W) && 
+            !is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_S)
+        ) m_movements.third = DENG_MOVEMENT_FORWARD;
+        
+
+        else if
+        (
+            !is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_W) && 
+            is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_S)
+        ) m_movements.third = DENG_MOVEMENT_BACKWARD;
+
+        else 
+            m_movements.third = DENG_MOVEMENT_NONE;
+
+
+        if
+        (
+            is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_A) && 
+            !is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_D)
+        ) m_movements.first = DENG_MOVEMENT_LEFTWARD;
+
+        else if
+        (
+            !is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_A) && 
+            is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_D)
+        ) m_movements.first = DENG_MOVEMENT_RIGHTWARD;
+
+        else m_movements.first = DENG_MOVEMENT_NONE;
+
+        if(is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_SPACE) && 
+        !is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_LEFT_CTRL)) {
+            m_movements.second = DENG_MOVEMENT_UPWARD;
         }
 
-        else if(!is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_W) && 
-        is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_S)) {
-            this->m_movements.third = DENG_MOVEMENT_BACKWARD;
+        else if(!is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_SPACE) && 
+        is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_LEFT_CTRL)) {
+            m_movements.second = DENG_MOVEMENT_DOWNWARD;
         }
 
         else {
-            this->m_movements.third = DENG_MOVEMENT_NONE;
-        }
-
-
-        if(is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_A) && 
-        !is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_D)) {
-            this->m_movements.first = DENG_MOVEMENT_LEFTWARD;
-        }
-
-        else if(!is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_A) && 
-        is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_D)) {
-            this->m_movements.first = DENG_MOVEMENT_RIGHTWARD;
-        }
-        else {
-            this->m_movements.first = DENG_MOVEMENT_NONE;
-        }
-
-
-        if(is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_SPACE) && 
-        !is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_LEFT_CTRL)) {
-            this->m_movements.second = DENG_MOVEMENT_UPWARD;
-        }
-
-        else if(!is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_SPACE) && 
-        is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_LEFT_CTRL)) {
-            this->m_movements.second = DENG_MOVEMENT_DOWNWARD;
-        }
-
-        else {
-            this->m_movements.second = DENG_MOVEMENT_NONE;
+            m_movements.second = DENG_MOVEMENT_NONE;
         }
     }
 
     void Events::checkForInputModeChange() {
-        if(this->m_p_window_wrap->getInputMode() == DENG_INPUT_MOVEMENT) {
-            this->getMovementType();
-            this->m_p_camera->updateCursorPos();
-            this->m_p_camera->setCameraViewRotation();
+        m_p_camera->updateCursorPos();
+        ext_mii.mouse_input = m_p_window_wrap->getInputMode();
+        
+        if(ext_mii.mouse_input == DENG_INPUT_MOVEMENT) {
+            getMovementType();
+            m_p_camera->setCameraViewRotation();
 
-            if(this->m_input_mode_change_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && 
-            is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_ESCAPE)) {
+            if(m_input_mode_change_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && 
+            is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_ESCAPE)) {
 
                 #if CAMERA_MOUSE_DEBUG
-                    LOG("frozen_mouse_position x:" + std::to_string(this->m_frozen_mouse_position.first) + "/" + std::to_string(this->m_frozen_mouse_position.second));
+                    LOG("frozen_mouse_position x:" + std::to_string(m_frozen_mouse_position.first) + "/" + std::to_string(m_frozen_mouse_position.second));
                 #endif
                 
-                this->m_p_window_wrap->setInputMode(DENG_INPUT_NONMOVEMENT);
-                this->m_input_mode_change_timer.setNewTimePoint();
-                this->m_p_camera->getMousePosition(&this->m_frozen_mouse_position);
+                m_p_window_wrap->setInputMode(DENG_INPUT_NONMOVEMENT);
+                m_input_mode_change_timer.setNewTimePoint();
+                m_p_camera->getMousePosition(&m_frozen_mouse_position);
             }
         }
 
-        else if(this->m_p_window_wrap->getInputMode() == DENG_INPUT_NONMOVEMENT) {
-            this->m_movements.first = DENG_MOVEMENT_NONE;
-            this->m_movements.second = DENG_MOVEMENT_NONE;
-            this->m_movements.third = DENG_MOVEMENT_NONE;
+        else if(ext_mii.mouse_input == DENG_INPUT_NONMOVEMENT) {
+            m_movements.first = DENG_MOVEMENT_NONE;
+            m_movements.second = DENG_MOVEMENT_NONE;
+            m_movements.third = DENG_MOVEMENT_NONE;
 
-            if(this->m_input_mode_change_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && 
-            is_key_active(this->m_p_window_wrap->getWindow(), DENG_KEY_ESCAPE)) {
-                this->m_p_camera->setMousePosition(this->m_frozen_mouse_position);
-                this->m_p_window_wrap->setInputMode(DENG_INPUT_MOVEMENT);
-                this->m_input_mode_change_timer.setNewTimePoint();
+            if(m_input_mode_change_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && 
+            is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_ESCAPE)) {
+                m_p_camera->setMousePosition(m_frozen_mouse_position);
+                m_p_window_wrap->setInputMode(DENG_INPUT_MOVEMENT);
+                m_input_mode_change_timer.setNewTimePoint();
             }
         }
     }
 
     void Events::update() {
-        this->checkForInputModeChange();
-        
-        if(this->m_movement_timer.isTimePassed(DENG_MOVEMENT_INTERVAL)) {
+        checkForInputModeChange();
+        if(m_movement_timer.isTimePassed(DENG_MOVEMENT_INTERVAL)) {
 
-            switch (this->m_movements.first)
+            switch (m_movements.first)
             {
             case DENG_MOVEMENT_LEFTWARD:
-                this->m_p_camera->moveL();
+                m_p_camera->moveL();
                 break;
 
             case DENG_MOVEMENT_RIGHTWARD:
-                this->m_p_camera->moveR();
+                m_p_camera->moveR();
                 break;
 
             case DENG_MOVEMENT_NONE: break;
@@ -106,14 +112,14 @@ namespace dengMath {
                 break;
             }
 
-            switch (this->m_movements.second)
+            switch (m_movements.second)
             {
             case DENG_MOVEMENT_UPWARD:
-                this->m_p_camera->moveUp();
+                m_p_camera->moveUp();
                 break;
 
             case DENG_MOVEMENT_DOWNWARD:
-                this->m_p_camera->moveDown();
+                m_p_camera->moveDown();
                 break;
 
             case DENG_MOVEMENT_NONE: break;
@@ -122,14 +128,14 @@ namespace dengMath {
                 break;
             }
 
-            switch (this->m_movements.third)
+            switch (m_movements.third)
             {
             case DENG_MOVEMENT_FORWARD:
-                this->m_p_camera->moveF();
+                m_p_camera->moveF();
                 break;
 
             case DENG_MOVEMENT_BACKWARD:
-                this->m_p_camera->moveB();
+                m_p_camera->moveB();
                 break;
 
             case DENG_MOVEMENT_NONE: break;
@@ -138,7 +144,7 @@ namespace dengMath {
                 break;
             }
 
-            this->m_movement_timer.setNewTimePoint();
+            m_movement_timer.setNewTimePoint();
         }
     }
 }

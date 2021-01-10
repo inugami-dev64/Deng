@@ -6,36 +6,36 @@ namespace dengMath {
     // Expand base by exp 
     double exp(double base, int exp) {
         if(exp == 0) return 1.0;
-        double local_current_value = base;
+        double current_value = base;
 
         for(int i = 0; i < exp - 1; i++) {
-            local_current_value *= base;
+            current_value *= base;
         }
 
-        if(exp < 0) return 1.0/local_current_value;
-        else return local_current_value;
+        if(exp < 0) return 1.0/current_value;
+        else return current_value;
     }
 
     // Expand base by exp
     float exp(float base, int exp) {
         if(exp == 0) return 1.0;
-        float local_current_value = base;
+        float current_value = base;
 
         for(int i = 0; i < exp - 1; i++) {
-            local_current_value *= base;
+            current_value *= base;
         }
 
-        if(exp < 0) return 1.0/local_current_value;
-        else return local_current_value;
+        if(exp < 0) return 1.0/current_value;
+        else return current_value;
     }
 
     vec2<float> getCartesianCoordsPoint(const vec2<float> &centre_position, const int16_t &angle, const float &distance, const bool &inverted_y_axis) {
-        vec2<float> local_coords;
-        local_coords.first = (sin(Conversion::degToRad(angle)) * distance) + centre_position.first;
-        if(!inverted_y_axis) local_coords.second = (cos(Conversion::degToRad(angle)) * distance) + centre_position.second;
-        else local_coords.second = -(cos(Conversion::degToRad(angle)) * distance) + centre_position.second;
+        vec2<float> coords;
+        coords.first = (sin(Conversion::degToRad(angle)) * distance) + centre_position.first;
+        if(!inverted_y_axis) coords.second = (cos(Conversion::degToRad(angle)) * distance) + centre_position.second;
+        else coords.second = -(cos(Conversion::degToRad(angle)) * distance) + centre_position.second;
 
-        return local_coords; 
+        return coords; 
     }
 
     float getFractionNumerator(const float &value_numerator, const float &value_denominator, const float &equivalent_denominator) {
@@ -43,11 +43,11 @@ namespace dengMath {
     }
 
     float getVectorLengthFromBounds(vec2<vec2<float>> vector_bounds) {
-        vec2<float> local_vector_coordinates = vector_bounds.second - vector_bounds.first;
-        return static_cast<float>(sqrt(pow(local_vector_coordinates.first, 2) + pow(local_vector_coordinates.second, 2)));
+        vec2<float> vector_coordinates = vector_bounds.second - vector_bounds.first;
+        return static_cast<float>(sqrt(pow(vector_coordinates.first, 2) + pow(vector_coordinates.second, 2)));
     }
 
-    float getTriangleAnglesFromEdges(const vec3<float> &triangle_edges, const dengTriangleAngleType &triangle_angle_type) {
+    float getTriangleAnglesFromEdges(const vec3<float> &triangle_edges, const deng_TriangleAngleType &triangle_angle_type) {
         switch (triangle_angle_type)
         {
         case DENG_TRIANGLE_ANGLE_ALPHA:
@@ -73,32 +73,33 @@ namespace dengMath {
     }
 
     float getVector2DRotation(vec2<vec2<float>> vector_bounds) {
-        vec2<float> local_vector_position = vector_bounds.second - vector_bounds.first;
-        float local_vector_length = getVectorLengthFromBounds(vector_bounds);
+        vec2<float> vector_position = vector_bounds.second - vector_bounds.first;
+        float vector_length = getVectorLengthFromBounds(vector_bounds);
         
         // first - rotation calculated from sin, second - rotation calculated from cos
-        vec2<float> local_rotations;
-        local_rotations.first = static_cast<float>(asin(static_cast<double>(local_vector_position.first) / static_cast<double>(local_vector_length)));
-        local_rotations.second = static_cast<float>(acos(-static_cast<double>(local_vector_position.second) / static_cast<double>(local_vector_length)));
+        vec2<float> rotations;
+        rotations.first = static_cast<float>(asin(static_cast<double>(vector_position.first) / static_cast<double>(vector_length)));
+        rotations.second = static_cast<float>(acos(-static_cast<double>(vector_position.second) / static_cast<double>(vector_length)));
         
-        LOG("sin_rot: " + std::to_string(Conversion::radToDeg(local_rotations.first)) + "/cos_rot: " + std::to_string(Conversion::radToDeg(local_rotations.second)));
+        LOG("sin_rot: " + std::to_string(Conversion::radToDeg(rotations.first)) + "/cos_rot: " + std::to_string(Conversion::radToDeg(rotations.second)));
 
-        if(local_rotations.first >= 0.0f) return static_cast<float>(round(Conversion::radToDeg(static_cast<float>(fabs(local_rotations.first)))));
+        if(rotations.first >= 0.0f) return static_cast<float>(round(Conversion::radToDeg(static_cast<float>(fabs(rotations.first)))));
         
-        if(local_rotations.first < 0 && Conversion::radToDeg(local_rotations.second) >= 0 && Conversion::radToDeg(local_rotations.second) < 90.0f) {
-            LOG("Condition local_rotations.first < 0 && (local_rotations.second >= 0 && local_rotations.second < 90) fulfilled!");
-            return (180.0f + static_cast<float>(round(Conversion::radToDeg(static_cast<float>(fabs(local_rotations.first))))));
+        if(rotations.first < 0 && Conversion::radToDeg(rotations.second) >= 0 && Conversion::radToDeg(rotations.second) < 90.0f) {
+            LOG("Condition rotations.first < 0 && (rotations.second >= 0 && rotations.second < 90) fulfilled!");
+            return (180.0f + static_cast<float>(round(Conversion::radToDeg(static_cast<float>(fabs(rotations.first))))));
         }
 
-        else if(local_rotations.first < 0 && Conversion::radToDeg(local_rotations.second) >= 90 && Conversion::radToDeg(local_rotations.second) < 180.0f) {
-            LOG("Condition local_rotations.first < 0 && (local_rotations.second >= 90 && local_rotations.second < 180) fulfilled!");
-            return (270.0f + static_cast<float>(round(Conversion::radToDeg(static_cast<float>(fabs(local_rotations.first))))));
+        else if(rotations.first < 0 && Conversion::radToDeg(rotations.second) >= 90 && Conversion::radToDeg(rotations.second) < 180.0f) {
+            LOG("Condition rotations.first < 0 && (rotations.second >= 90 && rotations.second < 180) fulfilled!");
+            return (270.0f + static_cast<float>(round(Conversion::radToDeg(static_cast<float>(fabs(rotations.first))))));
         }
 
         return 0.0f;
     }
 
-    // generic conversion methods
+
+    /* Generic conversion methods */
     float Conversion::degToRad(const float &deg) {
         return static_cast<float>(deg/180 * PI);
     }
@@ -108,15 +109,15 @@ namespace dengMath {
     }
 
     uint32_t Conversion::hexToDec(const std::string &hex_value) {
-        uint32_t local_dec = 0;
+        uint32_t dec = 0;
         for(size_t i = 0, exp_i = hex_value.size() - 1; i < hex_value.size(); i++, exp_i--)
-            local_dec += (hex_definitions[hex_value[i]] * dengMath::exp(16.0, exp_i));
+            dec += (hex_definitions[hex_value[i]] * dengMath::exp(16.0, exp_i));
 
-        LOG("decimal of " + hex_value + " is " + std::to_string(local_dec));
-        return local_dec;
+        LOG("decimal of " + hex_value + " is " + std::to_string(dec));
+        return dec;
     }
 
-    double Conversion::vector2DSizeToPixelSize(const double &vec_size, const vec2<uint32_t> &window_size, const dengCoordinateAxisType &axis_type) {
+    double Conversion::vector2DSizeToPixelSize(const double &vec_size, const vec2<uint32_t> &window_size, const deng_CoordinateAxisType &axis_type) {
         switch (axis_type)
         {
         case DENG_COORD_AXIS_X:
@@ -134,7 +135,7 @@ namespace dengMath {
         return 0.0;
     }
 
-    float Conversion::pixelSizeToVector2DSize(const double &pixel_size, const vec2<uint32_t> &window_size, const dengCoordinateAxisType &axis_type) {
+    float Conversion::pixelSizeToVector2DSize(const double &pixel_size, const vec2<uint32_t> &window_size, const deng_CoordinateAxisType &axis_type) {
         switch (axis_type)
         {
         case DENG_COORD_AXIS_X:
@@ -206,14 +207,14 @@ namespace dengMath {
         this->m_camera_position = new_position;
     }
 
-    void ViewMatrix::addToPosition(const vec4<float> &movement_speed, const dengCoordinateAxisType &movement_type, const bool &substract) {
+    void ViewMatrix::addToPosition(const vec4<float> &movement_speed, const deng_CoordinateAxisType &movement_type, const bool &substract) {
         switch (movement_type)
         {
         case DENG_COORD_AXIS_X: {
-            vec2<float> local_movement = getCartesianCoordsPoint({0.0f, 0.0f}, (this->y_rot + 90), movement_speed.first, false);
+            vec2<float> movement = getCartesianCoordsPoint({0.0f, 0.0f}, (this->y_rot + 90), movement_speed.first, false);
 
-            if(substract) this->m_camera_position.first -= local_movement.first, this->m_camera_position.third -= local_movement.second ;
-            else this->m_camera_position.first += local_movement.first, this->m_camera_position.third += local_movement.second;
+            if(substract) this->m_camera_position.first -= movement.first, this->m_camera_position.third -= movement.second ;
+            else this->m_camera_position.first += movement.first, this->m_camera_position.third += movement.second;
             break;
         }
 
@@ -223,10 +224,10 @@ namespace dengMath {
             break;
 
         case DENG_COORD_AXIS_Z: {
-            vec2<float> local_movement = getCartesianCoordsPoint({0.0f, 0.0f}, this->y_rot, movement_speed.third, false);
+            vec2<float> movement = getCartesianCoordsPoint({0.0f, 0.0f}, this->y_rot, movement_speed.third, false);
             
-            if(substract) this->m_camera_position.first -= local_movement.first, this->m_camera_position.third -= local_movement.second;
-            else this->m_camera_position.first += local_movement.first, this->m_camera_position.third += local_movement.second;
+            if(substract) this->m_camera_position.first -= movement.first, this->m_camera_position.third -= movement.second;
+            else this->m_camera_position.first += movement.first, this->m_camera_position.third += movement.second;
             break;
         }
         
@@ -296,86 +297,86 @@ namespace dengMath {
 
     template<typename T>
     T getSmallestElement(std::vector<T> *p_elements_vector) {
-        T local_smallest_element = (*p_elements_vector)[0];
+        T smallest_element = (*p_elements_vector)[0];
         for(size_t i = 0; i < p_elements_vector->size(); i++)
-            if(local_smallest_element > (*p_elements_vector)[i]) local_smallest_element = (*p_elements_vector)[i];
+            if(smallest_element > (*p_elements_vector)[i]) smallest_element = (*p_elements_vector)[i];
     
-        return local_smallest_element;
+        return smallest_element;
     }
 
     template<typename T>
     T getLargestElement(std::vector<T> *p_elements_vector) {
-        T local_largest_element = (*p_elements_vector)[0];
+        T largest_element = (*p_elements_vector)[0];
         for(size_t i = 0; i < p_elements_vector->size(); i++)
-            if(local_largest_element < (*p_elements_vector)[i]) local_largest_element = (*p_elements_vector)[i];
+            if(largest_element < (*p_elements_vector)[i]) largest_element = (*p_elements_vector)[i];
     
-        return local_largest_element;
+        return largest_element;
     }
 
     template<typename T>
     void sortInGrowingOrder(std::vector<T> *p_elements_vector) {
-        vec2<T> local_sorting_buffer;
+        vec2<T> sorting_buffer;
 
         for(size_t i = 0; i < p_elements_vector->size() - 1; i++) {
             if((*p_elements_vector)[i] > (*p_elements_vector)[i + 1]) {
-                local_sorting_buffer.second = (*p_elements_vector)[i];
-                local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+                sorting_buffer.second = (*p_elements_vector)[i];
+                sorting_buffer.first = (*p_elements_vector)[i + 1];
 
-                (*p_elements_vector)[i] = local_sorting_buffer.first;
-                (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                (*p_elements_vector)[i] = sorting_buffer.first;
+                (*p_elements_vector)[i + 1] = sorting_buffer.second;
             }
         }
     }
 
     template<typename T>
     void sortInDecliningOrder(std::vector<T> *p_elements_vector) {
-        vec2<T> local_sorting_buffer;
+        vec2<T> sorting_buffer;
 
         for(size_t i = 0; i < p_elements_vector->size() - 1; i++) {
             if((*p_elements_vector)[i] < (*p_elements_vector)[i + 1]) {
-                local_sorting_buffer.second = (*p_elements_vector)[i];
-                local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+                sorting_buffer.second = (*p_elements_vector)[i];
+                sorting_buffer.first = (*p_elements_vector)[i + 1];
 
-                (*p_elements_vector)[i] = local_sorting_buffer.first;
-                (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                (*p_elements_vector)[i] = sorting_buffer.first;
+                (*p_elements_vector)[i + 1] = sorting_buffer.second;
             }
         }
     }
 
     template<typename T>
-    void sortVectorInGrowingOrder(std::vector<T> *p_elements_vector, dengCoordinateAxisType coord_axis_type) {
-        vec2<T> local_sorting_buffer;
+    void sortVectorInGrowingOrder(std::vector<T> *p_elements_vector, deng_CoordinateAxisType coord_axis_type) {
+        vec2<T> sorting_buffer;
 
         for(size_t i = 0; i < p_elements_vector->size() - 1; i++) {
             switch (coord_axis_type)
             {
             case DENG_COORD_AXIS_X:
                 if((*p_elements_vector)[i].position_vec.first > (*p_elements_vector)[i + 1].position_vec.first) {
-                    local_sorting_buffer.second = (*p_elements_vector)[i];
-                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+                    sorting_buffer.second = (*p_elements_vector)[i];
+                    sorting_buffer.first = (*p_elements_vector)[i + 1];
 
-                    (*p_elements_vector)[i] = local_sorting_buffer.first;
-                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                    (*p_elements_vector)[i] = sorting_buffer.first;
+                    (*p_elements_vector)[i + 1] = sorting_buffer.second;
                 }
                 break;
 
             case DENG_COORD_AXIS_Y:
                 if((*p_elements_vector)[i].position_vec.second > (*p_elements_vector)[i + 1].position_vec.second) {
-                    local_sorting_buffer.second = (*p_elements_vector)[i];
-                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+                    sorting_buffer.second = (*p_elements_vector)[i];
+                    sorting_buffer.first = (*p_elements_vector)[i + 1];
 
-                    (*p_elements_vector)[i] = local_sorting_buffer.first;
-                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                    (*p_elements_vector)[i] = sorting_buffer.first;
+                    (*p_elements_vector)[i + 1] = sorting_buffer.second;
                 }
                 break;
 
             case DENG_COORD_AXIS_Z:
                 if((*p_elements_vector)[i].position_vec.third > (*p_elements_vector)[i + 1].position_vec.third) {
-                    local_sorting_buffer.second = (*p_elements_vector)[i];
-                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+                    sorting_buffer.second = (*p_elements_vector)[i];
+                    sorting_buffer.first = (*p_elements_vector)[i + 1];
 
-                    (*p_elements_vector)[i] = local_sorting_buffer.first;
-                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                    (*p_elements_vector)[i] = sorting_buffer.first;
+                    (*p_elements_vector)[i + 1] = sorting_buffer.second;
                 }
                 break;
             
@@ -386,39 +387,39 @@ namespace dengMath {
     }
 
     template<typename T>
-    void sortVectorInDecliningOrder(std::vector<T> *p_elements_vector, dengCoordinateAxisType coord_axis_type) {
-        vec2<T> local_sorting_buffer;
+    void sortVectorInDecliningOrder(std::vector<T> *p_elements_vector, deng_CoordinateAxisType coord_axis_type) {
+        vec2<T> sorting_buffer;
 
         for(size_t i = 0; i < p_elements_vector->size() - 1; i++) {
             switch (coord_axis_type)
             {
             case DENG_COORD_AXIS_X:
                 if((*p_elements_vector)[i].position_vec.first < (*p_elements_vector)[i + 1].position_vec.first) {
-                    local_sorting_buffer.second = (*p_elements_vector)[i];
-                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+                    sorting_buffer.second = (*p_elements_vector)[i];
+                    sorting_buffer.first = (*p_elements_vector)[i + 1];
 
-                    (*p_elements_vector)[i] = local_sorting_buffer.first;
-                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                    (*p_elements_vector)[i] = sorting_buffer.first;
+                    (*p_elements_vector)[i + 1] = sorting_buffer.second;
                 }
                 break;
 
             case DENG_COORD_AXIS_Y:
                 if((*p_elements_vector)[i].position_vec.second < (*p_elements_vector)[i + 1].position_vec.second) {
-                    local_sorting_buffer.second = (*p_elements_vector)[i];
-                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+                    sorting_buffer.second = (*p_elements_vector)[i];
+                    sorting_buffer.first = (*p_elements_vector)[i + 1];
 
-                    (*p_elements_vector)[i] = local_sorting_buffer.first;
-                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                    (*p_elements_vector)[i] = sorting_buffer.first;
+                    (*p_elements_vector)[i + 1] = sorting_buffer.second;
                 }
                 break;
 
             case DENG_COORD_AXIS_Z:
                 if((*p_elements_vector)[i].position_vec.third < (*p_elements_vector)[i + 1].position_vec.third) {
-                    local_sorting_buffer.second = (*p_elements_vector)[i];
-                    local_sorting_buffer.first = (*p_elements_vector)[i + 1];
+                    sorting_buffer.second = (*p_elements_vector)[i];
+                    sorting_buffer.first = (*p_elements_vector)[i + 1];
 
-                    (*p_elements_vector)[i] = local_sorting_buffer.first;
-                    (*p_elements_vector)[i + 1] = local_sorting_buffer.second;
+                    (*p_elements_vector)[i] = sorting_buffer.first;
+                    (*p_elements_vector)[i + 1] = sorting_buffer.second;
                 }
                 break;
             
@@ -441,14 +442,10 @@ namespace dengMath {
     
 
     // Apply model matrix for 3d asset
-    void applyModelMatrix(DENGAsset &asset, mat4<float> matrix) {
+    void applyModelMatrix(deng_Asset &asset, mat4<float> matrix) {
         size_t index;
         dengMath::vec3<float> *p_tmp_in;
         dengMath::vec4<float> tmp_out;
-        LOG("|" + std::to_string(matrix.row1.first) + "," + std::to_string(matrix.row1.second) + "," + std::to_string(matrix.row1.third) + "," + std::to_string(matrix.row1.fourth) + "|");
-        LOG("|" + std::to_string(matrix.row2.first) + "," + std::to_string(matrix.row2.second) + "," + std::to_string(matrix.row2.third) + "," + std::to_string(matrix.row2.fourth) + "|");
-        LOG("|" + std::to_string(matrix.row3.first) + "," + std::to_string(matrix.row3.second) + "," + std::to_string(matrix.row3.third) + "," + std::to_string(matrix.row3.fourth) + "|");
-        LOG("|" + std::to_string(matrix.row4.first) + "," + std::to_string(matrix.row4.second) + "," + std::to_string(matrix.row4.third) + "," + std::to_string(matrix.row4.fourth) + "|");
 
         for(index = 0; index < asset.vertices.size; index++) {
             switch (asset.asset_mode)
@@ -464,9 +461,9 @@ namespace dengMath {
             case DENG_ASSET_MODE_3D_UNMAPPED:
                 p_tmp_in = (dengMath::vec3<float>*) &asset.vertices.p_unmapped_vert_data[index]; 
                 tmp_out = matrix * (*p_tmp_in);
-                asset.vertices.p_unmapped_vert_data[index].vert_x = tmp_out.first;
-                asset.vertices.p_unmapped_vert_data[index].vert_y = tmp_out.second;
-                asset.vertices.p_unmapped_vert_data[index].vert_z = tmp_out.third;
+                asset.vertices.p_unmapped_vert_data[index].vert_data.vert_x = tmp_out.first;
+                asset.vertices.p_unmapped_vert_data[index].vert_data.vert_y = tmp_out.second;
+                asset.vertices.p_unmapped_vert_data[index].vert_data.vert_z = tmp_out.third;
                 break;
 
             case DENG_ASSET_MODE_2D_UNMAPPED:
@@ -478,5 +475,33 @@ namespace dengMath {
                 break;
             }
         }
+    }
+
+    
+    /* Calculate triangle surface area based on triangle vertices */
+    float trSurface2D(std::array<vec2<float>, 3> tr_verts) {
+        // Find triangle sides
+        float a = 
+            sqrt (
+                (tr_verts[1].first - tr_verts[0].first) * (tr_verts[1].first - tr_verts[0].first) + 
+                (tr_verts[1].second - tr_verts[0].second) * (tr_verts[1].second - tr_verts[0].second)
+            );
+
+        float b =
+            sqrt (
+                (tr_verts[2].first - tr_verts[1].first) * (tr_verts[2].first - tr_verts[1].first) +
+                (tr_verts[2].second - tr_verts[1].second) * (tr_verts[2].second - tr_verts[1].second)
+            );
+
+        float c =
+            sqrt (
+                (tr_verts[2].first - tr_verts[0].first) * (tr_verts[2].first - tr_verts[0].first) +
+                (tr_verts[2].second - tr_verts[0].second) * (tr_verts[2].second - tr_verts[0].second)
+            );
+
+        // Triangle semi perimeter
+        float s = (a + b + c) / 2;
+
+        return std::sqrt((s * (s - a) * (s - b) * (s - c)));
     }
 }  

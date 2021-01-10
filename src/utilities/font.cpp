@@ -3,8 +3,7 @@
 namespace dengUtils {
 
     /* Search for certain font and return true if found */
-    // Untested!
-    bool FontManager::verifyFont(dengRendStr &str, std::string &out_path) {
+    bool FontManager::verifyFont(bitmapStr &str, std::string &out_path) {
         size_t l_index, r_index, path_index;
         std::string list_font_name = "";
 
@@ -21,26 +20,30 @@ namespace dengUtils {
 
             if(str.font_file == list_font_name) {
                 out_path = m_fonts[l_index];
+                LOG("Found font file: " + out_path);
                 return true;
             }
 
             list_font_name = "";
         }
 
+        LOG("No font file found");
         return false;
     }
 
 
     /* Find all available fonts */
     // Untested
-    void FontManager::findFontFiles(std::string base_path) {
+    void FontManager::findFontFiles(std::string path) {
         // Check if '/' needs to be added to the end of the path
-        if(base_path[base_path.size() - 1] != '/') base_path += '/';
+        if(path != "" && path[path.size() - 1] != '/') 
+            path += '/';
+        else if(path == "") return;
 
         // Open directory
         DIR *dir;
-        dir = opendir(base_path.c_str());
-        if(!dir) WARNME("Invalid font path: " + base_path);
+        dir = opendir(path.c_str());
+        if(!dir) WARNME("Invalid font path: " + path);
         char *file_ext;
         
         // Read directory contents 
@@ -52,17 +55,15 @@ namespace dengUtils {
             {
             case DT_REG:
                 file_ext = cm_GetFileExtName(contents->d_name);
-                if(file_ext && !strcmp(file_ext, "ttf")) { 
-                    m_fonts.resize(m_fonts.size() + 1);
-                    m_fonts[m_fonts.size() - 1] = base_path + contents->d_name;
-                }
+                if(file_ext && !strcmp(file_ext, "ttf"))
+                    m_fonts.push_back(path + contents->d_name);
                 
                 if(file_ext) free(file_ext);
                 break;
 
             case DT_DIR:
                 if(std::string(contents->d_name) != "." && std::string(contents->d_name) != "..")
-                    findFontFiles(base_path + contents->d_name);
+                    findFontFiles(path + contents->d_name);
                 break;
 
             default:
@@ -74,9 +75,9 @@ namespace dengUtils {
 
 
     // Find unique glyphs and index them according to the text
-    std::vector<char> FontManager::indexGlyphs(dengRendStr &str) {
+    std::vector<char> FontManager::indexGlyphs(bitmapStr &str) {
         std::vector<char> unique_chars;
-        str.rend_text = (dengRendChar*) malloc(sizeof(dengRendChar) * strlen(str.text));
+        str.rend_text = (bitmapChar*) malloc(sizeof(bitmapChar) * strlen(str.text));
         
         size_t l_index, r_index;
         bool is_found = false;
@@ -107,27 +108,27 @@ namespace dengUtils {
     }
 
 
-    FontManager::FontManager(const char *custom_font_path, deng::WindowWrap *p_window_wrap) {
+    FontManager::FontManager(std::string custom_font_path, deng::WindowWrap *p_window_wrap) {
         FT_Error res;
         m_p_window_wrap = p_window_wrap;
         findFontFiles(DEFAULT_FONT_PATH);
-        if(custom_font_path) findFontFiles(custom_font_path);
+        findFontFiles(custom_font_path);
+
         res = FT_Init_FreeType(&m_library_instance);
-        if(res) ERR("Failed to initialise freetype library instance!");
+        if(res) FONT_ERR("Failed to initialise freetype library instance!");
     }
 
-    FontManager::~FontManager() {
-        FT_Done_FreeType(m_library_instance);
-    }
+    FontManager::~FontManager() { FT_Done_FreeType(m_library_instance); }
 
 
     /* Create new drawable string */
-    dengError FontManager::newStr(dengRendStr &str, const char *font_name, uint16_t px_size, dengMath::vec2<float> pos, dengMath::vec3<unsigned char> color) {
+    deng_Error FontManager::mkNewStr (
+        bitmapStr &str, 
+        uint16_t px_size, 
+        dengMath::vec2<float> pos, 
+        dengMath::vec3<unsigned char> color
+    ) {
         size_t index;
-        std::string tmp_path_str;
-        str.font_file = font_name;
-        if(!verifyFont(str, tmp_path_str)) WARNME("Failed to find font file!");
-        str.font_file = tmp_path_str.c_str();
 
         // Set up new freetype font face        
         FT_Error res;
@@ -140,7 +141,7 @@ namespace dengUtils {
         // Set sizes for glyphs
         res = FT_Set_Pixel_Sizes(str.font_face, 0, px_size);
         if(res) return DENG_ERROR_TYPE_GENERAL_THIRD_PARTY_LIB_CALLBACK_ERROR;
-        
+
         // Index chars and get unique vector characters
         std::vector<char> unique_ch = indexGlyphs(str);
         str.unique_glyphs.resize(unique_ch.size());
@@ -159,33 +160,37 @@ namespace dengUtils {
             if(res) return DENG_ERROR_TYPE_GENERAL_THIRD_PARTY_LIB_CALLBACK_ERROR;
         }
         
-
-        // Glyph data logging
-        for(index = 0; index < str.unique_glyphs.size(); index++) {
-            LOG("Width: " + std::to_string(str.unique_glyphs[index].bitmap.width) + "; Height: " + std::to_string(str.unique_glyphs[index].bitmap.rows) + 
-            "; Bearing X: " + std::to_string(str.unique_glyphs[index].bearings.first) + "; Bearing Y:" + std::to_string(str.unique_glyphs[index].bearings.second));
-            LOG("Advance step: " + std::to_string(str.unique_glyphs[index].advance.first));
-        }
-
-        LOG("ID:");
-        for(index = 0; index < strlen(str.text); index++)
-            LOG(std::to_string(str.rend_text[index].glyph_id));
-
         mkTextbox(str, color);
 
-        str.vert_pos[0] = {0.0f + pos.first, 0.0f + pos.second};
+        str.vert_pos[0] = {pos.first, pos.second};
         str.vert_pos[0].tex_data = {0.0f, 0.0f};
         
-        str.vert_pos[1].vert_data.vert_x = dengMath::Conversion::pixelSizeToVector2DSize((double) str.box_size.first, m_p_window_wrap->getSize(), DENG_COORD_AXIS_X) + pos.first;
-        str.vert_pos[1].vert_data.vert_y = 0.0f + pos.second;
+        str.vert_pos[1].vert_data.vert_x = dengMath::Conversion::pixelSizeToVector2DSize (
+            (double) str.box_size.first, 
+            m_p_window_wrap->getSize(), 
+            DENG_COORD_AXIS_X
+        ) + pos.first;
+        str.vert_pos[1].vert_data.vert_y = pos.second;
         str.vert_pos[1].tex_data = {1.0f, 0.0f};
         
-        str.vert_pos[2].vert_data.vert_x = dengMath::Conversion::pixelSizeToVector2DSize((double) str.box_size.first, m_p_window_wrap->getSize(), DENG_COORD_AXIS_X) + pos.first;
-        str.vert_pos[2].vert_data.vert_y = dengMath::Conversion::pixelSizeToVector2DSize((double) str.box_size.second, m_p_window_wrap->getSize(), DENG_COORD_AXIS_Y) + pos.second;
+        str.vert_pos[2].vert_data.vert_x = dengMath::Conversion::pixelSizeToVector2DSize (
+            (double) str.box_size.first, 
+            m_p_window_wrap->getSize(), 
+            DENG_COORD_AXIS_X
+        ) + pos.first;
+        str.vert_pos[2].vert_data.vert_y = dengMath::Conversion::pixelSizeToVector2DSize (
+            (double) str.box_size.second, 
+            m_p_window_wrap->getSize(), 
+            DENG_COORD_AXIS_Y
+        ) + pos.second;
         str.vert_pos[2].tex_data = {1.0f, 1.0f};
         
-        str.vert_pos[3].vert_data.vert_x = 0.0f + pos.first;
-        str.vert_pos[3].vert_data.vert_y = dengMath::Conversion::pixelSizeToVector2DSize((double) str.box_size.second + (double) pos.second, m_p_window_wrap->getSize(), DENG_COORD_AXIS_Y) + pos.second;
+        str.vert_pos[3].vert_data.vert_x = pos.first;
+        str.vert_pos[3].vert_data.vert_y = dengMath::Conversion::pixelSizeToVector2DSize (
+            (double) str.box_size.second + (double) pos.second, 
+            m_p_window_wrap->getSize(), 
+            DENG_COORD_AXIS_Y
+        ) + pos.second;
         str.vert_pos[3].tex_data = {0.0f, 1.0f};
 
         str.vert_indices = {0, 1, 2, 2, 3, 0};
@@ -194,12 +199,72 @@ namespace dengUtils {
     }
 
 
+    /* Callback function for creating new text box instance based on pixel size */
+    deng_Error FontManager::newPxStr (
+        bitmapStr &str,
+        const char *font_name,
+        uint16_t px_size,
+        dengMath::vec2<float> pos,
+        dengMath::vec3<unsigned char> color
+    ) {
+        std::string path_str;
+        str.font_file = font_name;
+        // Check if font file exists
+        if(!verifyFont(str, path_str))
+            FONT_ERR("Failed to find font file!");
+
+        str.font_file = path_str.c_str();
+
+        deng_Error res;
+        res = mkNewStr (
+            str,
+            px_size,
+            pos,
+            color
+        );
+
+        return res;
+    }
+
+
+    /* Callback function for creating new text box instance based on vector size */
+    deng_Error FontManager::newVecStr (
+        bitmapStr &str,
+        const char *font_name,
+        float vec_size,
+        dengMath::vec2<float> pos,
+        dengMath::vec3<unsigned char> color
+    ) {
+        std::string path_str;
+        str.font_file = font_name;
+        // Check if font file exists
+        if(!verifyFont(str, path_str))
+            FONT_ERR("Failed to find font file!");
+        
+        str.font_file = path_str.c_str();
+        float px_size = (float) dengMath::Conversion::vector2DSizeToPixelSize (
+            (double) vec_size,
+            m_p_window_wrap->getSize(),
+            DENG_COORD_AXIS_Y
+        );
+
+        deng_Error res;
+        res = mkNewStr (
+            str,
+            (uint16_t) px_size,
+            pos,
+            color
+        );
+
+        return res;
+    }
+
+
     /* Create textbox from glyphs */
-    void FontManager::mkTextbox(dengRendStr &str, dengMath::vec3<unsigned char> color) {
+    void FontManager::mkTextbox(bitmapStr &str, dengMath::vec3<unsigned char> color) {
         int32_t ln_bearing = 0; 
         int32_t l_bearing = 0;
         dengMath::vec2<int32_t> origin_offset;
-
         int32_t l_index, r_index, t_index, g_index;
 
         // Find the height of textbox and verify colormode

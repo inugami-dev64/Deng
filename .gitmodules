@@ -1,0 +1,6 @@
+[submodule "modules/freetype2"]
+	path = modules/freetype2
+	url = https://github.com/inugami-dev64/freetype2
+[submodule "modules/Imgui"]
+	path = modules/Imgui
+	url = https://github.com/inugami-dev64/Imgui

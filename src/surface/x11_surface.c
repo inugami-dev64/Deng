@@ -2,7 +2,7 @@
 
 static void handle_key_events();
 static void handle_mouse_events();
-static void set_cursor(DENGWindow *p_window, const char *cursor_path, int is_library_cur);
+static void set_cursor(DENGWindow *p_window, const char *cursor_path, bool_t is_library_cur);
 
 static bool_t is_running_var;
 static DENGKey recent_press_key;
@@ -26,18 +26,18 @@ DENGWindow *init_window(int width, int height, char *title, WindowMode window_mo
     p_window->x11_handler.p_display = XOpenDisplay((char*) NULL);
     p_window->x11_handler.screen = DefaultScreen(p_window->x11_handler.p_display);
 
-    XSizeHints local_size_hints;
+    XSizeHints size_hints;
 
     if(window_mode == DENG_WINDOW_MODE_FIXED) {
-        local_size_hints.flags |= (PMinSize | PMaxSize);
-        local_size_hints.min_width = local_size_hints.max_width =  p_window->width;
-        local_size_hints.min_height = local_size_hints.max_height = p_window->height;   
+        size_hints.flags |= (PMinSize | PMaxSize);
+        size_hints.min_width = size_hints.max_width =  p_window->width;
+        size_hints.min_height = size_hints.max_height = p_window->height;   
     }    
 
     p_window->x11_handler.window = XCreateSimpleWindow(p_window->x11_handler.p_display, DefaultRootWindow(p_window->x11_handler.p_display), 0, 0, width, height, DEFAULT_WINDOW_BORDER, WhitePixel(p_window->x11_handler.p_display, p_window->x11_handler.screen), BlackPixel(p_window->x11_handler.p_display, p_window->x11_handler.screen));
 
     XSetStandardProperties(p_window->x11_handler.p_display, p_window->x11_handler.window, title, title, None, NULL, 0, NULL);
-    XSetWMNormalHints(p_window->x11_handler.p_display, p_window->x11_handler.window, &local_size_hints);
+    XSetWMNormalHints(p_window->x11_handler.p_display, p_window->x11_handler.window, &size_hints);
 
     XSelectInput(p_window->x11_handler.p_display, p_window->x11_handler.window, EVENT_MASKS);
     p_window->x11_handler.gc = XCreateGC(p_window->x11_handler.p_display, p_window->x11_handler.window, 0, 0);
@@ -99,7 +99,17 @@ static void handle_mouse_events(DENGWindow *p_window) {
     case ButtonPress: {
         recent_press_btn = translateX11Btn(p_window->x11_handler.event.xbutton.button);
 
-        if((key_index = get_key_index(p_window, DENG_KEY_UNKNOWN, recent_press_btn, MOUSE_BUTTON, ACTIVE_KEYS)) == p_window->active_keys.btn_count)
+        if
+        (
+            (
+                key_index = get_key_index (
+                    p_window, 
+                    DENG_KEY_UNKNOWN, 
+                    recent_press_btn, 
+                    MOUSE_BUTTON, 
+                    ACTIVE_KEYS)
+            ) == p_window->active_keys.btn_count
+        )
             add_key(p_window, NULL, &recent_press_btn, MOUSE_BUTTON, ACTIVE_KEYS);
         
         break;
@@ -206,7 +216,7 @@ void update_window(DENGWindow *p_window) {
             destroy_window(p_window);
     }
 
-    // usleep(DENG_REFRESH_INTERVAL);
+    usleep(DENG_REFRESH_INTERVAL);
 }
 
 void destroy_window(DENGWindow *p_window) {

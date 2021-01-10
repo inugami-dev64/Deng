@@ -19,14 +19,14 @@ typedef struct VERT_HDR {
     uint32_t hdr_size;
     uint32_t vert_count;
     uint8_t vert_type;
-    DynamicVertices vertices_data;
+    deng_VertDynamic vertices_data;
 } VERT_HDR;
 
 typedef struct INDX_HDR {
     char *hdr_name;
     uint32_t hdr_size;
     uint32_t indices_count;
-    DynamicIndices indices_data;
+    deng_IndicesDynamic indices_data;
 } INDX_HDR;
 
 typedef struct TPIX_HDR {
@@ -34,7 +34,7 @@ typedef struct TPIX_HDR {
     uint32_t hdr_size;
     uint16_t img_width;
     uint16_t img_height;
-    DynamicPixelData pixel_data; 
+    deng_PixelDataDynamic pixel_data; 
 } TPIX_HDR;
 
 

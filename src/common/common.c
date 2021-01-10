@@ -3,41 +3,51 @@
 #define false 0
 #define true 1
 
-char *cm_GetFileExtName(const char *file_name) {
-    int f_index, l_index;
-    char *f_ext = (char*) calloc(1, sizeof(char));
-    char *l_ext = (char*) calloc(1, sizeof(char));
-    size_t ext_size = 0;
-    int is_ext_found = false;
-
-    // Iterate backwards to find nearest dot for the extension
-    for(f_index = (int) strlen(file_name) - 1; f_index >= 0; --f_index) {
-        if(f_index && file_name[f_index] == 0x2E) {
-            is_ext_found = true;
-            break;
-        }
-
-        ext_size++;
-        f_ext = (char*) realloc(f_ext, ext_size * sizeof(char));
-        f_ext[ext_size - 1] = file_name[f_index];
-    }
-
-    // Exit function if no extension is found
-    if(!is_ext_found) {
-        free(f_ext);
-        free(l_ext);
-        return NULL;
-    }
-
-    // Rearrange extension chars in reverse order
-    for(f_index = (int) strlen(f_ext) - 1, l_index = 0; l_index >= 0 && l_index < strlen(f_ext); f_index--, l_index++)
-        l_ext[l_index] = f_ext[f_index];
-
-    free(f_ext);
-    return l_ext;
+/* Clear all the contents in char buffer */
+void cm_ClearBuffer(char *str, int32_t len) {
+    int32_t index;
+    for(index = 0; index < len; index++) 
+        str[index] = 0x00;
 }
 
 
+/* Get the file extension name */
+char *cm_GetFileExtName(const char *file_name) {
+    int32_t l_index;
+    char *ext;
+    int32_t ext_size = 0;
+    int is_ext_found = false;
+    
+    // Find the extension index
+    for(l_index = strlen(file_name) - 1; l_index >= 0; l_index--) {
+        if(file_name[l_index] == 0x2E) {
+            is_ext_found = true;
+            break;
+        }
+    }
+
+    if(!is_ext_found) return NULL;
+
+    l_index++;
+    // Allocate memory for file extension string
+    ext_size = strlen(file_name) - l_index;
+    ext = (char*) calloc (
+        ext_size + 1,
+        sizeof(char)
+    );
+
+    // Write extension into ext variable
+    sprintf (
+        ext,
+        "%s",
+        file_name + l_index
+    );
+
+    return ext;
+}
+
+
+/* Trim string to certain size */
 char *cm_TrimString(const char *str, size_t beg_index, size_t end_pos) {
     size_t index;
     char *end_str = calloc(end_pos - beg_index, sizeof(char));
@@ -48,6 +58,21 @@ char *cm_TrimString(const char *str, size_t beg_index, size_t end_pos) {
 }
 
 
+/* Make all lowercase chars into uppercase chars */
+char *cm_MakeUpperCase(const char *str) {
+    int32_t index;
+    char *l_str = (char*) str;
+    
+    for(index = 0; index < strlen(l_str); index++) {
+        if(l_str[index] > 0x60 && l_str[index] < 0x7B) 
+            l_str[index] -= 0x20;
+    }
+
+    return l_str;
+}
+
+
+/* Check for memory allocation error */
 void cm_CheckMemoryAlloc(void *ptr) {
     if(ptr == NULL) {
         printf("ERROR: Failed to allocate memory!\n");
@@ -56,12 +81,7 @@ void cm_CheckMemoryAlloc(void *ptr) {
 }
 
 
-void cm_CleanBuffer(char *ptr, size_t size) {
-    for(size_t index = 0; index < size; index++)
-        ptr[index] = 0x00;
-}
-
-
+/* Sort all buffer contents alphabetically */
 void cm_SortAlphabetically(char **buffer, size_t buffer_count) {
     int is_sorted = false;
     size_t l_index, r_index;
@@ -101,6 +121,7 @@ void cm_SortAlphabetically(char **buffer, size_t buffer_count) {
 }
 
 
+/* Write into log file */
 void cm_LogWrite(const char *file_name, const char *content, int rewrite) {
     FILE *file;
 
