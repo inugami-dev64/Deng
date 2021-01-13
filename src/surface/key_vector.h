@@ -6,19 +6,19 @@ extern "C" {
 #endif
 
 // method declarations
-void init_key_vectors(DENGWindow *p_window);
+void deng_InitKeyData(deng_SurfaceWindow *p_window);
 
-void add_key(DENGWindow *p_window, DENGKey *p_key, DENGMouseButton *p_btn, int key_type, int array_type);
-void remove_key(DENGWindow *p_window, size_t index, int key_type, int array_type);
-size_t get_key_index(DENGWindow *p_window, DENGKey key, DENGMouseButton, int key_type, int array_type);
-void clean_keys(DENGWindow *p_window, int key_type, int array_type);
+void deng_RegisterKeyEvent(deng_SurfaceWindow *p_window, deng_Key *p_key, deng_MouseButton *p_btn, int key_type, int array_type);
+void deng_ClearKeyEvent(deng_SurfaceWindow *p_window, size_t index, int key_type, int array_type);
+size_t deng_FindKeyIndex(deng_SurfaceWindow *p_window, deng_Key key, deng_MouseButton, int key_type, int array_type);
+void deng_CleanKeyEvents(deng_SurfaceWindow *p_window, int key_type, int array_type);
 
-int is_key_active(DENGWindow *p_window, DENGKey key);
-int is_mouse_btn_active(DENGWindow *p_window, DENGMouseButton btn);
-int is_key_released(DENGWindow *p_window, DENGKey key);
-int is_mouse_btn_released(DENGWindow *p_window, DENGMouseButton btn);
+int deng_IsKeyActive(deng_SurfaceWindow *p_window, deng_Key key);
+int deng_IsMouseBtnActive(deng_SurfaceWindow *p_window, deng_MouseButton btn);
+int deng_IsKeyReleased(deng_SurfaceWindow *p_window, deng_Key key);
+int deng_IsMouseBtnReleased(deng_SurfaceWindow *p_window, deng_MouseButton btn);
 
-void free_key_vectors(DENGWindow *p_window);
+void deng_FreeKeyData(deng_SurfaceWindow *p_window);
 
 #ifdef __cplusplus
 }

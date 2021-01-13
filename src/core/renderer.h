@@ -128,8 +128,8 @@ namespace deng {
         void mkSwapChainSettings();
         void mkSwapChain (
             VkSurfaceKHR &surface, 
-            uint32_t g_queue_i, 
-            uint32_t p_queue_i
+            deng_ui32_t g_queue_i, 
+            deng_ui32_t p_queue_i
         );
         void mkRenderPass();
         void mkSCImageViews();
@@ -167,7 +167,7 @@ namespace deng {
     private:
         std::vector<deng_Asset> *m_p_assets = NULL;
         std::vector<TextureImageData> *m_p_textures = NULL;
-        uint32_t m_texture_descriptor_size;
+        deng_ui32_t m_texture_descriptor_size;
 
     private:
         void mkDescriptorSetLayouts(VkDevice &device);
@@ -179,7 +179,7 @@ namespace deng {
         );
         void mkDescriptorPools (
             VkDevice &device, 
-            size_t sc_img_size
+            size_t sc_img_c
         );
 
     public:
@@ -203,6 +203,11 @@ namespace deng {
             size_t sc_img_size, 
             VkSampler tex_sampler, 
             BufferData buffer_data
+        );
+
+        void updateDescriptorPools (
+            VkDevice device,
+            size_t sc_img_c
         );
 
     public:
@@ -280,7 +285,7 @@ namespace deng {
 
         void updateUniformBufferData (
             VkDevice device, 
-            const uint32_t current_image, 
+            const deng_ui32_t current_image, 
             Camera *p_camera, 
             deng_CameraUniformFlagBits flag_bits
         );
@@ -304,18 +309,18 @@ namespace deng {
     /* Make drawcalls and set up proper synchronisation */
     class DrawCaller {
     private:
-        std::vector<deng_Asset> *m_p_assets;
-        std::vector<TextureImageData> *m_p_textures;
+        std::vector<deng_Asset> *m_p_assets = NULL;
+        std::vector<TextureImageData> *m_p_textures = NULL;
         std::vector<VkFramebuffer> m_framebuffers;
         std::array<PipelineData, DENG_PIPELINE_COUNT> m_pl_data;
-        std::vector<VkDescriptorSet> *m_p_unmapped_ds;
+        std::vector<VkDescriptorSet> *m_p_unmapped_ds = NULL;
+        QueueFamilyFinder m_qff;
 
         // Commandpools and commandbuffers
-        VkCommandPool m_commandpool;
-        std::vector<VkCommandBuffer> m_commandbuffers;
+        VkCommandPool *m_p_commandpool = NULL;
+        std::vector<VkCommandBuffer> *m_p_commandbuffers = NULL;
 
     private:
-        void mkCommandPool(VkDevice &device, uint32_t g_queue_i);
         void mkSynchronisation(VkDevice &device);
         TextureImageData findTextureImageDataByID(char *id);
 
@@ -328,7 +333,7 @@ namespace deng {
 
     public:
         DrawCaller (
-            VkDevice device, 
+            VkDevice device,
             QueueFamilyFinder qff
         );
         
@@ -343,6 +348,8 @@ namespace deng {
             std::vector<VkDescriptorSet> *p_unmapped_ds
         );
 
+        void mkCommandPool(VkDevice device);
+
         void recordDrawCommands (
             VkDevice device, 
             VkQueue g_queue, 
@@ -354,11 +361,12 @@ namespace deng {
 
         void updateCommandBuffers (
             VkDevice device,
-            std::vector<VkCommandBuffer> cmd_bufs
+            std::vector<VkCommandBuffer> *p_cmd_bufs,
+            VkCommandPool *p_cmd_pool
         );
     
     public:
-        VkCommandPool getComPool();
+        VkCommandPool *getComPool();
         std::vector<VkCommandBuffer> *getComBufs();
     };
 
@@ -370,7 +378,7 @@ namespace deng {
         DescriptorCreator *m_p_desc_c;
         ResourceAllocator *m_p_ra = NULL;
         DrawCaller *m_p_dc = NULL;
-        dengUtils::FontManager *m_p_fm = NULL;
+        dengUtils::StringRasterizer *m_p_sr = NULL;
         std::mutex m_frame_mut;
         
         // Render usage specifications
@@ -407,12 +415,12 @@ namespace deng {
     public:
         void submitAssets (
             deng_Asset *assets, 
-            int32_t size
+            deng_i32_t size
         );
 
         void submitTextures (
             deng_Texture *textures,
-            int32_t tex_c
+            deng_i32_t tex_c
         );
         
         void submitTextureFile (
@@ -421,7 +429,7 @@ namespace deng {
         );
         
         void submitRendStr (
-            dengUtils::bitmapStr *rend_strs, 
+            dengUtils::BitmapStr *rend_strs, 
             size_t size
         );
 

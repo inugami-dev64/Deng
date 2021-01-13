@@ -7,7 +7,7 @@ extern "C" {
 #define DENG_HIDE_CURSOR 0x0001
 #define DENG_SHOW_CURSOR 0x0002
 
-typedef enum DENGKey {
+typedef enum deng_Key {
     // Generic keys
     DENG_KEY_UNKNOWN        =   -1,
     DENG_KEY_SPACE          =   32,
@@ -126,26 +126,27 @@ typedef enum DENGKey {
     DENG_KEY_RIGHT_ALT      =   346,
     DENG_KEY_RIGHT_SUPER    =   347,
     DENG_KEY_MENU           =   348
-} DENGKey;
+} deng_Key;
 
-typedef enum DENGMouseButton {
+
+typedef enum deng_MouseButton {
     DENG_MOUSE_BTN_UNKNOWN = -1,
     DENG_MOUSE_BTN_1 = 0,
     DENG_MOUSE_BTN_2 = 1,
     DENG_MOUSE_BTN_3 = 2,
     DENG_MOUSE_SCROLL_DOWN = 3,
     DENG_MOUSE_SCROLL_UP = 4
-} DENGMouseButton;
+} deng_MouseButton;
 
 
 #ifdef __linux__
-    DENGKey translateX11Key(KeySym keysym);
-    DENGMouseButton translateX11Btn(unsigned int button);
+    deng_Key translateX11Key(KeySym keysym);
+    deng_MouseButton translateX11Btn(unsigned int button);
 #endif
 
 #ifdef WIN32
-    DENGKey translateWIN32Key(uint16_t key_code);
-    DENGMouseButton translateWIN32Btn(UINT msg);
+    deng_Key translateWIN32Key(deng_ui16_t key_code);
+    deng_MouseButton translateWIN32Btn(UINT msg);
 #endif
 
 #ifdef __cplusplus

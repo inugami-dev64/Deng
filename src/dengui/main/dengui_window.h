@@ -1,7 +1,7 @@
-#ifndef GUI_WINDOW_H
-#define GUI_WINDOW_H
+#ifndef DENGUI_WINDOW_H
+#define DENGUI_WINDOW_H
 
-typedef uint32_t WindowID;
+typedef deng_ui32_t WindowID;
 // In pixels
 #define DENGUI_LIGHT_BORDER_THICKNESS       1
 #define DENGUI_MEDIUM_BORDER_THICKNESS      2
@@ -29,7 +29,7 @@ typedef uint32_t WindowID;
 // Default window parametres
 #define DENGUI_TITLEBAR_HEIGHT              0.05f
 #define DENGUI_TITLEBAR_ELEM_MARGIN         0.005f
-#define DENGUI_DEFAULT_FONT_FILE            "FreeMono.ttf"
+#define DENGUI_DEFAULT_FONT_FILE            "SourceCodePro-Regular.otf"
 
 // Main window element ids
 #define DENGUI_FORM_ID                      "form"
@@ -37,6 +37,10 @@ typedef uint32_t WindowID;
 #define DENGUI_MINIMISE_TRIANGLE_ID         "min_triangle"
 #define DENGUI_MAXIMISE_TRIANGLE_ID         "max_triangle"
 #define DENGUI_CLOSE_BTN_ID                 "close_btn"
+#define DENGUI_TITLE_ID                     "title"
+
+// Default string buttons 
+#define DENGUI_CLOSE_BTN                    "[X]"                  
 
 namespace dengui {
 
@@ -73,7 +77,7 @@ namespace dengui {
         bool update;
         std::vector<VERT_UNMAPPED_2D> unmapped_vert;
         std::vector<VERT_MAPPED_2D> mapped_vert;
-        std::vector<uint32_t> indices; 
+        std::vector<deng_ui32_t> indices; 
         std::string win_id;
     };
 
@@ -103,22 +107,6 @@ namespace dengui {
     };
 
 
-    /* Menubar class */
-    class Menubar {
-    private:
-        std::vector<dengMath::vec3<float>> m_vertices;
-        std::vector<uint32_t> m_indices;
-        
-        std::vector<MenubarElement> m_elems;
-        dengMath::vec4<float> m_color;
-        WindowBorder wb;
-
-    public:
-        Menubar(std::vector<MenubarElement> &elements);
-        void setWindowProps(dengMath::vec4<float> &color, WindowBorder wb);
-    };
-
-
     /* Struct to share between main thread and ui event thread */
     struct WindowElement {
         std::string child_id;
@@ -135,16 +123,15 @@ namespace dengui {
         ElementColorMode color_mode;
         std::vector<VERT_UNMAPPED_2D> unmapped_vert;
         std::vector<VERT_MAPPED_2D> mapped_vert;
-        std::vector<uint32_t> indices;
-        std::vector<uint8_t> texture;
-        dengMath::vec2<int32_t> tex_box;
+        std::vector<deng_ui32_t> indices;
+        std::vector<deng_ui8_t> texture;
+        dengMath::vec2<deng_i32_t> tex_box;
     };
 
 
     /* Window info struct */
     struct WindowInfo {
         std::string id;
-        Menubar *p_mb;
         WindowType wt;
         denguiWindowFlagBits fl_b;
         dengMath::vec4<float> pc;
@@ -157,36 +144,27 @@ namespace dengui {
     };
 
 
-    /* Main window class */
-    class Window {
-    private:
-        std::string m_id;
-        dengUtils::FontManager *m_p_fm;
-        std::vector<WindowElement> m_win_elems;
-        
-        /* Primary color specifies the window background color          *
-         * Secondary color specifies the window elements (buttons,      *
-           text field background etc colors)                            *
-         * Tertiary color specifies only the titlebar color             */
-        dengMath::vec4<float> m_primary_color;
-        dengMath::vec4<float> m_secondary_color;
-        dengMath::vec4<float> m_tertiary_color;
+    /* Class for creating all base window shapes */
+    struct WindowShapeInfo {
+        dengMath::vec2<deng_vec_t> pos;
+        dengMath::vec2<deng_vec_t> size;
+        RectangleOrigin rec_origin;
+        std::vector<VERT_UNMAPPED> *p_vert;
+        std::vector<deng_ui32_t> *p_indices;
+    };
 
-        // Window boundaries and position
-        dengMath::vec2<float> m_size;
-        dengMath::vec2<float> m_pos;
 
-        // Color specification boolean for checking if window
-        bool m_is_color_spec;
-        WindowType m_wt;
-        Menubar *m_p_mb;
-    
+    class BaseWindowShapes {
     private:
-        // Index all vertices
-        void indexVerts();
-        // Calculate all vertices
-        void calcVerts();
-        
+        dengUtils::StringRasterizer *m_p_sr;
+        dengMath::vec2<deng_ui32_t> m_window_bounds;
+
+    public:
+        BaseWindowShapes (
+            dengUtils::StringRasterizer *p_sr,
+            dengMath::vec2<deng_ui32_t> &window_bounds
+        );
+
         // Add generic unmapped rectangle to window vertices using absolute positions
         void addAbsUnmappedRec (
             dengMath::vec2<float> pos, 
@@ -194,7 +172,7 @@ namespace dengui {
             RectangleOrigin rec_origin,
             deng_ObjColorData color,
             std::vector<VERT_UNMAPPED_2D> &vert,
-            std::vector<uint32_t> &indices
+            std::vector<deng_ui32_t> &indices
         );
 
         // Add generic unmapped rectangle to window vertices using relative positions
@@ -206,7 +184,7 @@ namespace dengui {
             deng_ObjColorData color,
             std::array<deng_ObjVertData2D, 4> &form_vert,
             std::vector<VERT_UNMAPPED_2D> &vert,
-            std::vector<uint32_t> &indices
+            std::vector<deng_ui32_t> &indices
         );
 
         // Add generic triangle object to window
@@ -219,22 +197,79 @@ namespace dengui {
             deng_ObjColorData color,
             std::array<deng_ObjVertData2D, 4> &form_vert,
             std::vector<VERT_UNMAPPED_2D> &vert,
-            std::vector<uint32_t> &indices
+            std::vector<deng_ui32_t> &indices
         );
 
-        // Add text object to window
-        void addText (
+        // Add text object to window according to its relative position
+        void addRelText (
             dengMath::vec2<float> pos,
             float text_size,
-            dengMath::vec2<uint32_t> draw_bounds,
+            dengMath::vec2<deng_ui32_t> draw_bounds,
             RectangleOrigin rec_origin,
-            dengUtils::bitmapStr text,
+            dengUtils::BitmapStr text,
             dengMath::vec3<unsigned char> color,
             std::array<deng_ObjVertData2D, 4> &form_vert,
             std::vector<VERT_MAPPED_2D> &vert,
-            std::vector<uint32_t> &indices,
-            std::vector<uint8_t> &tex,
-            dengMath::vec2<int32_t> &tex_size
+            std::vector<deng_ui32_t> &indices,
+            std::vector<deng_ui8_t> &tex,
+            dengMath::vec2<deng_i32_t> &tex_size
+        );
+    };
+
+
+    /* Main window class */
+    class Window : private BaseWindowShapes{
+    private:
+        std::string m_id;
+        dengUtils::StringRasterizer *m_p_sr;
+        std::vector<WindowElement> m_win_elems;
+        
+        /* Primary color specifies the window background color          *
+         * Secondary color specifies the window elements (buttons,      *
+           text field background etc colors)                            *
+         * Tertiary color specifies only the titlebar color             */
+        dengMath::vec4<deng_vec_t> m_primary_color;
+        dengMath::vec4<deng_vec_t> m_secondary_color;
+        dengMath::vec4<deng_vec_t> m_tertiary_color;
+
+        // Window boundaries and position
+        dengMath::vec2<float> m_size;
+        dengMath::vec2<float> m_pos;
+
+        // Color specification boolean for checking if window
+        bool m_is_color_spec;
+        WindowType m_wt;
+    
+    private:    
+        std::array<deng_ObjVertData2D, 4> mkForm(WindowInfo *p_wi);
+        
+        void mkTitlebar (
+            WindowInfo *p_wi, 
+            std::array<deng_ObjVertData2D, 4> form_vert
+        );
+
+        void mkTitle (
+            WindowInfo *p_wi,
+            dengMath::vec2<deng_ui32_t> deng_win_bounds,
+            std::array<deng_ObjVertData2D, 4> form_vert,
+            dengMath::vec3<unsigned char> color
+        );
+        
+        void mkMinimiseTriangle (
+            WindowInfo *p_wi, 
+            std::array<deng_ObjVertData2D, 4> form_vert
+        );
+        
+        void mkMaximiseTriangle (
+            WindowInfo *p_wi,
+            std::array<deng_ObjVertData2D, 4> form_vert
+        );
+
+        void mkClose (
+            dengMath::vec4<deng_vec_t> color,
+            dengMath::vec2<deng_ui32_t> deng_win_bounds,
+            std::string parent,
+            std::array<deng_ObjVertData2D, 4> form_vert
         );
 
     // Getters and setters
@@ -258,26 +293,18 @@ namespace dengui {
         void setPos(dengMath::vec2<float> &pos);
         void setSize(dengMath::vec2<float> &size);
 
-        // Set menubar
-        void setMB(Menubar *p_mb);
-
     public:
         Window (
             WindowType wt, 
             std::string id, 
-            dengUtils::FontManager *p_fm
-        );
-
-        void minimize (
-            std::vector<deng_Asset> *p_assets, 
-            std::vector<deng_Texture> *p_textures
+            dengUtils::StringRasterizer *p_sr,
+            dengMath::vec2<deng_ui32_t> window_bounds
         );
 
         void makeWindow (
-            WindowInfo *p_wi, 
-            dengMath::vec2<uint32_t> draw_bounds
+            WindowInfo *p_wi,
+            dengMath::vec2<deng_ui32_t> draw_bounds
         );
-        void collapse();
     };
 
 
@@ -301,31 +328,26 @@ namespace dengui {
         VkRenderPass renderpass,
         VkExtent2D extent,
         dengMath::vec4<float> background,
-        dengMath::vec2<uint32_t> draw_area
+        dengMath::vec2<deng_ui32_t> draw_area
     );    
-
 
     /* Create new window instance */
     void beginWindow (
         Window **pp_window, 
         WindowInfo *p_wi, 
-        dengMath::vec2<uint32_t> draw_bounds,
-        dengUtils::FontManager *p_fm,
-        Events *p_ev
+        dengMath::vec2<deng_ui32_t> draw_bounds,
+        dengUtils::StringRasterizer *p_sr,
+        Events *p_ev,
+        deng_bool_t realloc_res
     );
 
-    /* Get all window elements made into assets */
-    void getAssets (
-        Window *windows, 
-        int32_t window_c, 
-        deng_Asset **p_assets, 
-        int32_t *p_asset_c,
-        deng_Texture **p_textures,
-        int32_t *p_tex_c
-    );
-
-    // Destroy window
-    void destroyWindow(Window *p_window);
+    
+    /* Attach child to the window */
+    // void attachChild (
+    //     Window *p_window,
+    //     Events *p_ev,
+    //     ChildInfo child_info
+    // );
 }
 
 #endif

@@ -1,6 +1,6 @@
 #include "deng_surface_core.h"
 
-const char **get_required_surface_extensions(DENGWindow *p_window, uint32_t *p_count, bool_t add_layer_ext) {
+const char **deng_GetRequiredVKSurfaceExt(deng_SurfaceWindow *p_window, deng_ui32_t *p_count, bool_t add_layer_ext) {
     char **pp_extensions;
     if(add_layer_ext) {
         *p_count = 3;
@@ -38,7 +38,7 @@ const char **get_required_surface_extensions(DENGWindow *p_window, uint32_t *p_c
     return pp_const_ext;
 }
 
-VkResult init_surface(DENGWindow *p_window, VkInstance *p_instance, VkSurfaceKHR *p_surface) {
+VkResult deng_InitVKSurface(deng_SurfaceWindow *p_window, VkInstance *p_instance, VkSurfaceKHR *p_surface) {
     #ifdef __linux__
         VkXlibSurfaceCreateInfoKHR surface_info;
         surface_info.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;

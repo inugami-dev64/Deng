@@ -31,6 +31,8 @@ namespace deng {
         dengMath::vec2<float> m_camera_max_centre_point_coord;
         dengMath::vec2<float> m_camera_max_right_corner_coord;
 
+
+        deng_i32_t m_prev_active_c;
         bool m_is_init;
 
     public:
@@ -38,8 +40,14 @@ namespace deng {
         dengMath::ProjectionMatrix *p_projection_matrix;
 
     public:
-        Camera(const dengMath::vec3<float> &camera_movement_speed_multiplier, const dengMath::vec2<float> &mouse_movement_speed_multiplier, 
-        const float &FOV, const float &near_plane, const float &far_plane, WindowWrap *p_window);
+        Camera (
+            const dengMath::vec3<float> &camera_movement_speed_multiplier, 
+            const dengMath::vec2<float> &mouse_movement_speed_multiplier, 
+            const float &FOV, 
+            const float &near_plane, 
+            const float &far_plane, 
+            WindowWrap *p_window
+        );
         ~Camera();
         void updateCursorPos();
         void setCameraViewRotation();

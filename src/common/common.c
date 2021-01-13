@@ -4,8 +4,8 @@
 #define true 1
 
 /* Clear all the contents in char buffer */
-void cm_ClearBuffer(char *str, int32_t len) {
-    int32_t index;
+void cm_ClearBuffer(char *str, deng_i32_t len) {
+    deng_i32_t index;
     for(index = 0; index < len; index++) 
         str[index] = 0x00;
 }
@@ -13,9 +13,9 @@ void cm_ClearBuffer(char *str, int32_t len) {
 
 /* Get the file extension name */
 char *cm_GetFileExtName(const char *file_name) {
-    int32_t l_index;
+    deng_i32_t l_index;
     char *ext;
-    int32_t ext_size = 0;
+    deng_i32_t ext_size = 0;
     int is_ext_found = false;
     
     // Find the extension index
@@ -60,7 +60,7 @@ char *cm_TrimString(const char *str, size_t beg_index, size_t end_pos) {
 
 /* Make all lowercase chars into uppercase chars */
 char *cm_MakeUpperCase(const char *str) {
-    int32_t index;
+    deng_i32_t index;
     char *l_str = (char*) str;
     
     for(index = 0; index < strlen(l_str); index++) {

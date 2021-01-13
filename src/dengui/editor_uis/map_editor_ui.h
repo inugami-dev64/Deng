@@ -39,7 +39,7 @@ namespace dengui {
     public:
         MapEditor (
             EventInfo &ev_info,
-            dengUtils::FontManager *p_fm
+            dengUtils::StringRasterizer *p_sr
         );
 
     // Getters

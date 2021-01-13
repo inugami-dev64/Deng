@@ -15,14 +15,14 @@ namespace dengUtils {
         float *m_p_grid_color_b;
 
         // first element represents x axis and second element represents z axis
-        dengMath::vec2<int32_t> m_min_vertices;
-        dengMath::vec2<int32_t> m_max_vertices;
+        dengMath::vec2<deng_i32_t> m_min_vertices;
+        dengMath::vec2<deng_i32_t> m_max_vertices;
 
         SpecifiedObject *m_grid;
 
     private:
-        dengMath::vec2<float*> getOrdereredVertexDataElements(const uint32_t index, const deng_CoordinateAxisType &axis);
-        void generateAxisLineVertices(dengMath::vec2<int32_t> &min_vertices, dengMath::vec2<int32_t> &max_vertices, const deng_CoordinateAxisType &axis, int32_t &index);
+        dengMath::vec2<float*> getOrdereredVertexDataElements(const deng_ui32_t index, const deng_CoordinateAxisType &axis);
+        void generateAxisLineVertices(dengMath::vec2<deng_i32_t> &min_vertices, dengMath::vec2<deng_i32_t> &max_vertices, const deng_CoordinateAxisType &axis, deng_i32_t &index);
 
     public:
         GridManager(SpecifiedObject *grid, const float &max_distance, float *p_grid_height, float *p_grid_width, float *p_color_r, float *p_color_g, float *p_color_b);

@@ -46,15 +46,15 @@ void dasAssembleINFOHDR (
     char *description, 
     FILE *file
 ) {
-    uint8_t asset_name_size, desc_size;
-    uint64_t time_point = (uint64_t) time(NULL);
+    deng_ui8_t asset_name_size, desc_size;
+    deng_ui64_t time_point = (deng_ui64_t) time(NULL);
     asset_name_size = strlen(asset_name);
     desc_size = strlen(description);
-    uint32_t hdr_size = 22 + (uint32_t) (asset_name_size + desc_size);
+    deng_ui32_t hdr_size = 22 + (deng_ui32_t) (asset_name_size + desc_size);
     
     fwrite(INFO_HEADER_NAME, sizeof(char), 8, file);
-    fwrite(&time_point, sizeof(uint64_t), 1, file);
-    fwrite(&hdr_size, sizeof(uint32_t), 1, file);
+    fwrite(&time_point, sizeof(deng_ui64_t), 1, file);
+    fwrite(&hdr_size, sizeof(deng_ui32_t), 1, file);
     fwrite(&asset_name_size, 1, 1, file);
     fwrite(asset_name, 1, strlen(asset_name), file);
     fwrite(&desc_size, 1, 1, file);
@@ -67,14 +67,14 @@ void dasAssembleVERTHDR (
     deng_VertDynamic *p_vertices, 
     FILE *file
 ) {
-    uint32_t hdr_size, vert_size;
+    deng_ui32_t hdr_size, vert_size;
     fwrite(VERTICES_HEADER_NAME, 1, strlen(VERTICES_HEADER_NAME), file);
     hdr_size = 17;
-    vert_size = (uint32_t) p_vertices->size;
-    hdr_size += (uint32_t) (p_vertices->size * sizeof(VERT_MAPPED));
+    vert_size = (deng_ui32_t) p_vertices->size;
+    hdr_size += (deng_ui32_t) (p_vertices->size * sizeof(VERT_MAPPED));
 
-    fwrite(&hdr_size, sizeof(uint32_t), 1, file);
-    fwrite(&vert_size, sizeof(uint32_t), 1, file);
+    fwrite(&hdr_size, sizeof(deng_ui32_t), 1, file);
+    fwrite(&vert_size, sizeof(deng_ui32_t), 1, file);
     fwrite(p_vertices->p_texture_mapped_vert_data, sizeof(VERT_MAPPED), p_vertices->size, file); 
 }
 
@@ -82,23 +82,23 @@ void dasAssembleINDXHDR (
     deng_IndicesDynamic *p_indices, 
     FILE *file
 ) {
-    uint32_t hdr_size = 16 + (p_indices->size * sizeof(uint32_t));
-    uint32_t indices_count = (uint32_t) p_indices->size;
+    deng_ui32_t hdr_size = 16 + (p_indices->size * sizeof(deng_ui32_t));
+    deng_ui32_t indices_count = (deng_ui32_t) p_indices->size;
     fwrite(INDICES_HEADER_NAME, strlen(INDICES_HEADER_NAME), 1, file);
-    fwrite(&hdr_size, sizeof(uint32_t), 1, file);
-    fwrite(&indices_count, sizeof(uint32_t), 1, file);
-    fwrite(p_indices->p_indices, p_indices->size * sizeof(uint32_t), 1, file);
+    fwrite(&hdr_size, sizeof(deng_ui32_t), 1, file);
+    fwrite(&indices_count, sizeof(deng_ui32_t), 1, file);
+    fwrite(p_indices->p_indices, p_indices->size * sizeof(deng_ui32_t), 1, file);
 }
 
 void dasAssembleTPIXHDR (
     deng_PixelDataDynamic *p_pixel_data, 
     FILE *file
 ) {
-    uint32_t hdr_size = 16 + p_pixel_data->size;
+    deng_ui32_t hdr_size = 16 + p_pixel_data->size;
     fwrite(TEXTURE_PIXEL_NAME, strlen(TEXTURE_PIXEL_NAME), 1, file);
-    fwrite(&hdr_size, sizeof(uint32_t), 1, file);
-    fwrite(&p_pixel_data->width, sizeof(uint16_t), 1, file);
-    fwrite(&p_pixel_data->height, sizeof(uint16_t), 1, file);
+    fwrite(&hdr_size, sizeof(deng_ui32_t), 1, file);
+    fwrite(&p_pixel_data->width, sizeof(deng_ui16_t), 1, file);
+    fwrite(&p_pixel_data->height, sizeof(deng_ui16_t), 1, file);
     fwrite(p_pixel_data->p_pixel_data, p_pixel_data->size, 1, file);
 }
 
@@ -198,9 +198,9 @@ void dasReadAsset (
 /* Destroy all allocated assets */
 void dasDestroyAssets (
     deng_Asset *assets,
-    int32_t asset_c
+    deng_i32_t asset_c
 ) {
-    int32_t l_index;
+    deng_i32_t l_index;
     for(l_index = 0; l_index < asset_c; l_index++) {
         switch (assets[l_index].asset_mode)
         {
@@ -232,9 +232,9 @@ void dasDestroyAssets (
 /* Destroy all allocated textures */
 void dasDestroyTextures (
     deng_Texture *textures,
-    int32_t tex_c
+    deng_i32_t tex_c
 ) {
-    int32_t l_index;
+    deng_i32_t l_index;
     for(l_index = 0; l_index < tex_c; l_index++) 
         free(textures[l_index].pixel_data.p_pixel_data);
 
@@ -246,12 +246,12 @@ void dasDestroyTextures (
 void dasReadINFOHDR (
     char **asset_name, 
     char **description, 
-    uint64_t *p_time_point, 
+    deng_ui64_t *p_time_point, 
     char *file_name, 
     FILE *file
 ) {
-    uint32_t hdr_size;
-    uint8_t name_size, desc_size;
+    deng_ui32_t hdr_size;
+    deng_ui8_t name_size, desc_size;
     char hdr_name[8];
     size_t res;
     res = fread(hdr_name, 8 * sizeof(char), 1, file);
@@ -261,14 +261,14 @@ void dasReadINFOHDR (
         return;
     }
 
-    res = fread(p_time_point, sizeof(uint64_t), 1, file);
-    res = fread(&hdr_size, sizeof(uint32_t), 1, file);
+    res = fread(p_time_point, sizeof(deng_ui64_t), 1, file);
+    res = fread(&hdr_size, sizeof(deng_ui32_t), 1, file);
 
-    res = fread(&name_size, sizeof(uint8_t), 1, file);
+    res = fread(&name_size, sizeof(deng_ui8_t), 1, file);
     *asset_name = (char*) calloc((size_t) name_size, sizeof(char));
     res = fread(*asset_name, sizeof(char), (size_t) name_size, file);
 
-    res = fread(&desc_size, sizeof(uint8_t), 1, file);
+    res = fread(&desc_size, sizeof(deng_ui8_t), 1, file);
     *description = (char*) calloc((size_t) desc_size, sizeof(char));
     res = fread(*description, sizeof(char), (size_t) desc_size, file);
 
@@ -284,8 +284,8 @@ void dasReadVERTHDR (
     FILE *file
 ) {
     char hdr_name[8];
-    uint32_t hdr_size;
-    uint32_t vert_count;
+    deng_ui32_t hdr_size;
+    deng_ui32_t vert_count;
 
     size_t res;
     res = fread(hdr_name, 8, 1, file);
@@ -295,8 +295,8 @@ void dasReadVERTHDR (
         return;
     }
 
-    res = fread(&hdr_size, sizeof(uint32_t), 1, file);
-    res = fread(&vert_count, sizeof(uint32_t), 1, file);
+    res = fread(&hdr_size, sizeof(deng_ui32_t), 1, file);
+    res = fread(&vert_count, sizeof(deng_ui32_t), 1, file);
     p_vertices->size = vert_count;
 
     p_vertices->p_texture_mapped_vert_data = (VERT_MAPPED*) malloc (
@@ -322,7 +322,7 @@ void dasReadINDXHDR (
     FILE *file
 ) {
     char hdr_name[8];
-    uint32_t hdr_size, indices_count;
+    deng_ui32_t hdr_size, indices_count;
 
     size_t res;
     res = fread(hdr_name, 8, 1, file);
@@ -336,14 +336,14 @@ void dasReadINDXHDR (
         return;
     }
 
-    res = fread(&hdr_size, sizeof(uint32_t), 1, file);
-    res = fread(&indices_count, sizeof(uint32_t), 1, file);
+    res = fread(&hdr_size, sizeof(deng_ui32_t), 1, file);
+    res = fread(&indices_count, sizeof(deng_ui32_t), 1, file);
     
     p_indices->size = indices_count;
-    p_indices->p_indices = (uint32_t*) malloc (
-        p_indices->size * sizeof(uint32_t)
+    p_indices->p_indices = (deng_ui32_t*) malloc (
+        p_indices->size * sizeof(deng_ui32_t)
     );
-    res = fread(p_indices->p_indices, sizeof(uint32_t), p_indices->size, file);
+    res = fread(p_indices->p_indices, sizeof(deng_ui32_t), p_indices->size, file);
 
     if(!res) {
         perror("Failed to read INDX_HDR\n");

@@ -30,7 +30,8 @@ namespace deng {
     class DrawCaller;
 }
 
-#include "gui_events.h"
-#include "gui_window.h"
+#include "dengui_child.h"
+#include "dengui_events.h"
+#include "dengui_window.h"
 
 #endif

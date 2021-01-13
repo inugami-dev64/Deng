@@ -9,7 +9,7 @@ namespace deng {
     ) {
         // Count total amount of supported extensions  
         LOG("Finding support for extension " + std::string(p_extenstion_name));
-        uint32_t extension_count;
+        deng_ui32_t extension_count;
         vkEnumerateDeviceExtensionProperties(gpu, nullptr, &extension_count, nullptr);
         
         // Get extensions by names
@@ -32,9 +32,9 @@ namespace deng {
 
 
     /* Find appropriate memory type */
-    uint32_t HardwareSpecs::getMemoryType (
+    deng_ui32_t HardwareSpecs::getMemoryType (
         VkPhysicalDevice *p_gpu, 
-        const uint32_t &type_filter, 
+        const deng_ui32_t &type_filter, 
         const VkMemoryPropertyFlags &properties
     ) {
         // Get all device memory properties
@@ -42,7 +42,7 @@ namespace deng {
         
         vkGetPhysicalDeviceMemoryProperties(*p_gpu, &memory_properties);
 
-        for(uint32_t index = 0; index < memory_properties.memoryTypeCount; index++) {
+        for(deng_ui32_t index = 0; index < memory_properties.memoryTypeCount; index++) {
             if(type_filter & (1 << index) && (memory_properties.memoryTypes[index].propertyFlags & properties)) {
                 LOG("Buffer mem type: " + std::to_string(index));
                 return index;
@@ -54,11 +54,11 @@ namespace deng {
 
 
     /* Get a score for GPUs based on the properties and features */
-    uint32_t HardwareSpecs::getDeviceScore (
+    deng_ui32_t HardwareSpecs::getDeviceScore (
         VkPhysicalDevice *p_gpu, 
         std::vector<const char*> &required_extenstions
     ) {
-        uint32_t score = 0;
+        deng_ui32_t score = 0;
         VkPhysicalDeviceFeatures device_features;
         VkPhysicalDeviceProperties device_properties;
 
@@ -91,9 +91,9 @@ namespace deng {
 
     /* Find correct graphics queue family */
     bool QueueFamilyFinder::findGraphicsFamily(VkPhysicalDevice gpu) {
-        uint32_t index;
+        deng_ui32_t index;
         // Get the total count of queue families
-        uint32_t family_count = 0;
+        deng_ui32_t family_count = 0;
         vkGetPhysicalDeviceQueueFamilyProperties (
             gpu, 
             &family_count, 
@@ -126,9 +126,9 @@ namespace deng {
         VkPhysicalDevice gpu, 
         VkSurfaceKHR surface
     ) {
-        uint32_t index;
+        deng_ui32_t index;
         // Get the total count of queue families
-        uint32_t family_count = 0;
+        deng_ui32_t family_count = 0;
         VkBool32 support = false;
         vkGetPhysicalDeviceQueueFamilyProperties (
             gpu, 
@@ -163,9 +163,9 @@ namespace deng {
 
 
     /* Graphics queuefamily getter method */
-    uint32_t QueueFamilyFinder::getGraphicsQFIndex() { return m_graphics_family_index; }
+    deng_ui32_t QueueFamilyFinder::getGraphicsQFIndex() { return m_graphics_family_index; }
     /* Present queue family getter method */
-    uint32_t QueueFamilyFinder::getPresentQFIndex() { return m_present_family_index; }
+    deng_ui32_t QueueFamilyFinder::getPresentQFIndex() { return m_present_family_index; }
 
 
     /* Initialize private variables */
@@ -186,8 +186,8 @@ namespace deng {
     VkShaderModule PipelineCreator::getShaderModule(std::vector<char> &shader_bins) {
         VkShaderModuleCreateInfo createinfo{};
         createinfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        createinfo.codeSize = (uint32_t) shader_bins.size();
-        createinfo.pCode = reinterpret_cast<const uint32_t*>(shader_bins.data());
+        createinfo.codeSize = (deng_ui32_t) shader_bins.size();
+        createinfo.pCode = reinterpret_cast<const deng_ui32_t*>(shader_bins.data());
         VkShaderModule shader_module;
 
         if(vkCreateShaderModule(m_device, &createinfo, nullptr, &shader_module) != VK_SUCCESS)
@@ -300,7 +300,7 @@ namespace deng {
         VkPrimitiveTopology primitive_topology, 
         bool add_depth_stencil, 
         bool add_color_blend, 
-        uint32_t subpass_index
+        deng_ui32_t subpass_index
     ) {
         FILE *file;
         long file_size;
@@ -359,7 +359,7 @@ namespace deng {
         /* Set up vertex input createinfo object */
         m_vert_input_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         m_vert_input_create_info.vertexBindingDescriptionCount = 1;
-        m_vert_input_create_info.vertexAttributeDescriptionCount = (uint32_t) (m_input_attr_descs.size());
+        m_vert_input_create_info.vertexAttributeDescriptionCount = (deng_ui32_t) (m_input_attr_descs.size());
         m_vert_input_create_info.pVertexBindingDescriptions = &m_input_binding_desc;
         m_vert_input_create_info.pVertexAttributeDescriptions = m_input_attr_descs.data();
 
@@ -444,7 +444,7 @@ namespace deng {
         /* Set up graphics pipeline createinfo */
         VkGraphicsPipelineCreateInfo graphics_pipeline_createinfo{};
         graphics_pipeline_createinfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        graphics_pipeline_createinfo.stageCount = (uint32_t) m_shader_stage_createinfos.size();
+        graphics_pipeline_createinfo.stageCount = (deng_ui32_t) m_shader_stage_createinfos.size();
         graphics_pipeline_createinfo.pStages = m_shader_stage_createinfos.data();
         graphics_pipeline_createinfo.pVertexInputState = &m_vert_input_create_info;
         graphics_pipeline_createinfo.pInputAssemblyState = &m_input_asm_createinfo;
@@ -485,7 +485,7 @@ namespace deng {
         VkSurfaceKHR &surface
     ) {
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(gpu, surface, &m_capabilities);
-        uint32_t format_count;
+        deng_ui32_t format_count;
         vkGetPhysicalDeviceSurfaceFormatsKHR(gpu, surface, &format_count, nullptr);
 
         if(!format_count) 
@@ -499,7 +499,7 @@ namespace deng {
             m_formats.data()
         );
         
-        uint32_t present_mode_count;
+        deng_ui32_t present_mode_count;
         vkGetPhysicalDeviceSurfacePresentModesKHR (
             gpu, 
             surface, 
@@ -532,7 +532,7 @@ namespace deng {
         VkPhysicalDevice gpu, 
         VkDeviceSize size,
         VkDeviceMemory *p_memory,  
-        uint32_t mem_type_bits, 
+        deng_ui32_t mem_type_bits, 
         VkMemoryPropertyFlags properties
     ) {
         VkMemoryAllocateInfo allocinfo{};
@@ -554,8 +554,8 @@ namespace deng {
         VkDevice device, 
         VkPhysicalDevice gpu, 
         VkImage &image, 
-        uint32_t width, 
-        uint32_t height, 
+        deng_ui32_t width, 
+        deng_ui32_t height, 
         VkFormat format, 
         VkImageTiling tiling, 
         VkImageUsageFlags usage
@@ -698,8 +698,8 @@ namespace deng {
         VkQueue g_queue, 
         VkBuffer src_buffer, 
         VkImage dst_image, 
-        uint32_t width, 
-        uint32_t height
+        deng_ui32_t width, 
+        deng_ui32_t height
     ) {
         // Begin recording commandbuffer
         VkCommandBuffer tmp_commandbuffer;

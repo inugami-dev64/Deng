@@ -18,32 +18,34 @@ extern "C" {
 #define X11_WINDOW 0x01
 #define WIN32_WINDOW 0x02 
 
-#define bool_t uint8_t
+#define bool_t deng_ui8_t
 #define true 1
 #define false 0
 
-typedef struct ActiveKeys {
+typedef struct deng_ActiceKeys {
     size_t key_count;
-    DENGKey *p_keys;
+    deng_Key *p_keys;
 
     size_t btn_count;
-    DENGMouseButton *p_btn;
-} ActiveKeys;
+    deng_MouseButton *p_btn;
+} deng_ActiceKeys;
 
-typedef struct ReleasedKeys {
+typedef struct deng_ReleasedKeys {
     size_t key_count;
-    DENGKey *p_keys;
+    deng_Key *p_keys;
 
     size_t btn_count;
-    DENGMouseButton *p_btn;
-} ReleasedKeys;
+    deng_MouseButton *p_btn;
+} deng_ReleasedKeys;
 
-typedef enum WindowMode {
-    DENG_WINDOW_MODE_FIXED = 0,
-    DENG_WINDOW_MODE_FULL_SCREEN = 1
-} WindowMode;
+typedef enum deng_SurfaceWindowMode {
+    DENG_WINDOW_MODE_FIXED          = 0,
+    DENG_WINDOW_MODE_FULL_SCREEN    = 1,
+    DENG_WINDOW_MODE_BORDERLESS     = 2,
+    DENG_WINDOW_MODE_FLEXIBLE       = 3
+} deng_SurfaceWindowMode;
 
-typedef struct VirtualMousePosition {
+typedef struct deng_VirtualMousePosition {
     bool_t is_enabled;
     float x;
     float y;
@@ -51,27 +53,30 @@ typedef struct VirtualMousePosition {
     float orig_y;
     float movement_x;
     float movement_y;
-} VirtualMousePosition;
+} deng_VirtualMousePosition;
 
 #ifdef __linux__
-    #define EVENT_MASKS KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | LeaveWindowMask | FocusChangeMask | PointerMotionMask
+    #define EVENT_MASKS KeyPressMask | \
+    KeyReleaseMask | ButtonPressMask | \
+    ButtonReleaseMask | LeaveWindowMask | \
+    FocusChangeMask | PointerMotionMask
     
     #define DENG_CURSOR_HIDDEN "xcursor/invisible"
     #define DENG_CURSOR_DEFAULT "default"
     #define DEFAULT_WINDOW_BORDER 5
 
-    typedef struct X11Handler {
+    typedef struct deng_SurfaceX11 {
         Display *p_display;
         Cursor default_cursor;
         int screen;
         Window window;
         XEvent event;
         GC gc;
-    } X11Handler;
+    } deng_SurfaceX11;
 #endif
 
 #ifdef WIN32
-    typedef struct WIN32Handler {
+    typedef struct deng_SurfaceWIN32 {
         WNDCLASS *p_window;
         HWND *p_hwnd;
         MSG *p_message;
@@ -80,7 +85,7 @@ typedef struct VirtualMousePosition {
         UINT raw_input_size;
         LONG mouse_x_pos;
         LONG mouse_y_pos;
-    } WIN32Handler;
+    } deng_SurfaceWIN32;
 
     #ifndef __DENG_API_CORE
         #define DENG_WIN32_CLASS_NAME L"DENG_WINDOW"
@@ -89,37 +94,56 @@ typedef struct VirtualMousePosition {
     #endif
 #endif
 
-typedef struct DENGWindow {
+typedef struct deng_SurfaceWindow {
     int width;
     int height;
     const char *window_title;
-    WindowMode window_mode;
-    ActiveKeys active_keys;
-    ReleasedKeys released_keys;
+    deng_SurfaceWindowMode window_mode;
+    deng_ActiceKeys active_keys;
+    deng_ReleasedKeys released_keys;
     
     int mode;
-    VirtualMousePosition virtual_mouse_position;
+    deng_VirtualMousePosition virtual_mouse_position;
 
     #ifdef __linux__
-        X11Handler x11_handler;
+        deng_SurfaceX11 x11_handler;
     #endif
 
     #ifdef _WIN32
-        WIN32Handler win32_handler;
+        deng_SurfaceWIN32 win32_handler;
     #endif
     
-} DENGWindow;
+} deng_SurfaceWindow;
 
-// method declarations
-void set_mouse_cursor_mode(DENGWindow *p_window, int mouse_mode);
-void set_mouse_coords(DENGWindow *p_window, int x, int y);
-void get_mouse_pos(DENGWindow *p_window, float *p_x, float *p_y, bool_t init_virtual_cursor);
+/* Set mouse cursor mode */
+void deng_SetMouseCursorMode (
+    deng_SurfaceWindow *p_window, 
+    int mouse_mode
+);
 
-DENGWindow *init_window(int width, int height, char *title, WindowMode window_mode);
+void deng_SetMouseCoords (
+    deng_SurfaceWindow *p_window, 
+    int x, 
+    int y
+);
 
-void update_window(DENGWindow *p_window);
-void destroy_window(DENGWindow *p_window);
-bool_t is_running(DENGWindow *p_window);
+void deng_GetMousePos (
+    deng_SurfaceWindow *p_window, 
+    float *p_x, 
+    float *p_y, 
+    bool_t init_virtual_cursor
+);
+
+deng_SurfaceWindow *deng_InitVKSurfaceWindow (
+    int width, 
+    int height, 
+    char *title, 
+    deng_SurfaceWindowMode window_mode
+);
+
+void deng_UpdateWindow(deng_SurfaceWindow *p_window);
+void deng_DestroyWindow(deng_SurfaceWindow *p_window);
+bool_t deng_IsRunning(deng_SurfaceWindow *p_window);
 
 #ifdef __cplusplus
 }

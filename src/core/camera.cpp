@@ -16,7 +16,8 @@ namespace deng {
         this->setMousePosition (
             this->m_zero_camera_rotation_mouse_pos
         );
-
+        
+        m_prev_active_c = 0;
         this->m_is_init = true;
         this->p_projection_matrix = new dengMath::ProjectionMatrix (
             FOV, 
@@ -132,7 +133,7 @@ namespace deng {
     void Camera::setMousePosition(dengMath::vec2<float> &mouse_position) {
         this->m_mouse_pos.first = (double) mouse_position.first;
         this->m_mouse_pos.second = (double) mouse_position.second;
-        set_mouse_coords (
+        deng_SetMouseCoords (
             this->m_p_window_wrap->getWindow(), 
             this->m_mouse_pos.first * (int) this->m_p_window_wrap->getSize().first, 
             this->m_mouse_pos.second * (int) this->m_p_window_wrap->getSize().second
@@ -148,7 +149,7 @@ namespace deng {
 
     void Camera::updateCursorPos() {
         std::lock_guard<std::mutex> lck(ext_mii.mut);
-        get_mouse_pos (
+        deng_GetMousePos (
             this->m_p_window_wrap->getWindow(), 
             &ext_mii.mouse_coords.first, 
             &ext_mii.mouse_coords.second, 
@@ -156,10 +157,10 @@ namespace deng {
         );
 
         ext_mii.active_btn_c = m_p_window_wrap->getWindow()->active_keys.btn_count;
-        if(ext_mii.active_btn_c) {
-            DENGMouseButton *tmp = (DENGMouseButton*) realloc (
+        if(ext_mii.active_btn_c && m_prev_active_c != ext_mii.active_btn_c) {
+            deng_MouseButton *tmp = (deng_MouseButton*) realloc (
                 ext_mii.active_btn,
-                sizeof(DENGMouseButton) * ext_mii.active_btn_c
+                sizeof(deng_MouseButton) * ext_mii.active_btn_c
             );
 
             // Check for memory allocation error
@@ -170,8 +171,10 @@ namespace deng {
             memcpy (
                 ext_mii.active_btn,
                 m_p_window_wrap->getWindow()->active_keys.p_btn,
-                sizeof(DENGMouseButton) * ext_mii.active_btn_c
+                sizeof(deng_MouseButton) * ext_mii.active_btn_c
             );
+
+            m_prev_active_c = ext_mii.active_btn_c;
         }
 
         this->m_mouse_pos.first = 

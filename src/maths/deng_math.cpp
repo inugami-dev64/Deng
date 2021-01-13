@@ -29,7 +29,7 @@ namespace dengMath {
         else return current_value;
     }
 
-    vec2<float> getCartesianCoordsPoint(const vec2<float> &centre_position, const int16_t &angle, const float &distance, const bool &inverted_y_axis) {
+    vec2<float> getCartesianCoordsPoint(const vec2<float> &centre_position, const deng_i16_t &angle, const float &distance, const bool &inverted_y_axis) {
         vec2<float> coords;
         coords.first = (sin(Conversion::degToRad(angle)) * distance) + centre_position.first;
         if(!inverted_y_axis) coords.second = (cos(Conversion::degToRad(angle)) * distance) + centre_position.second;
@@ -108,8 +108,8 @@ namespace dengMath {
         return static_cast<float>(rad/(2 * PI) * 360);
     }
 
-    uint32_t Conversion::hexToDec(const std::string &hex_value) {
-        uint32_t dec = 0;
+    deng_ui32_t Conversion::hexToDec(const std::string &hex_value) {
+        deng_ui32_t dec = 0;
         for(size_t i = 0, exp_i = hex_value.size() - 1; i < hex_value.size(); i++, exp_i--)
             dec += (hex_definitions[hex_value[i]] * dengMath::exp(16.0, exp_i));
 
@@ -117,7 +117,11 @@ namespace dengMath {
         return dec;
     }
 
-    double Conversion::vector2DSizeToPixelSize(const double &vec_size, const vec2<uint32_t> &window_size, const deng_CoordinateAxisType &axis_type) {
+    deng_px_t Conversion::vector2DSizeToPixelSize (
+        const deng_vec_t &vec_size, 
+        const vec2<deng_ui32_t> &window_size, 
+        const deng_CoordinateAxisType &axis_type
+    ) {
         switch (axis_type)
         {
         case DENG_COORD_AXIS_X:
@@ -135,7 +139,11 @@ namespace dengMath {
         return 0.0;
     }
 
-    float Conversion::pixelSizeToVector2DSize(const double &pixel_size, const vec2<uint32_t> &window_size, const deng_CoordinateAxisType &axis_type) {
+    deng_vec_t Conversion::pixelSizeToVector2DSize (
+        const deng_px_t &pixel_size, 
+        const vec2<deng_ui32_t> &window_size, 
+        const deng_CoordinateAxisType &axis_type
+    ) {
         switch (axis_type)
         {
         case DENG_COORD_AXIS_X:
@@ -240,7 +248,7 @@ namespace dengMath {
         #endif
     }
 
-    void ViewMatrix::getViewMatrix(mat4<float> *view) {
+    void ViewMatrix::getViewMatrix(mat4<deng_vec_t> *view) {
         *view = this->m_transformation_mat * this->m_rot_x_mat * this->m_rot_z_mat * this->m_rot_y_mat;
     }
 
@@ -284,7 +292,7 @@ namespace dengMath {
         this->m_aspect_ratio = aspect_ratio;
     }
 
-    void ProjectionMatrix::getProjectionMatrix(mat4<float> *matrix) {
+    void ProjectionMatrix::getProjectionMatrix(mat4<deng_vec_t> *matrix) {
         matrix->row1 = {this->m_aspect_ratio * static_cast<float>(1/tan(Conversion::degToRad(this->m_FOV/2))), 0, 0, 0};
         matrix->row2 = {0, static_cast<float>(1/tan(Conversion::degToRad(this->m_FOV/2))), 0, 0};
         matrix->row3 = {0, 0, this->m_far / (this->m_far - this->m_near), 1};
@@ -442,7 +450,7 @@ namespace dengMath {
     
 
     // Apply model matrix for 3d asset
-    void applyModelMatrix(deng_Asset &asset, mat4<float> matrix) {
+    void applyModelMatrix(deng_Asset &asset, mat4<deng_vec_t> matrix) {
         size_t index;
         dengMath::vec3<float> *p_tmp_in;
         dengMath::vec4<float> tmp_out;

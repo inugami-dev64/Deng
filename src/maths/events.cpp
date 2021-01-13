@@ -13,15 +13,15 @@ namespace dengMath {
     void Events::getMovementType() {
         if
         (
-            is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_W) && 
-            !is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_S)
+            deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_W) && 
+            !deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_S)
         ) m_movements.third = DENG_MOVEMENT_FORWARD;
         
 
         else if
         (
-            !is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_W) && 
-            is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_S)
+            !deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_W) && 
+            deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_S)
         ) m_movements.third = DENG_MOVEMENT_BACKWARD;
 
         else 
@@ -30,25 +30,25 @@ namespace dengMath {
 
         if
         (
-            is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_A) && 
-            !is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_D)
+            deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_A) && 
+            !deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_D)
         ) m_movements.first = DENG_MOVEMENT_LEFTWARD;
 
         else if
         (
-            !is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_A) && 
-            is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_D)
+            !deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_A) && 
+            deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_D)
         ) m_movements.first = DENG_MOVEMENT_RIGHTWARD;
 
         else m_movements.first = DENG_MOVEMENT_NONE;
 
-        if(is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_SPACE) && 
-        !is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_LEFT_CTRL)) {
+        if(deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_SPACE) && 
+        !deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_LEFT_CTRL)) {
             m_movements.second = DENG_MOVEMENT_UPWARD;
         }
 
-        else if(!is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_SPACE) && 
-        is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_LEFT_CTRL)) {
+        else if(!deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_SPACE) && 
+        deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_LEFT_CTRL)) {
             m_movements.second = DENG_MOVEMENT_DOWNWARD;
         }
 
@@ -66,7 +66,7 @@ namespace dengMath {
             m_p_camera->setCameraViewRotation();
 
             if(m_input_mode_change_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && 
-            is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_ESCAPE)) {
+            deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_ESCAPE)) {
 
                 #if CAMERA_MOUSE_DEBUG
                     LOG("frozen_mouse_position x:" + std::to_string(m_frozen_mouse_position.first) + "/" + std::to_string(m_frozen_mouse_position.second));
@@ -83,8 +83,14 @@ namespace dengMath {
             m_movements.second = DENG_MOVEMENT_NONE;
             m_movements.third = DENG_MOVEMENT_NONE;
 
-            if(m_input_mode_change_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && 
-            is_key_active(m_p_window_wrap->getWindow(), DENG_KEY_ESCAPE)) {
+            if
+            (
+                m_input_mode_change_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && 
+                deng_IsKeyActive (
+                    m_p_window_wrap->getWindow(), 
+                    DENG_KEY_ESCAPE
+                    )
+                ) {
                 m_p_camera->setMousePosition(m_frozen_mouse_position);
                 m_p_window_wrap->setInputMode(DENG_INPUT_MOVEMENT);
                 m_input_mode_change_timer.setNewTimePoint();

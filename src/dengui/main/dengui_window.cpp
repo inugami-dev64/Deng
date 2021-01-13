@@ -6,23 +6,33 @@ namespace dengui {
     void beginWindow (
         Window **pp_window,
         WindowInfo *p_wi,
-        dengMath::vec2<uint32_t> draw_bounds,
-        dengUtils::FontManager *p_fm,
-        Events *p_ev
+        dengMath::vec2<deng_ui32_t> draw_bounds,
+        dengUtils::StringRasterizer *p_sr,
+        Events *p_ev,
+        deng_bool_t realloc_res
     ) {
-        (*pp_window) = new Window(p_wi->wt, p_wi->id, p_fm);
+        (*pp_window) = new Window (
+            p_wi->wt, 
+            p_wi->id, 
+            p_sr,
+            draw_bounds
+        );
         (*pp_window)->setPos(p_wi->pos);
         (*pp_window)->setSize(p_wi->size);
-        (*pp_window)->setMB(p_wi->p_mb);
         (*pp_window)->setPC(&p_wi->pc);
         (*pp_window)->setSC(&p_wi->sc);
         (*pp_window)->setTC(&p_wi->tc);
 
         std::vector<WindowElement> elems;
-        (*pp_window)->makeWindow(p_wi, draw_bounds);
+        (*pp_window)->makeWindow (
+            p_wi, 
+            {(deng_ui32_t) draw_bounds.first, (deng_ui32_t) draw_bounds.second}
+        );
         elems = (*pp_window)->getWindowElements();
-        p_ev->pushWindowElements(elems);
-
+        p_ev->pushWindowElements (
+            elems, 
+            false
+        );
     }
 
 
@@ -40,7 +50,7 @@ namespace dengui {
         VkRenderPass renderpass,
         VkExtent2D extent,
         dengMath::vec4<float> background,
-        dengMath::vec2<uint32_t> draw_area
+        dengMath::vec2<deng_ui32_t> draw_area
     ) {
         EventInfo ev_info;
         ev_info.background = background;
@@ -56,161 +66,9 @@ namespace dengui {
         p_ev = new Events(ev_info);
     }
 
-
-    /* Make all window elements into deng_Assets */
-    void getAssets (
-        Window *windows,
-        int32_t window_c,
-        deng_Asset **p_assets,
-        int32_t *p_asset_c,
-        deng_Texture **p_textures,
-        int32_t *p_tex_c
-    ) {
-        int32_t l_index; 
-        size_t r_index, asset_index, tex_index;
-        std::vector<WindowElement> win_elems;
-
-        (*p_asset_c) = 0;
-        (*p_tex_c) = 0;
-        // Find the total count off assets
-        for(l_index = 0; l_index < window_c; l_index++) {
-            win_elems = windows[l_index].getWindowElements();
-
-            for(r_index = 0; r_index < win_elems.size(); r_index++) {
-                if(win_elems[r_index].color_mode == ELEMENT_COLOR_MODE_TEXTURE_MAPPED)
-                    (*p_tex_c)++;
-
-                (*p_asset_c)++;
-            }
-        }
-
-        LOG("TEX_C: " + std::to_string((*p_tex_c)));
-        // Allocate memory for assets
-        if((*p_asset_c)) {
-            (*p_assets) = (deng_Asset*) calloc (
-                (*p_asset_c),
-                sizeof(deng_Asset)
-            );
-        }
-
-        // Allocate memory for textures
-        if((*p_tex_c)) {
-            (*p_textures) = (deng_Texture*) calloc (
-                (*p_tex_c),
-                sizeof(deng_Texture)
-            );
-        }
-
-        // Create assets from window elements
-        asset_index = 0;
-        tex_index = 0;
-        for(l_index = 0; l_index < window_c; l_index++) {
-            win_elems = windows[l_index].getWindowElements();
-            
-            // Iterate through elements
-            for(r_index = 0; r_index < win_elems.size(); r_index++) {
-                // Create ID string
-                win_elems[r_index].asset_id = (char*) calloc (
-                    win_elems[r_index].child_id.size() + win_elems[r_index].parent_id.size() + 5,
-                    sizeof(char)
-                );
-
-                sprintf (
-                    win_elems[r_index].asset_id,
-                    "W(%s/%s)",
-                    win_elems[r_index].child_id.c_str(),
-                    win_elems[r_index].parent_id.c_str()
-                );
-
-                switch (win_elems[r_index].color_mode)
-                {
-                case ELEMENT_COLOR_MODE_TEXTURE_MAPPED:
-                    // Populate texture information
-                    (*p_textures)[tex_index].pixel_data.width = win_elems[r_index].tex_box.first;
-                    (*p_textures)[tex_index].pixel_data.height = win_elems[r_index].tex_box.second;
-                    (*p_textures)[tex_index].pixel_data.size = 
-                    win_elems[r_index].tex_box.first * win_elems[r_index].tex_box.second * 4;
-                    (*p_textures)[tex_index].id = win_elems[r_index].asset_id;
-                    
-                    // Allocate memory for texture data and copy all pixels over
-                    LOG("tex_size: " + std::to_string(win_elems[r_index].texture.size()));
-                    (*p_textures)[tex_index].pixel_data.p_pixel_data = (uint8_t*) calloc (
-                        win_elems[r_index].texture.size(),
-                        sizeof(uint8_t)
-                    );
-                    
-                    memcpy (
-                        (*p_textures)[tex_index].pixel_data.p_pixel_data,
-                        win_elems[r_index].texture.data(),
-                        win_elems[r_index].texture.size() * sizeof(uint8_t)
-                    );
-
-
-                    // Populate texture mapped asset vertices
-                    (*p_assets)[asset_index].id = win_elems[r_index].asset_id;
-                    (*p_assets)[asset_index].name = win_elems[r_index].asset_id;
-                    (*p_assets)[asset_index].asset_mode = DENG_ASSET_MODE_2D_TEXTURE_MAPPED;
-                    (*p_assets)[asset_index].is_shown = win_elems[r_index].is_visible;
-                    (*p_assets)[asset_index].vertices.size = win_elems[r_index].mapped_vert.size();
-                    (*p_assets)[asset_index].vertices.p_texture_mapped_vert_data_2d = (VERT_MAPPED_2D*) calloc (
-                        (*p_assets)[asset_index].vertices.size,
-                        sizeof(VERT_MAPPED_2D)
-                    );
-
-                    memcpy (
-                        (*p_assets)[asset_index].vertices.p_texture_mapped_vert_data_2d,
-                        win_elems[r_index].mapped_vert.data(),
-                        sizeof(VERT_MAPPED_2D) * (*p_assets)[asset_index].vertices.size
-                    );
-
-                    tex_index++;
-                    break;
-
-                case ELEMENT_COLOR_MODE_UNMAPPED:
-                    // Populate unmapped asset vertices
-                    (*p_assets)[asset_index].id = win_elems[r_index].asset_id;
-                    (*p_assets)[asset_index].name = (*p_assets)[asset_index].id;
-                    (*p_assets)[asset_index].asset_mode = DENG_ASSET_MODE_2D_UNMAPPED;
-                    (*p_assets)[asset_index].is_shown = win_elems[r_index].is_visible;
-                    (*p_assets)[asset_index].vertices.size = win_elems[r_index].unmapped_vert.size();
-                    (*p_assets)[asset_index].vertices.p_unmapped_vert_data_2d = (VERT_UNMAPPED_2D*) calloc (
-                        (*p_assets)[asset_index].vertices.size,
-                        sizeof(VERT_UNMAPPED_2D)
-                    );
-
-                    memcpy (
-                        (*p_assets)[asset_index].vertices.p_unmapped_vert_data_2d,
-                        win_elems[r_index].unmapped_vert.data(),
-                        sizeof(VERT_UNMAPPED_2D) * (*p_assets)[asset_index].vertices.size
-                    );
-                    break;
-                
-                default:
-                    break;
-                }
-
-                // Populate asset indices
-                (*p_assets)[asset_index].indices.size = win_elems[r_index].indices.size();
-                (*p_assets)[asset_index].indices.p_indices = (uint32_t*) calloc (
-                    (*p_assets)[asset_index].indices.size,
-                    sizeof(uint32_t)
-                );
-
-                memcpy (
-                    (*p_assets)[asset_index].indices.p_indices,
-                    win_elems[r_index].indices.data(),
-                    sizeof(uint32_t) * (*p_assets)[asset_index].indices.size
-                );
-
-                asset_index++;
-            }
-        }
-    }
-
     
     /* Initialise default values to windowinfo */
     WindowInfo::WindowInfo() {
-        p_mb = NULL;
         pc = DENGUI_DEFAULT_PRIMARY_COLOR;
         sc = DENGUI_DEFAULT_SECONDARY_COLOR;
         tc = DENGUI_DEFAULT_TERTIARY_COLOR;
@@ -224,24 +82,34 @@ namespace dengui {
     
     /* Window constructor */
     Window::Window (
-        WindowType wt, 
+        WindowType wt,
         std::string id,
-        dengUtils::FontManager *p_fm
-    ) {
+        dengUtils::StringRasterizer *p_sr,
+        dengMath::vec2<deng_ui32_t> window_bounds
+    ) : BaseWindowShapes(p_sr, window_bounds) {
         m_wt = wt;
         m_id = id;
-        m_p_fm = p_fm;
+        m_p_sr = p_sr;
+    }
+
+
+    BaseWindowShapes::BaseWindowShapes (
+        dengUtils::StringRasterizer *p_sr,
+        dengMath::vec2<deng_ui32_t> &window_bounds
+    ) {
+        m_p_sr = p_sr;
+        m_window_bounds = window_bounds;
     }
 
 
     /* Add rectangle to window class according to absolute postion */
-    void Window::addAbsUnmappedRec (
+    void BaseWindowShapes::addAbsUnmappedRec (
         dengMath::vec2<float> pos, 
         dengMath::vec2<float> size,
         RectangleOrigin rec_origin, 
         deng_ObjColorData color,
         std::vector<VERT_UNMAPPED_2D> &vert,
-        std::vector<uint32_t> &indices
+        std::vector<deng_ui32_t> &indices
     ) { 
         // Calculate all vertices
         UNI_OFFSET offset;
@@ -335,7 +203,7 @@ namespace dengui {
 
 
     /* Add rectangle to window class according to relative positions */
-    void Window::addRelUnmappedRec (
+    void BaseWindowShapes::addRelUnmappedRec (
         dengMath::vec2<float> pos,
         dengMath::vec2<float> size,
         bool is_abs_height,
@@ -343,7 +211,7 @@ namespace dengui {
         deng_ObjColorData color,
         std::array<deng_ObjVertData2D, 4> &form_vert,
         std::vector<VERT_UNMAPPED_2D> &vert,
-        std::vector<uint32_t> &indices
+        std::vector<deng_ui32_t> &indices
     ) {
         float window_width = form_vert[1].vert_x - form_vert[0].vert_x;
         float window_height = form_vert[3].vert_y - form_vert[0].vert_y;
@@ -511,7 +379,7 @@ namespace dengui {
 
 
     /* Add generic triangle element to window */ 
-    void Window::addGenTriangle (
+    void BaseWindowShapes::addGenTriangle (
         dengMath::vec2<float> pos,
         dengMath::vec2<float> surround_rec_size,
         std::array<dengMath::vec2<float>, 3> rel_tri_coords,
@@ -520,7 +388,7 @@ namespace dengui {
         deng_ObjColorData color,
         std::array<deng_ObjVertData2D, 4> &form_vert,
         std::vector<VERT_UNMAPPED_2D> &vert,
-        std::vector<uint32_t> &indices
+        std::vector<deng_ui32_t> &indices
     ) {
         UNI_OFFSET offset;
         offset.ind_offset = indices.size();
@@ -601,21 +469,20 @@ namespace dengui {
 
 
     /* Add text element to window */
-    void Window::addText (
+    void BaseWindowShapes::addRelText (
         dengMath::vec2<float> pos,
         float text_size,
-        dengMath::vec2<uint32_t> draw_bounds,
+        dengMath::vec2<deng_ui32_t> draw_bounds,
         RectangleOrigin rec_origin,
-        dengUtils::bitmapStr text,
+        dengUtils::BitmapStr text,
         dengMath::vec3<unsigned char> color,
         std::array<deng_ObjVertData2D, 4> &form_vert,
         std::vector<VERT_MAPPED_2D> &vert,
-        std::vector<uint32_t> &indices,
-        std::vector<uint8_t> &tex,
-        dengMath::vec2<int32_t> &tex_size
+        std::vector<deng_ui32_t> &indices,
+        std::vector<deng_ui8_t> &tex,
+        dengMath::vec2<deng_i32_t> &tex_size
     ) {
-        deng_Error res;
-        res = m_p_fm->newVecStr (
+        m_p_sr->newVecStr (
             text,
             DENGUI_DEFAULT_FONT_FILE,
             text_size,
@@ -623,21 +490,18 @@ namespace dengui {
             color
         );
 
-        if(res != DENG_NO_ERRORS)
-            FONT_ERR("failed to create text bitmap for DENGUI window");
+        deng_vec_t window_width = form_vert[1].vert_x - form_vert[0].vert_x;
+        deng_vec_t window_height = form_vert[3].vert_y - form_vert[0].vert_y;
 
-        float window_width = form_vert[1].vert_x - form_vert[0].vert_x;
-        float window_height = form_vert[3].vert_y - form_vert[0].vert_y;
-
-        float rec_width = dengMath::Conversion::pixelSizeToVector2DSize (
-            (double) text.box_size.first,
-            {draw_bounds.first, (uint32_t) draw_bounds.second},
+        deng_vec_t rec_width = dengMath::Conversion::pixelSizeToVector2DSize (
+            (deng_px_t) text.box_size.first,
+            {draw_bounds.first, draw_bounds.second},
             DENG_COORD_AXIS_X
         );
 
-        float rec_height = dengMath::Conversion::pixelSizeToVector2DSize (
-            (double) text.box_size.second,
-            {draw_bounds.first, (uint32_t) draw_bounds.second},
+        deng_vec_t rec_height = dengMath::Conversion::pixelSizeToVector2DSize (
+            (deng_px_t) text.box_size.second,
+            {draw_bounds.first, draw_bounds.second},
             DENG_COORD_AXIS_Y
         );
 
@@ -757,16 +621,16 @@ namespace dengui {
         tex_size = text.box_size;
     }
 
-
-    /* Calculate all window vertices information */
-    void Window::makeWindow (
-        WindowInfo *p_wi,
-        dengMath::vec2<uint32_t> draw_bounds
-    ) {
-        // Check for window type and create main window rectangle
-        dengMath::vec2<float> tmp_pos;
-        dengMath::vec2<float> tmp_size;
-        std::array<dengMath::vec2<float>, 3> rel_tri_pos;
+    /*************************************************************/
+    /*************************************************************/
+    /********** Main window elements creation methods ************/
+    /*************************************************************/
+    /*************************************************************/
+    
+    /* Main form creation method */
+    std::array<deng_ObjVertData2D, 4> Window::mkForm(WindowInfo *p_wi) {
+        dengMath::vec2<deng_vec_t> tmp_pos;
+        dengMath::vec2<deng_vec_t> tmp_size;
         m_win_elems.resize(m_win_elems.size() + 1);
 
         switch (p_wi->wt)
@@ -781,10 +645,6 @@ namespace dengui {
                 m_win_elems[m_win_elems.size() - 1].unmapped_vert,
                 m_win_elems[m_win_elems.size() - 1].indices
             );
-
-            rel_tri_pos[0] = {-1.0f, -1.0f};
-            rel_tri_pos[1] = {1.0f, -1.0f};
-            rel_tri_pos[2] = {0.0f, 1.0f};
 
             break;
 
@@ -802,9 +662,6 @@ namespace dengui {
                 m_win_elems[m_win_elems.size() - 1].indices
             );
 
-            rel_tri_pos[0] = {-1.0f, -1.0f};
-            rel_tri_pos[1] = {1.0f, -1.0f};
-            rel_tri_pos[2] = {0.0f, 1.0f};
             break;
 
         case WINDOW_TYPE_STATIC_TOP:
@@ -821,9 +678,6 @@ namespace dengui {
                 m_win_elems[m_win_elems.size() - 1].indices
             );
 
-            rel_tri_pos[0] = {-1.0f, -1.0f};
-            rel_tri_pos[1] = {1.0f, -1.0f};
-            rel_tri_pos[2] = {0.0f, 1.0f};
             break;
 
         case WINDOW_TYPE_STATIC_LEFT:
@@ -840,9 +694,6 @@ namespace dengui {
                 m_win_elems[m_win_elems.size() - 1].indices
             );
 
-            rel_tri_pos[0] = {1.0f, -1.0f};
-            rel_tri_pos[1] = {1.0f, 1.0f};
-            rel_tri_pos[2] = {-1.0f, 0.0f};
             break;
 
         case WINDOW_TYPE_STATIC_RIGHT:
@@ -858,10 +709,7 @@ namespace dengui {
                 m_win_elems[m_win_elems.size() - 1].unmapped_vert,
                 m_win_elems[m_win_elems.size() - 1].indices
             );
-
-            rel_tri_pos[0] = {-1.0f, -1.0f};
-            rel_tri_pos[1] = {-1.0f, 1.0f};
-            rel_tri_pos[2] = {1.0f, 0.0f};
+            
             break;
         
         default:
@@ -878,184 +726,345 @@ namespace dengui {
         m_win_elems[m_win_elems.size() - 1].onRMBClickFunc = NULL;
         m_win_elems[m_win_elems.size() - 1].onScrUpFunc = NULL;
         m_win_elems[m_win_elems.size() - 1].onScrDownFunc = NULL;
+        
         std::array<deng_ObjVertData2D, 4> form_vert;
         form_vert[0] = m_win_elems[m_win_elems.size() - 1].unmapped_vert[0].vert_data;
         form_vert[1] = m_win_elems[m_win_elems.size() - 1].unmapped_vert[1].vert_data;
         form_vert[2] = m_win_elems[m_win_elems.size() - 1].unmapped_vert[2].vert_data;
         form_vert[3] = m_win_elems[m_win_elems.size() - 1].unmapped_vert[3].vert_data;
+        return form_vert;
+    }
 
-        // Add titlebar to window
-        if(!(p_wi->fl_b & DENGUI_WINDOW_FLAG_NO_TITLEBAR)) {
-            tmp_pos.first = -1.0f;
-            tmp_pos.second = -1.0f;
-            tmp_size.first = 2.0f;
-            tmp_size.second = DENGUI_TITLEBAR_HEIGHT;
-            m_win_elems.resize(m_win_elems.size() + 1);
 
-            addRelUnmappedRec (
-                tmp_pos, 
+    /* Add titlebar to window */
+    void Window::mkTitlebar (
+        WindowInfo *p_wi,
+        std::array<deng_ObjVertData2D, 4> form_vert
+    ) {
+        dengMath::vec2<deng_vec_t> tmp_pos;
+        dengMath::vec2<deng_vec_t> tmp_size;
+
+        tmp_pos.first = -1.0f;
+        tmp_pos.second = -1.0f;
+        tmp_size.first = 2.0f;
+        tmp_size.second = DENGUI_TITLEBAR_HEIGHT;
+        m_win_elems.resize(m_win_elems.size() + 1);
+
+        addRelUnmappedRec (
+            tmp_pos, 
+            tmp_size,
+            true, 
+            REC_ORIGIN_VERTEX_TOP_LEFT,
+            *(deng_ObjColorData*) &p_wi->tc,
+            form_vert,
+            m_win_elems[m_win_elems.size() - 1].unmapped_vert,
+            m_win_elems[m_win_elems.size() - 1].indices
+        );
+
+        m_win_elems[m_win_elems.size() - 1].parent_id = p_wi->id;
+        m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_TITLEBAR_ID;
+        m_win_elems[m_win_elems.size() - 1].is_visible = true;
+        m_win_elems[m_win_elems.size() - 1].is_interactive = false;
+        m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
+        m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onRMBClickFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onScrDownFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onScrUpFunc = NULL;
+    }
+
+
+    /* Add minimize triangle to the window */
+    void Window::mkMinimiseTriangle (
+        WindowInfo *p_wi,
+        std::array<deng_ObjVertData2D, 4> form_vert
+    ) {
+        std::array<dengMath::vec2<deng_vec_t>, 3> rel_tri_pos;
+        dengMath::vec2<deng_vec_t> tmp_pos;
+        dengMath::vec2<deng_vec_t> tmp_size;
+
+        m_win_elems.resize(m_win_elems.size() + 1);
+        switch (p_wi->wt)
+        {
+        case WINDOW_TYPE_FLOATING:
+        case WINDOW_TYPE_STATIC_BOTTOM:
+        case WINDOW_TYPE_STATIC_TOP:
+            rel_tri_pos[0] = {-1.0f, -1.0f};
+            rel_tri_pos[1] = {1.0f, -1.0f};
+            rel_tri_pos[2] = {0.0f, 1.0f};
+            break;
+
+        case WINDOW_TYPE_STATIC_RIGHT:
+            rel_tri_pos[0] = {-1.0f, -1.0f};
+            rel_tri_pos[1] = {-1.0f, 1.0f};
+            rel_tri_pos[2] = {1.0f, 0.0f};
+            break;
+        
+        case WINDOW_TYPE_STATIC_LEFT:
+            rel_tri_pos[0] = {1.0f, -1.0f};
+            rel_tri_pos[1] = {1.0f, 1.0f};
+            rel_tri_pos[2] = {-1.0f, 0.0f};
+            break;
+        
+        default:
+            break;
+        }
+
+        tmp_pos.first = -1.0f + (2 * DENGUI_TITLEBAR_ELEM_MARGIN);
+        tmp_pos.second = -1.0f + DENGUI_TITLEBAR_ELEM_MARGIN;
+        tmp_size.first = DENGUI_TITLEBAR_HEIGHT - (2 * DENGUI_TITLEBAR_ELEM_MARGIN);
+        tmp_size.second = DENGUI_TITLEBAR_HEIGHT - (2 * DENGUI_TITLEBAR_ELEM_MARGIN);
+
+        // Add minimizable triangle
+        addGenTriangle (
+            tmp_pos, 
+            tmp_size,
+            rel_tri_pos,
+            true,
+            REC_ORIGIN_VERTEX_TOP_LEFT,
+            *(deng_ObjColorData*) &p_wi->sc,
+            form_vert,
+            m_win_elems[m_win_elems.size() - 1].unmapped_vert,
+            m_win_elems[m_win_elems.size() - 1].indices
+        );
+
+        m_win_elems[m_win_elems.size() - 1].parent_id = p_wi->id;
+        m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_MINIMISE_TRIANGLE_ID;
+        m_win_elems[m_win_elems.size() - 1].is_visible = true;
+        m_win_elems[m_win_elems.size() - 1].is_interactive = true;
+        m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
+        m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = minTriangleCallback;
+        m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onRMBClickFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onScrUpFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onScrDownFunc = NULL;
+    }
+
+
+    /* Create maximise triangle */
+    void Window::mkMaximiseTriangle (
+        WindowInfo *p_wi,
+        std::array<deng_ObjVertData2D, 4> form_vert
+    ) {
+        dengMath::vec2<deng_vec_t> tmp_pos;
+        dengMath::vec2<deng_vec_t> tmp_size;
+        std::array<dengMath::vec2<deng_vec_t>, 3> rel_tri_pos;
+
+        // Add maximise triangle
+        m_win_elems.resize(m_win_elems.size() + 1);
+        switch (p_wi->wt)
+        {
+        case WINDOW_TYPE_FLOATING:
+        case WINDOW_TYPE_STATIC_TOP:
+        case WINDOW_TYPE_STATIC_BOTTOM:
+            rel_tri_pos[0] = {0.0f, -1.0f};
+            rel_tri_pos[1] = {1.0f, 1.0f};
+            rel_tri_pos[2] = {-1.0f, 1.0f};
+
+            addGenTriangle (
+                tmp_pos,
                 tmp_size,
-                true, 
+                rel_tri_pos,
+                true,
                 REC_ORIGIN_VERTEX_TOP_LEFT,
-                *(deng_ObjColorData*) &p_wi->tc,
+                *(deng_ObjColorData*) &p_wi->sc,
+                form_vert,
+                m_win_elems[m_win_elems.size() - 1].unmapped_vert,
+                m_win_elems[m_win_elems.size() - 1].indices
+            );
+            break;
+        
+        case WINDOW_TYPE_STATIC_RIGHT:
+            rel_tri_pos[0] = {-1.0f, 0.0f};
+            rel_tri_pos[1] = {1.0f, -1.0f};
+            rel_tri_pos[2] = {1.0f, 1.0f};
+
+            addGenTriangle (
+                tmp_pos,
+                tmp_size,
+                rel_tri_pos,
+                true,
+                REC_ORIGIN_VERTEX_TOP_RIGHT,
+                *(deng_ObjColorData*) &p_wi->sc,
+                form_vert,
+                m_win_elems[m_win_elems.size() - 1].unmapped_vert,
+                m_win_elems[m_win_elems.size() - 1].indices
+            );
+            break; 
+        
+        case WINDOW_TYPE_STATIC_LEFT:
+            rel_tri_pos[0] = {-1.0f, -1.0f};
+            rel_tri_pos[1] = {1.0f, 0.0f};
+            rel_tri_pos[2] = {-1.0f, 1.0f};
+
+            addGenTriangle (
+                tmp_pos,
+                tmp_size,
+                rel_tri_pos,
+                true,
+                REC_ORIGIN_VERTEX_TOP_LEFT,
+                *(deng_ObjColorData*) &p_wi->sc,
                 form_vert,
                 m_win_elems[m_win_elems.size() - 1].unmapped_vert,
                 m_win_elems[m_win_elems.size() - 1].indices
             );
 
-            m_win_elems[m_win_elems.size() - 1].parent_id = p_wi->id;
-            m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_TITLEBAR_ID;
-            m_win_elems[m_win_elems.size() - 1].is_visible = true;
-            m_win_elems[m_win_elems.size() - 1].is_interactive = false;
-            m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
-            m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = NULL;
-            m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
-            m_win_elems[m_win_elems.size() - 1].onRMBClickFunc = NULL;
-            m_win_elems[m_win_elems.size() - 1].onScrDownFunc = NULL;
-            m_win_elems[m_win_elems.size() - 1].onScrUpFunc = NULL;
-            
+            break;
+
+        default:
+            break;
+        }
+
+        m_win_elems[m_win_elems.size() - 1].parent_id = p_wi->id;
+        m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_MAXIMISE_TRIANGLE_ID;
+        m_win_elems[m_win_elems.size() - 1].is_visible = false;
+        m_win_elems[m_win_elems.size() - 1].is_interactive = true;
+        m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
+        m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = dengui::maxTriangleCallback;
+        m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onRMBClickFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onScrUpFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onScrDownFunc = NULL;
+    }
+
+
+    /* Create close button for the window */
+    void Window::mkClose (
+        dengMath::vec4<deng_vec_t> color,
+        dengMath::vec2<deng_ui32_t> deng_win_bounds,
+        std::string parent,
+        std::array<deng_ObjVertData2D, 4> form_vert 
+    ) {
+        dengUtils::BitmapStr str;
+        dengMath::vec2<deng_vec_t> tmp_pos;
+        dengMath::vec2<deng_vec_t> window_size;
+        window_size.first = form_vert[1].vert_x - form_vert[0].vert_x;
+        window_size.second = form_vert[3].vert_y - form_vert[0].vert_y;
+
+        str.text = DENGUI_CLOSE_BTN;
+        tmp_pos.first = -1.0f + (DENGUI_TITLEBAR_ELEM_MARGIN / window_size.first * 2);
+        tmp_pos.second = -1.0f + (DENGUI_TITLEBAR_ELEM_MARGIN / window_size.second * 2);
+        
+        m_win_elems.resize(m_win_elems.size() + 1);
+        // Add closing button as a text box
+        addRelText (
+            tmp_pos,
+            DENGUI_TITLEBAR_HEIGHT - DENGUI_TITLEBAR_ELEM_MARGIN,
+            deng_win_bounds,
+            REC_ORIGIN_VERTEX_TOP_RIGHT,
+            str,
+            {(unsigned char) (color.first * 255), (unsigned char) (color.second * 255), (unsigned char) (color.third * 255)},
+            form_vert,
+            m_win_elems[m_win_elems.size() - 1].mapped_vert,
+            m_win_elems[m_win_elems.size() - 1].indices,
+            m_win_elems[m_win_elems.size() - 1].texture,
+            m_win_elems[m_win_elems.size() - 1].tex_box
+        );
+
+        m_win_elems[m_win_elems.size() - 1].parent_id = parent;
+        m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_CLOSE_BTN_ID;
+        m_win_elems[m_win_elems.size() - 1].is_visible = true;
+        m_win_elems[m_win_elems.size() - 1].is_interactive = true;
+        m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_TEXTURE_MAPPED;
+        m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = closeBtnCallback;
+        m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onRMBClickFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onScrUpFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onScrDownFunc = NULL;
+    }
+
+
+    /* Rasterise and create the title string vertices */
+    void Window::mkTitle (
+        WindowInfo *p_wi,
+        dengMath::vec2<deng_ui32_t> deng_win_bounds,
+        std::array<deng_ObjVertData2D, 4> form_vert, 
+        dengMath::vec3<unsigned char> color
+    ) {
+        dengMath::vec2<deng_vec_t> tmp_pos;
+        dengMath::vec2<deng_vec_t> titlebar_size;
+        dengUtils::BitmapStr str;
+        str.text = p_wi->id.c_str();
+        
+        deng_vec_t font_size = DENGUI_TITLEBAR_HEIGHT - (2 * DENGUI_TITLEBAR_ELEM_MARGIN);
+        // Trim the raster string into suitable size
+        deng_vec_t box_width = 0;
+        char *title = m_p_sr->strRasterWidthTrim (
+            str.text,
+            DENGUI_DEFAULT_FONT_FILE,
+            font_size,
+            form_vert[1].vert_x - form_vert[0].vert_x - (4 * DENGUI_TITLEBAR_HEIGHT),
+            deng_win_bounds,
+            &box_width
+        );
+
+        titlebar_size.first = form_vert[1].vert_x - form_vert[0].vert_x;
+        titlebar_size.second = (DENGUI_TITLEBAR_HEIGHT / (form_vert[3].vert_y - form_vert[0].vert_y)) + 1.0f;
+        
+        tmp_pos.first = -box_width / titlebar_size.first;
+        tmp_pos.second = -1.0f + DENGUI_TITLEBAR_ELEM_MARGIN / titlebar_size.second;
+
+        // Rasterise the string
+        str.text = title;
+        m_win_elems.resize(m_win_elems.size() + 1);
+        addRelText (
+            tmp_pos,
+            font_size,
+            deng_win_bounds,
+            REC_ORIGIN_VERTEX_TOP_LEFT,
+            str,
+            color,
+            form_vert,
+            m_win_elems[m_win_elems.size() - 1].mapped_vert,
+            m_win_elems[m_win_elems.size() - 1].indices,
+            m_win_elems[m_win_elems.size() - 1].texture,
+            m_win_elems[m_win_elems.size() - 1].tex_box
+        );
+
+        m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_TITLE_ID;
+        m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_TEXTURE_MAPPED;
+        m_win_elems[m_win_elems.size() - 1].is_interactive = false;
+        m_win_elems[m_win_elems.size() - 1].is_visible = true;
+        m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onRMBClickFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onScrDownFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].onScrUpFunc = NULL;
+        m_win_elems[m_win_elems.size() - 1].parent_id = p_wi->id;
+    }
+
+
+    /* Calculate all window vertices information */
+    void Window::makeWindow (
+        WindowInfo *p_wi,
+        dengMath::vec2<deng_ui32_t> draw_bounds
+    ) {
+        // Create main window form
+        std::array<deng_ObjVertData2D, 4> form_vert = mkForm(p_wi);
+        // Add titlebar to window
+        if(!(p_wi->fl_b & DENGUI_WINDOW_FLAG_NO_TITLEBAR)) {
+            mkTitlebar(p_wi, form_vert);
+            mkTitle (
+                p_wi,
+                draw_bounds,
+                form_vert,
+                {(unsigned char) (p_wi->sc.first * 255), (unsigned char) (p_wi->sc.second * 255), (unsigned char) (p_wi->sc.third * 255)}  
+            );
 
             // Add minimise and maximise triangles if needed
             if(!(p_wi->fl_b & DENGUI_WINDOW_FLAG_NO_COLLAPSE)) {
-                tmp_pos.first = -1.0f + (2 * DENGUI_TITLEBAR_ELEM_MARGIN);
-                tmp_pos.second = -1.0f + DENGUI_TITLEBAR_ELEM_MARGIN;
-                tmp_size.first = DENGUI_TITLEBAR_HEIGHT - (2 * DENGUI_TITLEBAR_ELEM_MARGIN);
-                tmp_size.second = DENGUI_TITLEBAR_HEIGHT - (2 * DENGUI_TITLEBAR_ELEM_MARGIN);
-
-                m_win_elems.resize(m_win_elems.size() + 1);
-                // Add minimizable triangle
-                addGenTriangle (
-                    tmp_pos, 
-                    tmp_size,
-                    rel_tri_pos,
-                    true,
-                    REC_ORIGIN_VERTEX_TOP_LEFT,
-                    *(deng_ObjColorData*) &p_wi->sc,
-                    form_vert,
-                    m_win_elems[m_win_elems.size() - 1].unmapped_vert,
-                    m_win_elems[m_win_elems.size() - 1].indices
-                );
-
-                m_win_elems[m_win_elems.size() - 1].parent_id = p_wi->id;
-                m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_MINIMISE_TRIANGLE_ID;
-                m_win_elems[m_win_elems.size() - 1].is_visible = true;
-                m_win_elems[m_win_elems.size() - 1].is_interactive = true;
-                m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
-                m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = minTriangleCallback;
-                m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
-                m_win_elems[m_win_elems.size() - 1].onRMBClickFunc = NULL;
-                m_win_elems[m_win_elems.size() - 1].onScrUpFunc = NULL;
-                m_win_elems[m_win_elems.size() - 1].onScrDownFunc = NULL;
-
-                // Add maximise triangle
-                m_win_elems.resize(m_win_elems.size() + 1);
-                switch (p_wi->wt)
-                {
-                case WINDOW_TYPE_FLOATING:
-                case WINDOW_TYPE_STATIC_TOP:
-                    rel_tri_pos[0] = {0.0f, -1.0f};
-                    rel_tri_pos[1] = {1.0f, 1.0f};
-                    rel_tri_pos[2] = {-1.0f, 1.0f};
-
-                    addGenTriangle (
-                        tmp_pos,
-                        tmp_size,
-                        rel_tri_pos,
-                        true,
-                        REC_ORIGIN_VERTEX_TOP_LEFT,
-                        *(deng_ObjColorData*) &p_wi->sc,
-                        form_vert,
-                        m_win_elems[m_win_elems.size() - 1].unmapped_vert,
-                        m_win_elems[m_win_elems.size() - 1].indices
-                    );
-                    break;
-                
-                case WINDOW_TYPE_STATIC_RIGHT:
-                    rel_tri_pos[0] = {-1.0f, 0.0f};
-                    rel_tri_pos[1] = {1.0f, -1.0f};
-                    rel_tri_pos[2] = {1.0f, 1.0f};
-
-                    addGenTriangle (
-                        tmp_pos,
-                        tmp_size,
-                        rel_tri_pos,
-                        true,
-                        REC_ORIGIN_VERTEX_TOP_RIGHT,
-                        *(deng_ObjColorData*) &p_wi->sc,
-                        form_vert,
-                        m_win_elems[m_win_elems.size() - 1].unmapped_vert,
-                        m_win_elems[m_win_elems.size() - 1].indices
-                    );
-                    break; 
-                
-                case WINDOW_TYPE_STATIC_LEFT:
-                    rel_tri_pos[0] = {-1.0f, -1.0f};
-                    rel_tri_pos[1] = {1.0f, 0.0f};
-                    rel_tri_pos[2] = {-1.0f, 1.0f};
-
-                    addGenTriangle (
-                        tmp_pos,
-                        tmp_size,
-                        rel_tri_pos,
-                        true,
-                        REC_ORIGIN_VERTEX_TOP_LEFT,
-                        *(deng_ObjColorData*) &p_wi->sc,
-                        form_vert,
-                        m_win_elems[m_win_elems.size() - 1].unmapped_vert,
-                        m_win_elems[m_win_elems.size() - 1].indices
-                    );
-
-                    break;
-
-                default:
-                    break;
-                }
-
-                m_win_elems[m_win_elems.size() - 1].parent_id = p_wi->id;
-                m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_MAXIMISE_TRIANGLE_ID;
-                m_win_elems[m_win_elems.size() - 1].is_visible = false;
-                m_win_elems[m_win_elems.size() - 1].is_interactive = true;
-                m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
-                m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = maxTriangleCallback;
-                m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
-                m_win_elems[m_win_elems.size() - 1].onRMBClickFunc = NULL;
-                m_win_elems[m_win_elems.size() - 1].onScrUpFunc = NULL;
-                m_win_elems[m_win_elems.size() - 1].onScrDownFunc = NULL;
+                mkMinimiseTriangle(p_wi, form_vert);
+                mkMaximiseTriangle(p_wi, form_vert);
             }
 
             // Add close button if needed ([X])
             if(!(p_wi->fl_b & DENGUI_WINDOW_FLAG_NO_CLOSE)) {
-                dengUtils::bitmapStr str;
-                str.text = "[X]";
-                tmp_pos.first = -1.0f + (2 * DENGUI_TITLEBAR_ELEM_MARGIN);
-                tmp_pos.second = -1.0f + DENGUI_TITLEBAR_ELEM_MARGIN;
-                
-                m_win_elems.resize(m_win_elems.size() + 1);
-                // Add closing button as a text box
-                addText (
-                    tmp_pos,
-                    DENGUI_TITLEBAR_HEIGHT - (2 * DENGUI_TITLEBAR_ELEM_MARGIN),
+                mkClose (
+                    p_wi->sc, 
                     draw_bounds,
-                    REC_ORIGIN_VERTEX_TOP_RIGHT,
-                    str,
-                    {(unsigned char) (p_wi->sc.first * 255), (unsigned char) (p_wi->sc.second * 255), (unsigned char) (p_wi->sc.third * 255)},
-                    form_vert,
-                    m_win_elems[m_win_elems.size() - 1].mapped_vert,
-                    m_win_elems[m_win_elems.size() - 1].indices,
-                    m_win_elems[m_win_elems.size() - 1].texture,
-                    m_win_elems[m_win_elems.size() - 1].tex_box
+                    p_wi->id, 
+                    form_vert
                 );
-
-                m_win_elems[m_win_elems.size() - 1].parent_id = p_wi->id;
-                m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_CLOSE_BTN_ID;
-                m_win_elems[m_win_elems.size() - 1].is_visible = true;
-                m_win_elems[m_win_elems.size() - 1].is_interactive = true;
-                m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_TEXTURE_MAPPED;
-                m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = closeBtnCallback;
-                m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
-                m_win_elems[m_win_elems.size() - 1].onRMBClickFunc = NULL;
-                m_win_elems[m_win_elems.size() - 1].onScrUpFunc = NULL;
-                m_win_elems[m_win_elems.size() - 1].onScrDownFunc = NULL;
             }
         }
     }
@@ -1075,5 +1084,4 @@ namespace dengui {
     void Window::setTC(dengMath::vec4<float> *p_tc) { m_tertiary_color = *p_tc; }
     void Window::setPos(dengMath::vec2<float> &pos) { m_pos = pos; }
     void Window::setSize(dengMath::vec2<float> &size) { m_size = size; }
-    void Window::setMB(Menubar *p_mb) { m_p_mb = p_mb; };
 }

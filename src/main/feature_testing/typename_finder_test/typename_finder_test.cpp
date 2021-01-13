@@ -3,7 +3,7 @@
 // test passed
 int main() {
     float float = 1.0f;
-    uint32_t uint = 1;
+    deng_ui32_t uint = 1;
     std::string str = "Hello world!";
 
     if(dengUtils::FindWithTypename::isNumeralType(str, DENG_NUMERAL_TYPE_DONT_CARE))

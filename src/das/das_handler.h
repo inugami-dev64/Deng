@@ -27,13 +27,13 @@ void dasAssemble(deng_Asset *passet, const char *filename);
 
 /* das reader functions */
 #ifdef DAS_EXT_HANDLER
-    void dasReadINFOHDR(char **assetname, char **description, uint64_t *ptimepoint, char *filename, FILE *file);
+    void dasReadINFOHDR(char **assetname, char **description, deng_ui64_t *ptimepoint, char *filename, FILE *file);
     void dasReadVERTHDR(deng_VertDynamic *pvertices, char *filename, FILE *file);
     void dasReadINDXHDR(deng_IndicesDynamic *pindices, char *filename, FILE *file);
 #endif
 
 /* Callback function for reading .das binary asset file */
 void dasReadAsset(deng_Asset *p_asset, const char *file_name, deng_AssetMode tex_mode);
-void dasDestroyAssets(deng_Asset *assets, int32_t asset_c);
-void dasDestroyTextures(deng_Texture *textures, int32_t tex_c);
+void dasDestroyAssets(deng_Asset *assets, deng_i32_t asset_c);
+void dasDestroyTextures(deng_Texture *textures, deng_i32_t tex_c);
 #endif

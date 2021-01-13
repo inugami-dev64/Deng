@@ -59,8 +59,8 @@ typedef struct VERT_UNMAPPED_2D {
 
 /* Vertices and indices offsets combined */
 typedef struct UNI_OFFSET {
-    uint64_t vert_offset;
-    uint64_t ind_offset;
+    deng_ui64_t vert_offset;
+    deng_ui64_t ind_offset;
 } UNI_OFFSET;
 
 
@@ -76,25 +76,25 @@ typedef struct deng_VertDynamic {
     /* 0 - UNMAPPED */
     /* 1 - TEXTURE MAPPED */
     size_t size;
-    uint64_t memory_offset;
+    deng_ui64_t memory_offset;
 } deng_VertDynamic;
 
 
 /* Indices data that is allocated on heap */
 typedef struct deng_IndicesDynamic {
-    uint32_t *p_indices;
+    deng_ui32_t *p_indices;
     size_t size;
-    uint64_t memory_offset;
+    deng_ui64_t memory_offset;
 } deng_IndicesDynamic;
 
 
 /* Pixel data that is allocated on heap */
 typedef struct deng_PixelDataDynamic {
-    uint8_t *p_pixel_data;
+    deng_ui8_t *p_pixel_data;
     size_t size;
-    uint16_t width;
-    uint16_t height;
-    uint64_t memory_offset;
+    deng_ui16_t width;
+    deng_ui16_t height;
+    deng_ui64_t memory_offset;
 } deng_PixelDataDynamic;
 
 
@@ -112,9 +112,9 @@ typedef struct deng_Asset {
     char *name;
     char *id;
     char *description;
-    uint64_t time_point; 
+    deng_ui64_t time_point; 
     deng_AssetMode asset_mode;
-    uint8_t is_shown;
+    deng_ui8_t is_shown;
     deng_VertDynamic vertices;
     deng_IndicesDynamic indices;
     

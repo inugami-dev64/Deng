@@ -1,7 +1,8 @@
 #include "deng_surface_core.h"
 
 #ifdef __linux__
-DENGKey translateX11Key(KeySym keysym) {
+/************** Xorg ************/
+deng_Key translateX11Key(KeySym keysym) {
     switch (keysym)
     {   
         // Generic keys
@@ -125,7 +126,7 @@ DENGKey translateX11Key(KeySym keysym) {
     }
 }
 
-DENGMouseButton translateX11Btn(unsigned int button) {
+deng_MouseButton translateX11Btn(unsigned int button) {
     switch (button)
     {
         case Button1: return DENG_MOUSE_BTN_1;
@@ -140,9 +141,11 @@ DENGMouseButton translateX11Btn(unsigned int button) {
 
 #endif
 
+
+/********* WIN32 API ***********/
 #ifdef _WIN32
 
-DENGKey translateWIN32Key(uint16_t key_code) {
+deng_Key translateWIN32Key(deng_ui16_t key_code) {
     switch(key_code) {
         case VK_SPACE:              return DENG_KEY_SPACE;
         case VK_OEM_7:              return DENG_KEY_APOSTROPHE;
@@ -262,7 +265,7 @@ DENGKey translateWIN32Key(uint16_t key_code) {
     }
 }
 
-DENGMouseButton translateWIN32Btn(UINT msg) {
+deng_MouseButton translateWIN32Btn(UINT msg) {
     switch(msg) {
         case WM_LBUTTONDOWN:
         case WM_LBUTTONUP:          return DENG_MOUSE_BTN_1;

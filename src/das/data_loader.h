@@ -23,12 +23,12 @@ void dasLoadTexture(deng_Texture *p_asset, const char *file_name);
     /* 1 - TEXTURE MAPPED */
 void dasLoadModel(deng_Asset *p_asset, const char *file_name);
 #ifdef DAS_EXT_LOADERS
-    int32_t dasGetIndex(char *buffer, size_t cur_index);
+    deng_i32_t dasGetIndex(char *buffer, size_t cur_index);
     void dasLoadOBJmodelVertices(deng_ObjVertData **pp_vert_data, size_t *p_vert_data_size, deng_ObjTextureData **pp_texture_data, size_t *p_tex_data_size, long file_size);
-    void dasLoadOBJindices(uint32_t **pp_vert_indices, size_t *p_vert_indices_size, uint32_t **pp_tex_vert_indices, size_t *p_tex_vert_indices_size, long file_size);
-    void dasIndexUnmappedVertices(deng_ObjVertData **pp_vert_data, size_t vert_size, uint32_t **pp_indices, size_t indices_size, deng_Asset *p_asset);
+    void dasLoadOBJindices(deng_ui32_t **pp_vert_indices, size_t *p_vert_indices_size, deng_ui32_t **pp_tex_vert_indices, size_t *p_tex_vert_indices_size, long file_size);
+    void dasIndexUnmappedVertices(deng_ObjVertData **pp_vert_data, size_t vert_size, deng_ui32_t **pp_indices, size_t indices_size, deng_Asset *p_asset);
     
-    void dasIndexTexMappedVertices(deng_ObjVertData **pp_vert_data, size_t vert_size, deng_ObjTextureData **pp_tex_data, size_t tex_size, uint32_t **pp_vert_indices, size_t vert_indices_size, uint32_t **pp_tex_indices, 
+    void dasIndexTexMappedVertices(deng_ObjVertData **pp_vert_data, size_t vert_size, deng_ObjTextureData **pp_tex_data, size_t tex_size, deng_ui32_t **pp_vert_indices, size_t vert_indices_size, deng_ui32_t **pp_tex_indices, 
     size_t tex_indices_size, deng_Asset *p_asset);
 #endif
 

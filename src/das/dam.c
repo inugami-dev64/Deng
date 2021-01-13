@@ -1,7 +1,7 @@
 #include "dam.h"
 
 /* Count years recursively */
-uint16_t damCountYears(int64_t *p_time, uint16_t years, int n, int *p_is_leap_year) {
+deng_ui16_t damCountYears(deng_i64_t *p_time, deng_ui16_t years, int n, int *p_is_leap_year) {
     if(n < 3 && (*p_time) - SECONDS_PER_YEAR >= 0) {
         n++;
         years++;
@@ -23,7 +23,7 @@ uint16_t damCountYears(int64_t *p_time, uint16_t years, int n, int *p_is_leap_ye
 
 
 /* Count months recursively */
-uint16_t damCountMonths(int64_t *p_time, uint16_t months, int is_leap_year) {
+deng_ui16_t damCountMonths(deng_i64_t *p_time, deng_ui16_t months, int is_leap_year) {
     if(months <= 12) {
         // Check if month has 31 days
         if(months % 2 && (*p_time) - SECONDS_PER_31_DAY_MONTH >= 0) {
@@ -59,7 +59,7 @@ uint16_t damCountMonths(int64_t *p_time, uint16_t months, int is_leap_year) {
 
 
 /* Format date from time from epoch */
-void damFormatDate(char *date, char *time, int64_t time_from_epoch) {
+void damFormatDate(char *date, char *time, deng_i64_t time_from_epoch) {
     int is_leap_year;
     char *ch_month, *ch_day;
     ch_month = (char*) calloc(7, sizeof(char));
@@ -72,15 +72,15 @@ void damFormatDate(char *date, char *time, int64_t time_from_epoch) {
 
     // Count years since epoch
     time_from_epoch -= 2 * SECONDS_PER_YEAR;
-    uint16_t year_count = 1972 + damCountYears(&time_from_epoch, 0, 0, &is_leap_year);
+    deng_ui16_t year_count = 1972 + damCountYears(&time_from_epoch, 0, 0, &is_leap_year);
 
     // Count months from remaining time
-    uint16_t month = damCountMonths(&time_from_epoch, 1, is_leap_year);
+    deng_ui16_t month = damCountMonths(&time_from_epoch, 1, is_leap_year);
     if(month < 10) sprintf(ch_month, "0%d", month);
     else sprintf(ch_month, "%d", month);
 
     // Count day
-    uint16_t day = (uint16_t) (time_from_epoch / 86400);
+    deng_ui16_t day = (deng_ui16_t) (time_from_epoch / 86400);
     time_from_epoch %= 86400;
     if(day < 10) sprintf(ch_day, "0%d", day);
     else sprintf(ch_day, "%d", day);
@@ -90,19 +90,19 @@ void damFormatDate(char *date, char *time, int64_t time_from_epoch) {
     free(ch_day);
 
     // Count hours
-    uint16_t hour = (uint16_t) (time_from_epoch / 3600);
+    deng_ui16_t hour = (deng_ui16_t) (time_from_epoch / 3600);
     time_from_epoch %= 3600;
     if(hour < 10) sprintf(ch_hour, "0%d", hour); 
     else sprintf(ch_hour, "%d", hour);
 
     // Count minutes
-    uint16_t minute = (uint16_t) (time_from_epoch / 60);
+    deng_ui16_t minute = (deng_ui16_t) (time_from_epoch / 60);
     time_from_epoch %= 60;
     if(minute < 10) sprintf(ch_minute, "0%d", minute);
     else sprintf(ch_minute, "%d", minute);
 
-    if(time_from_epoch < 10) sprintf(ch_second, "0%d", (uint16_t) time_from_epoch);
-    else sprintf(ch_second, "%d", (uint16_t) time_from_epoch);
+    if(time_from_epoch < 10) sprintf(ch_second, "0%d", (deng_ui16_t) time_from_epoch);
+    else sprintf(ch_second, "%d", (deng_ui16_t) time_from_epoch);
     
     sprintf(time, "%s:%s:%s", ch_hour, ch_minute, ch_second);
     free(ch_hour);
@@ -340,7 +340,7 @@ void damListAssets (
 
             char *asset_name = 0;
             char *asset_description = 0;
-            uint64_t time_point;
+            deng_ui64_t time_point;
 
             file = fopen(file_path, "rb");
             // Read information form INFO_HDR
@@ -358,7 +358,7 @@ void damListAssets (
             printf("Asset name: %s\n", asset_name);
             printf("Asset description: %s\n", asset_description);
             
-            int64_t signed_time_stamp = (int64_t) time_point;
+            deng_i64_t signed_time_stamp = (deng_i64_t) time_point;
             char date[11], time[9];
             damFormatDate(date, time, signed_time_stamp);
             

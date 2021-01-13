@@ -6,9 +6,9 @@ dengui::MouseInputInfo ext_mii;
 
 namespace deng {
 
-    static uint16_t text_box_c = 0;
-    static uint16_t texture_c = 0;
-    static uint16_t asset_c = 0; 
+    static deng_ui16_t text_box_c = 0;
+    static deng_ui16_t texture_c = 0;
+    static deng_ui16_t asset_c = 0; 
 
     /************************************************/
     /************************************************/
@@ -50,8 +50,8 @@ namespace deng {
         instance_createInfo.pApplicationInfo = &appinfo;
 
         // Get all required extensions
-        uint32_t extension_count;
-        const char **extensions = get_required_surface_extensions (
+        deng_ui32_t extension_count;
+        const char **extensions = deng_GetRequiredVKSurfaceExt (
             m_p_win->getWindow(), 
             &extension_count, 
             static_cast<int>(enable_validation_layers)
@@ -96,7 +96,7 @@ namespace deng {
 
     /* Check if Vulkan validation layers are available */
     bool InstanceCreator::checkValidationLayerSupport() {
-        uint32_t layer_count;
+        deng_ui32_t layer_count;
         vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
 
         std::vector<VkLayerProperties> available_layers(layer_count);
@@ -151,22 +151,22 @@ namespace deng {
     
     /* Select appropriate graphics device */
     void InstanceCreator::selectPhysicalDevice() {
-        uint32_t device_count;
-        uint32_t score;
+        deng_ui32_t device_count;
+        deng_ui32_t score;
         vkEnumeratePhysicalDevices(m_instance, &device_count, nullptr);
 
         if(device_count == 0)
             VK_INSTANCE_ERR("failed to find graphics cards!");
 
         std::vector<VkPhysicalDevice> devices(device_count);
-        std::multimap<uint32_t, VkPhysicalDevice> device_candidates;
+        std::multimap<deng_ui32_t, VkPhysicalDevice> device_candidates;
         VkResult result = vkEnumeratePhysicalDevices(m_instance, &device_count, devices.data());
         
         if(result != VK_SUCCESS) 
             VK_INSTANCE_ERR("no physical devices found!");
 
         // Iterate through every potential gpu device
-        for(uint32_t i = 0; i < device_count; i++) {
+        for(deng_ui32_t i = 0; i < device_count; i++) {
             score = HardwareSpecs::getDeviceScore (
                 &devices[i], 
                 m_required_extension_names
@@ -199,12 +199,12 @@ namespace deng {
             VK_INSTANCE_ERR("queue supporting GPU not found!");
 
         std::array<VkDeviceQueueCreateInfo, 2> queue_createinfos;
-        std::array<uint32_t, 2> queue_families_indexes = {m_qff.getGraphicsQFIndex(), m_qff.getPresentQFIndex()};
+        std::array<deng_ui32_t, 2> queue_families_indexes = {m_qff.getGraphicsQFIndex(), m_qff.getPresentQFIndex()};
 
         float queue_priority = 1.0f;
 
         // Create device queue creatinfos for present and graphics queues
-        for(uint32_t i = 0; i < 2; i++) {
+        for(deng_ui32_t i = 0; i < 2; i++) {
             VkDeviceQueueCreateInfo dev_queue_createinfo{};
             dev_queue_createinfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
             dev_queue_createinfo.queueFamilyIndex = queue_families_indexes[i];
@@ -219,7 +219,7 @@ namespace deng {
         // Create device createinfo
         VkDeviceCreateInfo logical_device_createinfo{};
         logical_device_createinfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        logical_device_createinfo.queueCreateInfoCount = static_cast<uint32_t>(queue_createinfos.size());
+        logical_device_createinfo.queueCreateInfoCount = static_cast<deng_ui32_t>(queue_createinfos.size());
         logical_device_createinfo.pQueueCreateInfos = queue_createinfos.data();
         logical_device_createinfo.pEnabledFeatures = &device_features;
         logical_device_createinfo.enabledExtensionCount = m_required_extension_names.size();
@@ -256,7 +256,7 @@ namespace deng {
     /* Create window surface with deng surface library */
     void InstanceCreator::mkWindowSurface() {
         LOG("Initialising window surface!");
-        if(init_surface(m_p_win->getWindow(), &m_instance, &m_surface) != VK_SUCCESS)
+        if(deng_InitVKSurface(m_p_win->getWindow(), &m_instance, &m_surface) != VK_SUCCESS)
             VK_INSTANCE_ERR("failed to create window surface!");
 
         LOG("Window surface created successfully!");
@@ -380,10 +380,10 @@ namespace deng {
     /* Create swapchain */
     void SwapChainCreator::mkSwapChain (
         VkSurfaceKHR &surface, 
-        uint32_t g_queue_i, 
-        uint32_t p_queue_i
+        deng_ui32_t g_queue_i, 
+        deng_ui32_t p_queue_i
     ) {
-        uint32_t min_image_count = m_p_sc_details->getCapabilities().minImageCount + 1;
+        deng_ui32_t min_image_count = m_p_sc_details->getCapabilities().minImageCount + 1;
         
         // Verify that the maximum image count is not exceeded
         if
@@ -404,7 +404,7 @@ namespace deng {
         swapchain_createinfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
         // Check if present queue and graphics queue are the same and if needed then synchronise the image sharing mode
-        std::array<uint32_t, 2> queue_family_indices = {g_queue_i, p_queue_i};
+        std::array<deng_ui32_t, 2> queue_family_indices = {g_queue_i, p_queue_i};
         if(g_queue_i != p_queue_i) {
             swapchain_createinfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
             swapchain_createinfo.queueFamilyIndexCount = 2;
@@ -424,7 +424,7 @@ namespace deng {
 
         else {
             LOG("Swapchain created successfully!");
-            uint32_t image_count;
+            deng_ui32_t image_count;
             vkGetSwapchainImagesKHR (
                 m_device, 
                 m_swapchain, 
@@ -488,7 +488,7 @@ namespace deng {
         std::array<VkAttachmentDescription, 2> attachments = {color_attachment, depth_attachment};
         VkRenderPassCreateInfo renderpass_createinfo{};
         renderpass_createinfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderpass_createinfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        renderpass_createinfo.attachmentCount = static_cast<deng_ui32_t>(attachments.size());
         renderpass_createinfo.pAttachments = attachments.data();
         renderpass_createinfo.subpassCount = 1;
         renderpass_createinfo.pSubpasses = &subpass_desc;
@@ -505,7 +505,7 @@ namespace deng {
     void SwapChainCreator::mkSCImageViews() {
         m_swapchain_image_views.resize(m_swapchain_images.size());
 
-        for(uint32_t i = 0; i < m_swapchain_image_views.size(); i++) {
+        for(deng_ui32_t i = 0; i < m_swapchain_image_views.size(); i++) {
             VkImageViewCreateInfo createInfo = 
             BufferCreator::getImageViewInfo (
                 m_swapchain_images[i], 
@@ -701,10 +701,10 @@ namespace deng {
         VkRenderPass &renderpass
     ) {
         // Vertices sizes
-        uint32_t tex_mapped_3d_vert_count = 0;
-        uint32_t unmapped_3d_vert_count = 0;
-        uint32_t tex_mapped_2d_vert_count = 0;
-        uint32_t unmapped_2d_vert_count = 0;
+        deng_ui32_t tex_mapped_3d_vert_count = 0;
+        deng_ui32_t unmapped_3d_vert_count = 0;
+        deng_ui32_t tex_mapped_2d_vert_count = 0;
+        deng_ui32_t unmapped_2d_vert_count = 0;
         size_t index;
 
         // Count the amount of vertices for each type of assets
@@ -712,19 +712,19 @@ namespace deng {
             switch ((*m_p_assets)[index].asset_mode)
             {
             case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
-                tex_mapped_3d_vert_count += static_cast<uint32_t>((*m_p_assets)[index].vertices.size);
+                tex_mapped_3d_vert_count += static_cast<deng_ui32_t>((*m_p_assets)[index].vertices.size);
                 break;
 
             case DENG_ASSET_MODE_3D_UNMAPPED:
-                unmapped_3d_vert_count += static_cast<uint32_t>((*m_p_assets)[index].vertices.size);
+                unmapped_3d_vert_count += static_cast<deng_ui32_t>((*m_p_assets)[index].vertices.size);
                 break;
             
             case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
-                tex_mapped_3d_vert_count += static_cast<uint32_t>((*m_p_assets)[index].vertices.size);
+                tex_mapped_3d_vert_count += static_cast<deng_ui32_t>((*m_p_assets)[index].vertices.size);
                 break;
 
             case DENG_ASSET_MODE_2D_UNMAPPED:
-                unmapped_2d_vert_count += static_cast<uint32_t>((*m_p_assets)[index].vertices.size);
+                unmapped_2d_vert_count += static_cast<deng_ui32_t>((*m_p_assets)[index].vertices.size);
                 break;
 
             default:
@@ -862,12 +862,12 @@ namespace deng {
 
         descriptor_pool_sizes.resize(1);
         descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptor_pool_sizes[0].descriptorCount = (uint32_t) sc_img_size;
-        desc_pool_createinfo.maxSets = (uint32_t) sc_img_size;
+        descriptor_pool_sizes[0].descriptorCount = (deng_ui32_t) sc_img_size;
+        desc_pool_createinfo.maxSets = (deng_ui32_t) sc_img_size;
 
         // Set up descriptor pool createinfo 
         desc_pool_createinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        desc_pool_createinfo.poolSizeCount = (uint32_t) descriptor_pool_sizes.size();
+        desc_pool_createinfo.poolSizeCount = (deng_ui32_t) descriptor_pool_sizes.size();
         desc_pool_createinfo.pPoolSizes = descriptor_pool_sizes.data();
 
         // Create descriptor pool for unmapped assets 
@@ -879,8 +879,8 @@ namespace deng {
         descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         descriptor_pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         
-        if(m_p_textures->size() != 0)
-            m_texture_descriptor_size = (uint32_t) (*m_p_textures).size() * sc_img_size; 
+        if(m_p_textures->size())
+            m_texture_descriptor_size = (deng_ui32_t) m_p_textures->size() * sc_img_size; 
         
         else 
             m_texture_descriptor_size = 1;
@@ -890,13 +890,37 @@ namespace deng {
         descriptor_pool_sizes[1].descriptorCount = m_texture_descriptor_size;
         desc_pool_createinfo.maxSets = m_texture_descriptor_size;
 
+        LOG("TEX_C: " + std::to_string(m_p_textures->size()));
         // Modify descriptor pool createinfo
-        desc_pool_createinfo.poolSizeCount = (uint32_t) descriptor_pool_sizes.size();
+        desc_pool_createinfo.poolSizeCount = (deng_ui32_t) descriptor_pool_sizes.size();
         desc_pool_createinfo.pPoolSizes = descriptor_pool_sizes.data();
 
         // Create descriptor pool for texture mapped assets
         if(vkCreateDescriptorPool(device, &desc_pool_createinfo, nullptr, &m_texture_mapped_desc_pool) != VK_SUCCESS)
             VK_DESC_ERR("failed to create descriptor pool for texture mapped assets");
+    }
+
+
+    void DescriptorCreator::updateDescriptorPools (
+        VkDevice device,
+        size_t sc_img_c
+    ) {
+        vkDestroyDescriptorPool (
+            device, 
+            m_unmapped_desc_pool, 
+            nullptr
+        );
+        
+        vkDestroyDescriptorPool (
+            device, 
+            m_texture_mapped_desc_pool, 
+            nullptr
+        );
+
+        mkDescriptorPools (
+            device,
+            sc_img_c
+        );
     }
 
 
@@ -922,7 +946,7 @@ namespace deng {
             tmp_descriptor_set_layouts[index] = m_unmapped_desc_set_layout;
         
         allocinfo.descriptorPool = m_unmapped_desc_pool;
-        allocinfo.descriptorSetCount = (uint32_t) tmp_descriptor_set_layouts.size();
+        allocinfo.descriptorSetCount = (deng_ui32_t) tmp_descriptor_set_layouts.size();
         allocinfo.pSetLayouts = tmp_descriptor_set_layouts.data();
 
         /* Allocate descriptor sets for unmapped 3D vertices */
@@ -948,7 +972,7 @@ namespace deng {
             // Update descriptor sets
             vkUpdateDescriptorSets (
                 device, 
-                (uint32_t) descriptor_writes.size(), 
+                (deng_ui32_t) descriptor_writes.size(), 
                 descriptor_writes.data(), 
                 0, 
                 nullptr
@@ -1026,7 +1050,7 @@ namespace deng {
                 // Update texture mapped descriptor sets
                 vkUpdateDescriptorSets (
                     device, 
-                    (uint32_t) descriptor_writes.size(), 
+                    (deng_ui32_t) descriptor_writes.size(), 
                     descriptor_writes.data(), 
                     0, 
                     nullptr
@@ -1273,8 +1297,8 @@ namespace deng {
                 device, 
                 gpu, 
                 (*m_p_textures)[index].image, 
-                (uint32_t) (*m_p_textures)[index].texture.pixel_data.width, 
-                (uint32_t) (*m_p_textures)[index].texture.pixel_data.height, 
+                (deng_ui32_t) (*m_p_textures)[index].texture.pixel_data.width, 
+                (deng_ui32_t) (*m_p_textures)[index].texture.pixel_data.height, 
                 VK_FORMAT_B8G8R8A8_SRGB, 
                 VK_IMAGE_TILING_OPTIMAL, 
                 VK_IMAGE_USAGE_SAMPLED_BIT | 
@@ -1405,7 +1429,7 @@ namespace deng {
 
                 // Add indices to the buffer byte count
                 (*m_p_assets)[l_index].indices.memory_offset = total_size;
-                total_size += (*m_p_assets)[l_index].indices.size * sizeof(uint32_t);
+                total_size += (*m_p_assets)[l_index].indices.size * sizeof(deng_ui32_t);
             }
             LOG("Vertices offset for asset " + std::string((*m_p_assets)[l_index].name) + ": " + 
             std::to_string((*m_p_assets)[l_index].vertices.memory_offset));
@@ -1499,7 +1523,7 @@ namespace deng {
                 total_size += data_size;
 
                 // Populate staging memory with indices data
-                data_size = (*m_p_assets)[l_index].indices.size * sizeof(uint32_t);
+                data_size = (*m_p_assets)[l_index].indices.size * sizeof(deng_ui32_t);
                 BufferCreator::populateBufferMem (
                     device, 
                     data_size, 
@@ -1564,7 +1588,7 @@ namespace deng {
         vkFreeCommandBuffers (
             device, 
             command_pool, 
-            (uint32_t) p_com_bufs->size(), 
+            (deng_ui32_t) p_com_bufs->size(), 
             p_com_bufs->data()
         );
 
@@ -1592,7 +1616,7 @@ namespace deng {
     /* Update uniform data buffer */
     void ResourceAllocator::updateUniformBufferData (
         VkDevice device, 
-        const uint32_t current_image, 
+        const deng_ui32_t current_image, 
         Camera *p_camera, 
         deng_CameraUniformFlagBits flag_bits
     ) {
@@ -1666,22 +1690,23 @@ namespace deng {
 
     /********** DrawCaller class methods **********/
     DrawCaller::DrawCaller (
-        VkDevice device, 
+        VkDevice device,
         QueueFamilyFinder qff
     ) {
-        mkCommandPool(device, qff.getGraphicsQFIndex());
+        m_qff = qff;
         mkSynchronisation(device);
     }
 
 
     /* Create command pool */
-    void DrawCaller::mkCommandPool(VkDevice &device, uint32_t g_queue_i) {
+    void DrawCaller::mkCommandPool(VkDevice device) {
         VkCommandPoolCreateInfo commandpool_createinfo{};
         commandpool_createinfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        commandpool_createinfo.queueFamilyIndex = g_queue_i;
+        commandpool_createinfo.queueFamilyIndex = m_qff.getGraphicsQFIndex();
 
         // Create commandpool
-        if(vkCreateCommandPool(device, &commandpool_createinfo, nullptr, &m_commandpool) != VK_SUCCESS)
+        m_p_commandpool = new VkCommandPool;
+        if(vkCreateCommandPool(device, &commandpool_createinfo, nullptr, m_p_commandpool) != VK_SUCCESS)
             VK_DRAWCMD_ERR("failed to create command pool");
         
         else LOG("Successfully created commandpool!");
@@ -1714,7 +1739,7 @@ namespace deng {
         fence_createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fence_createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-        for(int32_t i = 0; i < DENG_MAX_FRAMES_IN_FLIGHT; i++) {
+        for(deng_i32_t i = 0; i < DENG_MAX_FRAMES_IN_FLIGHT; i++) {
             if
             (
                 vkCreateSemaphore (
@@ -1775,14 +1800,15 @@ namespace deng {
     ) {
         size_t l_index, r_index;
 
-        m_commandbuffers.resize(m_framebuffers.size());
+        m_p_commandbuffers = new std::vector<VkCommandBuffer>;
+        m_p_commandbuffers->resize(m_framebuffers.size());
 
         // Set up commandbuffer allocate info
         VkCommandBufferAllocateInfo commandbuffer_allocation_info{};
         commandbuffer_allocation_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        commandbuffer_allocation_info.commandPool = m_commandpool;
+        commandbuffer_allocation_info.commandPool = *m_p_commandpool;
         commandbuffer_allocation_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        commandbuffer_allocation_info.commandBufferCount = static_cast<uint32_t>(m_commandbuffers.size());
+        commandbuffer_allocation_info.commandBufferCount = static_cast<deng_ui32_t>(m_p_commandbuffers->size());
 
         // Allocate command buffers
         if
@@ -1790,7 +1816,7 @@ namespace deng {
             vkAllocateCommandBuffers (
                 device, 
                 &commandbuffer_allocation_info, 
-                m_commandbuffers.data()
+                m_p_commandbuffers->data()
             )
         ) VK_DRAWCMD_ERR("failed to allocate command buffers");
         
@@ -1798,12 +1824,12 @@ namespace deng {
             LOG("Successfully allocated command buffers!");
 
         // Start iterating through commandbuffers to submit draw calls
-        for(l_index = 0; l_index < m_commandbuffers.size(); l_index++) {
+        for(l_index = 0; l_index < m_p_commandbuffers->size(); l_index++) {
             VkCommandBufferBeginInfo commandbuffer_begininfo{};
             commandbuffer_begininfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
             // Begin recording command buffer
-            if(vkBeginCommandBuffer(m_commandbuffers[l_index], &commandbuffer_begininfo) != VK_SUCCESS)
+            if(vkBeginCommandBuffer((*m_p_commandbuffers)[l_index], &commandbuffer_begininfo) != VK_SUCCESS)
                 VK_DRAWCMD_ERR("failed to begin recording command buffers");
 
             else LOG("Successfully begun to record command buffers!");
@@ -1824,12 +1850,12 @@ namespace deng {
 
             // Add clear values to renderpass begin info
             renderpass_begininfo.clearValueCount = 
-            (uint32_t) clear_values.size();
+            (deng_ui32_t) clear_values.size();
             renderpass_begininfo.pClearValues = clear_values.data();
             
             // Start a new render pass
             vkCmdBeginRenderPass (
-                m_commandbuffers[l_index], 
+                (*m_p_commandbuffers)[l_index], 
                 &renderpass_begininfo, 
                 VK_SUBPASS_CONTENTS_INLINE
             );
@@ -1840,7 +1866,7 @@ namespace deng {
                     if((*m_p_assets)[r_index].is_shown) {
                         LOG("Creating command buffers for asset: " + std::string((*m_p_assets)[r_index].name));
                         vkCmdBindVertexBuffers (
-                            m_commandbuffers[l_index], 
+                            (*m_p_commandbuffers)[l_index], 
                             0, 
                             1, 
                             buffer_data.p_main_buffer, 
@@ -1848,7 +1874,7 @@ namespace deng {
                         );
 
                         vkCmdBindIndexBuffer (
-                            m_commandbuffers[l_index], 
+                            (*m_p_commandbuffers)[l_index], 
                             *buffer_data.p_main_buffer, 
                             (*m_p_assets)[r_index].indices.memory_offset, 
                             VK_INDEX_TYPE_UINT32
@@ -1859,12 +1885,12 @@ namespace deng {
                         {
                         case DENG_ASSET_MODE_3D_UNMAPPED:
                             vkCmdBindPipeline (
-                                m_commandbuffers[l_index], 
+                                (*m_p_commandbuffers)[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 m_pl_data[UM3D_I].pipeline
                             );
                             vkCmdBindDescriptorSets (
-                                m_commandbuffers[l_index], 
+                                (*m_p_commandbuffers)[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 *m_pl_data[UM3D_I].p_pipeline_layout, 
                                 0, 
@@ -1877,12 +1903,12 @@ namespace deng {
 
                         case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
                             vkCmdBindPipeline (
-                                m_commandbuffers[l_index], 
+                                (*m_p_commandbuffers)[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 m_pl_data[TM3D_I].pipeline
                             );   
                             vkCmdBindDescriptorSets (
-                                m_commandbuffers[l_index], 
+                                (*m_p_commandbuffers)[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 *m_pl_data[TM3D_I].p_pipeline_layout, 
                                 0, 
@@ -1895,13 +1921,13 @@ namespace deng {
 
                         case DENG_ASSET_MODE_2D_UNMAPPED:
                             vkCmdBindPipeline (
-                                m_commandbuffers[l_index], 
+                                (*m_p_commandbuffers)[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 m_pl_data[UM2D_I].pipeline
                             );
 
                             vkCmdBindDescriptorSets (
-                                m_commandbuffers[l_index], 
+                                (*m_p_commandbuffers)[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 *m_pl_data[UM2D_I].p_pipeline_layout, 
                                 0, 
@@ -1915,12 +1941,12 @@ namespace deng {
 
                         case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
                             vkCmdBindPipeline (
-                                m_commandbuffers[l_index], 
+                                (*m_p_commandbuffers)[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 m_pl_data[TM2D_I].pipeline
                             );
                             vkCmdBindDescriptorSets (
-                                m_commandbuffers[l_index], 
+                                (*m_p_commandbuffers)[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 *m_pl_data[TM2D_I].p_pipeline_layout, 
                                 0, 
@@ -1934,7 +1960,7 @@ namespace deng {
 
                         // Draw assets
                         vkCmdDrawIndexed (
-                            m_commandbuffers[l_index], 
+                            (*m_p_commandbuffers)[l_index], 
                             (*m_p_assets)[r_index].indices.size, 
                             1, 
                             0, 
@@ -1945,11 +1971,11 @@ namespace deng {
                 }
 
             // End render pass
-            vkCmdEndRenderPass(m_commandbuffers[l_index]);
+            vkCmdEndRenderPass((*m_p_commandbuffers)[l_index]);
             LOG("Ended renderPass!");
 
             // Stop recording commandbuffer
-            if(vkEndCommandBuffer(m_commandbuffers[l_index]) != VK_SUCCESS)
+            if(vkEndCommandBuffer((*m_p_commandbuffers)[l_index]) != VK_SUCCESS)
                 VK_DRAWCMD_ERR("failed to end recording command buffer");
         }
     }
@@ -1958,22 +1984,32 @@ namespace deng {
     /* Update commandbuffers */
     void DrawCaller::updateCommandBuffers (
         VkDevice device,
-        std::vector<VkCommandBuffer> cmd_bufs
+        std::vector<VkCommandBuffer> *p_cmd_bufs,
+        VkCommandPool *p_cmd_pool
     ) {
         vkFreeCommandBuffers (
             device,
-            m_commandpool,
-            m_commandbuffers.size(),
-            m_commandbuffers.data()
+            *m_p_commandpool,
+            m_p_commandbuffers->size(),
+            m_p_commandbuffers->data()
         );
 
-        m_commandbuffers = cmd_bufs;
+        vkDestroyCommandPool (
+            device,
+            *m_p_commandpool,
+            nullptr
+        );
+
+        delete m_p_commandpool;
+        delete m_p_commandbuffers;
+        m_p_commandbuffers = p_cmd_bufs;
+        m_p_commandpool = p_cmd_pool;
     }
 
 
     /* DrawCaller getter methods */
-    VkCommandPool DrawCaller::getComPool() { return m_commandpool; }
-    std::vector<VkCommandBuffer> *DrawCaller::getComBufs() { return &m_commandbuffers; }
+    VkCommandPool *DrawCaller::getComPool() { return m_p_commandpool; }
+    std::vector<VkCommandBuffer> *DrawCaller::getComBufs() { return m_p_commandbuffers; }
 
 
     /*********************************************/
@@ -1986,10 +2022,10 @@ namespace deng {
     /* Submit assets for drawing */
     void Renderer::submitAssets (
         deng_Asset *assets, 
-        int32_t asset_c
+        deng_i32_t asset_c
     ) {
         size_t l_index = m_assets.size(); 
-        int32_t r_index;
+        deng_i32_t r_index;
         m_assets.resize(l_index + asset_c);
         
         for(r_index = 0; r_index < asset_c; l_index++, r_index++)
@@ -2000,10 +2036,10 @@ namespace deng {
     /* Submit preconfigured deng_Textures */
     void Renderer::submitTextures (
         deng_Texture *textures,
-        int32_t tex_c
+        deng_i32_t tex_c
     ) {
         size_t l_index = m_textures.size();
-        int32_t r_index;
+        deng_i32_t r_index;
         m_textures.resize(l_index + tex_c);
 
         for(r_index = 0; r_index < tex_c; l_index++, r_index++)
@@ -2034,7 +2070,10 @@ namespace deng {
 
 
     /* Submit text instances to renderer and make them into deng_Asset objects */ 
-    void Renderer::submitRendStr(dengUtils::bitmapStr *rend_strs, size_t size) {
+    void Renderer::submitRendStr (
+        dengUtils::BitmapStr *rend_strs, 
+        size_t size
+    ) {
         size_t asset_index = m_assets.size();
         size_t tex_index = m_textures.size();
         size_t l_index;
@@ -2109,7 +2148,7 @@ namespace deng {
     ) {
         m_asset_mut.lock();
         m_p_ww = p_ww;
-        m_p_fm = new dengUtils::FontManager("", m_p_ww);
+        m_p_sr = new dengUtils::StringRasterizer("", m_p_ww);
         m_usage_mode = usage;
 
         // Default shared data initialisation
@@ -2140,15 +2179,6 @@ namespace deng {
             m_p_ic->getQFF()
         );
 
-        m_p_desc_c = new DescriptorCreator (
-            m_p_ic->getDev(), 
-            m_p_scc->getExt(), 
-            m_p_scc->getRp(), 
-            &m_assets, 
-            &m_textures, 
-            m_p_scc->getSCImg().size()
-        );
-
         m_p_ra = new ResourceAllocator (
             m_p_ic->getDev(), 
             m_p_ic->getGpu(), 
@@ -2158,8 +2188,19 @@ namespace deng {
         );
 
         m_p_dc = new DrawCaller (
-            m_p_ic->getDev(), 
+            m_p_ic->getDev(),
             m_p_ic->getQFF()
+        );
+
+        m_p_dc->mkCommandPool(m_p_ic->getDev());
+
+        m_p_desc_c = new DescriptorCreator (
+            m_p_ic->getDev(), 
+            m_p_scc->getExt(), 
+            m_p_scc->getRp(), 
+            &m_assets, 
+            &m_textures, 
+            m_p_scc->getSCImg().size()
         );
 
         
@@ -2170,7 +2211,6 @@ namespace deng {
             ev_info.deng_window_area = m_p_ww->getSize();
             ev_info.device = m_p_ic->getDev();
             ev_info.gpu = m_p_ic->getGpu();
-            ev_info.commandpool = m_p_dc->getComPool();
             ev_info.renderpass = m_p_scc->getRp();
             ev_info.extent = m_p_scc->getExt();
             ev_info.g_queue = m_p_ic->getQFF().graphics_queue;
@@ -2188,7 +2228,6 @@ namespace deng {
                 &m_textures 
             );
 
-            LOG("FRAMEBUFFER_C: " + std::to_string(m_p_ra->getFB().size()));
             ev_info.p_dc->setMiscData (
                 m_p_desc_c->getPipelines(),
                 m_p_ra->getFB(),
@@ -2219,7 +2258,7 @@ namespace deng {
                 m_asset_mut.unlock();
                 m_p_map_editor = new dengui::MapEditor (
                     ev_info, 
-                    m_p_fm
+                    m_p_sr
                 );
                 m_asset_mut.lock();
                 break;
@@ -2227,6 +2266,11 @@ namespace deng {
             default:
                 break;
             }
+
+            m_p_desc_c->updateDescriptorPools (
+                m_p_ic->getDev(), 
+                m_p_scc->getSCImg().size()
+            );
         }
 
 
@@ -2239,7 +2283,7 @@ namespace deng {
         m_p_ra->mkTextureImages (
             m_p_ic->getDev(), 
             m_p_ic->getGpu(), 
-            m_p_dc->getComPool(), 
+            *m_p_dc->getComPool(), 
             m_p_ic->getQFF().graphics_queue, 
             m_p_scc->getSCImg().size()
         );
@@ -2247,7 +2291,7 @@ namespace deng {
         m_p_ra->mkBuffers (
             m_p_ic->getDev(), 
             m_p_ic->getGpu(), 
-            m_p_dc->getComPool(), 
+            *m_p_dc->getComPool(), 
             m_p_ic->getQFF().graphics_queue
         );
 
@@ -2302,8 +2346,8 @@ namespace deng {
         // Set input type as movement
         m_p_ww->setInputMode(DENG_INPUT_MOVEMENT);
         
-        uint32_t fps = 0;
-        while(is_running(m_p_ww->getWindow())) {
+        deng_ui32_t fps = 0;
+        while(deng_IsRunning(m_p_ww->getWindow())) {
             if(m_count_fps) end = std::chrono::steady_clock::now();
             if(std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() >= 1000) {
                 LOG("FPS " + std::to_string(fps));
@@ -2313,7 +2357,7 @@ namespace deng {
 
             else fps++;
             
-            update_window(m_p_ww->getWindow());
+            deng_UpdateWindow(m_p_ww->getWindow());
             m_p_ev->update();
 
             m_update_mut.lock();
@@ -2333,7 +2377,8 @@ namespace deng {
 
                     m_p_dc->updateCommandBuffers (
                         m_p_ic->getDev(),
-                        *m_p_map_editor->getEv()->getCmdBuffers()
+                        m_p_map_editor->getEv()->getCmdBuffers(),
+                        m_p_map_editor->getEv()->getCmdPool()
                     );
 
                     LOG("CMD_BUF_C: " + std::to_string(m_p_map_editor->getEv()->getCmdBuffers()->size()));
@@ -2352,7 +2397,7 @@ namespace deng {
             m_frame_mut.unlock();
         }
         vkDeviceWaitIdle(m_p_ic->getDev());
-        destroy_window(m_p_ww->getWindow());
+        deng_DestroyWindow(m_p_ww->getWindow());
     }
 
 
@@ -2368,7 +2413,7 @@ namespace deng {
         );
 
         // Call Vulkan next image acquire method
-        uint32_t image_index;
+        deng_ui32_t image_index;
         VkResult result = vkAcquireNextImageKHR (
             m_p_ic->getDev(), 
             m_p_scc->getSC(), 
@@ -2461,14 +2506,14 @@ namespace deng {
         // Clean commandbuffers and commandpools
         vkFreeCommandBuffers (
             m_p_ic->getDev(), 
-            m_p_dc->getComPool(), 
+            *m_p_dc->getComPool(), 
             m_p_dc->getComBufs()->size(), 
             m_p_dc->getComBufs()->data()
         );
 
         vkDestroyCommandPool (
             m_p_ic->getDev(), 
-            m_p_dc->getComPool(), 
+            *m_p_dc->getComPool(), 
             nullptr
         );
 

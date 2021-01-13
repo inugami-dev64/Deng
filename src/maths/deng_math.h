@@ -41,7 +41,7 @@ namespace dengMath {
 
         vec4<T> operator+(const vec4<T> &vector) {
             vec4<T> vec4;
-            if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(uint8_t).name() || typeid(T).name() == typeid(uint16_t).name() || typeid(T).name() == typeid(uint32_t).name() || typeid(T).name() == typeid(uint64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
+            if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(deng_ui8_t).name() || typeid(T).name() == typeid(deng_ui16_t).name() || typeid(T).name() == typeid(deng_ui32_t).name() || typeid(T).name() == typeid(deng_ui64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
                 vec4 = {(this->first + vector.first), (this->second + vector.second), (this->third + vector.third), (this->fourth + vector.fourth)};
             }
 
@@ -50,7 +50,7 @@ namespace dengMath {
 
         vec4<T> operator-(const vec4<T> &vector) {
             vec4<T> vec4;
-            if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(uint8_t).name() || typeid(T).name() == typeid(uint16_t).name() || typeid(T).name() == typeid(uint32_t).name() || typeid(T).name() == typeid(uint64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
+            if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(deng_ui8_t).name() || typeid(T).name() == typeid(deng_ui16_t).name() || typeid(T).name() == typeid(deng_ui32_t).name() || typeid(T).name() == typeid(deng_ui64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
                 vec4 = {(this->first - vector.first), (this->second - vector.second), (this->third - vector.third), (this->fourth - vector.fourth)};
             }
 
@@ -99,7 +99,7 @@ namespace dengMath {
 
         vec3<T> operator+(const vec3<T> &vector) {
             vec3<T> vec3;
-            if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(uint8_t).name() || typeid(T).name() == typeid(uint16_t).name() || typeid(T).name() == typeid(uint32_t).name() || typeid(T).name() == typeid(uint64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
+            if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(deng_ui8_t).name() || typeid(T).name() == typeid(deng_ui16_t).name() || typeid(T).name() == typeid(deng_ui32_t).name() || typeid(T).name() == typeid(deng_ui64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
                 vec3 = {(first + vector.first), (second + vector.second), (third + vector.third)};
             }
 
@@ -108,7 +108,7 @@ namespace dengMath {
 
         vec3<T> operator-(const vec3<T> &vector) {
             vec3<T> vec3;
-            if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(uint8_t).name() || typeid(T).name() == typeid(uint16_t).name() || typeid(T).name() == typeid(uint32_t).name() || typeid(T).name() == typeid(uint64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
+            if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(deng_ui8_t).name() || typeid(T).name() == typeid(deng_ui16_t).name() || typeid(T).name() == typeid(deng_ui32_t).name() || typeid(T).name() == typeid(deng_ui64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
                 vec3 = {(first - vector.first), (second - vector.second), (third - vector.third)};
             }
 
@@ -159,7 +159,7 @@ namespace dengMath {
 
         vec2<T> operator+(const vec2<T> &vector) {
             vec2<T> vec2;
-            if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(uint8_t).name() || typeid(T).name() == typeid(uint16_t).name() || typeid(T).name() == typeid(uint32_t).name() || typeid(T).name() == typeid(uint64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
+            if(typeid(T).name() == typeid(float).name() || typeid(T).name() == typeid(deng_ui8_t).name() || typeid(T).name() == typeid(deng_ui16_t).name() || typeid(T).name() == typeid(deng_ui32_t).name() || typeid(T).name() == typeid(deng_ui64_t).name() || typeid(T).name() == typeid(int).name() || typeid(T).name() == typeid(double).name()) {
                 vec2 = {(first + vector.first), (second + vector.second)};
             }
 
@@ -171,10 +171,10 @@ namespace dengMath {
             if
             (
                 typeid(T).name() == typeid(float).name() || 
-                typeid(T).name() == typeid(uint8_t).name() || 
-                typeid(T).name() == typeid(uint16_t).name() || 
-                typeid(T).name() == typeid(uint32_t).name() || 
-                typeid(T).name() == typeid(uint64_t).name() || 
+                typeid(T).name() == typeid(deng_ui8_t).name() || 
+                typeid(T).name() == typeid(deng_ui16_t).name() || 
+                typeid(T).name() == typeid(deng_ui32_t).name() || 
+                typeid(T).name() == typeid(deng_ui64_t).name() || 
                 typeid(T).name() == typeid(int).name() || 
                 typeid(T).name() == typeid(double).name()
             ) vec2 = {(first - vector.first), (second - vector.second)};
@@ -265,12 +265,12 @@ namespace dengMath {
 
     class ModelMatrix {
     private:
-        mat4<float> m_rot_x_mat;
-        mat4<float> m_rot_y_mat;
-        mat4<float> m_rot_z_mat;
+        mat4<deng_vec_t> m_rot_x_mat;
+        mat4<deng_vec_t> m_rot_y_mat;
+        mat4<deng_vec_t> m_rot_z_mat;
 
-        mat4<float> m_transformation_mat;
-        mat4<float> m_scale_mat;
+        mat4<deng_vec_t> m_transformation_mat;
+        mat4<deng_vec_t> m_scale_mat;
 
     public:
         ModelMatrix();
@@ -278,7 +278,7 @@ namespace dengMath {
         void setRotation(const float &x_rot, const float &y_rot, const float &z_rot);
         void setTransformation(const float &transform_x, const float &transform_y, const float &transform_z);
         void setScale(const float &scale_x, const float &scale_y, const float &scale_z);
-        mat4<float> getModelMatrix() { 
+        mat4<deng_vec_t> getModelMatrix() { 
             return m_transformation_mat * m_rot_x_mat * m_rot_y_mat * m_rot_z_mat * m_scale_mat;
         }
     };
@@ -286,7 +286,7 @@ namespace dengMath {
     class ViewMatrix {
     private:
         vec4<float> m_camera_position;
-        mat4<float> m_transformation_mat;
+        mat4<deng_vec_t> m_transformation_mat;
 
         float x_rot;
         float y_rot;
@@ -296,9 +296,9 @@ namespace dengMath {
         vec4<float> m_up_side;
         vec4<float> m_forward_side;
 
-        mat4<float> m_rot_x_mat;
-        mat4<float> m_rot_y_mat;
-        mat4<float> m_rot_z_mat;
+        mat4<deng_vec_t> m_rot_x_mat;
+        mat4<deng_vec_t> m_rot_y_mat;
+        mat4<deng_vec_t> m_rot_z_mat;
 
     public:
         ViewMatrix();
@@ -307,7 +307,7 @@ namespace dengMath {
 
         void setRotation(const float &x_rot, const float &y_rot);
         void setTransformationMatrix();
-        void getViewMatrix(mat4<float> *view_mat);
+        void getViewMatrix(mat4<deng_vec_t> *view_mat);
         vec4<float> getPosition();
     };
 
@@ -321,12 +321,12 @@ namespace dengMath {
 
     public:
         ProjectionMatrix(const float &FOV, const float &near_plane, const float &far_plane, const float &aspect_ratio);
-        void getProjectionMatrix(mat4<float> *p_matrix);
+        void getProjectionMatrix(mat4<deng_vec_t> *p_matrix);
     };
 
     struct UniformData {
-        mat4<float> view;
-        mat4<float> projection;
+        mat4<deng_vec_t> view;
+        mat4<deng_vec_t> projection;
         deng_CameraUniformFlagBits cam_flag_bits;
     };
 
@@ -334,7 +334,7 @@ namespace dengMath {
     double exp(double base, int exp);
     float exp(float base, int exp);
 
-    vec2<float> getCartesianCoordsPoint(const vec2<float> &centre, const int16_t &angle, const float &distance, const bool &inverted_y_axis);
+    vec2<float> getCartesianCoordsPoint(const vec2<float> &centre, const deng_i16_t &angle, const float &distance, const bool &inverted_y_axis);
     float getFractionNumerator(const float &value_numerator, const float &value_denominator, const float &equivalent_denominator);
     float getVectorLengthFromBounds(vec2<vec2<float>> vector_bounds);
     float getTriangleAnglesFromEdges(const vec3<float> &triangle_edges, const deng_TriangleAngleType &triangle_angle_type);
@@ -343,8 +343,16 @@ namespace dengMath {
     struct Conversion {
         static float degToRad(const float &deg);
         static float radToDeg(const float &rad);
-        static double vector2DSizeToPixelSize(const double &vec_size, const vec2<uint32_t> &window_size, const deng_CoordinateAxisType &axis_type);
-        static float pixelSizeToVector2DSize(const double &pixel_size, const vec2<uint32_t> &window_size, const deng_CoordinateAxisType &axis_type);
+        static double vector2DSizeToPixelSize (
+            const deng_vec_t &vec_size, 
+            const vec2<deng_ui32_t> &window_size, 
+            const deng_CoordinateAxisType &axis_type
+        );
+        static float pixelSizeToVector2DSize (
+            const deng_px_t &pixel_size, 
+            const vec2<deng_ui32_t> &window_size, 
+            const deng_CoordinateAxisType &axis_type
+        );
 
         std::unordered_map<char, int> hex_definitions;
         
@@ -373,7 +381,7 @@ namespace dengMath {
             this->hex_definitions['F'] = 15;
         }
 
-        uint32_t hexToDec(const std::string &hex_value);
+        deng_ui32_t hexToDec(const std::string &hex_value);
     };
 
     // data handling methods 
@@ -388,19 +396,32 @@ namespace dengMath {
     static void sortInDecliningOrder(std::vector<T> *p_elements_vector);
 
     template<typename T>
-    static void sortVectorInGrowingOrder(std::vector<T> *p_elements_vector, deng_CoordinateAxisType coord_axis_type);
+    static void sortVectorInGrowingOrder (
+        std::vector<T> *p_elements_vector, 
+        deng_CoordinateAxisType coord_axis_type
+    );
+    
     template<typename T>
-    static void sortVectorInDecliningOrder(std::vector<T> *p_elements_vector, deng_CoordinateAxisType coord_axis_type);
+    static void sortVectorInDecliningOrder (
+        std::vector<T> *p_elements_vector, 
+        deng_CoordinateAxisType coord_axis_type
+    );
 
     // in order to use this function the class used in std::vector must have const char *description as a public class variable
     template<typename T>
-    static T *findElementByDescription(std::vector<T> *p_vector, const char *description);
+    static T *findElementByDescription (
+        std::vector<T> *p_vector, 
+        const char *description
+    );
 
     // Calculate new asset vertices according to model matrix
-    void applyModelMatrix(deng_Asset &asset, mat4<float> matrix);
+    void applyModelMatrix (
+        deng_Asset &asset, 
+        mat4<deng_vec_t> matrix
+    );
 
     // Generic trigonometric calculation functions
-    float trSurface2D(std::array<vec2<float>, 3> tr_verts);
+    deng_vec_t trSurface2D(std::array<vec2<deng_vec_t>, 3> tr_verts);
 }
 
 #endif

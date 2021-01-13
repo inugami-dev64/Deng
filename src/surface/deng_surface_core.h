@@ -34,6 +34,7 @@ extern "C" {
     #include <vulkan/vulkan_win32.h>
 #endif
 
+#include "../common/common.h"
 #include "deng_key_definitions.h"
 #include "deng_surface_window.h"
 #include "key_vector.h"

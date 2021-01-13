@@ -35,13 +35,13 @@ namespace deng {
             const char *p_extension_name
         );
 
-        static uint32_t getMemoryType (
+        static deng_ui32_t getMemoryType (
             VkPhysicalDevice *p_gpu, 
-            const uint32_t &type_filter, 
+            const deng_ui32_t &type_filter, 
             const VkMemoryPropertyFlags &properties
         );
 
-        static uint32_t getDeviceScore (
+        static deng_ui32_t getDeviceScore (
             VkPhysicalDevice *p_device, 
             std::vector<const char*> &extenstions
         );
@@ -60,7 +60,7 @@ namespace deng {
             VkPhysicalDevice gpu,  
             VkDeviceSize size, 
             VkDeviceMemory *p_memory,
-            uint32_t mem_type_bits, 
+            deng_ui32_t mem_type_bits, 
             VkMemoryPropertyFlags properties
         );
 
@@ -69,8 +69,8 @@ namespace deng {
             VkDevice device, 
             VkPhysicalDevice gpu, 
             VkImage &image, 
-            uint32_t width, 
-            uint32_t height, 
+            deng_ui32_t width, 
+            deng_ui32_t height, 
             VkFormat format, 
             VkImageTiling tiling, 
             VkImageUsageFlags usage
@@ -90,8 +90,8 @@ namespace deng {
             VkQueue g_queue, 
             VkBuffer src_buffer, 
             VkImage dst_image, 
-            uint32_t width, 
-            uint32_t height
+            deng_ui32_t width, 
+            deng_ui32_t height
         );
         
         /* VkBuffer related functions */
@@ -141,8 +141,8 @@ namespace deng {
     /* Contains queue families finder and getter functions */
     class QueueFamilyFinder {
     private:
-        uint32_t m_graphics_family_index;
-        uint32_t m_present_family_index;
+        deng_ui32_t m_graphics_family_index;
+        deng_ui32_t m_present_family_index;
     
     public:
         VkQueue graphics_queue;
@@ -155,8 +155,8 @@ namespace deng {
             VkSurfaceKHR surface
         );
 
-        uint32_t getGraphicsQFIndex();
-        uint32_t getPresentQFIndex();
+        deng_ui32_t getGraphicsQFIndex();
+        deng_ui32_t getPresentQFIndex();
     };
     
 
@@ -227,7 +227,7 @@ namespace deng {
             VkPrimitiveTopology primitive_topology, 
             bool add_depth_stencil, 
             bool add_color_blend, 
-            uint32_t subpass_index
+            deng_ui32_t subpass_index
         );
     };
 

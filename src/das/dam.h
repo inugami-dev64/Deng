@@ -44,7 +44,7 @@ void damAssetAssemblyCaller(deng_Asset *p_asset, char **pp_repo_paths, int repo_
 #define SECONDS_PER_30_DAY_MONTH 2592000
 #define SECONDS_IN_FEBRUARY 2419200
 #define SECONDS_IN_LEAP_YEAR_FEBRUARY 2505600
-uint16_t damCountYears(int64_t *p_time, uint16_t years, int n, int *p_is_leap_year);
-uint16_t damCountMonths(int64_t *p_time, uint16_t months, int is_leap_year);
-void damFormatDate(char *date, char *time, int64_t time_from_epoch);
+deng_ui16_t damCountYears(deng_i64_t *p_time, deng_ui16_t years, int n, int *p_is_leap_year);
+deng_ui16_t damCountMonths(deng_i64_t *p_time, deng_ui16_t months, int is_leap_year);
+void damFormatDate(char *date, char *time, deng_i64_t time_from_epoch);
 #endif

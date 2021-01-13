@@ -13,28 +13,28 @@
 #endif
 
 namespace dengUtils {
-    struct bitmapChar {
+    struct BitmapChar {
         char ascii_ch;
-        uint16_t glyph_id; // ID of glyph texture
+        deng_ui16_t glyph_id; // ID of glyph texture
     };
 
-    struct bitmapGlyphData {
-        dengMath::vec2<int32_t> bearings;
-        dengMath::vec2<int32_t> advance;
+    struct BitmapGlyphData {
+        dengMath::vec2<deng_i32_t> bearings;
+        dengMath::vec2<deng_i32_t> advance;
         FT_Bitmap bitmap;
     };
     
-    struct bitmapStr {
+    struct BitmapStr {
         const char *text;
         const char *font_file;
-        
-        std::vector<bitmapGlyphData> unique_glyphs;
-        std::vector<uint8_t> tex_data;
-        std::array<VERT_MAPPED_2D, 4> vert_pos;
-        std::array<uint32_t, 6> vert_indices;
-        dengMath::vec2<int32_t> box_size;
 
-        bitmapChar *rend_text;
+        std::vector<BitmapGlyphData> unique_glyphs;
+        std::vector<deng_ui8_t> tex_data;
+        std::array<VERT_MAPPED_2D, 4> vert_pos;
+        std::array<deng_ui32_t, 6> vert_indices;
+        dengMath::vec2<deng_i32_t> box_size;
+
+        BitmapChar *rend_text;
         FT_Face font_face;
 
         void operator=(const char* input) { text = input; }
@@ -42,46 +42,68 @@ namespace dengUtils {
 
 
     // Class for handling font rendering
-    class FontManager {
+    class StringRasterizer {
     private:
         FT_Library m_library_instance;
-        deng::WindowWrap *m_p_window_wrap;
+        deng::WindowWrap *m_p_win;
         std::vector<std::string> m_fonts;
 
-    private:
-        bool verifyFont(bitmapStr &str, std::string &out_path);
-        std::vector<char> indexGlyphs(bitmapStr &str);
+    protected:
+        bool verifyFont(BitmapStr &str, std::string &out_path);
+        deng_px_t findTextSizePx(BitmapStr &str);
+        deng_vec_t findTextSizeVec(BitmapStr &str);
+        std::vector<char> indexGlyphs(BitmapStr &str);
         void findFontFiles(std::string custom_path);
-        void mkTextbox(bitmapStr &str, dengMath::vec3<unsigned char> color);
+        
         // Generic text box creationg function
-        deng_Error mkNewStr (
-            bitmapStr &str, 
-            uint16_t px_size,
-            dengMath::vec2<float> pos, 
+        void mkGlyphs (
+            BitmapStr &str, 
+            deng_ui16_t px_size,
+            dengMath::vec2<deng_vec_t> pos, 
+            dengMath::vec3<unsigned char> color
+        );
+
+        void mkTextbox (
+            BitmapStr &str, 
+            deng_px_t text_width,
+            dengMath::vec2<deng_vec_t> pos,
             dengMath::vec3<unsigned char> color
         );
 
     public:
         // If custom font path is not needed then just pass nullptr
-        FontManager(std::string custom_font_path, deng::WindowWrap *p_window_wrap);
-        ~FontManager();
+        StringRasterizer (
+            std::string custom_font_path, 
+            deng::WindowWrap *p_window_wrap
+        );
+        ~StringRasterizer();
         
         /* Create new text box instance from pixel size */
-        deng_Error newPxStr ( 
-            bitmapStr &str,
+        void newPxStr ( 
+            BitmapStr &str,
             const char *font_name,
-            uint16_t px_size,
+            deng_ui16_t px_size,
             dengMath::vec2<float> pos,
             dengMath::vec3<unsigned char> color
         );
         
         /* Create new text box instance from vector size */
-        deng_Error newVecStr (
-            bitmapStr &str,
+        void newVecStr (
+            BitmapStr &str,
             const char *font_name,
-            float vec_size,
+            deng_vec_t vec_size,
             dengMath::vec2<float> pos,
             dengMath::vec3<unsigned char> color  
+        );
+
+        /* Check for the width of rasterised textbox */
+        char *strRasterWidthTrim (
+            const char *str,
+            const char *font_name,
+            deng_vec_t vec_height,
+            deng_vec_t max_vec_width,
+            dengMath::vec2<deng_ui32_t> deng_window_size,
+            deng_vec_t *p_out_width
         );
     };
 }

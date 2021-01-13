@@ -9,7 +9,7 @@ int main() {
 
     obj_loader.getObjVertices(&game_asset);
 
-    dengUtils::FileManager fm;
-    fm.writeToFile("deng.log", "#entry point", DENG_WRITEMODE_REWRITE);
+    dengUtils::FileManager sr;
+    sr.writeToFile("deng.log", "#entry point", DENG_WRITEMODE_REWRITE);
     
 }

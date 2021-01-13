@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "base_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,7 +22,7 @@ extern "C" {
     // Memory allocation check
     void cm_CheckMemoryAlloc(void *ptr);
     // Set all the bytes to zero
-    void cm_ClearBuffer(char *str, int32_t len);
+    void cm_ClearBuffer(char *str, deng_i32_t len);
 
     // Sort all the strings in alphabetical order
     void cm_SortAlphabetically(char **buffer, size_t buffer_count);

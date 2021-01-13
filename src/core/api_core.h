@@ -34,17 +34,8 @@
 #include <unordered_map>
 #include <thread>
 #include <mutex>
+#include "../common/common.h"
 
-
-/* Universal deng error return type */ 
-enum deng_Error {
-    DENG_NO_ERRORS = 0,
-    DENG_ERROR_TYPE_GENERAL_ERROR = 1,
-    DENG_ERROR_TYPE_GENERAL_THIRD_PARTY_LIB_CALLBACK_ERROR = 2,
-    DENG_ERROR_TYPE_INVALID_PATH = 3,
-    DENG_ERROR_TYPE_INVALID_ASSET_DATA = 4,
-    DENG_ERROR_TYPE_INVALID_TEXTURE_DATA = 5
-};
 
 /* Coordinate axis specifier */
 enum deng_CoordinateAxisType {
@@ -65,7 +56,7 @@ enum deng_MovementEvent {
     DENG_MOVEMENT_DOWNWARD = 5
 };
 
-typedef uint32_t deng_CameraUniformFlagBits;
+typedef deng_ui32_t deng_CameraUniformFlagBits;
 #define DENG_CAMERA_UNIFORM_ORTHOGRAPHIC_CAMERA_MODE_3D 0x00000001u
 #define DENG_CAMERA_UNIFORM_PERSPECTIVE_CAMERA_MODE_3D  0x00000002u
 #define DENG_CAMERA_UNIFORM_ORTHOGRAPHIC_CAMERA_MODE_2D 0x00000004u
@@ -102,14 +93,14 @@ enum deng_RendererUsageMode {
 };
 
 /* Hints for controlling window with API calls */
-typedef uint32_t deng_WindowHintBits;
+typedef deng_ui32_t deng_WindowHintBits;
 #define DENG_WINDOW_HINT_FULL_SCREEN                    0x00000001u
 #define DENG_WINDOW_HINT_WINDOWED                       0x00000002u
 #define DENG_WINDOW_HINT_NO_MOUSE_LOCK                  0x00000004u
 #define DENG_WINDOW_HINT_NO_CURSOR_HIDE                 0x00000008u
 
 /* Hints for controlling renderer features */
-typedef uint32_t deng_RendererHintBits;
+typedef deng_ui32_t deng_RendererHintBits;
 #define DENG_RENDERER_HINT_ENABLE_VSYNC                 0x01
 #define DENG_RENDERER_HINT_SHOW_FPS_COUNTER             0x02
 #define DENG_RENDERER_HINT_ENABLE_VALIDATION_LAYERS     0x04

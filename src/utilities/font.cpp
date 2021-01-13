@@ -3,7 +3,7 @@
 namespace dengUtils {
 
     /* Search for certain font and return true if found */
-    bool FontManager::verifyFont(bitmapStr &str, std::string &out_path) {
+    bool StringRasterizer::verifyFont(BitmapStr &str, std::string &out_path) {
         size_t l_index, r_index, path_index;
         std::string list_font_name = "";
 
@@ -33,8 +33,7 @@ namespace dengUtils {
 
 
     /* Find all available fonts */
-    // Untested
-    void FontManager::findFontFiles(std::string path) {
+    void StringRasterizer::findFontFiles(std::string path) {
         // Check if '/' needs to be added to the end of the path
         if(path != "" && path[path.size() - 1] != '/') 
             path += '/';
@@ -55,8 +54,11 @@ namespace dengUtils {
             {
             case DT_REG:
                 file_ext = cm_GetFileExtName(contents->d_name);
-                if(file_ext && !strcmp(file_ext, "ttf"))
-                    m_fonts.push_back(path + contents->d_name);
+                if
+                (
+                    (file_ext && !strcmp(file_ext, "ttf")) || 
+                    (file_ext && !strcmp(file_ext, "otf"))
+                ) m_fonts.push_back(path + contents->d_name);
                 
                 if(file_ext) free(file_ext);
                 break;
@@ -75,9 +77,9 @@ namespace dengUtils {
 
 
     // Find unique glyphs and index them according to the text
-    std::vector<char> FontManager::indexGlyphs(bitmapStr &str) {
+    std::vector<char> StringRasterizer::indexGlyphs(BitmapStr &str) {
         std::vector<char> unique_chars;
-        str.rend_text = (bitmapChar*) malloc(sizeof(bitmapChar) * strlen(str.text));
+        str.rend_text = (BitmapChar*) malloc(sizeof(BitmapChar) * strlen(str.text));
         
         size_t l_index, r_index;
         bool is_found = false;
@@ -94,11 +96,11 @@ namespace dengUtils {
 
             if(!is_found) {
                 unique_chars.push_back(str.text[l_index]);
-                str.rend_text[l_index].glyph_id = (uint16_t) unique_chars.size() - 1;
+                str.rend_text[l_index].glyph_id = (deng_ui16_t) unique_chars.size() - 1;
             }
             else {
                 is_found = false;
-                str.rend_text[l_index].glyph_id = (uint16_t) r_index;
+                str.rend_text[l_index].glyph_id = (deng_ui16_t) r_index;
             }
             
             str.rend_text[l_index].ascii_ch = str.text[l_index];
@@ -108,9 +110,12 @@ namespace dengUtils {
     }
 
 
-    FontManager::FontManager(std::string custom_font_path, deng::WindowWrap *p_window_wrap) {
+    StringRasterizer::StringRasterizer (
+        std::string custom_font_path, 
+        deng::WindowWrap *p_window_wrap
+    ) {
         FT_Error res;
-        m_p_window_wrap = p_window_wrap;
+        m_p_win = p_window_wrap;
         findFontFiles(DEFAULT_FONT_PATH);
         findFontFiles(custom_font_path);
 
@@ -118,13 +123,39 @@ namespace dengUtils {
         if(res) FONT_ERR("Failed to initialise freetype library instance!");
     }
 
-    FontManager::~FontManager() { FT_Done_FreeType(m_library_instance); }
+    StringRasterizer::~StringRasterizer() { FT_Done_FreeType(m_library_instance); }
+
+
+    /* Find the total width of the textbox in vertices unit */
+    deng_vec_t StringRasterizer::findTextSizeVec(BitmapStr &str) {
+        deng_ui64_t l_index;
+        deng_px_t total_size = 0;
+        for(l_index = 0; l_index < strlen(str.text); l_index++)
+            total_size += str.unique_glyphs[str.rend_text[l_index].glyph_id].advance.first;
+
+        return dengMath::Conversion::pixelSizeToVector2DSize (
+            total_size,
+            m_p_win->getSize(),
+            DENG_COORD_AXIS_X
+        );
+    }
+
+
+    /* Find the total width of the textbox in pixel units */
+    deng_px_t StringRasterizer::findTextSizePx(BitmapStr &str) {
+        deng_ui64_t l_index;
+        deng_px_t total_size = 0;
+        for(l_index = 0; l_index < strlen(str.text); l_index++) 
+            total_size += str.unique_glyphs[str.rend_text[l_index].glyph_id].advance.first;
+
+        return total_size;
+    }
 
 
     /* Create new drawable string */
-    deng_Error FontManager::mkNewStr (
-        bitmapStr &str, 
-        uint16_t px_size, 
+    void StringRasterizer::mkGlyphs (
+        BitmapStr &str, 
+        deng_ui16_t px_size, 
         dengMath::vec2<float> pos, 
         dengMath::vec3<unsigned char> color
     ) {
@@ -132,15 +163,26 @@ namespace dengUtils {
 
         // Set up new freetype font face        
         FT_Error res;
-        res = FT_New_Face(m_library_instance, str.font_file, 0, &str.font_face);
+        res = FT_New_Face (
+            m_library_instance, 
+            str.font_file, 
+            0, 
+            &str.font_face
+        );
+
         if(res) {
             WARNME("Failed to create new font face!");
-            return DENG_ERROR_TYPE_GENERAL_THIRD_PARTY_LIB_CALLBACK_ERROR;
+            return;
         }
 
         // Set sizes for glyphs
-        res = FT_Set_Pixel_Sizes(str.font_face, 0, px_size);
-        if(res) return DENG_ERROR_TYPE_GENERAL_THIRD_PARTY_LIB_CALLBACK_ERROR;
+        res = FT_Set_Pixel_Sizes (
+            str.font_face, 
+            0, 
+            px_size
+        );
+        
+        if(res) return;
 
         // Index chars and get unique vector characters
         std::vector<char> unique_ch = indexGlyphs(str);
@@ -148,62 +190,35 @@ namespace dengUtils {
         
         for(index = 0; index < unique_ch.size(); index++) {
             res = FT_Load_Char(str.font_face, unique_ch[index], FT_LOAD_RENDER);    
-            if(res) return DENG_ERROR_TYPE_GENERAL_THIRD_PARTY_LIB_CALLBACK_ERROR;
+            if(res) return;
 
-            str.unique_glyphs[index].advance.first = (int32_t) str.font_face->glyph->advance.x / 64;
-            str.unique_glyphs[index].advance.second = (int32_t) str.font_face->glyph->advance.y / 64;
+            str.unique_glyphs[index].advance.first = (deng_i32_t) str.font_face->glyph->advance.x / 64;
+            str.unique_glyphs[index].advance.second = (deng_i32_t) str.font_face->glyph->advance.y / 64;
 
-            str.unique_glyphs[index].bearings.first = (int32_t) str.font_face->glyph->bitmap_left;
-            str.unique_glyphs[index].bearings.second = (int32_t) str.font_face->glyph->bitmap_top;
+            str.unique_glyphs[index].bearings.first = (deng_i32_t) str.font_face->glyph->bitmap_left;
+            str.unique_glyphs[index].bearings.second = (deng_i32_t) str.font_face->glyph->bitmap_top;
 
-            res = FT_Bitmap_Copy(m_library_instance, &str.font_face->glyph->bitmap, &str.unique_glyphs[index].bitmap);
-            if(res) return DENG_ERROR_TYPE_GENERAL_THIRD_PARTY_LIB_CALLBACK_ERROR;
+            res = FT_Bitmap_Copy (
+                m_library_instance, 
+                &str.font_face->glyph->bitmap, 
+                &str.unique_glyphs[index].bitmap
+            );
+
+            FT_Bitmap_Done (
+                m_library_instance, 
+                &str.font_face->glyph->bitmap
+            );
+
+            if(res) return;
         }
-        
-        mkTextbox(str, color);
-
-        str.vert_pos[0] = {pos.first, pos.second};
-        str.vert_pos[0].tex_data = {0.0f, 0.0f};
-        
-        str.vert_pos[1].vert_data.vert_x = dengMath::Conversion::pixelSizeToVector2DSize (
-            (double) str.box_size.first, 
-            m_p_window_wrap->getSize(), 
-            DENG_COORD_AXIS_X
-        ) + pos.first;
-        str.vert_pos[1].vert_data.vert_y = pos.second;
-        str.vert_pos[1].tex_data = {1.0f, 0.0f};
-        
-        str.vert_pos[2].vert_data.vert_x = dengMath::Conversion::pixelSizeToVector2DSize (
-            (double) str.box_size.first, 
-            m_p_window_wrap->getSize(), 
-            DENG_COORD_AXIS_X
-        ) + pos.first;
-        str.vert_pos[2].vert_data.vert_y = dengMath::Conversion::pixelSizeToVector2DSize (
-            (double) str.box_size.second, 
-            m_p_window_wrap->getSize(), 
-            DENG_COORD_AXIS_Y
-        ) + pos.second;
-        str.vert_pos[2].tex_data = {1.0f, 1.0f};
-        
-        str.vert_pos[3].vert_data.vert_x = pos.first;
-        str.vert_pos[3].vert_data.vert_y = dengMath::Conversion::pixelSizeToVector2DSize (
-            (double) str.box_size.second + (double) pos.second, 
-            m_p_window_wrap->getSize(), 
-            DENG_COORD_AXIS_Y
-        ) + pos.second;
-        str.vert_pos[3].tex_data = {0.0f, 1.0f};
-
-        str.vert_indices = {0, 1, 2, 2, 3, 0};
-
-        return DENG_NO_ERRORS;
     }
 
 
     /* Callback function for creating new text box instance based on pixel size */
-    deng_Error FontManager::newPxStr (
-        bitmapStr &str,
+    void StringRasterizer::newPxStr (
+        BitmapStr &str,
         const char *font_name,
-        uint16_t px_size,
+        deng_ui16_t px_size,
         dengMath::vec2<float> pos,
         dengMath::vec3<unsigned char> color
     ) {
@@ -215,21 +230,27 @@ namespace dengUtils {
 
         str.font_file = path_str.c_str();
 
-        deng_Error res;
-        res = mkNewStr (
+        mkGlyphs (
             str,
             px_size,
             pos,
             color
         );
 
-        return res;
+        deng_px_t width = findTextSizePx(str);
+
+        mkTextbox (
+            str,
+            width,
+            pos,
+            color
+        );
     }
 
 
     /* Callback function for creating new text box instance based on vector size */
-    deng_Error FontManager::newVecStr (
-        bitmapStr &str,
+    void StringRasterizer::newVecStr (
+        BitmapStr &str,
         const char *font_name,
         float vec_size,
         dengMath::vec2<float> pos,
@@ -242,53 +263,65 @@ namespace dengUtils {
             FONT_ERR("Failed to find font file!");
         
         str.font_file = path_str.c_str();
-        float px_size = (float) dengMath::Conversion::vector2DSizeToPixelSize (
-            (double) vec_size,
-            m_p_window_wrap->getSize(),
+        deng_vec_t px_size = (float) dengMath::Conversion::vector2DSizeToPixelSize (
+            (deng_px_t) vec_size,
+            m_p_win->getSize(),
             DENG_COORD_AXIS_Y
         );
 
-        deng_Error res;
-        res = mkNewStr (
+        mkGlyphs (
             str,
-            (uint16_t) px_size,
+            (deng_ui16_t) px_size,
             pos,
             color
         );
 
-        return res;
+        deng_px_t width = findTextSizePx(str);
+
+        mkTextbox (
+            str,
+            width,
+            pos,
+            color
+        );
     }
 
 
     /* Create textbox from glyphs */
-    void FontManager::mkTextbox(bitmapStr &str, dengMath::vec3<unsigned char> color) {
-        int32_t ln_bearing = 0; 
-        int32_t l_bearing = 0;
-        dengMath::vec2<int32_t> origin_offset;
-        int32_t l_index, r_index, t_index, g_index;
+    void StringRasterizer::mkTextbox (
+        BitmapStr &str,
+        deng_px_t px_width,
+        dengMath::vec2<deng_vec_t> pos, 
+        dengMath::vec3<unsigned char> color
+    ) {
+        deng_i32_t ln_bearing = 0; 
+        deng_i32_t l_bearing = 0;
+        dengMath::vec2<deng_i32_t> origin_offset;
+        deng_i32_t l_index, r_index, t_index, g_index;
 
         // Find the height of textbox and verify colormode
-        for(l_index = 0, str.box_size.second = 0; l_index < (int32_t) str.unique_glyphs.size(); l_index++) {
+        for(l_index = 0, str.box_size.second = 0; l_index < (deng_i32_t) str.unique_glyphs.size(); l_index++) {
             if(l_bearing < str.unique_glyphs[str.rend_text[l_index].glyph_id].bearings.second)
                 l_bearing = str.unique_glyphs[str.rend_text[l_index].glyph_id].bearings.second;
 
             // Check for the maximum negative bearing
-            if(ln_bearing < ((int32_t) str.unique_glyphs[str.rend_text[l_index].glyph_id].bitmap.rows) - str.unique_glyphs[str.rend_text[l_index].glyph_id].bearings.second)
-                ln_bearing = ((int32_t) (str.unique_glyphs[str.rend_text[l_index].glyph_id].bitmap.rows) - str.unique_glyphs[str.rend_text[l_index].glyph_id].bearings.second);
+            if(ln_bearing < ((deng_i32_t) str.unique_glyphs[str.rend_text[l_index].glyph_id].bitmap.rows) - str.unique_glyphs[str.rend_text[l_index].glyph_id].bearings.second)
+                ln_bearing = ((deng_i32_t) (str.unique_glyphs[str.rend_text[l_index].glyph_id].bitmap.rows) - str.unique_glyphs[str.rend_text[l_index].glyph_id].bearings.second);
         }   
         
+        str.box_size.first = (deng_i32_t) px_width;
         str.box_size.second = ln_bearing + l_bearing;
         
-        // Find the width of textbox
-        for(l_index = 0, str.box_size.first = 0; l_index < (int32_t) strlen(str.text); l_index++)
-            str.box_size.first += (int32_t) str.unique_glyphs[str.rend_text[l_index].glyph_id].advance.first;
-
-        str.tex_data.resize(str.box_size.first * str.box_size.second * 4);
+        str.tex_data.resize (
+            str.box_size.first * 
+            str.box_size.second * 
+            4
+        );
         origin_offset.first = 0;
         origin_offset.second = ln_bearing;
         
-        dengMath::vec2<int32_t> gl_rel_draw_coords;
-        int32_t gl_index;
+        dengMath::vec2<deng_i32_t> gl_rel_draw_coords;
+        deng_i32_t gl_index;
         bool draw_width, draw_height;
         
         // y axis iteration
@@ -302,8 +335,8 @@ namespace dengUtils {
                 gl_rel_draw_coords.second = l_index - (str.box_size.second - (str.unique_glyphs[str.rend_text[g_index].glyph_id].bearings.second + 
                 origin_offset.second));
 
-                draw_width = gl_rel_draw_coords.first >= 0 && gl_rel_draw_coords.first < (int32_t) str.unique_glyphs[str.rend_text[g_index].glyph_id].bitmap.width;
-                draw_height = gl_rel_draw_coords.second >= 0 && gl_rel_draw_coords.second < (int32_t) str.unique_glyphs[str.rend_text[g_index].glyph_id].bitmap.rows;
+                draw_width = gl_rel_draw_coords.first >= 0 && gl_rel_draw_coords.first < (deng_i32_t) str.unique_glyphs[str.rend_text[g_index].glyph_id].bitmap.width;
+                draw_height = gl_rel_draw_coords.second >= 0 && gl_rel_draw_coords.second < (deng_i32_t) str.unique_glyphs[str.rend_text[g_index].glyph_id].bitmap.rows;
                 if(draw_width && draw_height) {
                     gl_index = gl_rel_draw_coords.first + 
                     (gl_rel_draw_coords.second * str.unique_glyphs[str.rend_text[g_index].glyph_id].bitmap.width);
@@ -335,12 +368,151 @@ namespace dengUtils {
 
 
                 // Check if glyph index should be incremented
-                if(gl_rel_draw_coords.first >= (int32_t) str.unique_glyphs[str.rend_text[g_index].glyph_id].bitmap.width
-                && g_index != (int32_t) strlen(str.text) - 1){
+                if
+                (
+                    gl_rel_draw_coords.first >= (deng_i32_t) str.unique_glyphs[str.rend_text[g_index].glyph_id].bitmap.width && 
+                    g_index != (deng_i32_t) strlen(str.text) - 1
+                ) {
                     origin_offset.first += str.unique_glyphs[str.rend_text[g_index].glyph_id].advance.first;
                     g_index++;
                 }
             }
         }
+
+        str.vert_pos[0] = {pos.first, pos.second};
+        str.vert_pos[0].tex_data = {0.0f, 0.0f};
+        
+        str.vert_pos[1].vert_data.vert_x = dengMath::Conversion::pixelSizeToVector2DSize (
+            (deng_px_t) str.box_size.first, 
+            m_p_win->getSize(), 
+            DENG_COORD_AXIS_X
+        ) + pos.first;
+        str.vert_pos[1].vert_data.vert_y = pos.second;
+        str.vert_pos[1].tex_data = {1.0f, 0.0f};
+        
+        str.vert_pos[2].vert_data.vert_x = dengMath::Conversion::pixelSizeToVector2DSize (
+            (deng_px_t) str.box_size.first, 
+            m_p_win->getSize(), 
+            DENG_COORD_AXIS_X
+        ) + pos.first;
+        str.vert_pos[2].vert_data.vert_y = dengMath::Conversion::pixelSizeToVector2DSize (
+            (deng_px_t) str.box_size.second, 
+            m_p_win->getSize(), 
+            DENG_COORD_AXIS_Y
+        ) + pos.second;
+        str.vert_pos[2].tex_data = {1.0f, 1.0f};
+        
+        str.vert_pos[3].vert_data.vert_x = pos.first;
+        str.vert_pos[3].vert_data.vert_y = dengMath::Conversion::pixelSizeToVector2DSize (
+            (deng_px_t) str.box_size.second + (double) pos.second, 
+            m_p_win->getSize(), 
+            DENG_COORD_AXIS_Y
+        ) + pos.second;
+        str.vert_pos[3].tex_data = {0.0f, 1.0f};
+
+        str.vert_indices = {0, 1, 2, 2, 3, 0};
     }
+
+
+    /* Trim the width of potential rasterised string */
+    char *StringRasterizer::strRasterWidthTrim (
+        const char *str,
+        const char *font_name,
+        deng_vec_t vec_height,
+        deng_vec_t max_vec_width,
+        dengMath::vec2<deng_ui32_t> deng_window_size,
+        deng_vec_t *p_out_width 
+    ) {
+        BitmapStr ras_str;
+        ras_str.text = str;
+        ras_str.font_file = font_name;
+
+        std::string font_path;
+        if(!verifyFont(ras_str, font_path)) 
+            return NULL;
+
+        ras_str.font_file = font_path.c_str();
+        deng_px_t px_height = dengMath::Conversion::vector2DSizeToPixelSize (
+            vec_height,
+            deng_window_size,
+            DENG_COORD_AXIS_Y
+        );
+
+        // Find all unique glyphs
+        mkGlyphs (
+            ras_str,
+            px_height,
+            {0.0f, 0.0f},
+            {0x00, 0x00, 0x00}
+        );
+
+        deng_px_t max_px_width = dengMath::Conversion::vector2DSizeToPixelSize (
+            max_vec_width,
+            deng_window_size,
+            DENG_COORD_AXIS_X
+        );
+
+        LOG("MAX_HEIGHT: " + std::to_string(max_px_width));
+
+        // Count the total size of the string
+        deng_i32_t l_index;        
+        deng_bool_t is_max = false;
+        deng_px_t cur_px_width = 0.0;
+        
+        for(l_index = 0; l_index < (deng_i32_t) strlen(ras_str.text); l_index++) {
+            // Check if the current size is bigger than maximum size
+            if(cur_px_width >= max_px_width) { 
+                is_max = true;
+                break;
+            } 
+            cur_px_width += 
+            ras_str.unique_glyphs[ras_str.rend_text[l_index].glyph_id].advance.first;
+        } 
+
+        *p_out_width = dengMath::Conversion::pixelSizeToVector2DSize (
+            cur_px_width - ras_str.unique_glyphs[ras_str.rend_text[l_index].glyph_id].advance.first,
+            deng_window_size,
+            DENG_COORD_AXIS_X
+        );
+
+        char *out_str;
+        if(is_max) {
+            out_str = (char*) calloc (
+                l_index + 1,
+                sizeof(char)
+            );
+
+            out_str[l_index - 1] = 0x2E;
+            out_str[l_index - 2] = 0x2E;
+            out_str[l_index - 3] = 0x2E;
+
+            strncpy (
+                out_str,
+                ras_str.text,
+                l_index - 3
+            );
+        }
+
+        else {
+            out_str = (char*) calloc (
+                strlen(ras_str.text) + 1,
+                sizeof(char)
+            );
+
+            strcpy (
+                out_str,
+                ras_str.text
+            );
+        }
+
+        // Cleanup glyphs
+        for(l_index = 0; l_index < (deng_i32_t) ras_str.unique_glyphs.size(); l_index++) {
+            FT_Bitmap_Done (
+                m_library_instance, 
+                &ras_str.unique_glyphs[l_index].bitmap
+            );
+        }
+
+        return out_str;
+    }   
 }

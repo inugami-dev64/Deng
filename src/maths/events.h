@@ -11,7 +11,7 @@ namespace dengMath {
     private:
         dengUtils::Timer m_movement_timer;
         dengUtils::Timer m_input_mode_change_timer;
-        std::pair<bool, DENGKey> m_is_key_registered;
+        std::pair<bool, deng_Key> m_is_key_registered;
         deng::Camera *m_p_camera;
         deng::WindowWrap *m_p_window_wrap;
         vec3<deng_MovementEvent> m_movements;
@@ -20,7 +20,7 @@ namespace dengMath {
     private:
         void getMovementType();
         void checkForInputModeChange();
-        bool clickHandler(DENGKey key);
+        bool clickHandler(deng_Key key);
         
 
     public:

@@ -7,11 +7,12 @@ std::vector<deng_Texture> textures(2);
 
 int main() {
     // Create initialiser class objects
-    deng::WindowWrap window(1440, 1080, "Game!");
+    deng::WindowWrap window(1280, 980, "Game!");
     deng::Renderer rend;
-    
+
     rend.setHints (
-        DENG_RENDERER_HINT_SHOW_FPS_COUNTER
+        DENG_RENDERER_HINT_SHOW_FPS_COUNTER |
+        DENG_RENDERER_HINT_ENABLE_VALIDATION_LAYERS
     );
 
     rend.submitTextureFile (

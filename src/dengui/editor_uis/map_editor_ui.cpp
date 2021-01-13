@@ -4,7 +4,7 @@
 namespace dengui {
     MapEditor::MapEditor (
         EventInfo &ev_info, 
-        dengUtils::FontManager *p_fm
+        dengUtils::StringRasterizer *p_sr
     ) {
         m_p_ev = new Events(ev_info);
         
@@ -15,7 +15,6 @@ namespace dengui {
         wi.pc = DENG_MAP_UI_PRIMARY_COLOR;
         wi.sc = DENG_MAP_UI_SECONDARY_COLOR;
         wi.tc = DENG_MAP_UI_TERTIARY_COLOR;
-        wi.p_mb = NULL;
         wi.pos = {0.0f, 0.0f};
         wi.size = {0.6f, 1.0f};
         wi.wt = DENG_MAP_UI_MAIN_WINDOW_TYPE;
@@ -24,8 +23,9 @@ namespace dengui {
             &m_p_main_win,
             &wi,
             ev_info.deng_window_area,
-            p_fm,
-            m_p_ev
+            p_sr,
+            m_p_ev,
+            false
         );
     }
 
