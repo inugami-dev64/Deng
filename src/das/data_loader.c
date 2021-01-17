@@ -11,7 +11,11 @@ void dasCleanCharBuffer(char *buffer, size_t size) {
 }
 
 /* Image headers initialisation */
-void dasInitBMPimageHeaders(BMPFileHeader *p_file_header, BMPInfoHeader *p_info_header, BMPColorHeader *p_color_header) {
+void dasInitBMPimageHeaders (
+    BMPFileHeader *p_file_header, 
+    BMPInfoHeader *p_info_header, 
+    BMPColorHeader *p_color_header
+) {
     *p_file_header = (BMPFileHeader) {0x4D42, 0, 0, 0, 0};
     *p_info_header = (BMPInfoHeader) {0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0};
     *p_color_header = (BMPColorHeader) {0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000, 0x73524742, {0}};

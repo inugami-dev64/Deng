@@ -517,7 +517,7 @@ void damAssetAssemblyCaller(deng_Asset *p_asset, char **repo_paths, int repo_id)
 
     printf("total_name: %s\n", total_file_name);
 
-    p_asset->name = name_buffer;
+    p_asset->id = name_buffer;
     p_asset->description = desc_buffer;
 
     dasAssemble(p_asset, total_file_name);

@@ -32,7 +32,7 @@ void dasAssemble(deng_Asset *p_asset, const char *file_name) {
         exit(-1);
     }
     
-    dasAssembleINFOHDR(p_asset->name, p_asset->description, file);
+    dasAssembleINFOHDR(p_asset->id, p_asset->description, file);
     dasAssembleVERTHDR(&p_asset->vertices, file);
     dasAssembleINDXHDR(&p_asset->indices, file);
 
@@ -123,7 +123,7 @@ void dasReadAsset (
     p_asset->asset_mode = asset_mode;
     
     dasReadINFOHDR (
-        &p_asset->name, 
+        &p_asset->id, 
         &p_asset->description, 
         &p_asset->time_point, 
         (char*) file_name, 

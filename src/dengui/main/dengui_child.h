@@ -2,14 +2,6 @@
 #define DENGUI_CHILD_H
 
 namespace dengui {
-     /* Child element alignment mode */
-    enum ChildAlignment {
-        CHILD_ELEMENT_ALIGNMENT_HORIZONTAL  = 0,
-        CHILD_ELEMENT_ALIGNMENT_LIST        = 1,
-        CHILD_ELEMENT_ALIGNMENT_VERTICES    = 2,
-        CHILD_ELEMENT_ALIGNMENT_FREE        = 3
-    };
-
     /* Child window overlapping mode */
     enum ChildOverlapMode {
         CHILD_OVERLAP_HIDE      = 0,
@@ -21,8 +13,8 @@ namespace dengui {
     struct ChildInfo {
         // Relative position of window object
         dengMath::vec2<deng_vec_t> position;
+        std::string id;
         dengMath::vec2<deng_vec_t> size;
-        ChildAlignment alignment;
         ChildOverlapMode overlap;  
     };
 
@@ -36,6 +28,15 @@ namespace dengui {
         dengMath::vec2<deng_vec_t> size;
         void (*onClick)(WindowElement*, Events*);
         char *label;
+    };
+
+
+    class ChildWindow {
+    private:
+        ChildInfo m_info;
+
+    public:
+        ChildWindow(ChildInfo &child_info);
     };
 }
 

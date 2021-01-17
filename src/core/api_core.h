@@ -37,6 +37,36 @@
 #include "../common/common.h"
 
 
+typedef deng_ui32_t deng_CameraUniformFlagBits;
+#define DENG_CAMERA_UNIFORM_ORTHOGRAPHIC_CAMERA_MODE_3D 0x01u
+#define DENG_CAMERA_UNIFORM_PERSPECTIVE_CAMERA_MODE_3D  0x02u
+#define DENG_CAMERA_UNIFORM_ORTHOGRAPHIC_CAMERA_MODE_2D 0x04u
+#define DENG_CAMERA_UNIFORM_NO_CAMERA_MODE_2D           0x08u
+#define DENG_CAMERA_UNIFORM_NO_CAMERA_MODE_3D           0x10u
+
+/* Hints for controlling window with API calls */
+typedef deng_ui32_t deng_WindowHintBits;
+#define DENG_WINDOW_HINT_FULL_SCREEN                    0x01u
+#define DENG_WINDOW_HINT_WINDOWED                       0x02u
+#define DENG_WINDOW_HINT_NO_MOUSE_LOCK                  0x04u
+#define DENG_WINDOW_HINT_NO_CURSOR_HIDE                 0x08u
+
+/* Hints for controlling renderer features */
+typedef deng_ui32_t deng_RendererHintBits;
+#define DENG_RENDERER_HINT_ENABLE_VSYNC                     0x0001u
+#define DENG_RENDERER_HINT_SHOW_FPS_COUNTER                 0x0002u
+#define DENG_RENDERER_HINT_ENABLE_VALIDATION_LAYERS         0x0004u
+#define DENG_RENDERER_HINT_MSAA_MAX_HARDWARE_SUPPORTED      0x0008u
+#define DENG_RENDERER_HINT_MSAA_64                          0x0010u
+#define DENG_RENDERER_HINT_MSAA_32                          0x0020u
+#define DENG_RENDERER_HINT_MSAA_16                          0x0040u
+#define DENG_RENDERER_HINT_MSAA_8                           0x0080u
+#define DENG_RENDERER_HINT_MSAA_4                           0x0100u
+#define DENG_RENDERER_HINT_MSAA_2                           0x0200u
+#define DENG_RENDERER_HINT_MSAA_1                           0x0400u
+#define DENG_RENDERER_HINT_MIPMAP_ENABLE                    0x0800u
+
+
 /* Coordinate axis specifier */
 enum deng_CoordinateAxisType {
     DENG_COORD_AXIS_UNDEFINED = -1,
@@ -55,13 +85,6 @@ enum deng_MovementEvent {
     DENG_MOVEMENT_UPWARD = 4,
     DENG_MOVEMENT_DOWNWARD = 5
 };
-
-typedef deng_ui32_t deng_CameraUniformFlagBits;
-#define DENG_CAMERA_UNIFORM_ORTHOGRAPHIC_CAMERA_MODE_3D 0x00000001u
-#define DENG_CAMERA_UNIFORM_PERSPECTIVE_CAMERA_MODE_3D  0x00000002u
-#define DENG_CAMERA_UNIFORM_ORTHOGRAPHIC_CAMERA_MODE_2D 0x00000004u
-#define DENG_CAMERA_UNIFORM_NO_CAMERA_MODE_2D           0x00000008u
-#define DENG_CAMERA_UNIFORM_NO_CAMERA_MODE_3D           0x00000010u
 
 /* Pipeline type specifier */
 enum deng_PipelineType {
@@ -92,18 +115,7 @@ enum deng_RendererUsageMode {
     DENG_RENDERER_USAGE_GAME_MODE = 2,
 };
 
-/* Hints for controlling window with API calls */
-typedef deng_ui32_t deng_WindowHintBits;
-#define DENG_WINDOW_HINT_FULL_SCREEN                    0x00000001u
-#define DENG_WINDOW_HINT_WINDOWED                       0x00000002u
-#define DENG_WINDOW_HINT_NO_MOUSE_LOCK                  0x00000004u
-#define DENG_WINDOW_HINT_NO_CURSOR_HIDE                 0x00000008u
 
-/* Hints for controlling renderer features */
-typedef deng_ui32_t deng_RendererHintBits;
-#define DENG_RENDERER_HINT_ENABLE_VSYNC                 0x01
-#define DENG_RENDERER_HINT_SHOW_FPS_COUNTER             0x02
-#define DENG_RENDERER_HINT_ENABLE_VALIDATION_LAYERS     0x04
 
 // Local dependencies
 #include "forward_dec.h"
@@ -116,6 +128,7 @@ typedef deng_ui32_t deng_RendererHintBits;
 #include "window.h"
 #include "camera.h"
 
+#include "../shapes/shapes.h"
 #include "../maths/events.h"
 #include "rend_helpers.h"
 #include "../utilities/font.h"

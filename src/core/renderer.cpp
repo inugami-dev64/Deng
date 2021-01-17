@@ -29,6 +29,7 @@ namespace deng {
             mkDebugMessenger();
         
         selectPhysicalDevice();
+        findSupportedProperties();
         mkLogicalDevice(enable_validation_layers);
     }
 
@@ -153,14 +154,22 @@ namespace deng {
     void InstanceCreator::selectPhysicalDevice() {
         deng_ui32_t device_count;
         deng_ui32_t score;
-        vkEnumeratePhysicalDevices(m_instance, &device_count, nullptr);
+        vkEnumeratePhysicalDevices (
+            m_instance, 
+            &device_count, 
+            nullptr
+        );
 
         if(device_count == 0)
             VK_INSTANCE_ERR("failed to find graphics cards!");
 
         std::vector<VkPhysicalDevice> devices(device_count);
         std::multimap<deng_ui32_t, VkPhysicalDevice> device_candidates;
-        VkResult result = vkEnumeratePhysicalDevices(m_instance, &device_count, devices.data());
+        VkResult result = vkEnumeratePhysicalDevices (
+            m_instance, 
+            &device_count, 
+            devices.data()
+        );
         
         if(result != VK_SUCCESS) 
             VK_INSTANCE_ERR("no physical devices found!");
@@ -263,6 +272,67 @@ namespace deng {
     }
 
 
+    /* Find the maximum supported sample count for anti-aliasing (MSAA) */
+    void InstanceCreator::findSupportedProperties() {
+        VkPhysicalDeviceProperties props;
+        vkGetPhysicalDeviceProperties(m_gpu, &props);
+
+        // Find maximum multisample count
+        VkSampleCountFlags counts = 
+        props.limits.framebufferColorSampleCounts &
+        props.limits.framebufferDepthSampleCounts;
+
+        if(counts & VK_SAMPLE_COUNT_64_BIT) {
+            m_max_sample_count = VK_SAMPLE_COUNT_64_BIT;
+            LOG("Maximum sample count 64bit");
+        } 
+        else if(counts & VK_SAMPLE_COUNT_32_BIT) { 
+            m_max_sample_count = VK_SAMPLE_COUNT_32_BIT;
+            LOG("Maximum sample count 32bit");
+        }
+        else if(counts & VK_SAMPLE_COUNT_16_BIT) { 
+            m_max_sample_count = VK_SAMPLE_COUNT_16_BIT;
+            LOG("Maximum sample count 16bit");
+        }
+        else if(counts & VK_SAMPLE_COUNT_8_BIT) { 
+            m_max_sample_count = VK_SAMPLE_COUNT_8_BIT;
+            LOG("Maximum sample count 8bit");
+        }
+        else if(counts & VK_SAMPLE_COUNT_4_BIT) { 
+            m_max_sample_count = VK_SAMPLE_COUNT_4_BIT;
+            LOG("Maximum sample count 4bit");
+        }
+        else if(counts & VK_SAMPLE_COUNT_2_BIT) { 
+            m_max_sample_count = VK_SAMPLE_COUNT_2_BIT;
+            LOG("Maximum sample count 2bit");
+        }
+        else if(counts & VK_SAMPLE_COUNT_1_BIT) { 
+            m_max_sample_count = VK_SAMPLE_COUNT_1_BIT;
+            LOG("Maximum sample count 1bit");
+        }
+        else 
+            m_max_sample_count = VK_SAMPLE_COUNT_FLAG_BITS_MAX_ENUM;
+
+        // Find linear filtering support needed for mipmapping
+        VkFormatProperties format_props;
+        vkGetPhysicalDeviceFormatProperties (
+            m_gpu,
+            VK_FORMAT_B8G8R8A8_SRGB,
+            &format_props
+        );
+
+        if(!(format_props.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
+            m_tex_linear_filtering_support = false;
+            LOG("Texture linear filtering is not supported by hardware");
+        }
+        else {
+            m_tex_linear_filtering_support = true;
+            LOG("Texture linear filtering is supported by hardware");
+        }
+    }   
+
+
+
     /* InstanceCreator getter methods */
     VkInstance InstanceCreator::getIns() { return m_instance; }
     VkDevice InstanceCreator::getDev() { return m_device; }
@@ -270,20 +340,29 @@ namespace deng {
     VkSurfaceKHR InstanceCreator::getSu() { return m_surface; }
     QueueFamilyFinder InstanceCreator::getQFF() { return m_qff; } 
     VkDebugUtilsMessengerEXT InstanceCreator::getDMEXT() { return m_debug_mes; }
+    bool InstanceCreator::getLFSupport() { return m_tex_linear_filtering_support; }
+    VkSampleCountFlagBits InstanceCreator::getMaxSampleCount() { return m_max_sample_count; }
 
-
+    
+    /*************************************************/
+    /*************************************************/
     /************ SwapChainCreator class *************/
+    /*************************************************/
+    /*************************************************/
     SwapChainCreator::SwapChainCreator (
         VkDevice device,
         WindowWrap *p_win,
         VkPhysicalDevice gpu, 
         VkSurfaceKHR surface, 
-        QueueFamilyFinder qff
-    ) {        
+        QueueFamilyFinder qff,
+        VkSampleCountFlagBits sample_c
+    ) { 
+        m_msaa_sample_c = sample_c;       
         m_device = device;
         m_gpu = gpu;
         m_p_win = p_win;
         m_qff = qff;
+        
         m_p_sc_details = new SwapChainDetails(gpu, surface);
 
         mkSwapChainSettings();
@@ -447,15 +526,15 @@ namespace deng {
     void SwapChainCreator::mkRenderPass() {
         VkAttachmentDescription color_attachment{};
         color_attachment.format = m_surface_format.format;
-        color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        color_attachment.samples = m_msaa_sample_c;
         color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        color_attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
         VkAttachmentDescription depth_attachment{};
         depth_attachment.format = VK_FORMAT_D32_SFLOAT;
-        depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depth_attachment.samples = m_msaa_sample_c;
         depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         depth_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -470,11 +549,27 @@ namespace deng {
         depth_attachment_reference.attachment = 1;
         depth_attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
+        // Color attachment description for resolving multisampled images
+        VkAttachmentDescription color_attachment_resolve{};
+        color_attachment_resolve.format = m_surface_format.format;
+        color_attachment_resolve.samples = VK_SAMPLE_COUNT_1_BIT;
+        color_attachment_resolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        color_attachment_resolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        color_attachment_resolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        color_attachment_resolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        color_attachment_resolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        color_attachment_resolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+        VkAttachmentReference color_attachment_resolve_ref{};
+        color_attachment_resolve_ref.attachment = 2;
+        color_attachment_resolve_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
         VkSubpassDescription subpass_desc{};
         subpass_desc.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpass_desc.colorAttachmentCount = 1;
         subpass_desc.pColorAttachments = &color_attachment_reference;
         subpass_desc.pDepthStencilAttachment = &depth_attachment_reference;
+        subpass_desc.pResolveAttachments = &color_attachment_resolve_ref;
 
         VkSubpassDependency subpass_dependency{};
         subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -485,7 +580,7 @@ namespace deng {
         subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-        std::array<VkAttachmentDescription, 2> attachments = {color_attachment, depth_attachment};
+        std::array<VkAttachmentDescription, 3> attachments = {color_attachment, depth_attachment, color_attachment_resolve};
         VkRenderPassCreateInfo renderpass_createinfo{};
         renderpass_createinfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         renderpass_createinfo.attachmentCount = static_cast<deng_ui32_t>(attachments.size());
@@ -510,7 +605,8 @@ namespace deng {
             BufferCreator::getImageViewInfo (
                 m_swapchain_images[i], 
                 m_surface_format.format, 
-                VK_IMAGE_ASPECT_COLOR_BIT
+                VK_IMAGE_ASPECT_COLOR_BIT,
+                1
             );
             if(vkCreateImageView(m_device, &createInfo, nullptr, &m_swapchain_image_views[i]) != VK_SUCCESS)
                 VK_SWAPCHAIN_ERR("failed to create image views!");
@@ -519,6 +615,7 @@ namespace deng {
 
 
     /* Remake the swapchain (needed for resizing the window) */
+    // Not tested
     void SwapChainCreator::remkSwapChain (
         VkDevice device,
         WindowWrap *p_win,
@@ -565,6 +662,7 @@ namespace deng {
     VkRenderPass SwapChainCreator::getRp() { return m_renderpass; }
     VkExtent2D SwapChainCreator::getExt() { return m_extent; }
     VkSwapchainKHR SwapChainCreator::getSC() { return m_swapchain; }
+    VkFormat SwapChainCreator::getSF() { return m_surface_format.format; }
     std::vector<VkImage> SwapChainCreator::getSCImg() { return m_swapchain_images; }
     std::vector<VkImageView> SwapChainCreator::getSCImgViews() { return m_swapchain_image_views; }
 
@@ -581,14 +679,23 @@ namespace deng {
         VkRenderPass renderpass, 
         std::vector<deng_Asset> *p_assets, 
         std::vector<TextureImageData> *p_textures, 
-        size_t sc_img_size
+        size_t sc_img_size,
+        VkSampleCountFlagBits sample_c
     ) {
         m_p_assets = p_assets;
         m_p_textures = p_textures;
         mkDescriptorSetLayouts(device);   
         mkPipelineLayouts(device);
-        mkGraphicsPipelines(device, extent, renderpass);
-        mkDescriptorPools(device, sc_img_size);
+        mkGraphicsPipelines (
+            device, 
+            extent, 
+            renderpass, 
+            sample_c
+        );
+        mkDescriptorPools (
+            device, 
+            sc_img_size
+        );
     }
 
 
@@ -698,7 +805,8 @@ namespace deng {
     void DescriptorCreator::mkGraphicsPipelines (
         VkDevice &device, 
         VkExtent2D &extent, 
-        VkRenderPass &renderpass
+        VkRenderPass &renderpass,
+        VkSampleCountFlagBits sample_c
     ) {
         // Vertices sizes
         deng_ui32_t tex_mapped_3d_vert_count = 0;
@@ -788,6 +896,7 @@ namespace deng {
             VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 
             true, 
             false, 
+            sample_c,
             0
         );
 
@@ -800,7 +909,8 @@ namespace deng {
             VK_FRONT_FACE_COUNTER_CLOCKWISE, 
             VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 
             true, 
-            false, 
+            false,
+            sample_c, 
             0
         );
 
@@ -814,6 +924,7 @@ namespace deng {
             VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 
             false, 
             false, 
+            sample_c,
             0
         );
 
@@ -827,6 +938,7 @@ namespace deng {
             VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 
             true, 
             false, 
+            sample_c,
             0
         );
 
@@ -986,7 +1098,6 @@ namespace deng {
     void DescriptorCreator::mkTexMappedDS (
         VkDevice device, 
         size_t sc_img_size, 
-        VkSampler tex_sampler, 
         BufferData buffer_data
     ) {
         size_t l_index, r_index;
@@ -1007,7 +1118,7 @@ namespace deng {
         allocinfo.descriptorSetCount = tmp_descriptor_set_layouts.size();   
         allocinfo.pSetLayouts = tmp_descriptor_set_layouts.data();
         
-        // Iterate through every game asset and 
+        // Iterate through every texture and create descritor sets for them
         for(l_index = 0; l_index < m_p_textures->size(); l_index++) {
             (*m_p_textures)[l_index].descriptor_sets.resize(sc_img_size);
 
@@ -1027,7 +1138,7 @@ namespace deng {
                 // Set up descriptor image info 
                 desc_imageinfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 desc_imageinfo.imageView = (*m_p_textures)[l_index].image_view;
-                desc_imageinfo.sampler = tex_sampler;
+                desc_imageinfo.sampler = (*m_p_textures)[l_index].sampler;
 
                 // Set up descriptor writes structs for texture mapped assets
                 descriptor_writes.resize(2);
@@ -1076,14 +1187,38 @@ namespace deng {
     ResourceAllocator::ResourceAllocator (
         VkDevice device, 
         VkPhysicalDevice gpu, 
-        VkExtent2D extent, 
+        VkExtent2D extent,
+        VkSampleCountFlagBits sample_c, 
         VkRenderPass renderpass, 
-        std::vector<VkImageView> sc_img_views
+        std::vector<VkImageView> sc_img_views,
+        VkFormat sc_color_format
     ) {
-        mkUniformBuffers(device, gpu, sc_img_views.size());
-        mkTextureSampler(device);
-        mkDepthResources(device, gpu, extent);
-        mkFrameBuffers(device, renderpass, extent, sc_img_views);
+        m_sample_count = sample_c;
+        mkUniformBuffers (
+            device, 
+            gpu, 
+            sc_img_views.size()
+        );
+        
+        mkColorResources (
+            device, 
+            gpu, 
+            extent, 
+            sc_color_format
+        );
+        
+        mkDepthResources (
+            device, 
+            gpu, 
+            extent
+        );
+
+        mkFrameBuffers (
+            device, 
+            renderpass, 
+            extent, 
+            sc_img_views
+        );
     }
 
 
@@ -1132,8 +1267,12 @@ namespace deng {
 
 
     /* Create texture sampler */
-    void ResourceAllocator::mkTextureSampler(VkDevice &device) {
-        // Set up texture sampler createinfo
+    void ResourceAllocator::mkTextureSampler (
+        VkDevice &device,
+        VkSampler &sampler,
+        deng_ui32_t mip_levels
+    ) {
+        // Set up texture sampler createinfo base
         VkSamplerCreateInfo samplerInfo{};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         samplerInfo.magFilter = VK_FILTER_LINEAR;
@@ -1149,10 +1288,10 @@ namespace deng {
         samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
         samplerInfo.mipLodBias = 0.0f;
         samplerInfo.minLod = 0.0f;
-        samplerInfo.maxLod = 0.0f;
-        
+        samplerInfo.maxLod = static_cast<float>(mip_levels);
+
         // Create texture sampler 
-        if(vkCreateSampler(device, &samplerInfo, nullptr, &m_tex_sampler) != VK_SUCCESS)
+        if(vkCreateSampler(device, &samplerInfo, nullptr, &sampler) != VK_SUCCESS)
             VK_RES_ERR("failed to create texture sampler!");
     }
     
@@ -1166,10 +1305,10 @@ namespace deng {
     ) {
         size_t index;
         m_framebuffers.resize(sc_img_views.size());
-        std::array<VkImageView, 2> attachments;
+        std::array<VkImageView, 3> attachments;
 
         for(index = 0; index < sc_img_views.size(); index++) {
-            attachments = {sc_img_views[index], m_depth_image_view};
+            attachments = {m_color_image_view, m_depth_image_view, sc_img_views[index]};
 
             VkFramebufferCreateInfo framebuffer_createinfo{};
             framebuffer_createinfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -1188,6 +1327,55 @@ namespace deng {
     }
 
 
+    /* Create color resources for multisampling */
+    void ResourceAllocator::mkColorResources (
+        VkDevice &device,
+        VkPhysicalDevice &gpu,
+        VkExtent2D &extent,
+        VkFormat sc_color_format
+    ) {
+        VkMemoryRequirements mem_req = BufferCreator::makeImage (
+            device,
+            gpu,
+            m_color_image,
+            extent.width,
+            extent.height,
+            1,
+            sc_color_format,
+            VK_IMAGE_TILING_OPTIMAL,
+            VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | 
+            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+            m_sample_count
+        );
+
+        BufferCreator::allocateMemory (
+            device,
+            gpu,
+            mem_req.size,
+            &m_color_image_mem,
+            mem_req.memoryTypeBits,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+        );
+
+        vkBindImageMemory (
+            device,
+            m_color_image,
+            m_color_image_mem,
+            0
+        );
+
+        VkImageViewCreateInfo image_view_createinfo = BufferCreator::getImageViewInfo (
+            m_color_image,
+            sc_color_format,
+            VK_IMAGE_ASPECT_COLOR_BIT,
+            1
+        );
+
+        if(vkCreateImageView(device, &image_view_createinfo, nullptr, &m_color_image_view) != VK_SUCCESS)
+            VK_RES_ERR("failed to create color image view");
+    }
+
+
     /* Create depth resources for depth buffering */
     void ResourceAllocator::mkDepthResources (
         VkDevice &device, 
@@ -1200,9 +1388,11 @@ namespace deng {
             m_depth_image, 
             extent.width, 
             extent.height, 
+            1,
             VK_FORMAT_D32_SFLOAT, 
             VK_IMAGE_TILING_OPTIMAL, 
-            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+            m_sample_count
         );
         
         BufferCreator::allocateMemory (
@@ -1224,7 +1414,8 @@ namespace deng {
         VkImageViewCreateInfo image_view_createinfo = BufferCreator::getImageViewInfo (
             m_depth_image, 
             VK_FORMAT_D32_SFLOAT, 
-            VK_IMAGE_ASPECT_DEPTH_BIT
+            VK_IMAGE_ASPECT_DEPTH_BIT,
+            1
         );
 
         if(vkCreateImageView(device, &image_view_createinfo, nullptr, &m_depth_image_view) != VK_SUCCESS)
@@ -1242,23 +1433,162 @@ namespace deng {
     } 
 
 
+    void ResourceAllocator::mkMipMaps (
+        VkDevice &device,
+        VkCommandPool &cmd_pool,
+        VkImage image,
+        VkQueue g_queue,
+        deng_i32_t width,
+        deng_i32_t height,
+        deng_ui32_t mip_levels
+    ) {
+        // Generate all mipmaps
+        VkCommandBuffer cmd_buf;
+        CommandBufferRecorder::beginCommandBufferSingleCommand (
+            device,
+            cmd_pool,
+            &cmd_buf
+        );
+
+        VkImageMemoryBarrier mem_barrier{};
+        VkImageBlit blit{};
+        mem_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        mem_barrier.image = image;
+        mem_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        mem_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        mem_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        mem_barrier.subresourceRange.baseArrayLayer = 0;
+        mem_barrier.subresourceRange.layerCount = 1;
+        mem_barrier.subresourceRange.levelCount = 1;
+
+        deng_i32_t mip_width = width;
+        deng_i32_t mip_height = height;
+        deng_ui32_t index;
+        for(index = 1; index < mip_levels; index++) {
+            mem_barrier.subresourceRange.baseMipLevel = index - 1;
+            mem_barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            mem_barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            mem_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            mem_barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+            // Record pipeline barrier
+            vkCmdPipelineBarrier (
+                cmd_buf,
+                VK_PIPELINE_STAGE_TRANSFER_BIT,
+                VK_PIPELINE_STAGE_TRANSFER_BIT,
+                0,
+                0,
+                NULL,
+                0,
+                NULL,
+                1,
+                &mem_barrier
+            );
+
+            blit.srcOffsets[0] = {0, 0, 0};
+            blit.srcOffsets[1] = {mip_width, mip_height, 1};
+            blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            blit.srcSubresource.baseArrayLayer = 0;
+            blit.srcSubresource.mipLevel = index - 1;
+            blit.srcSubresource.layerCount = 1;
+            blit.dstOffsets[0] = {0, 0, 0};
+            blit.dstOffsets[1] = {mip_width > 1 ? mip_width / 2 : 1, mip_height > 1 ? mip_height / 2 : 1, 1};
+            blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            blit.dstSubresource.baseArrayLayer = 0;
+            blit.dstSubresource.mipLevel = index;
+            blit.dstSubresource.layerCount = 1;
+
+            vkCmdBlitImage (
+                cmd_buf,
+                image,
+                VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                image, 
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                1,
+                &blit,
+                VK_FILTER_LINEAR
+            );
+
+            mem_barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            mem_barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            mem_barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            mem_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+            vkCmdPipelineBarrier (
+                cmd_buf,
+                VK_PIPELINE_STAGE_TRANSFER_BIT,
+                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                0,
+                0,
+                NULL,
+                0,
+                NULL,
+                1,
+                &mem_barrier
+            );
+
+            if(mip_width > 1) mip_width /= 2;
+            if(mip_height > 1) mip_height /= 2;
+        }
+
+        // Final mip level transitioning
+        mem_barrier.subresourceRange.baseMipLevel = mip_levels - 1;
+        mem_barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        mem_barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        mem_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        mem_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        vkCmdPipelineBarrier (
+            cmd_buf,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+            0,
+            0,
+            NULL,
+            0,
+            NULL,
+            1,
+            &mem_barrier
+        );
+
+        CommandBufferRecorder::endCommandBufferSingleCommand (
+            device,
+            g_queue,
+            cmd_pool,
+            &cmd_buf
+        );
+    }
+
+
     /* Create image buffers for every texture */
     void ResourceAllocator::mkTextureImages (
         VkDevice device, 
         VkPhysicalDevice gpu, 
-        VkCommandPool command_pool, 
+        VkCommandPool command_pool,
+        bool is_lf_supported, 
         VkQueue g_queue, 
         size_t sc_img_size
     ) {
         size_t index;
         VkMemoryRequirements memory_requirements;
+        deng_ui32_t mip_levels = 0;
 
         // Iterate through assets an check if it is texture mapped
-        LOG("tex_c: " + std::to_string(m_p_textures->size()));
         for(index = 0; index < m_p_textures->size(); index++) {
-            printf("TEX ID: %s\n", (*m_p_textures)[index].texture.id);
             (*m_p_textures)[index].descriptor_sets.resize(sc_img_size);
+            if(is_lf_supported) {
+                mip_levels = (deng_i32_t) floor (
+                    log2 (
+                        std::max (
+                            (*m_p_textures)[index].texture.pixel_data.width, 
+                            (*m_p_textures)[index].texture.pixel_data.height
+                        )
+                    )
+                ) + 1;
+            }
             
+            else mip_levels = 1;
+
             // Create new staging buffer and allocate memory for it
             memory_requirements = BufferCreator::makeBuffer (
                 device, 
@@ -1268,7 +1598,6 @@ namespace deng {
                 &m_buffer_data.staging_buffer
             );
 
-            LOG("pixel_c: " + std::to_string((*m_p_textures)[index].texture.pixel_data.size));
             BufferCreator::allocateMemory (
                 device, 
                 gpu, 
@@ -1293,21 +1622,27 @@ namespace deng {
             );
 
             // Create new image and populate the memory for it
-            BufferCreator::makeImage (
+            memory_requirements = BufferCreator::makeImage (
                 device, 
                 gpu, 
                 (*m_p_textures)[index].image, 
                 (deng_ui32_t) (*m_p_textures)[index].texture.pixel_data.width, 
-                (deng_ui32_t) (*m_p_textures)[index].texture.pixel_data.height, 
+                (deng_ui32_t) (*m_p_textures)[index].texture.pixel_data.height,
+                mip_levels, 
                 VK_FORMAT_B8G8R8A8_SRGB, 
                 VK_IMAGE_TILING_OPTIMAL, 
                 VK_IMAGE_USAGE_SAMPLED_BIT | 
-                VK_IMAGE_USAGE_TRANSFER_DST_BIT
+                VK_IMAGE_USAGE_TRANSFER_DST_BIT | 
+                VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+                VK_SAMPLE_COUNT_1_BIT
             );
+
+            LOG("WIDTH: " + std::to_string((*m_p_textures)[index].texture.pixel_data.width));
+            LOG("HEIGHT: " + std::to_string((*m_p_textures)[index].texture.pixel_data.height));
             BufferCreator::allocateMemory (
                 device, 
                 gpu, 
-                (*m_p_textures)[index].texture.pixel_data.size,
+                memory_requirements.size,
                 &(*m_p_textures)[index].image_mem,  
                 memory_requirements.memoryTypeBits, 
                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
@@ -1327,7 +1662,8 @@ namespace deng {
                 g_queue, 
                 VK_FORMAT_B8G8R8A8_SRGB, 
                 VK_IMAGE_LAYOUT_UNDEFINED, 
-                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                mip_levels
             );
             BufferCreator::copyBufferToImage (
                 device, 
@@ -1338,16 +1674,33 @@ namespace deng {
                 (*m_p_textures)[index].texture.pixel_data.width, 
                 (*m_p_textures)[index].texture.pixel_data.height
             );
-            BufferCreator::transitionImageLayout (
-                device, 
-                (*m_p_textures)[index].image, 
-                command_pool, 
-                g_queue, 
-                VK_FORMAT_B8G8R8A8_SRGB, 
-                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            );
-            
+
+            // Additional mipmap enable / disable flags should be implemented
+            if(is_lf_supported) {
+                mkMipMaps (
+                    device,
+                    command_pool,
+                    (*m_p_textures)[index].image,
+                    g_queue,
+                    (deng_i32_t) (*m_p_textures)[index].texture.pixel_data.width,
+                    (deng_i32_t) (*m_p_textures)[index].texture.pixel_data.height,
+                    mip_levels
+                );
+            }
+
+            else {
+                BufferCreator::transitionImageLayout (
+                    device,
+                    (*m_p_textures)[index].image,
+                    command_pool,
+                    g_queue,
+                    VK_FORMAT_B8G8R8_SRGB,
+                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                    mip_levels
+                );
+            }
+
             // Clean the staging buffer
             vkDestroyBuffer (
                 device, 
@@ -1363,7 +1716,8 @@ namespace deng {
             VkImageViewCreateInfo viewinfo = BufferCreator::getImageViewInfo (
                 (*m_p_textures)[index].image, 
                 VK_FORMAT_B8G8R8A8_SRGB, 
-                VK_IMAGE_ASPECT_COLOR_BIT
+                VK_IMAGE_ASPECT_COLOR_BIT,
+                mip_levels
             );
             
             if
@@ -1375,6 +1729,13 @@ namespace deng {
                     &(*m_p_textures)[index].image_view
                 ) != VK_SUCCESS
             ) VK_RES_ERR("Failed to create texture image view!");
+
+            // Create texture sampler for every texture
+            mkTextureSampler (
+                device, 
+                (*m_p_textures)[index].sampler,
+                mip_levels
+            );
 
             LOG("Successfully created texture image view!");
         }
@@ -1398,7 +1759,7 @@ namespace deng {
 
         // Count total amount of bytes needed to allocate for assets 
         for(l_index = 0; l_index < m_p_assets->size(); l_index++) {
-            LOG("Counting bytes of model: " + std::string((*m_p_assets)[l_index].name));
+            LOG("Counting bytes of model: " + std::string((*m_p_assets)[l_index].id));
             
             if((*m_p_assets)[l_index].is_shown) {
                 (*m_p_assets)[l_index].vertices.memory_offset = total_size;
@@ -1431,9 +1792,9 @@ namespace deng {
                 (*m_p_assets)[l_index].indices.memory_offset = total_size;
                 total_size += (*m_p_assets)[l_index].indices.size * sizeof(deng_ui32_t);
             }
-            LOG("Vertices offset for asset " + std::string((*m_p_assets)[l_index].name) + ": " + 
+            LOG("Vertices offset for asset " + std::string((*m_p_assets)[l_index].id) + ": " + 
             std::to_string((*m_p_assets)[l_index].vertices.memory_offset));
-            LOG("Indices offset for asset " + std::string((*m_p_assets)[l_index].name) + ": " +
+            LOG("Indices offset for asset " + std::string((*m_p_assets)[l_index].id) + ": " +
             std::to_string((*m_p_assets)[l_index].indices.memory_offset));
         }
 
@@ -1680,12 +2041,13 @@ namespace deng {
 
     /* ResourceAllocator class getters */
     BufferData ResourceAllocator::getBD() { return m_buffer_data; }
-    VkSampler ResourceAllocator::getSamp() { return m_tex_sampler; }
     std::vector<VkFramebuffer> ResourceAllocator::getFB() { return m_framebuffers; }
     VkImage ResourceAllocator::getDepImg() { return m_depth_image; }
     VkDeviceMemory ResourceAllocator::getDepImgMem() { return m_depth_image_mem; }
     VkImageView ResourceAllocator::getDepImgView() { return m_depth_image_view; }
-
+    VkImage ResourceAllocator::getColorImg() { return m_color_image; }
+    VkDeviceMemory ResourceAllocator::getColorImgMem() { return m_color_image_mem; }
+    VkImageView ResourceAllocator::getColorImgView() { return m_color_image_view; }
 
 
     /********** DrawCaller class methods **********/
@@ -1864,7 +2226,7 @@ namespace deng {
                 // Iterate through every asset and submit a draw call
                 for(r_index = 0; r_index < m_p_assets->size(); r_index++) {
                     if((*m_p_assets)[r_index].is_shown) {
-                        LOG("Creating command buffers for asset: " + std::string((*m_p_assets)[r_index].name));
+                        LOG("Creating command buffers for asset: " + std::string((*m_p_assets)[r_index].id));
                         vkCmdBindVertexBuffers (
                             (*m_p_commandbuffers)[l_index], 
                             0, 
@@ -1913,7 +2275,7 @@ namespace deng {
                                 *m_pl_data[TM3D_I].p_pipeline_layout, 
                                 0, 
                                 1,
-                                &findTextureImageDataByID((*m_p_assets)[r_index].id).descriptor_sets[l_index], 
+                                &findTextureImageDataByID((*m_p_assets)[r_index].tex_id).descriptor_sets[l_index], 
                                 0, 
                                 nullptr
                             );                    
@@ -2018,7 +2380,6 @@ namespace deng {
     /*********************************************/
     /*********************************************/
 
-
     /* Submit assets for drawing */
     void Renderer::submitAssets (
         deng_Asset *assets, 
@@ -2101,7 +2462,6 @@ namespace deng {
 
             // Create new asset for text box
             m_assets[asset_index].asset_mode = DENG_ASSET_MODE_2D_TEXTURE_MAPPED;
-            m_assets[asset_index].name = id_str;
             m_assets[asset_index].description = (char*) rend_strs[l_index].text;
             m_assets[asset_index].id = id_str;
             m_assets[asset_index].is_shown = true;
@@ -2122,21 +2482,98 @@ namespace deng {
     }
 
     /* Set renderer hints */
-    void Renderer::setHints(deng_RendererHintBits hints) {
+    void Renderer::setHints (
+        deng_RendererHintBits hints,
+        WindowWrap *p_win
+    ) {
         // Check if VSync should be enabled
-        if((hints & DENG_RENDERER_HINT_ENABLE_VSYNC) == DENG_RENDERER_HINT_ENABLE_VSYNC)
+        if(hints & DENG_RENDERER_HINT_ENABLE_VSYNC)
             m_enable_vsync = true;
         else m_enable_vsync = false;
 
         // Check if FPS counter should be enabled
-        if((hints & DENG_RENDERER_HINT_SHOW_FPS_COUNTER) == DENG_RENDERER_HINT_SHOW_FPS_COUNTER)
+        if(hints & DENG_RENDERER_HINT_SHOW_FPS_COUNTER)
             m_count_fps = true;
         else m_count_fps = false;
 
         // Check if Vulkan validation layers should be enabled
-        if((hints & DENG_RENDERER_HINT_ENABLE_VALIDATION_LAYERS) == DENG_RENDERER_HINT_ENABLE_VALIDATION_LAYERS)
+        if(hints & DENG_RENDERER_HINT_ENABLE_VALIDATION_LAYERS)
             m_enable_validation_layers = true;
         else m_enable_validation_layers = false;
+
+        m_p_ic = new InstanceCreator (
+            p_win,
+            m_enable_validation_layers
+        );
+
+        // Check for MSAA related flags
+        if(hints & DENG_RENDERER_HINT_MSAA_MAX_HARDWARE_SUPPORTED)
+            m_msaa_sample_count = m_p_ic->getMaxSampleCount();
+        if
+        (
+            (hints & DENG_RENDERER_HINT_MSAA_64) && 
+            m_p_ic->getMaxSampleCount() >= VK_SAMPLE_COUNT_64_BIT
+        ) m_msaa_sample_count = VK_SAMPLE_COUNT_64_BIT;
+        else if
+        (
+            (hints & DENG_RENDERER_HINT_MSAA_64) &&
+            m_p_ic->getMaxSampleCount() < VK_SAMPLE_COUNT_64_BIT
+        ) m_msaa_sample_count = m_p_ic->getMaxSampleCount();
+
+        if
+        (
+            (hints & DENG_RENDERER_HINT_MSAA_32) &&
+            m_p_ic->getMaxSampleCount() >= VK_SAMPLE_COUNT_32_BIT
+        ) m_msaa_sample_count = VK_SAMPLE_COUNT_32_BIT;
+        else if
+        (
+            (hints & DENG_RENDERER_HINT_MSAA_32) &&
+            m_p_ic->getMaxSampleCount() < VK_SAMPLE_COUNT_32_BIT
+        ) m_msaa_sample_count = m_p_ic->getMaxSampleCount();
+
+        if
+        (
+            (hints & DENG_RENDERER_HINT_MSAA_16) &&
+            m_p_ic->getMaxSampleCount() >= VK_SAMPLE_COUNT_16_BIT
+        ) m_msaa_sample_count = VK_SAMPLE_COUNT_16_BIT;
+        else if
+        (
+            (hints & DENG_RENDERER_HINT_MSAA_16) &&
+            m_p_ic->getMaxSampleCount() < VK_SAMPLE_COUNT_16_BIT
+        ) m_msaa_sample_count = m_p_ic->getMaxSampleCount();
+
+        if
+        (
+            (hints & DENG_RENDERER_HINT_MSAA_8) &&
+            m_p_ic->getMaxSampleCount() >= VK_SAMPLE_COUNT_8_BIT
+        ) m_msaa_sample_count = VK_SAMPLE_COUNT_8_BIT;
+        else if
+        (
+            (hints & DENG_RENDERER_HINT_MSAA_8) &&
+            m_p_ic->getMaxSampleCount() < VK_SAMPLE_COUNT_8_BIT
+        ) m_msaa_sample_count = m_p_ic->getMaxSampleCount();
+
+        if 
+        (
+            (hints & DENG_RENDERER_HINT_MSAA_4) &&
+            m_p_ic->getMaxSampleCount() >= VK_SAMPLE_COUNT_4_BIT
+        ) m_msaa_sample_count = VK_SAMPLE_COUNT_4_BIT;
+        else if
+        (
+            (hints & DENG_RENDERER_HINT_MSAA_4) &&
+            m_p_ic->getMaxSampleCount() < VK_SAMPLE_COUNT_4_BIT
+        ) m_msaa_sample_count = m_p_ic->getMaxSampleCount();
+
+        if
+        (
+            (hints & DENG_RENDERER_HINT_MSAA_2) &&
+            m_p_ic->getMaxSampleCount() >= VK_SAMPLE_COUNT_2_BIT
+        ) m_msaa_sample_count = VK_SAMPLE_COUNT_2_BIT;
+        else if
+        (
+            (hints & DENG_RENDERER_HINT_MSAA_2) &&
+            m_p_ic->getMaxSampleCount() < VK_SAMPLE_COUNT_2_BIT
+        ) m_msaa_sample_count = m_p_ic->getMaxSampleCount();
     }
 
 
@@ -2168,23 +2605,23 @@ namespace deng {
 
         m_p_ev = new dengMath::Events(m_p_ww, m_p_camera);
 
-        // Create new renderer creator objects
-        m_p_ic = new InstanceCreator(m_p_ww, m_enable_validation_layers);
-
         m_p_scc = new SwapChainCreator (
             m_p_ic->getDev(),
             m_p_ww, 
             m_p_ic->getGpu(), 
             m_p_ic->getSu(), 
-            m_p_ic->getQFF()
+            m_p_ic->getQFF(),
+            m_msaa_sample_count
         );
 
         m_p_ra = new ResourceAllocator (
             m_p_ic->getDev(), 
             m_p_ic->getGpu(), 
             m_p_scc->getExt(), 
+            m_msaa_sample_count,
             m_p_scc->getRp(), 
-            m_p_scc->getSCImgViews()
+            m_p_scc->getSCImgViews(),
+            m_p_scc->getSF()
         );
 
         m_p_dc = new DrawCaller (
@@ -2200,7 +2637,8 @@ namespace deng {
             m_p_scc->getRp(), 
             &m_assets, 
             &m_textures, 
-            m_p_scc->getSCImg().size()
+            m_p_scc->getSCImg().size(),
+            m_msaa_sample_count
         );
 
         
@@ -2238,8 +2676,10 @@ namespace deng {
                 m_p_ic->getDev(),
                 m_p_ic->getGpu(),
                 m_p_scc->getExt(),
+                m_msaa_sample_count,
                 m_p_scc->getRp(),
-                m_p_scc->getSCImgViews()
+                m_p_scc->getSCImgViews(),
+                m_p_scc->getSF()
             );
 
             ev_info.p_ra->setAssetsData (
@@ -2284,6 +2724,7 @@ namespace deng {
             m_p_ic->getDev(), 
             m_p_ic->getGpu(), 
             *m_p_dc->getComPool(), 
+            m_p_ic->getLFSupport(),
             m_p_ic->getQFF().graphics_queue, 
             m_p_scc->getSCImg().size()
         );
@@ -2305,7 +2746,6 @@ namespace deng {
         m_p_desc_c->mkTexMappedDS (
             m_p_ic->getDev(), 
             m_p_scc->getSCImg().size(), 
-            m_p_ra->getSamp(), 
             m_p_ra->getBD()
         );
 
@@ -2554,12 +2994,12 @@ namespace deng {
         delete m_p_scc;
 
         // Clean texture images
-        vkDestroySampler (
-            m_p_ic->getDev(), 
-            m_p_ra->getSamp(), 
-            nullptr
-        );
         for(index = 0; index < m_textures.size(); index++) {
+            vkDestroySampler (
+                m_p_ic->getDev(),
+                m_textures[index].sampler, 
+                nullptr
+            );
             vkDestroyImageView (
                 m_p_ic->getDev(), 
                 m_textures[index].image_view, 
@@ -2615,6 +3055,23 @@ namespace deng {
         vkFreeMemory (
             m_p_ic->getDev(), 
             m_p_ra->getDepImgMem(), 
+            nullptr
+        );
+
+        // Clean color image resources
+        vkDestroyImageView (
+            m_p_ic->getDev(),
+            m_p_ra->getColorImgView(),
+            nullptr
+        );
+        vkDestroyImage (
+            m_p_ic->getDev(),
+            m_p_ra->getColorImg(),
+            nullptr
+        );
+        vkFreeMemory (
+            m_p_ic->getDev(),
+            m_p_ra->getColorImgMem(),
             nullptr
         );
 

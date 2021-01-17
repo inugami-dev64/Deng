@@ -154,6 +154,12 @@ namespace dengMath {
             return ((2.0f / static_cast<float>(window_size.second)) * static_cast<float>(pixel_size));
             break;
 
+        case DENG_COORD_AXIS_UNDEFINED: {
+            deng_ui32_t avg_size = (window_size.first + window_size.second) / 2;
+            return ((2.0f / static_cast<float>(avg_size)) * static_cast<float>(pixel_size));   
+            break;
+        }
+
         default:
             break;
         }

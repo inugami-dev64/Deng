@@ -109,17 +109,14 @@ typedef enum deng_AssetMode {
 
 /* Main asset struct */
 typedef struct deng_Asset {
-    char *name;
     char *id;
+    char *tex_id;
     char *description;
     deng_ui64_t time_point; 
     deng_AssetMode asset_mode;
     deng_ui8_t is_shown;
     deng_VertDynamic vertices;
     deng_IndicesDynamic indices;
-    
-    // For fragment shader
-    deng_ObjColorData solid_fill_color;
 } deng_Asset;
 
 

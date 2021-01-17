@@ -35,7 +35,7 @@ namespace dengui {
         {
         case ELEMENT_COLOR_MODE_UNMAPPED:
             // printf("MOUSE: %f, %f\n", point.first, point.second);
-            for(l_index = 0; l_index < p_elem->unmapped_vert.size(); l_index++) {
+            for(l_index = 0; l_index < p_elem->base_vert_size; l_index++) {
                 r_index = l_index + 1;
                 if(r_index == p_elem->unmapped_vert.size()) r_index = 0;
 
@@ -53,7 +53,7 @@ namespace dengui {
             break;
 
         case ELEMENT_COLOR_MODE_TEXTURE_MAPPED:
-            for(l_index = 0; l_index < p_elem->mapped_vert.size(); l_index++) {
+            for(l_index = 0; l_index < p_elem->base_vert_size; l_index++) {
                 r_index = l_index + 1;
                 if(r_index == p_elem->mapped_vert.size()) r_index = 0;
 
@@ -277,7 +277,6 @@ namespace dengui {
 
             // Base asset information
             (*m_info.p_assets)[l_index].id = elems[r_index].asset_id;
-            (*m_info.p_assets)[l_index].name = elems[r_index].asset_id;
             (*m_info.p_assets)[l_index].is_shown = elems[r_index].is_visible;
             (*m_info.p_assets)[l_index].indices.size = elems[r_index].indices.size();
 
@@ -315,7 +314,7 @@ namespace dengui {
                     elems[r_index].texture.size()
                 );
 
-
+                (*m_info.p_assets)[l_index].tex_id = elems[r_index].asset_id;
                 (*m_info.p_assets)[l_index].asset_mode = DENG_ASSET_MODE_2D_TEXTURE_MAPPED;
                 (*m_info.p_assets)[l_index].vertices.size = elems[r_index].mapped_vert.size();
 

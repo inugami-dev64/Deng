@@ -10,11 +10,21 @@ namespace deng {
         // Count total amount of supported extensions  
         LOG("Finding support for extension " + std::string(p_extenstion_name));
         deng_ui32_t extension_count;
-        vkEnumerateDeviceExtensionProperties(gpu, nullptr, &extension_count, nullptr);
+        vkEnumerateDeviceExtensionProperties (
+            gpu, 
+            nullptr, 
+            &extension_count, 
+            nullptr
+        );
         
         // Get extensions by names
         std::vector<VkExtensionProperties> all_extensions(extension_count);
-        vkEnumerateDeviceExtensionProperties(gpu, nullptr, &extension_count, all_extensions.data());
+        vkEnumerateDeviceExtensionProperties (
+            gpu, 
+            nullptr, 
+            &extension_count, 
+            all_extensions.data()
+        );
         
         // Iterate through all extension to find matching extension
         for(VkExtensionProperties &extension : all_extensions) {
@@ -40,7 +50,10 @@ namespace deng {
         // Get all device memory properties
         VkPhysicalDeviceMemoryProperties memory_properties;
         
-        vkGetPhysicalDeviceMemoryProperties(*p_gpu, &memory_properties);
+        vkGetPhysicalDeviceMemoryProperties (
+            *p_gpu, 
+            &memory_properties
+        );
 
         for(deng_ui32_t index = 0; index < memory_properties.memoryTypeCount; index++) {
             if(type_filter & (1 << index) && (memory_properties.memoryTypes[index].propertyFlags & properties)) {
@@ -62,8 +75,15 @@ namespace deng {
         VkPhysicalDeviceFeatures device_features;
         VkPhysicalDeviceProperties device_properties;
 
-        vkGetPhysicalDeviceProperties(*p_gpu, &device_properties);
-        vkGetPhysicalDeviceFeatures(*p_gpu, &device_features);
+        vkGetPhysicalDeviceProperties (
+            *p_gpu, 
+            &device_properties
+        );
+        
+        vkGetPhysicalDeviceFeatures (
+            *p_gpu, 
+            &device_features
+        );
 
         if(device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) score += 1000;
         
@@ -300,6 +320,7 @@ namespace deng {
         VkPrimitiveTopology primitive_topology, 
         bool add_depth_stencil, 
         bool add_color_blend, 
+        VkSampleCountFlagBits sample_c,
         deng_ui32_t subpass_index
     ) {
         FILE *file;
@@ -404,7 +425,7 @@ namespace deng {
         /* Set up multisampling createinfo */
         m_multisample_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         m_multisample_createinfo.sampleShadingEnable = VK_FALSE;
-        m_multisample_createinfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+        m_multisample_createinfo.rasterizationSamples = sample_c;
 
         /* Set colorblend options */
         m_colorblend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
@@ -523,8 +544,11 @@ namespace deng {
     std::vector<VkSurfaceFormatKHR> SwapChainDetails::getFormats() { return m_formats; }
     std::vector<VkPresentModeKHR> SwapChainDetails::getPresentModes() { return m_present_modes; }
 
-
+    /****************************************/
+    /****************************************/
     /********* BufferCreator struct *********/
+    /****************************************/
+    /****************************************/
 
     /* Generic memory allocation method */
     void BufferCreator::allocateMemory (
@@ -556,9 +580,11 @@ namespace deng {
         VkImage &image, 
         deng_ui32_t width, 
         deng_ui32_t height, 
+        deng_ui32_t mip_levels,
         VkFormat format, 
         VkImageTiling tiling, 
-        VkImageUsageFlags usage
+        VkImageUsageFlags usage,
+        VkSampleCountFlagBits sample_c
     ) {
         // Set up image createinfo
         VkImageCreateInfo image_createInfo{};
@@ -567,13 +593,13 @@ namespace deng {
         image_createInfo.extent.width = width;
         image_createInfo.extent.height = height;
         image_createInfo.extent.depth = 1;
-        image_createInfo.mipLevels = 1;
+        image_createInfo.mipLevels = mip_levels;
         image_createInfo.arrayLayers = 1;
         image_createInfo.format = format;
         image_createInfo.tiling = tiling;
         image_createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         image_createInfo.usage = usage;
-        image_createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        image_createInfo.samples = sample_c;
         image_createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         // Create image
@@ -595,8 +621,9 @@ namespace deng {
     /* Returns image filled view createinfo struct */
     VkImageViewCreateInfo BufferCreator::getImageViewInfo (
         VkImage &image, 
-        const VkFormat &format, 
-        const VkImageAspectFlags &aspect_flags
+        VkFormat format, 
+        VkImageAspectFlags aspect_flags,
+        deng_ui32_t mip_levels
     ) {
         VkImageViewCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -606,7 +633,7 @@ namespace deng {
 
         createInfo.subresourceRange.aspectMask = aspect_flags;
         createInfo.subresourceRange.baseMipLevel = 0;
-        createInfo.subresourceRange.levelCount = 1;
+        createInfo.subresourceRange.levelCount = mip_levels;
         createInfo.subresourceRange.baseArrayLayer = 0;
         createInfo.subresourceRange.layerCount = 1;
         return createInfo;
@@ -621,7 +648,8 @@ namespace deng {
         VkQueue g_queue, 
         VkFormat format, 
         VkImageLayout old_layout, 
-        VkImageLayout new_layout
+        VkImageLayout new_layout,
+        deng_ui32_t mip_levels
     ) {
         // Begin recording commandbuffer
         VkCommandBuffer tmp_commandbuffer;
@@ -641,7 +669,7 @@ namespace deng {
         memory_barrier.image = image;
         memory_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         memory_barrier.subresourceRange.baseMipLevel = 0;
-        memory_barrier.subresourceRange.levelCount = 1;
+        memory_barrier.subresourceRange.levelCount = mip_levels;
         memory_barrier.subresourceRange.baseArrayLayer = 0;
         memory_barrier.subresourceRange.layerCount = 1;
 

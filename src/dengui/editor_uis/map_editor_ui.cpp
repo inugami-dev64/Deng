@@ -18,6 +18,7 @@ namespace dengui {
         wi.pos = {0.0f, 0.0f};
         wi.size = {0.6f, 1.0f};
         wi.wt = DENG_MAP_UI_MAIN_WINDOW_TYPE;
+        wi.border = DENG_MAP_UI_BORDER;
 
         beginWindow (
             &m_p_main_win,

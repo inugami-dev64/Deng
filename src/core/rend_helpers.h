@@ -23,6 +23,7 @@ namespace deng {
         deng_Texture texture;
         VkImage image;
         VkImageView image_view;
+        VkSampler sampler;
         VkDeviceMemory image_mem;
         std::vector<VkDescriptorSet> descriptor_sets;
     };
@@ -51,8 +52,9 @@ namespace deng {
     struct BufferCreator {
         static VkImageViewCreateInfo getImageViewInfo (
             VkImage &image, 
-            const VkFormat &format, 
-            const VkImageAspectFlags &aspect_flags
+            VkFormat format, 
+            VkImageAspectFlags aspect_flags,
+            deng_ui32_t mip_levels
         );
 
         static void allocateMemory (
@@ -71,9 +73,11 @@ namespace deng {
             VkImage &image, 
             deng_ui32_t width, 
             deng_ui32_t height, 
+            deng_ui32_t mip_levels,
             VkFormat format, 
             VkImageTiling tiling, 
-            VkImageUsageFlags usage
+            VkImageUsageFlags usage,
+            VkSampleCountFlagBits sample_c
         );
         static void transitionImageLayout (
             VkDevice device, 
@@ -82,7 +86,8 @@ namespace deng {
             VkQueue g_queue, 
             VkFormat format, 
             VkImageLayout old_layout, 
-            VkImageLayout new_layout
+            VkImageLayout new_layout,
+            deng_ui32_t mip_levels
         ); 
         static void copyBufferToImage (
             VkDevice device, 
@@ -227,6 +232,7 @@ namespace deng {
             VkPrimitiveTopology primitive_topology, 
             bool add_depth_stencil, 
             bool add_color_blend, 
+            VkSampleCountFlagBits sample_c,
             deng_ui32_t subpass_index
         );
     };

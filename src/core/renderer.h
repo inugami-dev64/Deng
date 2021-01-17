@@ -27,7 +27,8 @@ namespace deng {
         #define TEXTURE_MAPPED_VERT_SHADER_2D       "shaders/bin/2d_tex_mapped_vert.spv"
         #define TEXTURE_MAPPED_FRAG_SHADER_2D       "shaders/bin/2d_tex_mapped_frag.spv"
     #endif
-    
+
+
     /* Struct for storing all Vulkan instance objects */
     struct VulkanInstanceInfo {
         QueueFamilyFinder m_qff;
@@ -43,6 +44,7 @@ namespace deng {
         VkSwapchainKHR m_swapchain;
         VkPresentModeKHR m_present_mode;
         VkExtent2D m_extent;
+        VkFormat m_format;
         VkSurfaceFormatKHR m_surface_format;
         std::vector<VkImage> m_swapchain_images;
         std::vector<VkImageView> m_swapchain_image_views;
@@ -70,7 +72,11 @@ namespace deng {
         VkDeviceMemory m_depth_image_mem;
         VkImageView m_depth_image_view;
 
-        VkSampler m_tex_sampler;
+        VkSampleCountFlagBits m_sample_count;
+        VkImage m_color_image;
+        VkDeviceMemory m_color_image_mem;
+        VkImageView m_color_image_view;
+
         BufferData m_buffer_data;
     };
 
@@ -79,13 +85,18 @@ namespace deng {
      * creating logical device and creating new instance for Vulkan */
     class InstanceCreator : private VulkanInstanceInfo, private VulkanDeviceInfo {
     private:
+        // Supported device properties flags
+        bool m_tex_linear_filtering_support;
+
         // Required vulkan extensions
         std::vector<const char*> m_required_extension_names;
+        VkSampleCountFlagBits m_max_sample_count;
         const char *m_p_validation_layer = "VK_LAYER_KHRONOS_validation";
 
     private:
         void mkInstance(bool &enable_validation_layers);
         bool checkValidationLayerSupport();
+        void findSupportedProperties();
         void mkDebugMessenger();
         void selectPhysicalDevice();
         void mkLogicalDevice(bool &enable_validation_layers);
@@ -110,8 +121,10 @@ namespace deng {
         );
 
     public:
+        bool getLFSupport();
         VkInstance getIns();
         VkDevice getDev();
+        VkSampleCountFlagBits getMaxSampleCount();
         VkPhysicalDevice getGpu();
         VkSurfaceKHR getSu();
         QueueFamilyFinder getQFF();
@@ -123,6 +136,7 @@ namespace deng {
     class SwapChainCreator : private VulkanSwapChainInfo, private VulkanDeviceInfo {
     private:
         QueueFamilyFinder m_qff;
+        VkSampleCountFlagBits m_msaa_sample_c;
     
     private:
         void mkSwapChainSettings();
@@ -141,7 +155,8 @@ namespace deng {
             WindowWrap *p_win,
             VkPhysicalDevice gpu, 
             VkSurfaceKHR surface, 
-            QueueFamilyFinder qff
+            QueueFamilyFinder qff,
+            VkSampleCountFlagBits sample_c
         );
         ~SwapChainCreator();
         
@@ -157,6 +172,7 @@ namespace deng {
         VkRenderPass getRp();
         VkExtent2D getExt();
         VkSwapchainKHR getSC();
+        VkFormat getSF();
         std::vector<VkImage> getSCImg();
         std::vector<VkImageView> getSCImgViews();
     };  
@@ -175,7 +191,8 @@ namespace deng {
         void mkGraphicsPipelines (
             VkDevice &device, 
             VkExtent2D &extent, 
-            VkRenderPass &renderpass
+            VkRenderPass &renderpass,
+            VkSampleCountFlagBits sample_c
         );
         void mkDescriptorPools (
             VkDevice &device, 
@@ -189,7 +206,8 @@ namespace deng {
             VkRenderPass renderpass, 
             std::vector<deng_Asset> *p_assets, 
             std::vector<TextureImageData> *p_textures, 
-            size_t sc_img_size
+            size_t sc_img_size,
+            VkSampleCountFlagBits sample_c
         );
         
         void mkUnmappedDS (
@@ -201,7 +219,6 @@ namespace deng {
         void mkTexMappedDS (
             VkDevice device, 
             size_t sc_img_size, 
-            VkSampler tex_sampler, 
             BufferData buffer_data
         );
 
@@ -232,18 +249,36 @@ namespace deng {
             VkPhysicalDevice &gpu, 
             size_t sc_img_size
         );
-
-        void mkTextureSampler(VkDevice &device);
+        void mkTextureSampler (
+            VkDevice &device,
+            VkSampler &sampler,
+            deng_ui32_t mip_levels
+        );
         void mkFrameBuffers (
             VkDevice &device, 
             VkRenderPass &renderpass, 
             VkExtent2D &extent, 
             std::vector<VkImageView> &sc_img_views
         );
+        void mkColorResources (
+            VkDevice &device,
+            VkPhysicalDevice &gpu,
+            VkExtent2D &extent,
+            VkFormat sc_color_format
+        );
         void mkDepthResources (
             VkDevice &device, 
             VkPhysicalDevice &gpu, 
             VkExtent2D &extent
+        );
+        void mkMipMaps (
+            VkDevice &device,
+            VkCommandPool &cmd_pool,
+            VkImage image,
+            VkQueue g_queue,
+            deng_i32_t width,
+            deng_i32_t height,
+            deng_ui32_t mip_levels
         );
         
     public:
@@ -251,8 +286,10 @@ namespace deng {
             VkDevice device, 
             VkPhysicalDevice gpu, 
             VkExtent2D extent, 
+            VkSampleCountFlagBits sample_c,
             VkRenderPass renderpass, 
-            std::vector<VkImageView> sc_img_views
+            std::vector<VkImageView> sc_img_views,
+            VkFormat sc_color_format
         );
         
         void setAssetsData (
@@ -263,7 +300,8 @@ namespace deng {
         void mkTextureImages (
             VkDevice device, 
             VkPhysicalDevice gpu, 
-            VkCommandPool command_pool, 
+            VkCommandPool command_pool,
+            bool is_lf_supported, 
             VkQueue g_queue, 
             size_t sc_img_size
         );
@@ -298,11 +336,13 @@ namespace deng {
         
     public:
         BufferData getBD();
-        VkSampler getSamp();
         std::vector<VkFramebuffer> getFB();
         VkImage getDepImg();
         VkDeviceMemory getDepImgMem();
         VkImageView getDepImgView();
+        VkImage getColorImg();
+        VkDeviceMemory getColorImgMem();
+        VkImageView getColorImgView();
     };
 
 
@@ -386,6 +426,7 @@ namespace deng {
         bool m_enable_vsync;
         bool m_enable_validation_layers;
         bool m_count_fps;
+        VkSampleCountFlagBits m_msaa_sample_count = VK_SAMPLE_COUNT_1_BIT;
         dengMath::vec3<float> m_clear_color;
 
         // View distance settings
@@ -433,7 +474,10 @@ namespace deng {
             size_t size
         );
 
-        void setHints(deng_RendererHintBits hints);
+        void setHints (
+            deng_RendererHintBits hints,
+            WindowWrap *p_win
+        );
         void initRenderer (
             WindowWrap *p_ww, 
             deng_RendererUsageMode usage, 

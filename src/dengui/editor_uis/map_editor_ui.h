@@ -25,7 +25,7 @@
     #define DENG_MAP_UI_TERTIARY_COLOR          DENGUI_DEFAULT_TERTIARY_COLOR
 
     // Default border mode
-    #define DENG_MAP_UI_BORDER                  dengui::WINDOW_BORDER_LIGHT
+    #define DENG_MAP_UI_BORDER                  dengui::WINDOW_BORDER_MEDIUM
 #endif
 
 namespace dengui {

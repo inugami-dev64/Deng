@@ -54,12 +54,12 @@ namespace dengui {
     };
 
 
-    /* Specify window border thickness */ 
+    /* Specify window border thickness (px) */
     enum WindowBorder {
         WINDOW_BORDER_NONE      = 0,
-        WINDOW_BORDER_LIGHT     = 1,
-        WINDOW_BORDER_MEDIUM    = 2,
-        WINDOW_BORDER_HEAVY     = 3    
+        WINDOW_BORDER_LIGHT     = 2,
+        WINDOW_BORDER_MEDIUM    = 4,
+        WINDOW_BORDER_HEAVY     = 7    
     };
 
 
@@ -100,13 +100,6 @@ namespace dengui {
     };
 
     
-    /* Menubar object specifications */
-    struct MenubarElement {
-        std::string m_title;
-        DropDownMenu m_menu;
-    };
-
-
     /* Struct to share between main thread and ui event thread */
     struct WindowElement {
         std::string child_id;
@@ -121,6 +114,8 @@ namespace dengui {
         void (*onScrUpFunc)(WindowElement*, Events*);
         void (*onScrDownFunc)(WindowElement*, Events*);
         ElementColorMode color_mode;
+        deng_i32_t base_vert_size;
+        deng_i32_t base_indices_size;
         std::vector<VERT_UNMAPPED_2D> unmapped_vert;
         std::vector<VERT_MAPPED_2D> mapped_vert;
         std::vector<deng_ui32_t> indices;
@@ -133,6 +128,7 @@ namespace dengui {
     struct WindowInfo {
         std::string id;
         WindowType wt;
+        WindowBorder border;
         denguiWindowFlagBits fl_b;
         dengMath::vec4<float> pc;
         dengMath::vec4<float> sc;
