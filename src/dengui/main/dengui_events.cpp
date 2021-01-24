@@ -35,12 +35,12 @@ namespace dengui {
         {
         case ELEMENT_COLOR_MODE_UNMAPPED:
             // printf("MOUSE: %f, %f\n", point.first, point.second);
-            for(l_index = 0; l_index < p_elem->base_vert_size; l_index++) {
+            for(l_index = 0; l_index < (size_t) p_elem->base_vert_size; l_index++) {
                 r_index = l_index + 1;
                 if(r_index == p_elem->unmapped_vert.size()) r_index = 0;
 
-                vc = *(dengMath::vec2<float>*) &p_elem->unmapped_vert[l_index].vert_data;
-                vn = *(dengMath::vec2<float>*) &p_elem->unmapped_vert[r_index].vert_data;
+                vc = *(dengMath::vec2<deng_vec_t>*) &p_elem->unmapped_vert[l_index].vert_data;
+                vn = *(dengMath::vec2<deng_vec_t>*) &p_elem->unmapped_vert[r_index].vert_data;
 
                 if
                 (
@@ -53,7 +53,7 @@ namespace dengui {
             break;
 
         case ELEMENT_COLOR_MODE_TEXTURE_MAPPED:
-            for(l_index = 0; l_index < p_elem->base_vert_size; l_index++) {
+            for(l_index = 0; l_index < (size_t) p_elem->base_vert_size; l_index++) {
                 r_index = l_index + 1;
                 if(r_index == p_elem->mapped_vert.size()) r_index = 0;
 

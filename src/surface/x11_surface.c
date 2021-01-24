@@ -404,7 +404,7 @@ void deng_SetMouseCursorMode (
 ) {
     switch(mouse_mode) 
     {
-        case DENG_MOUSE_MODE_VIRTUAL:
+    case DENG_MOUSE_MODE_VIRTUAL:
         __SetCursor (
             p_window, 
             DENG_CURSOR_HIDDEN, 

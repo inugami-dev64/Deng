@@ -1,13 +1,23 @@
 #include "dam.h"
 
 /* Count years recursively */
-deng_ui16_t damCountYears(deng_i64_t *p_time, deng_ui16_t years, int n, int *p_is_leap_year) {
+deng_ui16_t damCountYears (
+    deng_i64_t *p_time, 
+    deng_ui16_t years, 
+    int n, 
+    int *p_is_leap_year
+) {
     if(n < 3 && (*p_time) - SECONDS_PER_YEAR >= 0) {
         n++;
         years++;
         (*p_time) -= SECONDS_PER_YEAR;
         *p_is_leap_year = false;
-        return damCountYears(p_time, years, n, p_is_leap_year);
+        return damCountYears (
+            p_time, 
+            years, 
+            n, 
+            p_is_leap_year
+        );
     }
     
     else if((*p_time) - SECONDS_PER_LEAP_YEAR >= 0) {
@@ -15,7 +25,12 @@ deng_ui16_t damCountYears(deng_i64_t *p_time, deng_ui16_t years, int n, int *p_i
         (*p_time) -= SECONDS_PER_LEAP_YEAR;
         n = 0;
         *p_is_leap_year = true;
-        return damCountYears(p_time, years, n, p_is_leap_year);
+        return damCountYears (
+            p_time, 
+            years, 
+            n, 
+            p_is_leap_year
+        );
     }
 
     return years;
@@ -114,8 +129,9 @@ void damFormatDate(char *date, char *time, deng_i64_t time_from_epoch) {
 /* Read local repository paths */
 void damReadLocalRepoConf(char ***ppp_repo_path, size_t *p_repo_count, int *p_write_repo_id) {
     size_t l_index, r_index;
+    size_t res = 0;
     int is_default_found = false;
-    int is_white_space_handled;
+    int is_white_space_handled = false;
 
     FILE *file = fopen(repo_conf_path, "rb");
     // Create new config file if not created
@@ -143,7 +159,7 @@ void damReadLocalRepoConf(char ***ppp_repo_path, size_t *p_repo_count, int *p_wr
 
     // Find the new line positions in config file
     while(ftell(file) < file_size) {
-        fread(&ch, 1, 1, file);
+        res = fread(&ch, 1, 1, file);
         if(ch == 0x0A) {
             (*p_repo_count)++;
             p_new_line_position = (long*) realloc(p_new_line_position, (*p_repo_count) * sizeof(long));
@@ -163,7 +179,7 @@ void damReadLocalRepoConf(char ***ppp_repo_path, size_t *p_repo_count, int *p_wr
         is_white_space_handled = false;
         (*ppp_repo_path)[l_index] = (char*) calloc((size_t) (p_new_line_position[l_index] - ftell(file)), sizeof(char));
 
-        fread((*ppp_repo_path)[l_index], sizeof(char), p_new_line_position[l_index] - ftell(file), file);
+        res = fread((*ppp_repo_path)[l_index], sizeof(char), p_new_line_position[l_index] - ftell(file), file);
         fseek(file, 1L, SEEK_CUR);
         
         // Find whitespace
@@ -474,6 +490,7 @@ void damListLocalRepos(char **pp_repo_paths, size_t repo_count, int default_id) 
 /* Assemble name and description to asset file */
 void damAssetAssemblyCaller(deng_Asset *p_asset, char **repo_paths, int repo_id) {
     size_t index;
+    char *res = 0;
     char *total_file_name;
     char file_name_buffer[24];
     char name_buffer[24];
@@ -485,11 +502,11 @@ void damAssetAssemblyCaller(deng_Asset *p_asset, char **repo_paths, int repo_id)
     
     // Get user input for name and description
     printf("Enter the file name (without .das): ");
-    fgets(file_name_buffer, 24, stdin);
+    res = fgets(file_name_buffer, 24, stdin);
     printf("Enter descriptive file name: ");
-    fgets(name_buffer, 24, stdin);
+    res = fgets(name_buffer, 24, stdin);
     printf("Add description to the asset: \n");
-    fgets(desc_buffer, 256, stdin);
+    res = fgets(desc_buffer, 256, stdin);
     
     // Remove all newlines
     for(index = 0; index < 24; index++) { 
@@ -520,7 +537,10 @@ void damAssetAssemblyCaller(deng_Asset *p_asset, char **repo_paths, int repo_id)
     p_asset->id = name_buffer;
     p_asset->description = desc_buffer;
 
-    dasAssemble(p_asset, total_file_name);
+    dasAssemble (
+        p_asset, 
+        total_file_name
+    );
     free(p_asset->vertices.p_texture_mapped_vert_data);
     free(p_asset->indices.p_indices);
 

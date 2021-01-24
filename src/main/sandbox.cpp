@@ -14,6 +14,7 @@ int main() {
     rend.setHints (
         DENG_RENDERER_HINT_SHOW_FPS_COUNTER |
         DENG_RENDERER_HINT_MSAA_2 |
+        DENG_RENDERER_HINT_ENABLE_VALIDATION_LAYERS | 
         DENG_RENDERER_HINT_MIPMAP_ENABLE,
         &window
     );

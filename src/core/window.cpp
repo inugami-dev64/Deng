@@ -10,11 +10,18 @@ namespace deng {
         m_title = (char*) title;
         m_pixel_size = {2.0 / static_cast<double>(m_size.first), 2.0 / static_cast<double>(m_size.second)};
         LOG("Pixel size: " + std::to_string(m_pixel_size.first) + "/" + std::to_string(m_pixel_size.second));
-        m_p_game_window = deng_InitVKSurfaceWindow(x, y, m_title, DENG_WINDOW_MODE_FIXED);
+        m_p_game_window = deng_InitVKSurfaceWindow (
+            x, 
+            y, 
+            m_title, 
+            DENG_WINDOW_MODE_FIXED
+        );
     }
 
     WindowWrap::~WindowWrap() {
+        LOG("Free test");
         deng_DestroyWindow(m_p_game_window);
+        LOG("Free test");
     }
 
     deng_SurfaceWindow *WindowWrap::getWindow() {

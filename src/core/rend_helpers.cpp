@@ -320,6 +320,7 @@ namespace deng {
         deng_ui32_t subpass_index
     ) {
         FILE *file;
+        size_t res = 0;
         long file_size;
 
         /* Get vertex shader binary data */
@@ -333,7 +334,7 @@ namespace deng {
         file_size = ftell(file);
         fseek(file, 0, SEEK_SET);
         vert_shader_binary_vector.resize(file_size);
-        fread(vert_shader_binary_vector.data(), sizeof(char), file_size, file);
+        res = fread(vert_shader_binary_vector.data(), sizeof(char), file_size, file);
         fclose(file);
 
         /* Get frag shader binary data */
@@ -347,7 +348,7 @@ namespace deng {
         file_size = ftell(file);
         fseek(file, 0, SEEK_SET);
         frag_shader_binary_vector.resize(file_size);
-        fread(frag_shader_binary_vector.data(), sizeof(char), file_size, file);
+        res = fread(frag_shader_binary_vector.data(), sizeof(char), file_size, file);
 
         /* Call shader module handler */
         m_shader_modules[0] = getShaderModule(vert_shader_binary_vector);

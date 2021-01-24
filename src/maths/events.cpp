@@ -65,8 +65,11 @@ namespace dengMath {
             getMovementType();
             m_p_camera->setCameraViewRotation();
 
-            if(m_input_mode_change_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && 
-            deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_ESCAPE)) {
+            if
+            (
+                m_input_mode_change_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && 
+                deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_ESCAPE)
+            ) {
 
                 #if CAMERA_MOUSE_DEBUG
                     LOG("frozen_mouse_position x:" + std::to_string(m_frozen_mouse_position.first) + "/" + std::to_string(m_frozen_mouse_position.second));
@@ -89,8 +92,8 @@ namespace dengMath {
                 deng_IsKeyActive (
                     m_p_window_wrap->getWindow(), 
                     DENG_KEY_ESCAPE
-                    )
-                ) {
+                )
+            ) {
                 m_p_camera->setMousePosition(m_frozen_mouse_position);
                 m_p_window_wrap->setInputMode(DENG_INPUT_MOVEMENT);
                 m_input_mode_change_timer.setNewTimePoint();

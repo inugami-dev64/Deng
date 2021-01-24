@@ -396,8 +396,8 @@ void dasLoadModel(deng_Asset *p_asset, const char *file_name) {
 /* OBJ file format */
 // Read vertices information from the file
  void dasLoadOBJmodelVertices(deng_ObjVertData **pp_vert_data, size_t *p_vert_size, deng_ObjTextureData **pp_texture_data, size_t *p_tex_size, long file_size) {
-    size_t index;
-    size_t res;
+    size_t index = 0;
+    size_t res = 0;
     printf("Loading vertices...\n");
     unsigned char prev_tmp = 0x00, tmp = 0x00, next_tmp = 0x00;
     char x_buffer[12], y_buffer[12], z_buffer[12];
@@ -424,7 +424,7 @@ void dasLoadModel(deng_Asset *p_asset, const char *file_name) {
             if(tmp != 0x20) x_buffer[index] = tmp;
         }
 
-        while(tmp == 0x20) fread(&tmp, sizeof(tmp), 1, file);
+        while(tmp == 0x20) res = fread(&tmp, sizeof(tmp), 1, file);
 
         /* Get y coordinate data */
         y_buffer[0] = tmp;
@@ -433,7 +433,7 @@ void dasLoadModel(deng_Asset *p_asset, const char *file_name) {
             if(tmp != 0x20) y_buffer[index] = tmp;
         }
 
-        while(tmp == 0x20) fread(&tmp, sizeof(tmp), 1, file);
+        while(tmp == 0x20) res = fread(&tmp, sizeof(tmp), 1, file);
 
         /* Get z coordinate data */
         z_buffer[0] = tmp;
@@ -450,7 +450,10 @@ void dasLoadModel(deng_Asset *p_asset, const char *file_name) {
         res = fread(&next_tmp, sizeof(next_tmp), 1, file);
 
         (*p_vert_size)++;
-        *pp_vert_data = (deng_ObjVertData*) realloc(*pp_vert_data, (*p_vert_size) * sizeof(deng_ObjVertData));
+        *pp_vert_data = (deng_ObjVertData*) realloc (
+            *pp_vert_data, 
+            (*p_vert_size) * sizeof(deng_ObjVertData)
+        );
         cm_CheckMemoryAlloc(*pp_vert_data);
         (*pp_vert_data)[(*p_vert_size) - 1] = (deng_ObjVertData) {(float) atof(x_buffer), (float) atof(y_buffer), (float) atof(z_buffer)};
 
@@ -469,39 +472,43 @@ void dasLoadModel(deng_Asset *p_asset, const char *file_name) {
         /* Get x coordinate data */
         fseek(file, 1L, SEEK_CUR);
         for(index = 0; tmp != 0x20; index++) {
-            fread(&tmp, sizeof(tmp), 1, file);
+            res = fread(&tmp, sizeof(tmp), 1, file);
             if(tmp != 0x20) x_buffer[index] = tmp;
         }
 
-        while(tmp == 0x20) fread(&tmp, sizeof(tmp), 1, file);
+        while(tmp == 0x20) 
+            res = fread(&tmp, sizeof(tmp), 1, file);
 
         /* Get y coordinate data */
         y_buffer[0] = tmp;
         for(index = 1; tmp != 0x0A && ftell(file) < file_size; index++) {
-            fread(&tmp, sizeof(tmp), 1, file);
+            res = fread(&tmp, sizeof(tmp), 1, file);
             if(tmp != 0x0A) y_buffer[index] = tmp;
         }
 
         while(tmp == 0x0A) {
             prev_tmp = tmp;
-            fread(&tmp, sizeof(tmp), 1, file);
+            res = fread(&tmp, sizeof(tmp), 1, file);
         }
 
-        fread(&next_tmp, sizeof(next_tmp), 1, file);
+        res = fread(&next_tmp, sizeof(next_tmp), 1, file);
 
         (*p_tex_size)++;
-        *pp_texture_data = (deng_ObjTextureData*) realloc(*pp_texture_data, (*p_tex_size) * sizeof(deng_ObjTextureData));
+        *pp_texture_data = (deng_ObjTextureData*) realloc (
+            *pp_texture_data, 
+            (*p_tex_size) * sizeof(deng_ObjTextureData)
+        );
         cm_CheckMemoryAlloc(*pp_texture_data);
         (*pp_texture_data)[(*p_tex_size) - 1] = (deng_ObjTextureData) {(float) atof(x_buffer), (float) atof(y_buffer)}; 
         
         dasCleanCharBuffer(x_buffer, 12);
         dasCleanCharBuffer(y_buffer, 12);
     }
+
     if(!res) {
         printf("Failed to read texture vertex data from file\n");
         exit(-1);
     }
-
     // Position of object's file stream as right now is at the beginning of vertex normals reading 
 }
 

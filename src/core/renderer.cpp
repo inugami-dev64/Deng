@@ -1,4 +1,3 @@
-#include <vulkan/vulkan_core.h>
 #define __DENG_API_CORE
 #include "api_core.h"
 
@@ -323,6 +322,25 @@ namespace deng {
         }
     }   
 
+    
+    /* Destroy debug messenger */
+    void InstanceCreator::destroyDebugUtils (
+        VkInstance instance,
+        VkDebugUtilsMessengerEXT messenger
+    ) {
+        auto messengerDestroyer = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr (
+            instance,
+            "vkDestroyDebugUtilsMessengerExt"
+        );
+
+        if(messengerDestroyer)
+            messengerDestroyer (
+                instance,
+                messenger,
+                nullptr
+            );
+    }
+
 
 
     /* InstanceCreator getter methods */
@@ -640,7 +658,6 @@ namespace deng {
 
 
     SwapChainCreator::~SwapChainCreator() {
-        SCCleanup();
         delete m_p_sc_details;
     }
 
@@ -2794,7 +2811,7 @@ namespace deng {
             makeFrame();
             m_frame_mut.unlock();
         }
-
+        
         vkDeviceWaitIdle(m_p_ic->getDev());
         cleanup();
     }
@@ -2946,11 +2963,13 @@ namespace deng {
             m_p_scc->getRp(), 
             nullptr
         );
+
         vkDestroyDescriptorPool (
             m_p_ic->getDev(), 
             m_p_desc_c->getUnmappedDP(), 
             nullptr
         );
+
         vkDestroyDescriptorPool (
             m_p_ic->getDev(), 
             m_p_desc_c->getTexMappedDP(), 
@@ -2992,7 +3011,22 @@ namespace deng {
             m_p_desc_c->getTexMappedDSL(), 
             nullptr
         );
+        
+        // Clean ubo buffer data 
+        for(index = 0; index < m_p_ra->getBD().mat_uniform_buffers.size(); index++) {
+            vkDestroyBuffer (
+                m_p_ic->getDev(), 
+                m_p_ra->getBD().mat_uniform_buffers[index], 
+                nullptr
+            );
 
+            vkFreeMemory (
+                m_p_ic->getDev(), 
+                m_p_ra->getBD().mat_uniform_buffer_mem[index], 
+                nullptr
+            );
+        }
+        
         // Clean main buffer data
         vkDestroyBuffer (
             m_p_ic->getDev(), 
@@ -3040,6 +3074,7 @@ namespace deng {
         );
 
         // Clean semaphores and fences
+        LOG("Thread test");
         for(index = 0; index < DENG_MAX_FRAMES_IN_FLIGHT; index++) {
             vkDestroySemaphore (
                 m_p_ic->getDev(), 
@@ -3057,42 +3092,53 @@ namespace deng {
                 nullptr
             );
         }
+    
+        // Destroy swapchain
+        LOG("Thread test");
+        //m_p_scc->SCCleanup();
 
         // Clean instance and devices
+        LOG("Thread test1");
         vkDestroyDevice (
             m_p_ic->getDev(), 
             nullptr
         );
 
+        if(m_enable_validation_layers)
+            InstanceCreator::destroyDebugUtils (
+                m_p_ic->getIns(), 
+                m_p_ic->getDMEXT()
+            );
+
+        LOG("Thread test");
         vkDestroySurfaceKHR (
             m_p_ic->getIns(), 
             m_p_ic->getSu(), 
             nullptr
         );
-        auto mes_fun = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr (
-            m_p_ic->getIns(), 
-            "vkDestroyDebugUtilsMessengerEXT"
-        );
-        if(mes_fun) 
-            mes_fun(m_p_ic->getIns(), m_p_ic->getDMEXT(), nullptr);
 
+        
+        LOG("Thread test");
         vkDestroyInstance (
             m_p_ic->getIns(), 
             nullptr
         );
+
+
+        LOG("Thread test");
         
         // Free memory from all renderer creator class instances
-        //if(m_p_ic)
-            //delete m_p_ic;
-        //if(m_p_scc)
-            //delete m_p_scc;
-        //if(m_p_desc_c)
-            //delete m_p_desc_c;
-        //if(m_p_ra)
-            //delete m_p_ra;
-        //if(m_p_dc)
-            //delete m_p_dc;
-        //if(m_p_sr)
-            //delete m_p_sr;
+        if(m_p_ic)
+            delete m_p_ic;
+        if(m_p_scc)
+            delete m_p_scc;
+        if(m_p_desc_c)
+            delete m_p_desc_c;
+        if(m_p_ra)
+            delete m_p_ra;
+        if(m_p_dc)
+            delete m_p_dc;
+        if(m_p_sr)
+            delete m_p_sr;
     }
 } 

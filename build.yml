@@ -2,17 +2,17 @@ import:
   windows: 
     - modules/freetype2/build.yml
 premake:
-  cc: gcc 
-  cxx: g++ 
+  cc: gcc
+  cxx: g++
   cc_flags: 
-    - Wall 
+    - Wall
     - m64
-    - g 
+    - O3
   cxx_flags: 
-    - Wall 
+    - Wall
     - m64 
     - std=c++11
-    - g
+    - O3
   include_path:
     linux:
       - "/usr/include/freetype2"
@@ -53,11 +53,8 @@ tasks:
       - common/common.c
       - das/das_handler.c
       - das/data_loader.c
-  
-  libsurface:
-    type: static_lib
-    - surface/key_translation.c
-    - surface/key_vector.c
-    - surface/vulkan_handler.c
-    linux: surface/x11_surface.c
-    windows: surface/win32_surface.c
+      - surface/key_translation.c
+      - surface/key_vector.c
+      - surface/vulkan_handler.c
+      linux: surface/x11_surface.c
+      windows: surface/win32_surface.c

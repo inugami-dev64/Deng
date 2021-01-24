@@ -1,6 +1,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
+#include <vulkan/vulkan_core.h>
 namespace deng {
 
     #ifdef __DENG_API_CORE
@@ -106,7 +107,7 @@ namespace deng {
         VkResult mkDebugMessenger (
             const VkDebugUtilsMessengerCreateInfoEXT *p_messenger_createinfo
         );
-        
+
         static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback (
             VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, 
             VkDebugUtilsMessageTypeFlagsEXT message_type, 
@@ -118,6 +119,11 @@ namespace deng {
         InstanceCreator (
             WindowWrap *p_window_wrap, 
             bool enable_validation_layers
+        );
+
+        static void destroyDebugUtils (
+            VkInstance instance,
+            VkDebugUtilsMessengerEXT messenger
         );
 
     public:
@@ -147,7 +153,6 @@ namespace deng {
         );
         void mkRenderPass();
         void mkSCImageViews();
-        void SCCleanup();
     
     public:
         SwapChainCreator (
@@ -159,7 +164,8 @@ namespace deng {
             VkSampleCountFlagBits sample_c
         );
         ~SwapChainCreator();
-        
+        void SCCleanup();
+
         /* System that checks for window resizing should be made */
         void remkSwapChain (
             VkDevice device,

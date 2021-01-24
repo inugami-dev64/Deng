@@ -3,8 +3,8 @@ import:
   windows: 
     - modules/freetype2/build.yml
 premake:
-  cc: gcc 
-  cxx: g++ 
+  cc: gcc
+  cxx: g++
   cc_flags: 
     - Wall 
     - m64

@@ -1,5 +1,5 @@
-#include "deng_key_definitions.h"
 #include "deng_surface_core.h"
+#include "deng_key_definitions.h"
 
 void deng_InitKeyData(deng_SurfaceWindow *p_window) {
     p_window->active_keys.key_count = 0;
