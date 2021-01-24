@@ -1,6 +1,5 @@
+#include "deng_key_definitions.h"
 #include "deng_surface_core.h"
-
-LRESULT CALLBACK win32_message_handler(HWND hwnd, UINT msg, WPARAM param, LPARAM lparam);
 
 static deng_Key recent_press_key;
 static deng_Key recent_release_key;
@@ -14,8 +13,13 @@ static bool_t is_exit = false;
 static bool_t is_window_deleted = false;
 static size_t key_index;
 
-deng_SurfaceWindow *deng_InitVKSurfaceWindow(int width, int height, char *title, deng_SurfaceWindowMode window_mode) {
-    deng_SurfaceWindow *p_window = malloc(sizeof(deng_SurfaceWindow));
+deng_SurfaceWindow *deng_InitVKSurfaceWindow (
+    int width, 
+    int height, 
+    char *title, 
+    deng_SurfaceWindowMode window_mode
+) {
+    deng_SurfaceWindow *p_window = (deng_SurfaceWindow*) malloc(sizeof(deng_SurfaceWindow));
 
     p_window->width = width;
     p_window->height = height;
@@ -48,9 +52,7 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow(int width, int height, char *title,
     p_window->released_keys.p_btn = (deng_MouseButton*) malloc(sizeof(deng_MouseButton));
 
     RegisterClass(p_window->win32_handler.p_window);
-
     LPCTSTR win_class = DENG_WIN32_CLASS_NAME;
-
     DWORD window_style;
 
     switch (window_mode)
@@ -152,8 +154,15 @@ LRESULT CALLBACK win32_message_handler(HWND hwnd, UINT msg, WPARAM wparam, LPARA
 }
 
 void deng_UpdateWindow(deng_SurfaceWindow *p_window) {
-    deng_CleanKeyEvents(p_window, KB_KEY | MOUSE_BUTTON, RELEASE_KEYS);
-    ShowWindow(*p_window->win32_handler.p_hwnd, SW_NORMAL);
+    deng_CleanKeyEvents (
+        p_window, 
+        KB_KEY | MOUSE_BUTTON, 
+        RELEASE_KEYS
+    );
+    ShowWindow (
+        *p_window->win32_handler.p_hwnd, 
+        SW_NORMAL
+    );
 
     while(PeekMessageW(p_window->win32_handler.p_message, NULL, 0, 0, PM_REMOVE)) {
         TranslateMessage(p_window->win32_handler.p_message);
@@ -170,7 +179,11 @@ void deng_UpdateWindow(deng_SurfaceWindow *p_window) {
     usleep(DENG_REFRESH_INTERVAL);
 }
 
-void deng_SetMouseCoords(deng_SurfaceWindow *p_window, int x, int y) {
+void deng_SetMouseCoords (
+    deng_SurfaceWindow *p_window, 
+    int x, 
+    int y
+) {
     SetCursorPos(x, y);
     if(!p_window->virtual_mouse_position.is_enabled) {
         p_window->win32_handler.mouse_x_pos = (LONG) x;
@@ -178,8 +191,13 @@ void deng_SetMouseCoords(deng_SurfaceWindow *p_window, int x, int y) {
     }
 }
 
-void deng_SetMouseCursorMode(deng_SurfaceWindow *p_window, int mouse_mode) {
-    if(mouse_mode & DENG_HIDE_CURSOR) {
+void deng_SetMouseCursorMode (
+    deng_SurfaceWindow *p_window, 
+    deng_MouseMode mouse_mode
+) {
+    switch(mouse_mode) 
+    {
+    case DENG_MOUSE_MODE_VIRTUAL:
         ShowCursor(false);
         p_window->virtual_mouse_position.is_enabled = false;
 
@@ -189,19 +207,29 @@ void deng_SetMouseCursorMode(deng_SurfaceWindow *p_window, int mouse_mode) {
         p_window->virtual_mouse_position.y = y;
 
         p_window->virtual_mouse_position.is_enabled = true;
-    }
+        break;
 
-    if(mouse_mode & DENG_SHOW_CURSOR) {
+    case DENG_MOUSE_MODE_CURSOR_VISIBLE:
         ShowCursor(true);
         p_window->virtual_mouse_position.is_enabled = false;
+        break;
     }
 }
 
-void deng_GetMousePos(deng_SurfaceWindow *p_window, float *p_x, float *p_y, bool_t init_virtual_cursor) {
+void deng_GetMousePos (
+    deng_SurfaceWindow *p_window, 
+    float *p_x, 
+    float *p_y, 
+    bool_t init_virtual_cursor
+) {
     POINT point;
     RECT rect;
 
-    if(GetCursorPos(&point) && GetWindowRect(*p_window->win32_handler.p_hwnd, &rect)) {
+    if
+    (
+        GetCursorPos(&point) && 
+        GetWindowRect(*p_window->win32_handler.p_hwnd, &rect)
+    ) {
         p_window->virtual_mouse_position.orig_x = (float) (rect.left + (LONG) (p_window->width / 2));
         p_window->virtual_mouse_position.orig_y = (float) (rect.top + (LONG) (p_window->height / 2));
     }
@@ -210,8 +238,17 @@ void deng_GetMousePos(deng_SurfaceWindow *p_window, float *p_x, float *p_y, bool
         p_window->virtual_mouse_position.movement_x = ((float) point.x) - p_window->virtual_mouse_position.orig_x;
         p_window->virtual_mouse_position.movement_y = ((float) point.y) - p_window->virtual_mouse_position.orig_y;
 
-        if((point.x - rect.left) != p_window->virtual_mouse_position.orig_x || (point.y - rect.top) != p_window->virtual_mouse_position.orig_y)
-            deng_SetMouseCoords(p_window, p_window->virtual_mouse_position.orig_x, p_window->virtual_mouse_position.orig_y);
+        if
+        (
+            (point.x - rect.left) != p_window->virtual_mouse_position.orig_x || 
+            (point.y - rect.top) != p_window->virtual_mouse_position.orig_y
+        ) {
+            deng_SetMouseCoords (
+                p_window, 
+                p_window->virtual_mouse_position.orig_x, 
+                p_window->virtual_mouse_position.orig_y
+            );
+        }
 
         p_window->virtual_mouse_position.x += p_window->virtual_mouse_position.movement_x;
         p_window->virtual_mouse_position.y += p_window->virtual_mouse_position.movement_y;
@@ -223,8 +260,13 @@ void deng_GetMousePos(deng_SurfaceWindow *p_window, float *p_x, float *p_y, bool
     else {
         *p_x = (float) p_window->win32_handler.mouse_x_pos;
         *p_y = (float) p_window->win32_handler.mouse_y_pos;
-        if(init_virtual_cursor)
-            deng_SetMouseCoords(p_window, p_window->virtual_mouse_position.orig_x, p_window->virtual_mouse_position.orig_y);
+        if(init_virtual_cursor) {
+            deng_SetMouseCoords (
+                p_window, 
+                p_window->virtual_mouse_position.orig_x, 
+                p_window->virtual_mouse_position.orig_y
+            );
+        }
     }
 
 }

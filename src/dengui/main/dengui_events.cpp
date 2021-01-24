@@ -1,4 +1,4 @@
-#include "../../core/api_core.h"
+#include "../../core/api_core.h" 
 
 extern dengui::MouseInputInfo ext_mii;
 
@@ -404,7 +404,6 @@ namespace dengui {
 
     /* Allocate new resources according to the window element changes and previous assets */
     void Events::allocateNewResources() {
-        LOG("Creating new command buffers");
         m_info.p_dc->mkCommandPool(m_info.device);
         
         m_info.p_ra->mkBuffers (
@@ -422,8 +421,6 @@ namespace dengui {
             m_info.background,
             m_info.p_ra->getBD()
         );
-
-        LOG("Done making new command buffers");
     }
 
 

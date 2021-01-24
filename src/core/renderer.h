@@ -229,6 +229,8 @@ namespace deng {
 
     public:
         std::array<PipelineData, DENG_PIPELINE_COUNT> getPipelines();
+        VkPipelineLayout getUnmappedPL();
+        VkPipelineLayout getTexMappedPL();
         std::vector<VkDescriptorSet> *getUnmappedDS();
         VkDescriptorSetLayout getUnmappedDSL();
         VkDescriptorSetLayout getTexMappedDSL();

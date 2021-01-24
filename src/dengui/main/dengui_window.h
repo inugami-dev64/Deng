@@ -1,6 +1,7 @@
 #ifndef DENGUI_WINDOW_H
 #define DENGUI_WINDOW_H
 
+#include <vector>
 typedef deng_ui32_t WindowID;
 // In pixels
 #define DENGUI_LIGHT_BORDER_THICKNESS       1
@@ -29,7 +30,7 @@ typedef deng_ui32_t WindowID;
 // Default window parametres
 #define DENGUI_TITLEBAR_HEIGHT              0.05f
 #define DENGUI_TITLEBAR_ELEM_MARGIN         0.005f
-#define DENGUI_DEFAULT_FONT_FILE            "SourceCodePro-Regular.otf"
+#define DENGUI_DEFAULT_FONT_FILE            "SourceCodePro-Regular.ttf"
 
 // Main window element ids
 #define DENGUI_FORM_ID                      "form"
@@ -161,50 +162,15 @@ namespace dengui {
             dengMath::vec2<deng_ui32_t> &window_bounds
         );
 
-        // Add generic unmapped rectangle to window vertices using absolute positions
-        void addAbsUnmappedRec (
-            dengMath::vec2<float> pos, 
-            dengMath::vec2<float> size, 
-            RectangleOrigin rec_origin,
-            deng_ObjColorData color,
-            std::vector<VERT_UNMAPPED_2D> &vert,
-            std::vector<deng_ui32_t> &indices
-        );
-
-        // Add generic unmapped rectangle to window vertices using relative positions
-        void addRelUnmappedRec (
-            dengMath::vec2<float> pos,
-            dengMath::vec2<float> size,
-            bool is_abs_height,
-            RectangleOrigin rec_origin,
-            deng_ObjColorData color,
-            std::array<deng_ObjVertData2D, 4> &form_vert,
-            std::vector<VERT_UNMAPPED_2D> &vert,
-            std::vector<deng_ui32_t> &indices
-        );
-
-        // Add generic triangle object to window
-        void addGenTriangle (
-            dengMath::vec2<float> pos,
-            dengMath::vec2<float> surrond_rec_size,
-            std::array<dengMath::vec2<float>, 3> rel_rec_coords,
-            bool is_abs_size,
-            RectangleOrigin rec_origin,
-            deng_ObjColorData color,
-            std::array<deng_ObjVertData2D, 4> &form_vert,
-            std::vector<VERT_UNMAPPED_2D> &vert,
-            std::vector<deng_ui32_t> &indices
-        );
-
         // Add text object to window according to its relative position
         void addRelText (
-            dengMath::vec2<float> pos,
-            float text_size,
+            dengMath::vec2<deng_vec_t> pos,
+            deng_vec_t text_size,
             dengMath::vec2<deng_ui32_t> draw_bounds,
             RectangleOrigin rec_origin,
             dengUtils::BitmapStr text,
             dengMath::vec3<unsigned char> color,
-            std::array<deng_ObjVertData2D, 4> &form_vert,
+            VERT_UNMAPPED_2D *form_vert,
             std::vector<VERT_MAPPED_2D> &vert,
             std::vector<deng_ui32_t> &indices,
             std::vector<deng_ui8_t> &tex,
@@ -237,35 +203,34 @@ namespace dengui {
         WindowType m_wt;
     
     private:    
-        std::array<deng_ObjVertData2D, 4> mkForm(WindowInfo *p_wi);
+        void mkForm(WindowInfo *p_wi);
         
         void mkTitlebar (
             WindowInfo *p_wi, 
-            std::array<deng_ObjVertData2D, 4> form_vert
+            VERT_UNMAPPED_2D *form_vert
         );
 
         void mkTitle (
             WindowInfo *p_wi,
             dengMath::vec2<deng_ui32_t> deng_win_bounds,
-            std::array<deng_ObjVertData2D, 4> form_vert,
-            dengMath::vec3<unsigned char> color
-        );
+            VERT_UNMAPPED_2D *form_vert,
+            dengMath::vec3<unsigned char> color);
         
         void mkMinimiseTriangle (
             WindowInfo *p_wi, 
-            std::array<deng_ObjVertData2D, 4> form_vert
+            VERT_UNMAPPED_2D *form_vert
         );
         
         void mkMaximiseTriangle (
             WindowInfo *p_wi,
-            std::array<deng_ObjVertData2D, 4> form_vert
+            VERT_UNMAPPED_2D *form_vert
         );
 
         void mkClose (
             dengMath::vec4<deng_vec_t> color,
             dengMath::vec2<deng_ui32_t> deng_win_bounds,
             std::string parent,
-            std::array<deng_ObjVertData2D, 4> form_vert
+            VERT_UNMAPPED_2D *form_vert
         );
 
     // Getters and setters

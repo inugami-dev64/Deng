@@ -66,8 +66,9 @@ namespace dengUtils {
         void mkTextbox (
             BitmapStr &str, 
             deng_px_t text_width,
+            dengMath::vec3<unsigned char> color,
             dengMath::vec2<deng_vec_t> pos,
-            dengMath::vec3<unsigned char> color
+            dengMath::vec2<deng_vec_t> origin
         );
 
     public:
@@ -83,8 +84,9 @@ namespace dengUtils {
             BitmapStr &str,
             const char *font_name,
             deng_ui16_t px_size,
-            dengMath::vec2<float> pos,
-            dengMath::vec3<unsigned char> color
+            dengMath::vec3<unsigned char> color,
+            dengMath::vec2<deng_vec_t> pos,
+            dengMath::vec2<deng_vec_t> origin
         );
         
         /* Create new text box instance from vector size */
@@ -92,8 +94,9 @@ namespace dengUtils {
             BitmapStr &str,
             const char *font_name,
             deng_vec_t vec_size,
-            dengMath::vec2<float> pos,
-            dengMath::vec3<unsigned char> color  
+            dengMath::vec3<unsigned char> color,
+            dengMath::vec2<deng_vec_t> pos,
+            dengMath::vec2<deng_vec_t> origin
         );
 
         /* Check for the width of rasterised textbox */

@@ -1,3 +1,4 @@
+#include "deng_key_definitions.h"
 #include "deng_surface_core.h"
 
 void deng_InitKeyData(deng_SurfaceWindow *p_window) {
@@ -22,7 +23,13 @@ void deng_InitKeyData(deng_SurfaceWindow *p_window) {
     );
 }
 
-void deng_RegisterKeyEvent(deng_SurfaceWindow *p_window, deng_Key *p_key, deng_MouseButton *p_btn, int key_type, int array_type) {
+void deng_RegisterKeyEvent (
+    deng_SurfaceWindow *p_window, 
+    deng_Key *p_key, 
+    deng_MouseButton *p_btn, 
+    int key_type, 
+    int array_type
+) {
     switch (key_type)
     {
     case MOUSE_BUTTON:
@@ -157,7 +164,10 @@ void deng_ClearKeyEvent (
             }   
 
             free(p_window->active_keys.p_btn);
-            p_window->active_keys.p_btn = malloc(p_window->active_keys.btn_count * sizeof(deng_MouseButton));
+            p_window->active_keys.p_btn = (deng_MouseButton*) malloc (
+                p_window->active_keys.btn_count * 
+                sizeof(deng_MouseButton)
+            );
 
             for(l_index = 0; l_index < p_window->active_keys.btn_count; l_index++)
                 p_window->active_keys.p_btn[l_index] = tmp[l_index];
@@ -176,7 +186,10 @@ void deng_ClearKeyEvent (
             }   
 
             free(p_window->released_keys.p_btn);
-            p_window->released_keys.p_btn = malloc(p_window->released_keys.btn_count * sizeof(deng_MouseButton));
+            p_window->released_keys.p_btn = (deng_MouseButton*) malloc (
+                p_window->released_keys.btn_count * 
+                sizeof(deng_MouseButton)
+            );
 
             for(l_index = 0; l_index < p_window->released_keys.btn_count; l_index++)
                 p_window->released_keys.p_btn[l_index] = tmp[l_index];
@@ -198,7 +211,7 @@ void deng_ClearKeyEvent (
             }
 
             free(p_window->active_keys.p_keys);
-            p_window->active_keys.p_keys = malloc (
+            p_window->active_keys.p_keys = (deng_Key*) malloc (
                 p_window->active_keys.key_count * 
                 sizeof(deng_Key)
             );
@@ -221,7 +234,7 @@ void deng_ClearKeyEvent (
             }
 
             free(p_window->released_keys.p_keys);
-            p_window->released_keys.p_keys = malloc (
+            p_window->released_keys.p_keys = (deng_Key*) malloc (
                 p_window->released_keys.key_count * 
                 sizeof(deng_Key)
             );

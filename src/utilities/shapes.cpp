@@ -1,4 +1,5 @@
 #include "../core/api_core.h"
+#include <string>
 
 namespace dengUtils {
 
@@ -236,19 +237,19 @@ namespace dengUtils {
         deng_ui64_t vert_offset = vert.size();
         vert.resize(vert_offset + 4);
 
-        vert[vert_offset].vert_data.vert_x = pos.first + size.first * ((origin.first + 1.0f) / 2);
-        vert[vert_offset].vert_data.vert_y = pos.second + size.second * ((origin.second + 1.0f) / 2);
+        vert[vert_offset].vert_data.vert_x = pos.first - size.first * ((origin.first + 1.0f) / 2);
+        vert[vert_offset].vert_data.vert_y = pos.second - size.second * ((origin.second + 1.0f) / 2);
         vert[vert_offset].color_data = *(deng_ObjColorData*) &color;
 
         vert[vert_offset + 1].vert_data.vert_x = pos.first + size.first * (1.0f - (origin.first + 1.0f) / 2);
-        vert[vert_offset + 1].vert_data.vert_y = pos.second + size.second * ((origin.second + 1.0f) / 2);
+        vert[vert_offset + 1].vert_data.vert_y = pos.second - size.second * ((origin.second + 1.0f) / 2);
         vert[vert_offset + 1].color_data = *(deng_ObjColorData*) &color;
 
         vert[vert_offset + 2].vert_data.vert_x = pos.first + size.first * (1.0f - (origin.first + 1.0f) / 2);
         vert[vert_offset + 2].vert_data.vert_y = pos.second + size.second * (1.0f - (origin.second + 1.0f) / 2);
         vert[vert_offset + 2].color_data = *(deng_ObjColorData*) &color;
 
-        vert[vert_offset + 3].vert_data.vert_x = pos.first + size.first * ((origin.first + 1.0f) / 2);
+        vert[vert_offset + 3].vert_data.vert_x = pos.first - size.first * ((origin.first + 1.0f) / 2);
         vert[vert_offset + 3].vert_data.vert_y = pos.second + size.second * (1.0f - (origin.second + 1.0f) / 2);
         vert[vert_offset + 3].color_data = *(deng_ObjColorData*) &color;
     }
@@ -258,6 +259,7 @@ namespace dengUtils {
     void RectangleGenerator::generateUnmappedRelRec (
         dengMath::vec2<deng_vec_t> pos,
         dengMath::vec2<deng_vec_t> size,
+        deng_bool_t is_abs_size,
         dengMath::vec2<deng_vec_t> origin,
         VERT_UNMAPPED_2D *outer_rec,
         dengMath::vec4<deng_vec_t> color,
@@ -266,23 +268,20 @@ namespace dengUtils {
         dengMath::vec2<deng_vec_t> outer_rec_size;
         outer_rec_size.first = outer_rec[1].vert_data.vert_x - outer_rec[0].vert_data.vert_x;
         outer_rec_size.second = outer_rec[3].vert_data.vert_y - outer_rec[0].vert_data.vert_y;
-
+        
         dengMath::vec2<deng_vec_t> abs_pos;
-        abs_pos.first = (pos.first + 1.0f) * outer_rec_size.first / 2;
-        abs_pos.second = (pos.second + 1.0f) * outer_rec_size.second / 2;
-
-        dengMath::vec2<deng_vec_t> abs_size;
-        abs_size.first = size.first * outer_rec_size.first / 2;
-        abs_size.second = size.second * outer_rec_size.second / 2;
-
-        dengMath::vec2<deng_vec_t> abs_origin;
-        abs_origin.first = (origin.first + 1.0f) * outer_rec_size.first / 2;
-        abs_origin.second = (origin.second + 1.0f) * outer_rec_size.second / 2;
+        abs_pos.first = (pos.first + 1.0f) * outer_rec_size.first / 2 + outer_rec[0].vert_data.vert_x;
+        abs_pos.second = (pos.second + 1.0f) * outer_rec_size.second / 2 + outer_rec[0].vert_data.vert_y;
+        
+        if(!is_abs_size) {
+            size.first = size.first * outer_rec_size.first / 2;
+            size.second = size.second * outer_rec_size.second / 2;
+        }
 
         RectangleGenerator::generateUnmappedAbsRec (
             abs_pos,
-            abs_size,
-            abs_origin,
+            size,
+            origin,
             color,
             vert
         );
@@ -299,20 +298,20 @@ namespace dengUtils {
         deng_ui64_t vert_offset = vert.size();
         vert.resize(vert_offset + 4);
 
-        vert[vert_offset].vert_data.vert_x = pos.first + size.first * ((origin.first + 1.0f) / 2);
-        vert[vert_offset].vert_data.vert_y = pos.second + size.second * ((origin.second + 1.0f) / 2);
+        vert[vert_offset].vert_data.vert_x = pos.first - size.first * ((origin.first + 1.0f) / 2);
+        vert[vert_offset].vert_data.vert_y = pos.second - size.second * ((origin.second + 1.0f) / 2);
         vert[vert_offset].tex_data = {0.0f, 0.0f};
 
         vert[vert_offset + 1].vert_data.vert_x = pos.first + size.first * (1.0f - (origin.first + 1.0f) / 2);
-        vert[vert_offset + 1].vert_data.vert_y = pos.second + size.second * ((origin.second + 1.0f) / 2);
+        vert[vert_offset + 1].vert_data.vert_y = pos.second - size.second * ((origin.second + 1.0f) / 2);
         vert[vert_offset + 1].tex_data = {1.0f, 0.0f};
 
-        vert[vert_offset + 2].vert_data.vert_x = pos.first + size.first + (1.0f - (origin.first + 1.0f) / 2);
-        vert[vert_offset + 2].vert_data.vert_y = pos.second + size.second + (1.0f - (origin.second + 1.0f) / 2);
-        vert[vert_offset + 2].tex_data = {1.0f, 1.0f};
+        vert[vert_offset + 2].vert_data.vert_x = pos.first + size.first * (1.0f - (origin.first + 1.0f) / 2);
+        vert[vert_offset + 2].vert_data.vert_y = pos.second + size.second * (1.0f - (origin.second + 1.0f) / 2);
+        vert[vert_offset + 2].tex_data= {1.0f, 1.0f};
 
-        vert[vert_offset + 3].vert_data.vert_x = pos.first + size.first + ((origin.first + 1.0f) / 2);
-        vert[vert_offset + 3].vert_data.vert_y = pos.second + size.second + (1.0f - (origin.second + 1.0f) / 2);
+        vert[vert_offset + 3].vert_data.vert_x = pos.first - size.first * ((origin.first + 1.0f) / 2);
+        vert[vert_offset + 3].vert_data.vert_y = pos.second + size.second * (1.0f - (origin.second + 1.0f) / 2);
         vert[vert_offset + 3].tex_data = {0.0f, 1.0f};
     }
 
@@ -321,6 +320,7 @@ namespace dengUtils {
     void RectangleGenerator::generateMappedRelRec (
         dengMath::vec2<deng_vec_t> pos,
         dengMath::vec2<deng_vec_t> size,
+        deng_bool_t is_abs_size,
         dengMath::vec2<deng_vec_t> origin,
         VERT_UNMAPPED_2D *outer_rec,
         std::vector<VERT_MAPPED_2D> &vert
@@ -330,21 +330,18 @@ namespace dengUtils {
         outer_rec_size.second = outer_rec[3].vert_data.vert_y - outer_rec[0].vert_data.vert_y;
 
         dengMath::vec2<deng_vec_t> abs_pos;
-        abs_pos.first = (pos.first + 1.0f) * outer_rec_size.first / 2;
-        abs_pos.second = (pos.second + 1.0f) * outer_rec_size.second / 2;
-
-        dengMath::vec2<deng_vec_t> abs_size;
-        abs_size.first = size.first * outer_rec_size.first / 2;
-        abs_size.second = size.second * outer_rec_size.second / 2;
-
-        dengMath::vec2<deng_vec_t> abs_origin;
-        abs_origin.first = (origin.first + 1.0f) * outer_rec_size.first / 2;
-        abs_origin.second = (origin.second + 1.0f) * outer_rec_size.second / 2;
+        abs_pos.first = (pos.first + 1.0f) * outer_rec_size.first / 2 + outer_rec[0].vert_data.vert_x;
+        abs_pos.second = (pos.second + 1.0f) * outer_rec_size.second / 2 + outer_rec[0].vert_data.vert_y;
+        
+        if(!is_abs_size) {
+            size.first = size.first * outer_rec_size.first / 2;
+            size.second = size.second * outer_rec_size.second / 2;
+        }
 
         RectangleGenerator::generateMappedAbsRec (
             abs_pos,
-            abs_size,
-            abs_origin,
+            size,
+            origin,
             vert
         );
     }
@@ -381,22 +378,6 @@ namespace dengUtils {
             m_draw_bounds,
             border_width
         );
-
-        for(int32_t i = 0; i < vert.size(); i++) {
-            LOG (
-                "REC_VERT: " + 
-                std::to_string(vert[i].vert_data.vert_x) + 
-                ", " + 
-                std::to_string(vert[i].vert_data.vert_y)
-            );
-        }
-
-        for(int32_t i = 0; i < indices.size(); i++) {
-            LOG (
-                "REC_INDEX: " +
-                std::to_string(indices[i])
-            );
-        }
 
         return RectangleGenerator::AssetMaker2D::makeUnmappedAsset (
             asset_id,
@@ -435,11 +416,13 @@ namespace dengUtils {
     }
 
 
-    deng_Asset RectangleGenerator::generateUnmappedRelRecAsset (
+    /* Generate unmapped recatngle asset with relative position */
+    deng_Asset RectangleGenerator::makeUnmappedRelRecAsset (
         const char *asset_id,
         const char *asset_desc,
         dengMath::vec2<deng_vec_t> pos,
         dengMath::vec2<deng_vec_t> size,
+        deng_bool_t is_abs_size,
         dengMath::vec2<deng_vec_t> origin,
         dengMath::vec4<deng_vec_t> color,
         VERT_UNMAPPED_2D *outer_rec,
@@ -452,6 +435,7 @@ namespace dengUtils {
         RectangleGenerator::generateUnmappedRelRec (
             pos,
             size,
+            is_abs_size,     
             origin,
             outer_rec,
             color,
@@ -469,6 +453,210 @@ namespace dengUtils {
         );
 
         return RectangleGenerator::AssetMaker2D::makeUnmappedAsset (
+            asset_id,
+            asset_desc,
+            vert,
+            indices
+        );
+    }
+
+
+    /* Generate texture mapped rectangle asset with relative position */
+    deng_Asset RectangleGenerator::makeMappedRelRecAsset (
+        const char *asset_id,
+        const char *tex_id,
+        const char *asset_desc,
+        dengMath::vec2<deng_vec_t> pos,
+        dengMath::vec2<deng_vec_t> size,
+        deng_bool_t is_abs_size,
+        dengMath::vec2<deng_vec_t> origin,
+        dengMath::vec4<deng_vec_t> color,
+        VERT_UNMAPPED_2D *outer_rec
+    ) {
+        std::vector<VERT_MAPPED_2D> vert;
+        std::vector<deng_ui32_t> indices = {0, 1, 2, 2, 3, 0};
+
+        RectangleGenerator::generateMappedRelRec (
+            pos,
+            size,
+            is_abs_size,
+            origin,
+            outer_rec,
+            vert
+        );
+
+        return RectangleGenerator::AssetMaker2D::makeTexMappedAsset (
+            asset_id,
+            tex_id,
+            asset_desc,
+            vert,
+            indices
+        );
+    }
+
+
+    TriangleGenerator::TriangleGenerator (
+        dengMath::vec2<deng_ui32_t> draw_bounds
+    ) { m_draw_bounds = draw_bounds; }
+
+
+    /* Generate triangle from absolute position */
+    void TriangleGenerator::generateAbsTriangle (
+        std::vector<VERT_UNMAPPED_2D> &vert,
+        dengMath::vec2<deng_vec_t> tri_rec_pos,
+        dengMath::vec2<deng_vec_t> tri_rec_size,
+        dengMath::vec2<deng_vec_t> tri_rec_origin,
+        dengMath::vec4<deng_vec_t> color,
+        std::vector<dengMath::vec2<deng_vec_t>> tri_rec_triangle_pos
+    ) {
+        deng_ui64_t vert_offset = vert.size();
+        vert.resize(vert_offset + 3);
+        std::array<deng_ObjVertData2D, 4> tri_rec_vert;
+
+        // Calculate all surrounding triangle vertices
+        tri_rec_vert[0].vert_x = tri_rec_pos.first - ((tri_rec_origin.first + 1.0f) / 2 * tri_rec_size.first);
+        tri_rec_vert[0].vert_y = tri_rec_pos.second - ((tri_rec_origin.second + 1.0f) / 2 * tri_rec_size.second);
+        tri_rec_vert[1].vert_x = tri_rec_pos.first + ((1.0f - (tri_rec_origin.first + 1.0f) / 2) * tri_rec_size.first);
+        tri_rec_vert[1].vert_y = tri_rec_pos.second - ((tri_rec_origin.first + 1.0f) / 2 * tri_rec_size.second);
+        tri_rec_vert[2].vert_x = tri_rec_pos.first + ((1.0f - (tri_rec_origin.first + 1.0f) / 2) * tri_rec_size.first);
+        tri_rec_vert[2].vert_y = tri_rec_pos.second + ((1.0f - (tri_rec_origin.second + 1.0f) / 2) * tri_rec_size.second);
+        tri_rec_vert[3].vert_x = tri_rec_pos.first - ((tri_rec_origin.first + 1.0f) / 2 * tri_rec_size.first);
+        tri_rec_vert[3].vert_y = tri_rec_pos.second + ((1.0f - (tri_rec_origin.second + 1.0f) / 2) * tri_rec_size.second);
+    
+        deng_vec_t tri_rec_width = tri_rec_vert[1].vert_x - tri_rec_vert[0].vert_x;
+        deng_vec_t tri_rec_height = tri_rec_vert[3].vert_y - tri_rec_vert[0].vert_y;
+
+        // All triangle vertices from its surrounding rectangle are taken from top - left corner
+        vert[vert_offset].vert_data.vert_x = tri_rec_vert[0].vert_x + (tri_rec_triangle_pos[0].first + 1.0f) / 2 * tri_rec_width;
+        vert[vert_offset].vert_data.vert_y = tri_rec_vert[0].vert_y + (tri_rec_triangle_pos[0].second + 1.0f) / 2 * tri_rec_height;
+        vert[vert_offset].color_data = *(deng_ObjColorData*) &color;
+
+        vert[vert_offset + 1].vert_data.vert_x = tri_rec_vert[0].vert_x + (tri_rec_triangle_pos[1].first + 1.0f) / 2 * tri_rec_width;
+        vert[vert_offset + 1].vert_data.vert_y = tri_rec_vert[0].vert_y + (tri_rec_triangle_pos[1].second + 1.0f) / 2 * tri_rec_height;
+        vert[vert_offset + 1].color_data = *(deng_ObjColorData*) &color;
+
+        vert[vert_offset + 2].vert_data.vert_x = tri_rec_vert[0].vert_x + (tri_rec_triangle_pos[2].first + 1.0f) / 2 * tri_rec_width;
+        vert[vert_offset + 2].vert_data.vert_y = tri_rec_vert[0].vert_y + (tri_rec_triangle_pos[2].second + 1.0f) / 2 * tri_rec_height;
+        vert[vert_offset + 2].color_data = *(deng_ObjColorData*) &color;
+    }
+
+
+    /* Generate triangle from relative position */
+    void TriangleGenerator::generateRelTriangle (
+        std::vector<VERT_UNMAPPED_2D> &vert,
+        VERT_UNMAPPED_2D *outer_rec,
+        dengMath::vec2<deng_vec_t> tri_rec_pos,
+        dengMath::vec2<deng_vec_t> tri_rec_size,
+        dengMath::vec2<deng_vec_t> tri_rec_origin,
+        dengMath::vec4<deng_vec_t> color,
+        deng_bool_t is_abs_size,
+        std::vector<dengMath::vec2<deng_vec_t>> tri_rec_triangle_pos 
+    ) {
+        dengMath::vec2<deng_vec_t> outer_rec_size;
+        outer_rec_size.first = outer_rec[1].vert_data.vert_x - outer_rec[0].vert_data.vert_x;
+        outer_rec_size.second = outer_rec[3].vert_data.vert_y - outer_rec[0].vert_data.vert_y;
+        
+        tri_rec_pos.first = (tri_rec_pos.first + 1.0f) / 2 * outer_rec_size.first + outer_rec[0].vert_data.vert_x;
+        tri_rec_pos.second = (tri_rec_pos.second + 1.0f) / 2 * outer_rec_size.second + outer_rec[0].vert_data.vert_y;
+        
+        if(!is_abs_size) {
+            tri_rec_size.first = tri_rec_size.first / 2 * outer_rec_size.first;
+            tri_rec_size.second = tri_rec_size.second / 2 * outer_rec_size.second;
+        }
+
+        TriangleGenerator::generateAbsTriangle (
+            vert,
+            tri_rec_pos,
+            tri_rec_size,
+            tri_rec_origin,
+            color,
+            tri_rec_triangle_pos
+        );
+    }
+
+
+    /* Generate triangle shaped asset from absolute position */
+    deng_Asset TriangleGenerator::makeAbsTriangleAsset (
+        const char *asset_id,
+        const char *asset_desc,
+        dengMath::vec2<deng_vec_t> tri_rec_pos,
+        dengMath::vec2<deng_vec_t> tri_rec_size,
+        dengMath::vec2<deng_vec_t> tri_rec_origin,
+        dengMath::vec4<deng_vec_t> color,
+        std::vector<dengMath::vec2<deng_vec_t>> tri_rec_triangle_pos,
+        deng_px_t border_width,
+        dengMath::vec4<deng_vec_t> border_color
+    ) {
+        std::vector<VERT_UNMAPPED_2D> vert;
+        std::vector<deng_ui32_t> indices = {0, 1, 2};
+
+        TriangleGenerator::generateAbsTriangle (
+            vert,
+            tri_rec_pos,
+            tri_rec_size,
+            tri_rec_origin,
+            color,
+            tri_rec_triangle_pos
+        );
+
+        TriangleGenerator::BorderGenerator::generateBorders (
+            vert,
+            false,
+            0,
+            indices,
+            border_color,
+            m_draw_bounds,
+            border_width
+        );
+
+        return TriangleGenerator::AssetMaker2D::makeUnmappedAsset (
+            asset_id,
+            asset_desc,
+            vert,
+            indices
+        );
+    }
+
+
+    /* Generate triangle shaped asset from relative position */
+    deng_Asset TriangleGenerator::makeRelTriangleAsset (
+        const char *asset_id,
+        const char *asset_desc,
+        VERT_UNMAPPED_2D *outer_rec,
+        dengMath::vec2<deng_vec_t> tri_rec_pos,
+        dengMath::vec2<deng_vec_t> tri_rec_size,
+        dengMath::vec2<deng_vec_t> tri_rec_origin,
+        dengMath::vec4<deng_vec_t> color,
+        std::vector<dengMath::vec2<deng_vec_t>> tri_rec_triangle_pos,
+        deng_px_t border_width,
+        dengMath::vec4<deng_vec_t> border_color,
+        deng_bool_t is_abs_size
+    ) {
+        std::vector<VERT_UNMAPPED_2D> vert;
+        std::vector<deng_ui32_t> indices = {0, 1, 2};
+
+        TriangleGenerator::generateRelTriangle (
+            vert,
+            outer_rec,
+            tri_rec_pos,
+            tri_rec_size,
+            tri_rec_origin,
+            color,
+            is_abs_size,
+            tri_rec_triangle_pos
+        );
+
+        TriangleGenerator::BorderGenerator::generateBorders (
+            vert,
+            false,
+            0,
+            indices,
+            border_color,
+            m_draw_bounds,
+            border_width
+        );
+
+        return TriangleGenerator::AssetMaker2D::makeUnmappedAsset (
             asset_id,
             asset_desc,
             vert,
@@ -571,17 +759,16 @@ namespace dengUtils {
 
     /* Generate circle asset from absolute sizes */
     deng_Asset CircleGenerator::makeAbsCircleAsset (
-        dengMath::vec2<deng_vec_t> pos,
         const char *asset_id,
         const char *asset_desc,
+        dengMath::vec2<deng_vec_t> pos,
         deng_vec_t radius,
         dengMath::vec4<deng_vec_t> color,
         deng_px_t border_width,
         dengMath::vec4<deng_vec_t> border_color 
     ) {
         std::vector<VERT_UNMAPPED_2D> vertices;
-        std::vector<deng_ui32_t> indices;
-
+        std::vector<deng_ui32_t> indices; 
         CircleGenerator::generateAbsCircle (
             vertices,
             indices,
@@ -612,9 +799,9 @@ namespace dengUtils {
     /* Generate circle assets from relative sizes                               *
      * Asset will be calculated from top left vertex for surrounding rectangle  */
     deng_Asset CircleGenerator::makeRelCircleAsset (
-        dengMath::vec2<deng_vec_t> pos,
         const char *asset_id,
         const char *asset_desc,
+        dengMath::vec2<deng_vec_t> pos,
         deng_vec_t radius,
         dengMath::vec4<deng_vec_t> color,
         VERT_UNMAPPED_2D *surround_rec,

@@ -1,4 +1,5 @@
 #ifndef DENG_SURFACE_WINDOW_H
+#define DENG_SURFACE_WINDOW_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,13 +23,13 @@ extern "C" {
 #define true 1
 #define false 0
 
-typedef struct deng_ActiceKeys {
+typedef struct deng_ActiveKeys {
     size_t key_count;
     deng_Key *p_keys;
 
     size_t btn_count;
     deng_MouseButton *p_btn;
-} deng_ActiceKeys;
+} deng_ActiveKeys;
 
 typedef struct deng_ReleasedKeys {
     size_t key_count;
@@ -87,6 +88,14 @@ typedef struct deng_VirtualMousePosition {
         LONG mouse_y_pos;
     } deng_SurfaceWIN32;
 
+    /* WIN32 message callback function */
+    LRESULT CALLBACK win32_message_handler (
+        HWND hwnd, 
+        UINT msg, 
+        WPARAM param, 
+        LPARAM lparam
+    );
+
     #ifndef __DENG_API_CORE
         #define DENG_WIN32_CLASS_NAME L"DENG_WINDOW"
     #else 
@@ -99,7 +108,7 @@ typedef struct deng_SurfaceWindow {
     int height;
     const char *window_title;
     deng_SurfaceWindowMode window_mode;
-    deng_ActiceKeys active_keys;
+    deng_ActiveKeys active_keys;
     deng_ReleasedKeys released_keys;
     
     int mode;
@@ -118,7 +127,7 @@ typedef struct deng_SurfaceWindow {
 /* Set mouse cursor mode */
 void deng_SetMouseCursorMode (
     deng_SurfaceWindow *p_window, 
-    int mouse_mode
+    deng_MouseMode mouse_mode
 );
 
 void deng_SetMouseCoords (

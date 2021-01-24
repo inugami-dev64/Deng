@@ -1,16 +1,26 @@
 #include "deng_surface_core.h"
+#include "deng_key_definitions.h"
+#include "deng_surface_window.h"
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <signal.h>
+#include <vulkan/vulkan_core.h>
 
-static void handle_key_events();
-static void handle_mouse_events();
-static void set_cursor (
+/* Static function declarations */
+static void __HandleKeyEvents();
+static void __HandleMouseEvents();
+static void __SetCursor (
     deng_SurfaceWindow *p_window, 
     const char *cursor_path, 
     bool_t is_library_cur
 );
+void __Terminate(int signum);
 
-static bool_t deng_IsRunning_var;
+volatile sig_atomic_t deng_IsRunningVar;
 static deng_Key recent_press_key;
 static deng_Key recent_release_key;
+struct sigaction signal_action;
+static Atom atom_kill;
 
 static deng_MouseButton recent_press_btn;
 static deng_MouseButton recent_release_btn;
@@ -21,7 +31,9 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
     char *title, 
     deng_SurfaceWindowMode window_mode
 ) {
-    deng_SurfaceWindow *p_window = malloc(sizeof(deng_SurfaceWindow));
+    deng_SurfaceWindow *p_window = (deng_SurfaceWindow*) malloc (
+        sizeof(deng_SurfaceWindow)
+    );
     
     p_window->width = width;
     p_window->height = height;
@@ -29,8 +41,8 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
     p_window->virtual_mouse_position.is_enabled = 0;
     p_window->virtual_mouse_position.movement_x = 0;
     p_window->virtual_mouse_position.movement_y = 0;
-    p_window->virtual_mouse_position.orig_x = width / 2;
-    p_window->virtual_mouse_position.orig_y = height / 2;
+    p_window->virtual_mouse_position.orig_x = (float) width / 2;
+    p_window->virtual_mouse_position.orig_y = (float) height / 2;
 
     p_window->x11_handler.p_display = XOpenDisplay(NULL);
     p_window->x11_handler.screen = DefaultScreen (
@@ -83,6 +95,7 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
         p_window->x11_handler.window, 
         EVENT_MASKS
     );
+
     p_window->x11_handler.gc = XCreateGC (
         p_window->x11_handler.p_display, 
         p_window->x11_handler.window, 
@@ -127,13 +140,38 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
     );
 
     deng_InitKeyData(p_window);
-    deng_IsRunning_var = true;
+    deng_IsRunningVar = true;
     p_window->mode = X11_WINDOW;
+    
+    // Set window delete atom to wm protocols
+    atom_kill = XInternAtom (
+        p_window->x11_handler.p_display, 
+        "WM_DELETE_WINDOW", 
+        True
+    );
+    
+    XSetWMProtocols (
+        p_window->x11_handler.p_display, 
+        p_window->x11_handler.window, 
+        &atom_kill, 
+        1
+    );
 
+
+    // SIGTERM termination handler
+    memset(&signal_action, 0, sizeof(struct sigaction));
+    signal_action.sa_handler = __Terminate;
+    sigaction(SIGKILL, &signal_action, NULL);
+    
     return p_window;
 }
 
-static void handle_key_events(deng_SurfaceWindow *p_window) {
+void __Terminate(int signum) {
+    printf("Terminating...\n");
+    deng_IsRunningVar = false;
+}
+
+static void __HandleKeyEvents(deng_SurfaceWindow *p_window) {
     size_t key_index;
     switch (p_window->x11_handler.event.type)
     {
@@ -202,7 +240,7 @@ static void handle_key_events(deng_SurfaceWindow *p_window) {
     }
 } 
 
-static void handle_mouse_events(deng_SurfaceWindow *p_window) {
+static void __HandleMouseEvents(deng_SurfaceWindow *p_window) {
     size_t key_index;
     switch (p_window->x11_handler.event.type)
     {
@@ -314,7 +352,7 @@ void deng_GetMousePos (
     }
 }
 
-static void set_cursor (
+static void __SetCursor (
     deng_SurfaceWindow *p_window, 
     const char *file_path, 
     bool_t is_library_cur
@@ -323,14 +361,14 @@ static void set_cursor (
 
     switch (is_library_cur)
     {
-    case 0:
+    case false:
         cursor = XcursorFilenameLoadCursor (
             p_window->x11_handler.p_display, 
             file_path
         );
         break;
 
-    case 1:
+    case true:
         cursor = XcursorLibraryLoadCursor (
             p_window->x11_handler.p_display, 
             DENG_CURSOR_DEFAULT
@@ -347,12 +385,27 @@ static void set_cursor (
     );
 }
 
+
+/* Error callback function for xlib */
+int __ErrorHandler (
+    Display *display,
+    XErrorEvent *err_ev
+) {
+    printf("Loop end\n");
+    deng_IsRunningVar = false;
+
+    return 0;
+}
+
+
 void deng_SetMouseCursorMode (
     deng_SurfaceWindow *p_window, 
-    int mouse_mode
+    deng_MouseMode mouse_mode
 ) {
-    if(mouse_mode & DENG_HIDE_CURSOR) {
-        set_cursor (
+    switch(mouse_mode) 
+    {
+        case DENG_MOUSE_MODE_VIRTUAL:
+        __SetCursor (
             p_window, 
             DENG_CURSOR_HIDDEN, 
             false
@@ -369,21 +422,34 @@ void deng_SetMouseCursorMode (
         p_window->virtual_mouse_position.y = y;
 
         p_window->virtual_mouse_position.is_enabled = true;
-    }
+        break;
 
-    if(mouse_mode & DENG_SHOW_CURSOR) {
-        set_cursor (
+    case DENG_MOUSE_MODE_CURSOR_VISIBLE: 
+        __SetCursor (
             p_window, 
             DENG_CURSOR_DEFAULT, 
             1
         );
         p_window->virtual_mouse_position.is_enabled = false;
+        break;
     }
 }
 
-
 /* Update the window and recieve new key presses if needed */
 void deng_UpdateWindow(deng_SurfaceWindow *p_window) {
+    // Check for exit event
+    if
+    (
+        XCheckTypedWindowEvent (
+            p_window->x11_handler.p_display,
+            p_window->x11_handler.window, 
+            ClientMessage, 
+            &p_window->x11_handler.event
+        )
+    ) {
+        deng_IsRunningVar = false;
+        return;
+    }
     deng_CleanKeyEvents (
         p_window, 
         MOUSE_BUTTON, 
@@ -395,7 +461,7 @@ void deng_UpdateWindow(deng_SurfaceWindow *p_window) {
         KB_KEY, 
         RELEASE_KEYS
     );
-
+    
     if
     (
         XCheckWindowEvent (
@@ -404,7 +470,7 @@ void deng_UpdateWindow(deng_SurfaceWindow *p_window) {
             KeyPressMask | KeyReleaseMask, 
             &p_window->x11_handler.event
         )
-    ) handle_key_events(p_window);
+    ) __HandleKeyEvents(p_window);
     
     if
     (
@@ -414,18 +480,7 @@ void deng_UpdateWindow(deng_SurfaceWindow *p_window) {
             ButtonPressMask | ButtonReleaseMask, 
             &p_window->x11_handler.event
         )
-    ) handle_mouse_events(p_window);
-
-    if
-    (
-        XCheckWindowEvent (
-            p_window->x11_handler.p_display, 
-            p_window->x11_handler.window, 
-            StructureNotifyMask, 
-            &p_window->x11_handler.event
-        ) &&
-        p_window->x11_handler.event.type == DestroyNotify 
-    ) deng_DestroyWindow(p_window);
+    ) __HandleMouseEvents(p_window);
 
     usleep(DENG_REFRESH_INTERVAL);
 }
@@ -439,11 +494,9 @@ void deng_DestroyWindow(deng_SurfaceWindow *p_window) {
         p_window->x11_handler.p_display, 
         p_window->x11_handler.window
     );
-    XCloseDisplay(p_window->x11_handler.p_display);
     deng_FreeKeyData(p_window);
-    exit(EXIT_SUCCESS);
 }
 
 bool_t deng_IsRunning(deng_SurfaceWindow *p_window) {
-    return deng_IsRunning_var;
+    return deng_IsRunningVar;
 }

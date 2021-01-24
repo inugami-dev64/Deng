@@ -26,40 +26,16 @@ premake:
   project_name: deng
 
 tasks: 
-  libsurface:
-    type: static_lib
-    src:
-      - surface/key_translation.c
-      - surface/key_vector.c
-      - surface/vulkan_handler.c
-      linux:
-        - surface/x11_surface.c
-      windows:
-        - surface/win32_surface.c  
-    
-  libdas:
-    type: dynamic_lib
-    src:
-      - das/das_handler.c
-      - das/data_loader.c
-      windows:
-        - common/common.c
-
-  libcommon:
-    type: dynamic_lib
-    src:
-      - common/common.c
-
   dam:
     type: exec
     src:
       - das/dam.c
-    deps:
-      - ldas
-      - lcommon
+      - das/das_handler.c
+      - das/data_loader.c
+      - common/common.c
   
-  deng:
-    type: exec
+  libdeng:
+    type: dynamic_lib
     src: 
       - main/sandbox.cpp
       - core/camera.cpp
@@ -70,30 +46,18 @@ tasks:
       - maths/events.cpp
       - utilities/font.cpp
       - utilities/timer/timer.cpp
-      - shapes/shapes.cpp
+      - utilities/shapes.cpp
       - dengui/main/dengui_events.cpp
       - dengui/main/dengui_window.cpp
       - dengui/editor_uis/map_editor_ui.cpp
-    deps:
-      - ldas
-      - lsurface
-      - lcommon
-      - lfreetype
-      - lpthread
-      linux:
-        - lvulkan
-        - lX11
-        - lXcursor
-        - ldl
-      windows:
-        - lcomctl32
-        - "lvulkan-1"
-link:
-  shaders: shaders/
-  assets: assets/
-  textures: textures/
-  objects: objects/
-
-cpy:
-  linux:
-    xcursor: src/surface/xcursor
+      - common/common.c
+      - das/das_handler.c
+      - das/data_loader.c
+  
+  libsurface:
+    type: static_lib
+    - surface/key_translation.c
+    - surface/key_vector.c
+    - surface/vulkan_handler.c
+    linux: surface/x11_surface.c
+    windows: surface/win32_surface.c

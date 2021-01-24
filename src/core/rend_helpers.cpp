@@ -56,10 +56,8 @@ namespace deng {
         );
 
         for(deng_ui32_t index = 0; index < memory_properties.memoryTypeCount; index++) {
-            if(type_filter & (1 << index) && (memory_properties.memoryTypes[index].propertyFlags & properties)) {
-                LOG("Buffer mem type: " + std::to_string(index));
+            if(type_filter & (1 << index) && (memory_properties.memoryTypes[index].propertyFlags & properties))
                 return index;
-            }
         }
 
         VK_BUFFER_ERR("failed to find suitable memory type");
@@ -132,7 +130,6 @@ namespace deng {
         for(index = 0; index < family_count; index++) {
             if(queue_family_properties[index].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
                 m_graphics_family_index = index;
-                LOG("Graphics queue family index: " + std::to_string(m_graphics_family_index));
                 return true;
             }
         }
@@ -174,7 +171,6 @@ namespace deng {
 
             if(support && m_graphics_family_index != index) {
                 m_present_family_index = index; 
-                LOG("Presentation queue family index: " + m_present_family_index);
                 return true;
             }
         }
@@ -809,7 +805,6 @@ namespace deng {
         VkDeviceMemory buffer_memory, 
         VkDeviceSize offset
     ) {
-        LOG("Populating buffer memory!");
         void *data;
         vkMapMemory (
             device, 
@@ -828,7 +823,6 @@ namespace deng {
             device, 
             buffer_memory
         );
-        LOG("Populated buffer memory");
     }
     
 

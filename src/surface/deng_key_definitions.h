@@ -1,14 +1,16 @@
 #ifndef DENG_KEY_DEFINITIONS_H
+#define DENG_KEY_DEFINITIONS_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define DENG_HIDE_CURSOR 0x0001
-#define DENG_SHOW_CURSOR 0x0002
+typedef enum deng_MouseMode {
+    DENG_MOUSE_MODE_VIRTUAL         = 0,
+    DENG_MOUSE_MODE_CURSOR_VISIBLE  = 1
+} deng_MouseMode;
 
 typedef enum deng_Key {
-    // Generic keys
     DENG_KEY_UNKNOWN        =   -1,
     DENG_KEY_SPACE          =   32,
     DENG_KEY_APOSTROPHE     =   39,

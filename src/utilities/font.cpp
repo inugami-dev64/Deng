@@ -1,4 +1,5 @@
 #include "../core/api_core.h"
+#include <string>
 
 namespace dengUtils {
 
@@ -181,6 +182,8 @@ namespace dengUtils {
             0, 
             px_size
         );
+
+        LOG("FNT_PX_SIZE: " + std::to_string(px_size));
         
         if(res) return;
 
@@ -204,6 +207,11 @@ namespace dengUtils {
                 &str.unique_glyphs[index].bitmap
             );
 
+            LOG (
+                "GLYPH_SIZE: " +
+                std::to_string(str.unique_glyphs[index].bitmap.width)
+            );
+
             FT_Bitmap_Done (
                 m_library_instance, 
                 &str.font_face->glyph->bitmap
@@ -219,8 +227,9 @@ namespace dengUtils {
         BitmapStr &str,
         const char *font_name,
         deng_ui16_t px_size,
-        dengMath::vec2<float> pos,
-        dengMath::vec3<unsigned char> color
+        dengMath::vec3<unsigned char> color,
+        dengMath::vec2<deng_vec_t> pos,
+        dengMath::vec2<deng_vec_t> origin
     ) {
         std::string path_str;
         str.font_file = font_name;
@@ -242,8 +251,9 @@ namespace dengUtils {
         mkTextbox (
             str,
             width,
+            color,
             pos,
-            color
+            origin
         );
     }
 
@@ -252,9 +262,10 @@ namespace dengUtils {
     void StringRasterizer::newVecStr (
         BitmapStr &str,
         const char *font_name,
-        float vec_size,
-        dengMath::vec2<float> pos,
-        dengMath::vec3<unsigned char> color
+        deng_vec_t vec_size,
+        dengMath::vec3<unsigned char> color,
+        dengMath::vec2<deng_vec_t> pos,
+        dengMath::vec2<deng_vec_t> origin
     ) {
         std::string path_str;
         str.font_file = font_name;
@@ -281,8 +292,9 @@ namespace dengUtils {
         mkTextbox (
             str,
             width,
+            color,
             pos,
-            color
+            origin
         );
     }
 
@@ -291,8 +303,9 @@ namespace dengUtils {
     void StringRasterizer::mkTextbox (
         BitmapStr &str,
         deng_px_t px_width,
+        dengMath::vec3<unsigned char> color,
         dengMath::vec2<deng_vec_t> pos, 
-        dengMath::vec3<unsigned char> color
+        dengMath::vec2<deng_vec_t> origin
     ) {
         deng_i32_t ln_bearing = 0; 
         deng_i32_t l_bearing = 0;
@@ -311,12 +324,33 @@ namespace dengUtils {
         
         str.box_size.first = (deng_i32_t) px_width;
         str.box_size.second = ln_bearing + l_bearing;
+
+        dengMath::vec2<deng_vec_t> vec_size;
+        vec_size.first = dengMath::Conversion::pixelSizeToVector2DSize (
+            str.box_size.first,
+            m_p_win->getSize(),
+            DENG_COORD_AXIS_X
+        );
+
+        vec_size.second = dengMath::Conversion::pixelSizeToVector2DSize (
+            str.box_size.second,
+            m_p_win->getSize(),
+            DENG_COORD_AXIS_Y
+        );
         
         str.tex_data.resize (
             str.box_size.first * 
             str.box_size.second * 
             4
         );
+
+        LOG (
+            "TEXT_SIZE_PX: " +
+            std::to_string(str.box_size.first) +
+            ", " +
+            std::to_string(str.box_size.second)
+        );
+
         origin_offset.first = 0;
         origin_offset.second = ln_bearing;
         
@@ -379,36 +413,18 @@ namespace dengUtils {
             }
         }
 
-        str.vert_pos[0] = {pos.first, pos.second};
-        str.vert_pos[0].tex_data = {0.0f, 0.0f};
-        
-        str.vert_pos[1].vert_data.vert_x = dengMath::Conversion::pixelSizeToVector2DSize (
-            (deng_px_t) str.box_size.first, 
-            m_p_win->getSize(), 
-            DENG_COORD_AXIS_X
-        ) + pos.first;
-        str.vert_pos[1].vert_data.vert_y = pos.second;
-        str.vert_pos[1].tex_data = {1.0f, 0.0f};
-        
-        str.vert_pos[2].vert_data.vert_x = dengMath::Conversion::pixelSizeToVector2DSize (
-            (deng_px_t) str.box_size.first, 
-            m_p_win->getSize(), 
-            DENG_COORD_AXIS_X
-        ) + pos.first;
-        str.vert_pos[2].vert_data.vert_y = dengMath::Conversion::pixelSizeToVector2DSize (
-            (deng_px_t) str.box_size.second, 
-            m_p_win->getSize(), 
-            DENG_COORD_AXIS_Y
-        ) + pos.second;
-        str.vert_pos[2].tex_data = {1.0f, 1.0f};
-        
-        str.vert_pos[3].vert_data.vert_x = pos.first;
-        str.vert_pos[3].vert_data.vert_y = dengMath::Conversion::pixelSizeToVector2DSize (
-            (deng_px_t) str.box_size.second + (double) pos.second, 
-            m_p_win->getSize(), 
-            DENG_COORD_AXIS_Y
-        ) + pos.second;
-        str.vert_pos[3].tex_data = {0.0f, 1.0f};
+        std::vector<VERT_MAPPED_2D> tmp_vec;
+        RectangleGenerator::generateMappedAbsRec (
+            pos,
+            vec_size,
+            origin,
+            tmp_vec
+        );
+
+        str.vert_pos[0] = tmp_vec[0];
+        str.vert_pos[1] = tmp_vec[1];
+        str.vert_pos[2] = tmp_vec[2];
+        str.vert_pos[3] = tmp_vec[3];
 
         str.vert_indices = {0, 1, 2, 2, 3, 0};
     }

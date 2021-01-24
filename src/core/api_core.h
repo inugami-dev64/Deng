@@ -52,19 +52,22 @@ typedef deng_ui32_t deng_WindowHintBits;
 #define DENG_WINDOW_HINT_NO_CURSOR_HIDE                 0x08u
 
 /* Hints for controlling renderer features */
-typedef deng_ui32_t deng_RendererHintBits;
-#define DENG_RENDERER_HINT_ENABLE_VSYNC                     0x0001u
-#define DENG_RENDERER_HINT_SHOW_FPS_COUNTER                 0x0002u
-#define DENG_RENDERER_HINT_ENABLE_VALIDATION_LAYERS         0x0004u
-#define DENG_RENDERER_HINT_MSAA_MAX_HARDWARE_SUPPORTED      0x0008u
-#define DENG_RENDERER_HINT_MSAA_64                          0x0010u
-#define DENG_RENDERER_HINT_MSAA_32                          0x0020u
-#define DENG_RENDERER_HINT_MSAA_16                          0x0040u
-#define DENG_RENDERER_HINT_MSAA_8                           0x0080u
-#define DENG_RENDERER_HINT_MSAA_4                           0x0100u
-#define DENG_RENDERER_HINT_MSAA_2                           0x0200u
-#define DENG_RENDERER_HINT_MSAA_1                           0x0400u
-#define DENG_RENDERER_HINT_MIPMAP_ENABLE                    0x0800u
+typedef deng_ui16_t deng_RendererHintBits;
+#define DENG_RENDERER_HINT_API_VULKAN                       0x0001u
+#define DENG_RENDERER_HINT_API_OPENGL                       0x0002u
+#define DENG_RENDERER_HINT_ENABLE_VSYNC                     0x0004u
+#define DENG_RENDERER_HINT_SHOW_FPS_COUNTER                 0x0008u
+#define DENG_RENDERER_HINT_ENABLE_VALIDATION_LAYERS         0x0010u
+#define DENG_RENDERER_HINT_MSAA_MAX_HARDWARE_SUPPORTED      0x0020u
+#define DENG_RENDERER_HINT_MSAA_64                          0x0040u
+#define DENG_RENDERER_HINT_MSAA_32                          0x0080u
+#define DENG_RENDERER_HINT_MSAA_16                          0x0100u
+#define DENG_RENDERER_HINT_MSAA_8                           0x0200u
+#define DENG_RENDERER_HINT_MSAA_4                           0x0400u
+#define DENG_RENDERER_HINT_MSAA_2                           0x0800u
+#define DENG_RENDERER_HINT_MSAA_1                           0x1000u
+#define DENG_RENDERER_HINT_MIPMAP_ENABLE                    0x2000u
+#define DENG_RENDERER_HINT_CUSTOM_LOOP                      0x4000u
 
 
 /* Coordinate axis specifier */
@@ -128,7 +131,7 @@ enum deng_RendererUsageMode {
 #include "window.h"
 #include "camera.h"
 
-#include "../shapes/shapes.h"
+#include "../utilities/shapes.h"
 #include "../maths/events.h"
 #include "rend_helpers.h"
 #include "../utilities/font.h"

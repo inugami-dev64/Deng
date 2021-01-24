@@ -63,7 +63,12 @@ namespace deng {
         void moveDown();
 
     };
-    
+
+    //class OrthoGraphicCamera2D {
+    //private:
+        //WindowWrap *m_p_ww;
+        //deng_vec_t m_x_rot;
+    //}
 }
 
 #endif

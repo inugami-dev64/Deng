@@ -1,3 +1,4 @@
+#include <vulkan/vulkan_core.h>
 #define __DENG_API_CORE
 #include "api_core.h"
 
@@ -90,8 +91,6 @@ namespace deng {
         // Create new Vulkan instance
         if(vkCreateInstance(&instance_createInfo, nullptr, &m_instance) != VK_SUCCESS)
             VK_INSTANCE_ERR("failed to create an instance!");
-
-        else LOG("Successfully created an instance");
     }
 
 
@@ -134,7 +133,6 @@ namespace deng {
             nullptr, 
             &m_debug_mes
         );
-        LOG("Debug messenger created successfully!");
     }
 
 
@@ -204,8 +202,7 @@ namespace deng {
         if (
             !m_qff.findGraphicsFamily(m_gpu) || 
             !m_qff.findPresentSupportFamily(m_gpu, m_surface)
-        )
-            VK_INSTANCE_ERR("queue supporting GPU not found!");
+        ) VK_INSTANCE_ERR("queue supporting GPU not found!");
 
         std::array<VkDeviceQueueCreateInfo, 2> queue_createinfos;
         std::array<deng_ui32_t, 2> queue_families_indexes = {m_qff.getGraphicsQFIndex(), m_qff.getPresentQFIndex()};
@@ -251,24 +248,19 @@ namespace deng {
             &m_qff.graphics_queue
         );
         
-        LOG("Device graphics queue recieved successfully!");
         vkGetDeviceQueue (
             m_device, 
             m_qff.getPresentQFIndex(), 
             0, 
             &m_qff.present_queue
         );
-        LOG("Device present queue recieved successfully!");
     }
 
     
     /* Create window surface with deng surface library */
     void InstanceCreator::mkWindowSurface() {
-        LOG("Initialising window surface!");
         if(deng_InitVKSurface(m_p_win->getWindow(), &m_instance, &m_surface) != VK_SUCCESS)
             VK_INSTANCE_ERR("failed to create window surface!");
-
-        LOG("Window surface created successfully!");
     }
 
 
@@ -387,7 +379,6 @@ namespace deng {
             ) {
                 m_surface_format = surface_format;
                 found_suitable_format = true;
-                LOG("Found suitable surface format!");
             }
         }
         
@@ -451,8 +442,6 @@ namespace deng {
             m_extent.width = m_p_win->getSize().first;
             m_extent.height = m_p_win->getSize().second;
         }
-
-        LOG("Successfully initialised swap chain settings!");
     }
 
 
@@ -502,7 +491,6 @@ namespace deng {
             VK_SWAPCHAIN_ERR("failed to create create a swap chain!");
 
         else {
-            LOG("Swapchain created successfully!");
             deng_ui32_t image_count;
             vkGetSwapchainImagesKHR (
                 m_device, 
@@ -510,7 +498,6 @@ namespace deng {
                 &image_count, 
                 nullptr
             );
-            LOG("Currently available " + std::to_string(image_count) + " swapchain images!");
             m_swapchain_images.resize(image_count);
             vkGetSwapchainImagesKHR (
                 m_device, 
@@ -738,8 +725,6 @@ namespace deng {
             )
         ) VK_DESC_ERR("failed to create descriptor set layout for unmapped assets!");
 
-        else LOG("Successfully created pipeline layout for unmapped assets");
-
         // Use both bindings for texture mapped vertices
         bindings.resize(2);
         bindings[0] = ubo_matrix_layout_binding;
@@ -762,8 +747,6 @@ namespace deng {
                 &m_texture_mapped_desc_set_layout
             ) != VK_SUCCESS
         ) VK_DESC_ERR("failed to create descriptor set layout for texture mapped assets!");
-        
-        else LOG("Successfully created pipeline layout for textured assets");
     }
 
 
@@ -950,15 +933,14 @@ namespace deng {
                 VK_NULL_HANDLE, 
                 pipeline_infos.size(), 
                 pipeline_infos.data(), 
-                nullptr, pipelines.data()
+                nullptr, 
+                pipelines.data()
             ) != VK_SUCCESS
         ) VK_DESC_ERR("failed to create graphics pipelines!");
 
         else {
             for(index = 0; index < pipelines.size(); index++)
                 m_pipelines[index].pipeline = pipelines[index];
-
-            LOG("Graphics pipelines created successfully!");
         }
     }
 
@@ -997,12 +979,10 @@ namespace deng {
         else 
             m_texture_descriptor_size = 1;
 
-        LOG("Texture descriptor pool size: " + std::to_string(m_texture_descriptor_size));
         descriptor_pool_sizes[0].descriptorCount = m_texture_descriptor_size;
         descriptor_pool_sizes[1].descriptorCount = m_texture_descriptor_size;
         desc_pool_createinfo.maxSets = m_texture_descriptor_size;
 
-        LOG("TEX_C: " + std::to_string(m_p_textures->size()));
         // Modify descriptor pool createinfo
         desc_pool_createinfo.poolSizeCount = (deng_ui32_t) descriptor_pool_sizes.size();
         desc_pool_createinfo.pPoolSizes = descriptor_pool_sizes.data();
@@ -1089,7 +1069,6 @@ namespace deng {
                 0, 
                 nullptr
             );
-            LOG("Successfully created descriptor sets for unmapped assets");
         }
     }
     
@@ -1125,8 +1104,6 @@ namespace deng {
             // Allocate descriptor sets
             if(vkAllocateDescriptorSets(device, &allocinfo, (*m_p_textures)[l_index].descriptor_sets.data()) != VK_SUCCESS)
                 VK_DESC_ERR("failed to allocate descriptor sets for texture mapped assets");
-
-            else LOG("Successfully allocated texture mapped descriptor sets!");
 
             // Iterate through every descriptor set and update it
             for(r_index = 0; r_index < sc_img_size; r_index++) {
@@ -1166,7 +1143,6 @@ namespace deng {
                     0, 
                     nullptr
                 );
-                LOG("Successfully created descriptor sets for texture mapped assets"); 
             }
         }
     }
@@ -1174,6 +1150,8 @@ namespace deng {
 
     /* DescriptorCreator getters */
     std::array<PipelineData, DENG_PIPELINE_COUNT> DescriptorCreator::getPipelines() { return m_pipelines; }
+    VkPipelineLayout DescriptorCreator::getUnmappedPL() { return m_unmapped_pl; }
+    VkPipelineLayout DescriptorCreator::getTexMappedPL() { return m_texture_mapped_pl; }
     std::vector<VkDescriptorSet> *DescriptorCreator::getUnmappedDS() { return &m_unmapped_descriptor_sets; }
     VkDescriptorSetLayout DescriptorCreator::getUnmappedDSL() { return m_unmapped_desc_set_layout; }
     VkDescriptorSetLayout DescriptorCreator::getTexMappedDSL() { return m_texture_mapped_desc_set_layout; }
@@ -1181,8 +1159,11 @@ namespace deng {
     VkDescriptorPool DescriptorCreator::getTexMappedDP() { return m_texture_mapped_desc_pool; }
 
 
-
+    /*********************************************************/
+    /*********************************************************/
     /********** ResourceAllocator class methods **************/
+    /*********************************************************/
+    /*********************************************************/
 
     ResourceAllocator::ResourceAllocator (
         VkDevice device, 
@@ -1273,25 +1254,25 @@ namespace deng {
         deng_ui32_t mip_levels
     ) {
         // Set up texture sampler createinfo base
-        VkSamplerCreateInfo samplerInfo{};
-        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        samplerInfo.magFilter = VK_FILTER_LINEAR;
-        samplerInfo.minFilter = VK_FILTER_LINEAR;
-        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.anisotropyEnable = VK_TRUE;
-        samplerInfo.maxAnisotropy = 16.0f;
-        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-        samplerInfo.unnormalizedCoordinates = VK_FALSE;
-        samplerInfo.compareEnable = VK_FALSE;
-        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        samplerInfo.mipLodBias = 0.0f;
-        samplerInfo.minLod = 0.0f;
-        samplerInfo.maxLod = static_cast<float>(mip_levels);
+        VkSamplerCreateInfo sampler_info{};
+        sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        sampler_info.magFilter = VK_FILTER_LINEAR;
+        sampler_info.minFilter = VK_FILTER_LINEAR;
+        sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_info.anisotropyEnable = VK_TRUE;
+        sampler_info.maxAnisotropy = 16.0f;
+        sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        sampler_info.unnormalizedCoordinates = VK_FALSE;
+        sampler_info.compareEnable = VK_FALSE;
+        sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        sampler_info.mipLodBias = 0.0f;
+        sampler_info.minLod = 0.0f;
+        sampler_info.maxLod = static_cast<float>(mip_levels);
 
         // Create texture sampler 
-        if(vkCreateSampler(device, &samplerInfo, nullptr, &sampler) != VK_SUCCESS)
+        if(vkCreateSampler(device, &sampler_info, nullptr, &sampler) != VK_SUCCESS)
             VK_RES_ERR("failed to create texture sampler!");
     }
     
@@ -1485,6 +1466,7 @@ namespace deng {
                 &mem_barrier
             );
 
+            // Set blit image struct for mipmapping
             blit.srcOffsets[0] = {0, 0, 0};
             blit.srcOffsets[1] = {mip_width, mip_height, 1};
             blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -1565,7 +1547,7 @@ namespace deng {
         VkDevice device, 
         VkPhysicalDevice gpu, 
         VkCommandPool command_pool,
-        bool is_lf_supported, 
+        bool is_lf, 
         VkQueue g_queue, 
         size_t sc_img_size
     ) {
@@ -1576,7 +1558,8 @@ namespace deng {
         // Iterate through assets an check if it is texture mapped
         for(index = 0; index < m_p_textures->size(); index++) {
             (*m_p_textures)[index].descriptor_sets.resize(sc_img_size);
-            if(is_lf_supported) {
+            // Check if mipmapping is supported
+            if(is_lf) {
                 mip_levels = (deng_i32_t) floor (
                     log2 (
                         std::max (
@@ -1637,8 +1620,6 @@ namespace deng {
                 VK_SAMPLE_COUNT_1_BIT
             );
 
-            LOG("WIDTH: " + std::to_string((*m_p_textures)[index].texture.pixel_data.width));
-            LOG("HEIGHT: " + std::to_string((*m_p_textures)[index].texture.pixel_data.height));
             BufferCreator::allocateMemory (
                 device, 
                 gpu, 
@@ -1676,7 +1657,7 @@ namespace deng {
             );
 
             // Additional mipmap enable / disable flags should be implemented
-            if(is_lf_supported) {
+            if(is_lf) {
                 mkMipMaps (
                     device,
                     command_pool,
@@ -1736,8 +1717,6 @@ namespace deng {
                 (*m_p_textures)[index].sampler,
                 mip_levels
             );
-
-            LOG("Successfully created texture image view!");
         }
     }
 
@@ -1750,7 +1729,6 @@ namespace deng {
         VkQueue g_queue
     ) {
         size_t l_index;
-        LOG("Initialising main buffer!");
         VkDeviceSize total_size = 0, data_size = 0;
         VkMemoryRequirements memory_requirements;
 
@@ -1759,8 +1737,6 @@ namespace deng {
 
         // Count total amount of bytes needed to allocate for assets 
         for(l_index = 0; l_index < m_p_assets->size(); l_index++) {
-            LOG("Counting bytes of model: " + std::string((*m_p_assets)[l_index].id));
-            
             if((*m_p_assets)[l_index].is_shown) {
                 (*m_p_assets)[l_index].vertices.memory_offset = total_size;
                 switch ((*m_p_assets)[l_index].asset_mode)
@@ -1775,12 +1751,10 @@ namespace deng {
                 }
 
                 case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
-                    LOG("2D MAPPED: " + std::string((*m_p_assets)[l_index].id));
                     total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_2D);
                     break;
 
                 case DENG_ASSET_MODE_2D_UNMAPPED:
-                    LOG("2D UNMAPPED: " + std::string((*m_p_assets)[l_index].id));
                     total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED_2D);
                     break;
                 
@@ -1792,10 +1766,6 @@ namespace deng {
                 (*m_p_assets)[l_index].indices.memory_offset = total_size;
                 total_size += (*m_p_assets)[l_index].indices.size * sizeof(deng_ui32_t);
             }
-            LOG("Vertices offset for asset " + std::string((*m_p_assets)[l_index].id) + ": " + 
-            std::to_string((*m_p_assets)[l_index].vertices.memory_offset));
-            LOG("Indices offset for asset " + std::string((*m_p_assets)[l_index].id) + ": " +
-            std::to_string((*m_p_assets)[l_index].indices.memory_offset));
         }
 
         LOG("Main buffer size is: " + std::to_string(total_size));
@@ -2070,8 +2040,6 @@ namespace deng {
         m_p_commandpool = new VkCommandPool;
         if(vkCreateCommandPool(device, &commandpool_createinfo, nullptr, m_p_commandpool) != VK_SUCCESS)
             VK_DRAWCMD_ERR("failed to create command pool");
-        
-        else LOG("Successfully created commandpool!");
     }
 
 
@@ -2083,7 +2051,7 @@ namespace deng {
                 return (*m_p_textures)[l_index];    
         }
 
-        // Error not found
+        // Error texture not found
         VK_DRAWCMD_ERR("could not find texture with id: " + std::string(id));
     }
 
@@ -2124,8 +2092,6 @@ namespace deng {
                 )
             ) VK_DRAWCMD_ERR("Failed to create semaphores");
         }
-
-        LOG("Successfully initialised semaphores and fences!");
     }
 
 
@@ -2182,9 +2148,6 @@ namespace deng {
             )
         ) VK_DRAWCMD_ERR("failed to allocate command buffers");
         
-        else 
-            LOG("Successfully allocated command buffers!");
-
         // Start iterating through commandbuffers to submit draw calls
         for(l_index = 0; l_index < m_p_commandbuffers->size(); l_index++) {
             VkCommandBufferBeginInfo commandbuffer_begininfo{};
@@ -2193,8 +2156,6 @@ namespace deng {
             // Begin recording command buffer
             if(vkBeginCommandBuffer((*m_p_commandbuffers)[l_index], &commandbuffer_begininfo) != VK_SUCCESS)
                 VK_DRAWCMD_ERR("failed to begin recording command buffers");
-
-            else LOG("Successfully begun to record command buffers!");
 
             // Set up renderpass begin info
             VkRenderPassBeginInfo renderpass_begininfo{};
@@ -2221,12 +2182,9 @@ namespace deng {
                 &renderpass_begininfo, 
                 VK_SUBPASS_CONTENTS_INLINE
             );
-                LOG("Successfully began renderpass!");
-                
                 // Iterate through every asset and submit a draw call
                 for(r_index = 0; r_index < m_p_assets->size(); r_index++) {
                     if((*m_p_assets)[r_index].is_shown) {
-                        LOG("Creating command buffers for asset: " + std::string((*m_p_assets)[r_index].id));
                         vkCmdBindVertexBuffers (
                             (*m_p_commandbuffers)[l_index], 
                             0, 
@@ -2334,7 +2292,6 @@ namespace deng {
 
             // End render pass
             vkCmdEndRenderPass((*m_p_commandbuffers)[l_index]);
-            LOG("Ended renderPass!");
 
             // Stop recording commandbuffer
             if(vkEndCommandBuffer((*m_p_commandbuffers)[l_index]) != VK_SUCCESS)
@@ -2389,8 +2346,10 @@ namespace deng {
         deng_i32_t r_index;
         m_assets.resize(l_index + asset_c);
         
-        for(r_index = 0; r_index < asset_c; l_index++, r_index++)
+        for(r_index = 0; r_index < asset_c; l_index++, r_index++) {
+            LOG("Submitted asset " + std::string(assets[r_index].id));
             m_assets[l_index] = assets[r_index];
+        }
     } 
 
 
@@ -2831,13 +2790,13 @@ namespace deng {
                 m_cmd_update = false;
             }
             m_update_mut.unlock();
-
             m_frame_mut.lock();
             makeFrame();
             m_frame_mut.unlock();
         }
+
         vkDeviceWaitIdle(m_p_ic->getDev());
-        deng_DestroyWindow(m_p_ww->getWindow());
+        cleanup();
     }
 
 
@@ -2959,21 +2918,27 @@ namespace deng {
 
         // Clean pipeline related data
         std::array<PipelineData, DENG_PIPELINE_COUNT> pipeline_data = m_p_desc_c->getPipelines();
+        LOG("Pipeline array size: " + std::to_string(pipeline_data.size()));
         for(index = 0; index < pipeline_data.size(); index++) { 
             vkDestroyPipeline (
                 m_p_ic->getDev(), 
                 pipeline_data[index].pipeline, 
                 nullptr
             );
-            if(pipeline_data[index].p_pipeline_layout) {
-                vkDestroyPipelineLayout (
-                    m_p_ic->getDev(), 
-                    *pipeline_data[index].p_pipeline_layout, 
-                    nullptr
-                );
-                pipeline_data[index].p_pipeline_layout = nullptr;
-            }
         }
+        
+        // Clean pipeline layout data 
+        vkDestroyPipelineLayout (
+            m_p_ic->getDev(), 
+            m_p_desc_c->getUnmappedPL(), 
+            nullptr
+        );
+        
+        vkDestroyPipelineLayout (
+            m_p_ic->getDev(), 
+            m_p_desc_c->getTexMappedPL(), 
+            nullptr
+        );
 
         // Clean swapchain information
         vkDestroyRenderPass (
@@ -2991,7 +2956,6 @@ namespace deng {
             m_p_desc_c->getTexMappedDP(), 
             nullptr
         );
-        delete m_p_scc;
 
         // Clean texture images
         for(index = 0; index < m_textures.size(); index++) {
@@ -3105,14 +3069,30 @@ namespace deng {
             m_p_ic->getSu(), 
             nullptr
         );
-        auto mesFun = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr (
+        auto mes_fun = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr (
             m_p_ic->getIns(), 
             "vkDestroyDebugUtilsMessengerEXT"
         );
-        if(mesFun) mesFun(m_p_ic->getIns(), m_p_ic->getDMEXT(), nullptr);
+        if(mes_fun) 
+            mes_fun(m_p_ic->getIns(), m_p_ic->getDMEXT(), nullptr);
+
         vkDestroyInstance (
             m_p_ic->getIns(), 
             nullptr
         );
+        
+        // Free memory from all renderer creator class instances
+        //if(m_p_ic)
+            //delete m_p_ic;
+        //if(m_p_scc)
+            //delete m_p_scc;
+        //if(m_p_desc_c)
+            //delete m_p_desc_c;
+        //if(m_p_ra)
+            //delete m_p_ra;
+        //if(m_p_dc)
+            //delete m_p_dc;
+        //if(m_p_sr)
+            //delete m_p_sr;
     }
 } 

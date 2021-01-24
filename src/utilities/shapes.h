@@ -57,6 +57,7 @@ namespace dengUtils {
         static void generateUnmappedRelRec (
             dengMath::vec2<deng_vec_t> pos,
             dengMath::vec2<deng_vec_t> size,
+            deng_bool_t is_abs_size,
             dengMath::vec2<deng_vec_t> origin,
             VERT_UNMAPPED_2D *outer_rec,
             dengMath::vec4<deng_vec_t> color,
@@ -73,6 +74,7 @@ namespace dengUtils {
         static void generateMappedRelRec (
             dengMath::vec2<deng_vec_t> pos,
             dengMath::vec2<deng_vec_t> size,
+            deng_bool_t is_abs_size,
             dengMath::vec2<deng_vec_t> origin,
             VERT_UNMAPPED_2D *outer_rec,
             std::vector<VERT_MAPPED_2D> &vert
@@ -98,11 +100,12 @@ namespace dengUtils {
             dengMath::vec2<deng_vec_t> origin
         );
 
-        deng_Asset generateUnmappedRelRecAsset (
+        deng_Asset makeUnmappedRelRecAsset (
             const char *asset_id,
             const char *asset_desc,
             dengMath::vec2<deng_vec_t> pos,
             dengMath::vec2<deng_vec_t> size,
+            deng_bool_t is_abs_size,
             dengMath::vec2<deng_vec_t> origin,
             dengMath::vec4<deng_vec_t> color,
             VERT_UNMAPPED_2D *outer_rec,
@@ -110,17 +113,70 @@ namespace dengUtils {
             dengMath::vec4<deng_vec_t> border_color
         );
 
-        deng_Asset generateMappedRelRecAsset (
+        deng_Asset makeMappedRelRecAsset (
             const char *asset_id,
             const char *tex_id,
             const char *asset_desc,
             dengMath::vec2<deng_vec_t> pos,
             dengMath::vec2<deng_vec_t> size,
+            deng_bool_t is_abs_size,
             dengMath::vec2<deng_vec_t> origin,
             dengMath::vec4<deng_vec_t> color,
-            VERT_UNMAPPED_2D *outer_rec,
+            VERT_UNMAPPED_2D *outer_rec
+        );
+    };
+
+
+    class TriangleGenerator : private BorderGenerator, private AssetMaker2D {
+    private:
+        dengMath::vec2<deng_ui32_t> m_draw_bounds;
+
+    public:
+        TriangleGenerator(dengMath::vec2<deng_ui32_t> draw_bounds);
+        static void generateAbsTriangle (
+            std::vector<VERT_UNMAPPED_2D> &vert,
+            dengMath::vec2<deng_vec_t> tri_rec_pos,
+            dengMath::vec2<deng_vec_t> tri_rec_size,
+            dengMath::vec2<deng_vec_t> tri_rec_origin,
+            dengMath::vec4<deng_vec_t> color,
+            std::vector<dengMath::vec2<deng_vec_t>> tri_rec_triangle_pos 
+        );
+
+        static void generateRelTriangle (
+            std::vector<VERT_UNMAPPED_2D> &vert,
+            VERT_UNMAPPED_2D *outer_rec,  
+            dengMath::vec2<deng_vec_t> tri_rec_pos,
+            dengMath::vec2<deng_vec_t> tri_rec_size,
+            dengMath::vec2<deng_vec_t> tri_rec_origin,
+            dengMath::vec4<deng_vec_t> color,
+            deng_bool_t is_abs_size,
+            std::vector<dengMath::vec2<deng_vec_t>> tri_rec_triangle_pos
+        );
+
+        deng_Asset makeAbsTriangleAsset (
+            const char *asset_id,
+            const char *asset_desc,
+            dengMath::vec2<deng_vec_t> tri_rec_pos,
+            dengMath::vec2<deng_vec_t> tri_rec_size,
+            dengMath::vec2<deng_vec_t> tri_rec_origin,
+            dengMath::vec4<deng_vec_t> color, 
+            std::vector<dengMath::vec2<deng_vec_t>> tri_rec_triangle_pos,
             deng_px_t border_width,
             dengMath::vec4<deng_vec_t> border_color
+        );
+
+        deng_Asset makeRelTriangleAsset (
+            const char *asset_id,
+            const char *asset_desc,
+            VERT_UNMAPPED_2D *outer_rec,
+            dengMath::vec2<deng_vec_t> tri_rec_pos,
+            dengMath::vec2<deng_vec_t> tri_rec_size,
+            dengMath::vec2<deng_vec_t> tri_rec_origin,
+            dengMath::vec4<deng_vec_t> color,
+            std::vector<dengMath::vec2<deng_vec_t>> tri_rec_triangle_pos,
+            deng_px_t border_width,
+            dengMath::vec4<deng_vec_t> border_color,
+            deng_bool_t is_abs_size
         );
     };
 
@@ -150,9 +206,9 @@ namespace dengUtils {
         );
 
         deng_Asset makeAbsCircleAsset (
-            dengMath::vec2<deng_vec_t> pos,
             const char *asset_id,
             const char *asset_desc,
+            dengMath::vec2<deng_vec_t> pos,
             deng_vec_t radius,
             dengMath::vec4<deng_vec_t> color,
             deng_px_t border_width,
@@ -160,9 +216,9 @@ namespace dengUtils {
         );
 
         deng_Asset makeRelCircleAsset (
-            dengMath::vec2<deng_vec_t> pos,
             const char *asset_id,
             const char *asset_desc,
+            dengMath::vec2<deng_vec_t> pos,
             deng_vec_t radius,
             dengMath::vec4<deng_vec_t> color,
             VERT_UNMAPPED_2D *surround_rec,
