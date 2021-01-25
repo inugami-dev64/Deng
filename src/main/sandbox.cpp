@@ -1,4 +1,4 @@
-#include "../core/api_core.h"
+#include "../../headers/deng/api_core.h"
 #define SANDBOX_BACKGROUND {0.1411765f, 0.0431372f, 0.2313725f, 1.0f}
 #define TRI_INDEX   0
 #define CIR_INDEX   1

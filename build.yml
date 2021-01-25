@@ -37,7 +37,6 @@ tasks:
   libdeng:
     type: dynamic_lib
     src: 
-      - main/sandbox.cpp
       - core/camera.cpp
       - core/rend_helpers.cpp
       - core/renderer.cpp

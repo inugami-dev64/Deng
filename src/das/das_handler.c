@@ -1,5 +1,5 @@
 #define DAS_EXT_HANDLER
-#include "das_core.h"
+#include "../../headers/das/das_core.h"
  
 /* Add .das file extension to the file name */
 char *dasGetFileExtName(char *file_name) {

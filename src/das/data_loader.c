@@ -1,6 +1,6 @@
 #define DAS_EXT_LOADERS
 #define DAS_GENERIC_HELPERS
-#include "das_core.h"
+#include "../../headers/das/das_core.h"
 
 static FILE *file;
 

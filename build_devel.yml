@@ -3,8 +3,8 @@ import:
   windows: 
     - modules/freetype2/build.yml
 premake:
-  cc: gcc
-  cxx: g++
+  cc: clang
+  cxx: clang++
   cc_flags: 
     - Wall 
     - m64
@@ -52,29 +52,28 @@ tasks:
       - common/common.c
   
   libdeng:
-    type: static_lib
+    type: dynamic_lib
     src: 
-      - main/sandbox.cpp
-      - core/camera.cpp
-      - core/rend_helpers.cpp
-      - core/renderer.cpp
-      - core/window.cpp
-      - maths/deng_math.cpp
-      - maths/events.cpp
-      - utilities/font.cpp
-      - utilities/timer/timer.cpp
-      - utilities/shapes.cpp
-      - dengui/main/dengui_events.cpp
-      - dengui/main/dengui_window.cpp
-      - dengui/editor_uis/map_editor_ui.cpp
+      - deng/camera.cpp
+      - deng/renderer.cpp
+      - deng/window.cpp
+      - deng/rend_helpers.cpp
+      - deng/deng_math.cpp
+      - deng/events.cpp
+      - utils/font.cpp
+      - utils/timer.cpp
+      - utils/shapes.cpp
+      - dengui/dengui_events.cpp
+      - dengui/dengui_window.cpp
+      - dengui/map_editor_ui.cpp
       - common/common.c
       - das/das_handler.c
       - das/data_loader.c
-      - surface/key_translation.c
-      - surface/key_vector.c
-      - surface/vulkan_handler.c
-      linux: surface/x11_surface.c
-      windows: surface/win32_surface.c
+      - deng/key_translation.c
+      - deng/key_vector.c
+      - deng/vulkan_handler.c
+      linux: deng/x11_surface.c
+      windows: deng/win32_surface.c
 
 link:
   shaders: shaders/
@@ -84,4 +83,4 @@ link:
 
 cpy:
   linux:
-    xcursor: src/surface/xcursor
+    xcursor: src/deng/xcursor
