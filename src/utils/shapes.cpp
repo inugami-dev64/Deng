@@ -73,12 +73,13 @@ namespace dengUtils {
                 norm_vec.second * norm_vec.second
             );
 
+            deng_ObjColorData *p_color = (deng_ObjColorData*) &color;
             border_verts[push_index].vert_data = vert[c_index].vert_data;
-            border_verts[push_index].color_data = *(deng_ObjColorData*) &color;
+            border_verts[push_index].color_data = *p_color;
 
             border_verts[push_index + 1].vert_data.vert_x = border_sine * vec_border_width + vert[c_index].vert_data.vert_x;
             border_verts[push_index + 1].vert_data.vert_y = border_cosine * vec_border_width + vert[c_index].vert_data.vert_y;
-            border_verts[push_index + 1].color_data = *(deng_ObjColorData*) &color;
+            border_verts[push_index + 1].color_data = *p_color;
         }
 
 
@@ -207,13 +208,13 @@ namespace dengUtils {
         );
 
         out_asset.vertices.size = vert.size();
-        out_asset.vertices.p_texture_mapped_vert_data_2d = (VERT_MAPPED_2D*) calloc (
+        out_asset.vertices.p_tex_mapped_vert_data_2d = (VERT_MAPPED_2D*) calloc (
             vert.size(),
             sizeof(VERT_MAPPED_2D)
         );
 
         memcpy (
-            out_asset.vertices.p_texture_mapped_vert_data_2d,
+            out_asset.vertices.p_tex_mapped_vert_data_2d,
             vert.data(),
             vert.size() * sizeof(VERT_MAPPED_2D)
         );
@@ -236,22 +237,24 @@ namespace dengUtils {
     ) {
         deng_ui64_t vert_offset = vert.size();
         vert.resize(vert_offset + 4);
-
+        
+        
+        deng_ObjColorData *p_color = (deng_ObjColorData*) &color;
         vert[vert_offset].vert_data.vert_x = pos.first - size.first * ((origin.first + 1.0f) / 2);
         vert[vert_offset].vert_data.vert_y = pos.second - size.second * ((origin.second + 1.0f) / 2);
-        vert[vert_offset].color_data = *(deng_ObjColorData*) &color;
+        vert[vert_offset].color_data = *p_color;
 
         vert[vert_offset + 1].vert_data.vert_x = pos.first + size.first * (1.0f - (origin.first + 1.0f) / 2);
         vert[vert_offset + 1].vert_data.vert_y = pos.second - size.second * ((origin.second + 1.0f) / 2);
-        vert[vert_offset + 1].color_data = *(deng_ObjColorData*) &color;
+        vert[vert_offset + 1].color_data = *p_color;
 
         vert[vert_offset + 2].vert_data.vert_x = pos.first + size.first * (1.0f - (origin.first + 1.0f) / 2);
         vert[vert_offset + 2].vert_data.vert_y = pos.second + size.second * (1.0f - (origin.second + 1.0f) / 2);
-        vert[vert_offset + 2].color_data = *(deng_ObjColorData*) &color;
+        vert[vert_offset + 2].color_data = *p_color;
 
         vert[vert_offset + 3].vert_data.vert_x = pos.first - size.first * ((origin.first + 1.0f) / 2);
         vert[vert_offset + 3].vert_data.vert_y = pos.second + size.second * (1.0f - (origin.second + 1.0f) / 2);
-        vert[vert_offset + 3].color_data = *(deng_ObjColorData*) &color;
+        vert[vert_offset + 3].color_data = *p_color;
     }
 
 
@@ -525,19 +528,20 @@ namespace dengUtils {
     
         deng_vec_t tri_rec_width = tri_rec_vert[1].vert_x - tri_rec_vert[0].vert_x;
         deng_vec_t tri_rec_height = tri_rec_vert[3].vert_y - tri_rec_vert[0].vert_y;
-
+        
+        deng_ObjColorData *p_color = (deng_ObjColorData*) &color;
         // All triangle vertices from its surrounding rectangle are taken from top - left corner
         vert[vert_offset].vert_data.vert_x = tri_rec_vert[0].vert_x + (tri_rec_triangle_pos[0].first + 1.0f) / 2 * tri_rec_width;
         vert[vert_offset].vert_data.vert_y = tri_rec_vert[0].vert_y + (tri_rec_triangle_pos[0].second + 1.0f) / 2 * tri_rec_height;
-        vert[vert_offset].color_data = *(deng_ObjColorData*) &color;
+        vert[vert_offset].color_data = *p_color;
 
         vert[vert_offset + 1].vert_data.vert_x = tri_rec_vert[0].vert_x + (tri_rec_triangle_pos[1].first + 1.0f) / 2 * tri_rec_width;
         vert[vert_offset + 1].vert_data.vert_y = tri_rec_vert[0].vert_y + (tri_rec_triangle_pos[1].second + 1.0f) / 2 * tri_rec_height;
-        vert[vert_offset + 1].color_data = *(deng_ObjColorData*) &color;
+        vert[vert_offset + 1].color_data = *p_color;
 
         vert[vert_offset + 2].vert_data.vert_x = tri_rec_vert[0].vert_x + (tri_rec_triangle_pos[2].first + 1.0f) / 2 * tri_rec_width;
         vert[vert_offset + 2].vert_data.vert_y = tri_rec_vert[0].vert_y + (tri_rec_triangle_pos[2].second + 1.0f) / 2 * tri_rec_height;
-        vert[vert_offset + 2].color_data = *(deng_ObjColorData*) &color;
+        vert[vert_offset + 2].color_data = *p_color;
     }
 
 
@@ -692,9 +696,12 @@ namespace dengUtils {
         deng_i32_t l_index, n_index, i;
         std::vector<VERT_UNMAPPED_2D> cir_vert;
         cir_vert.resize(vert_c + 1);
+
+        deng_ObjVertData2D *p_pos = (deng_ObjVertData2D*) &pos;
+        deng_ObjColorData *p_color = (deng_ObjColorData*) &color;
         // Center point
-        cir_vert[0].vert_data = *(deng_ObjVertData2D*) &pos;
-        cir_vert[0].color_data = *(deng_ObjColorData*) &color;
+        cir_vert[0].vert_data = *p_pos;
+        cir_vert[0].color_data = *p_color;
 
         std::vector<deng_ui32_t> cir_indices;
         cir_indices.resize(vert_c * 3);
@@ -706,7 +713,7 @@ namespace dengUtils {
             cur_step += step;
             cir_vert[l_index].vert_data.vert_x = radius * sin(cur_step) + pos.first;
             cir_vert[l_index].vert_data.vert_y = -radius * cos(cur_step) + pos.second;
-            cir_vert[l_index].color_data = *(deng_ObjColorData*) &color;
+            cir_vert[l_index].color_data = *p_color;
         }
 
         // Find all circle indices

@@ -12,21 +12,23 @@ namespace deng {
         #define DENG_MAX_FRAMES_IN_FLIGHT 3
         
         /* Pipeline indices */
-        #define DENG_PIPELINE_COUNT 4
-        #define UM3D_I  0
-        #define TM3D_I  1
-        #define UM2D_I  2
-        #define TM2D_I  3
+        #define DENG_PIPELINE_COUNT 6
+        #define UM3D_UNOR_I     0
+        #define UM3D_NOR_I      1
+        #define TM3D_UNOR_I     2
+        #define TM3D_NOR_I      3
+        #define UM2D_I          4
+        #define TM2D_I          5
 
         /* Shader binary file names */
-        #define UNMAPPED_VERT_SHADER_3D             "shaders/bin/3d_unmapped_vert.spv"
-        #define UNMAPPED_FRAG_SHADER_3D             "shaders/bin/3d_unmapped_frag.spv"
-        #define TEXTURE_MAPPED_VERT_SHADER_3D       "shaders/bin/3d_tex_mapped_vert.spv"
-        #define TEXTURE_MAPPED_FRAG_SHADER_3D       "shaders/bin/3d_tex_mapped_frag.spv"
-        #define UNMAPPED_VERT_SHADER_2D             "shaders/bin/2d_unmapped_vert.spv"
-        #define UNMAPPED_FRAG_SHADER_2D             "shaders/bin/2d_unmapped_frag.spv"
-        #define TEXTURE_MAPPED_VERT_SHADER_2D       "shaders/bin/2d_tex_mapped_vert.spv"
-        #define TEXTURE_MAPPED_FRAG_SHADER_2D       "shaders/bin/2d_tex_mapped_frag.spv"
+        #define UNMAPPED_VERT_SHADER_2D             "shaders/bin/2d_unmapped.spv"
+        #define TEXTURE_MAPPED_VERT_SHADER_2D       "shaders/bin/2d_tex_mapped.spv"
+        #define UNMAPPED_VERT_SHADER_3D             "shaders/bin/3d_unmapped.spv"
+        #define UNMAPPED_NORM_VERT_SHADER_3D        "shaders/bin/3d_unmapped_nor.spv"
+        #define TEXTURE_MAPPED_VERT_SHADER_3D       "shaders/bin/3d_tex_mapped.spv"
+        #define TEXTURE_MAPPPED_NORM_VERT_SHADER_3D "shaders/bin/3d_tex_mapped_nor.spv"
+        #define TEXTURE_MAPPED_FRAG_SHADER          "shaders/bin/tex_mapped_frag.spv"
+        #define UNMAPPED_FRAG_SHADER                "shaders/bin/unmapped_frag.spv"
     #endif
 
 
@@ -462,6 +464,7 @@ namespace deng {
         void makeFrame();
 
     public:
+        Renderer(WindowWrap *p_win); 
         void submitAssets (
             deng_Asset *assets, 
             deng_i32_t size
@@ -482,14 +485,10 @@ namespace deng {
             size_t size
         );
 
-        void setHints (
-            deng_RendererHintBits hints,
-            WindowWrap *p_win
-        );
+        void setHints(deng_RendererHintBits hints);
         void initRenderer (
-            WindowWrap *p_ww, 
             deng_RendererUsageMode usage, 
-            dengMath::vec4<float> background
+            dengMath::vec4<deng_vec_t> background
         );
         void run();        
     };

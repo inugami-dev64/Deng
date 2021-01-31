@@ -1,43 +1,6 @@
 #ifndef DATA_H
 #define DATA_H
 
-#define VERT_TYPE_TEXTURE_MAPPED
-#define VERT_TYPE_UNMAPPED
-
-/* DAS file format headers */
-typedef struct INFO_HDR {
-    char *hdr_name;
-    deng_ui32_t hdr_size;
-    deng_ui8_t name_size;
-    char *asset_name;
-    deng_ui8_t desc_size;
-    char *desc;
-} INFO_HDR;
-
-typedef struct VERT_HDR {
-    char *hdr_name;
-    deng_ui32_t hdr_size;
-    deng_ui32_t vert_count;
-    deng_ui8_t vert_type;
-    deng_VertDynamic vertices_data;
-} VERT_HDR;
-
-typedef struct INDX_HDR {
-    char *hdr_name;
-    deng_ui32_t hdr_size;
-    deng_ui32_t indices_count;
-    deng_IndicesDynamic indices_data;
-} INDX_HDR;
-
-typedef struct TPIX_HDR {
-    char *hdr_name;
-    deng_ui32_t hdr_size;
-    deng_ui16_t img_width;
-    deng_ui16_t img_height;
-    deng_PixelDataDynamic pixel_data; 
-} TPIX_HDR;
-
-
 /* BMP image headers */
 #pragma pack(1)
 typedef struct BMPFileHeader {
@@ -97,7 +60,15 @@ typedef struct TGAInfoHeader {
 } TGAInfoHeader;
 #pragma pack()
 
-void init_BMP_image_headers(BMPFileHeader *p_file_header, BMPInfoHeader *p_info_header, BMPColorHeader *p_color_header);
-void init_TGA_image_headers(TGATypeHeader *p_type_header, TGAColorMapHeader *p_color_map_header, TGAInfoHeader *p_info_header);
+void das_InitBMPImageHeaders (
+    BMPFileHeader *p_file_header, 
+    BMPInfoHeader *p_info_header, 
+    BMPColorHeader *p_color_header
+);
 
+void das_InitTGAImageHeaders (
+    TGATypeHeader *p_type_header, 
+    TGAColorMapHeader *p_color_map_header, 
+    TGAInfoHeader *p_info_header
+);
 #endif

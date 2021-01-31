@@ -1,10 +1,14 @@
+#include <stdlib.h>
 #define DAS_EXT_HANDLER
 #include "../../headers/das/das_core.h"
  
 /* Add .das file extension to the file name */
-char *dasGetFileExtName(char *file_name) {
+char *dasGetDASFileName(char *file_name) {
     size_t index;
-    char *output = (char*) malloc((strlen(file_name) + 3) * sizeof(char));
+    char *output = (char*) malloc (
+        (strlen(file_name) + 3) * 
+        sizeof(char)
+    );
 
     /* Copy file name chars to output */
     for(index = 0; index < strlen(file_name); index++) 
@@ -19,22 +23,43 @@ char *dasGetFileExtName(char *file_name) {
 }   
 
 /* das file assembler callback function */
-void dasAssemble(deng_Asset *p_asset, const char *file_name) {
+void dasAssemble (
+    deng_Asset *p_asset, 
+    const char *out_file
+) {
     FILE *file;
-    file = fopen(file_name, "wb");
+    file = fopen (
+        out_file, 
+        "wb"
+    );
+
     if(!file) {
         fprintf (
             stderr,
             "Failed to open file: %s\n",
-            file_name
+            out_file
         );
 
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
     
-    dasAssembleINFOHDR(p_asset->id, p_asset->description, file);
-    dasAssembleVERTHDR(&p_asset->vertices, file);
-    dasAssembleINDXHDR(&p_asset->indices, file);
+
+    dasAssembleINFOHDR (
+        p_asset->id,
+        p_asset->asset_mode,
+        file
+    );
+
+    dasAssembleVERTHDR (
+        &p_asset->vertices, 
+        p_asset->asset_mode,
+        file
+    );
+    
+    dasAssembleINDXHDR (
+        &p_asset->indices, 
+        file
+    );
 
     fclose(file);
 }
@@ -43,41 +68,91 @@ void dasAssemble(deng_Asset *p_asset, const char *file_name) {
 /* das INFO_HDR assembler */
 void dasAssembleINFOHDR (
     char *asset_name, 
-    char *description, 
+    deng_AssetMode v_type, 
     FILE *file
 ) {
-    deng_ui8_t asset_name_size, desc_size;
-    deng_ui64_t time_point = (deng_ui64_t) time(NULL);
-    asset_name_size = strlen(asset_name);
-    desc_size = strlen(description);
-    deng_ui32_t hdr_size = 22 + (deng_ui32_t) (asset_name_size + desc_size);
+    deng_ui64_t timestamp = (deng_ui64_t) time(NULL);
+    deng_ui8_t type = (deng_ui8_t) v_type;
+    deng_ui8_t asset_name_size = (deng_ui8_t) strlen(asset_name);
+    deng_ui32_t hdr_size = 22 + (deng_ui32_t) asset_name_size;
     
+    printf("Timestamp: %ld\n", timestamp);
     fwrite(INFO_HEADER_NAME, sizeof(char), 8, file);
-    fwrite(&time_point, sizeof(deng_ui64_t), 1, file);
     fwrite(&hdr_size, sizeof(deng_ui32_t), 1, file);
-    fwrite(&asset_name_size, 1, 1, file);
-    fwrite(asset_name, 1, strlen(asset_name), file);
-    fwrite(&desc_size, 1, 1, file);
-    fwrite(description, 1, strlen(description), file);
+    fwrite(&timestamp, sizeof(deng_ui64_t), 1, file);
+    fwrite(&type, sizeof(deng_ui8_t), 1, file);
+    fwrite(&asset_name_size, sizeof(deng_ui8_t), 1, file);
+    fwrite(asset_name, sizeof(char), strlen(asset_name), file);
 }
 
 
 /* das VERT_HDR assembler */
 void dasAssembleVERTHDR (
     deng_VertDynamic *p_vertices, 
+    deng_AssetMode asset_mode,
     FILE *file
 ) {
-    deng_ui32_t hdr_size, vert_size;
-    fwrite(VERTICES_HEADER_NAME, 1, strlen(VERTICES_HEADER_NAME), file);
-    hdr_size = 17;
-    vert_size = (deng_ui32_t) p_vertices->size;
-    hdr_size += (deng_ui32_t) (p_vertices->size * sizeof(VERT_MAPPED));
+    deng_ui32_t hdr_vert_c = (deng_ui32_t) p_vertices->size;
+    deng_ui32_t hdr_size = 0;
+    
+    fwrite(VERTICES_HEADER_NAME, sizeof(char), 8, file);
+    switch(asset_mode) 
+    {
+    case DENG_ASSET_MODE_3D_UNMAPPED:
+        hdr_size = 16 + 12 * hdr_vert_c;
+        fwrite(&hdr_size, sizeof(deng_ui32_t), 1, file);
+        fwrite(&hdr_vert_c, sizeof(deng_ui32_t), 1, file);
+        fwrite (
+            p_vertices->p_unmapped_unnormalized_vert,
+            sizeof(VERT_UNMAPPED_UNOR),
+            p_vertices->size,
+            file
+        );
+        break;
 
-    fwrite(&hdr_size, sizeof(deng_ui32_t), 1, file);
-    fwrite(&vert_size, sizeof(deng_ui32_t), 1, file);
-    fwrite(p_vertices->p_texture_mapped_vert_data, sizeof(VERT_MAPPED), p_vertices->size, file); 
+    case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
+        hdr_size = 16 + 20 * hdr_vert_c;
+        fwrite(&hdr_size, sizeof(deng_ui32_t), 1, file);
+        fwrite(&hdr_vert_c, sizeof(deng_ui32_t), 1, file);
+        fwrite (
+            p_vertices->p_tex_mapped_unnormalized_vert,
+            sizeof(VERT_MAPPED_UNOR),
+            p_vertices->size,
+            file
+        );
+        break;
+
+    case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+        hdr_size = 16 + 24 * hdr_vert_c;
+        fwrite(&hdr_size, sizeof(deng_ui32_t), 1, file);
+        fwrite(&hdr_vert_c, sizeof(deng_ui32_t), 1, file);
+        fwrite (
+            p_vertices->p_unmapped_normalized_vert,
+            sizeof(VERT_UNMAPPED_NOR),
+            p_vertices->size,
+            file
+        );
+        break;
+
+    case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
+        printf("Write test\n");
+        hdr_size = 16 + 32 * hdr_vert_c;
+        fwrite(&hdr_size, sizeof(deng_ui32_t), 1, file);
+        fwrite(&hdr_vert_c, sizeof(deng_ui32_t), 1, file);
+        fwrite (
+            p_vertices->p_tex_mapped_normalized_vert,
+            sizeof(VERT_MAPPED_NOR),
+            p_vertices->size,
+            file
+        );
+        break;
+    default:
+        break;
+    }
 }
 
+
+/* Write INDX_HDR to asset file */
 void dasAssembleINDXHDR (
     deng_IndicesDynamic *p_indices, 
     FILE *file
@@ -90,24 +165,12 @@ void dasAssembleINDXHDR (
     fwrite(p_indices->p_indices, p_indices->size * sizeof(deng_ui32_t), 1, file);
 }
 
-void dasAssembleTPIXHDR (
-    deng_PixelDataDynamic *p_pixel_data, 
-    FILE *file
-) {
-    deng_ui32_t hdr_size = 16 + p_pixel_data->size;
-    fwrite(TEXTURE_PIXEL_NAME, strlen(TEXTURE_PIXEL_NAME), 1, file);
-    fwrite(&hdr_size, sizeof(deng_ui32_t), 1, file);
-    fwrite(&p_pixel_data->width, sizeof(deng_ui16_t), 1, file);
-    fwrite(&p_pixel_data->height, sizeof(deng_ui16_t), 1, file);
-    fwrite(p_pixel_data->p_pixel_data, p_pixel_data->size, 1, file);
-}
-
 
 /* das file reader callback function */
 void dasReadAsset (
     deng_Asset *p_asset, 
-    const char *file_name, 
-    deng_AssetMode asset_mode
+    const char *file_name,
+    deng_AssetMode f_asset_mode
 ) {
     FILE *file;
     file = fopen(file_name, "rb");
@@ -118,79 +181,31 @@ void dasReadAsset (
         exit(-1);
     }
 
-    size_t index;
-    deng_VertDynamic tmp_vert;
-    p_asset->asset_mode = asset_mode;
-    
     dasReadINFOHDR (
         &p_asset->id, 
-        &p_asset->description, 
         &p_asset->time_point, 
+        &p_asset->asset_mode,
         (char*) file_name, 
         file
     );
 
-    switch (asset_mode)
-    {
-    case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
-        dasReadVERTHDR (
-            &p_asset->vertices, 
-            (char*) file_name, 
-            file
-        );
-        break;
+    dasReadVERTHDR (
+        &p_asset->vertices, 
+        p_asset->asset_mode,
+        f_asset_mode,
+        (char*) file_name, 
+        file
+    );
+
+    if(f_asset_mode != DENG_ASSET_MODE_DONT_CARE)
+        p_asset->asset_mode = f_asset_mode;
     
-    case DENG_ASSET_MODE_3D_UNMAPPED:
-        dasReadVERTHDR(&tmp_vert, (char*) file_name, file);
-        p_asset->vertices.size = tmp_vert.size;
-        p_asset->vertices.p_unmapped_vert_data = (VERT_UNMAPPED*) malloc (
-            p_asset->vertices.size * sizeof(VERT_UNMAPPED)
-        );
+    dasReadINDXHDR (
+        &p_asset->indices, 
+        (char*) file_name, 
+        file
+    );
 
-        // Populate asset unmapped vertices
-        for(index = 0; index < p_asset->vertices.size; index++)
-            p_asset->vertices.p_unmapped_vert_data[index].vert_data = tmp_vert.p_texture_mapped_vert_data[index].vert_data;
-        
-        break;
-
-    case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
-        dasReadVERTHDR(&tmp_vert, (char*) file_name, file);
-        p_asset->vertices.size = tmp_vert.size;
-        p_asset->vertices.p_texture_mapped_vert_data_2d = (VERT_MAPPED_2D*) malloc(p_asset->vertices.size * sizeof(VERT_MAPPED_2D));
-
-        // Populate 2D asset textured vertices
-        for(index = 0; index < p_asset->vertices.size; index++) {
-            p_asset->vertices.p_texture_mapped_vert_data_2d[index].vert_data.vert_x = 
-            tmp_vert.p_texture_mapped_vert_data[index].vert_data.vert_x;
-            p_asset->vertices.p_texture_mapped_vert_data_2d[index].vert_data.vert_y =
-            tmp_vert.p_texture_mapped_vert_data[index].vert_data.vert_y;
-            p_asset->vertices.p_texture_mapped_vert_data_2d[index].tex_data = tmp_vert.p_texture_mapped_vert_data[index].tex_data;  
-        }
-        break;
-
-    case DENG_ASSET_MODE_2D_UNMAPPED:
-        dasReadVERTHDR(&tmp_vert, (char*) file_name, file);
-        p_asset->vertices.size = tmp_vert.size;
-        p_asset->vertices.p_unmapped_vert_data_2d = (VERT_UNMAPPED_2D*) malloc (
-            p_asset->vertices.size * 
-            sizeof(VERT_UNMAPPED_2D)
-        );
-        
-        // Populate 2D asset unmapped vertices
-        for(index = 0; index < p_asset->vertices.size; index++) {
-            p_asset->vertices.p_unmapped_vert_data_2d[index].vert_data.vert_x = 
-            tmp_vert.p_texture_mapped_vert_data[index].vert_data.vert_x;
-            p_asset->vertices.p_unmapped_vert_data_2d[index].vert_data.vert_y = 
-            tmp_vert.p_texture_mapped_vert_data[index].vert_data.vert_y;
-        }
-        break;
-
-
-    default:
-        break;
-    }
-    
-    dasReadINDXHDR(&p_asset->indices, (char*) file_name, file);
     fclose(file);
 }
 
@@ -200,31 +215,41 @@ void dasDestroyAssets (
     deng_Asset *assets,
     deng_i32_t asset_c
 ) {
+    // O(n)
     deng_i32_t l_index;
     for(l_index = 0; l_index < asset_c; l_index++) {
         switch (assets[l_index].asset_mode)
         {
         case DENG_ASSET_MODE_2D_UNMAPPED:
-            free(assets[l_index].vertices.p_unmapped_vert_data_2d);
+            free (assets[l_index].vertices.p_unmapped_vert_data_2d);
             break;
-        
+
         case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
-            free(assets[l_index].vertices.p_texture_mapped_vert_data_2d);
+            free(assets[l_index].vertices.p_tex_mapped_vert_data_2d);
             break;
 
         case DENG_ASSET_MODE_3D_UNMAPPED:
-            free(assets[l_index].vertices.p_unmapped_vert_data);
+            free(assets[l_index].vertices.p_unmapped_unnormalized_vert);
+            break;
+
+        case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+            free(assets[l_index].vertices.p_unmapped_normalized_vert);
             break;
 
         case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
-            free(assets[l_index].vertices.p_texture_mapped_vert_data);
+            free(assets[l_index].vertices.p_tex_mapped_unnormalized_vert);
+            break;
+
+        case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
+            free(assets[l_index].vertices.p_tex_mapped_normalized_vert);
             break;
         
         default:
             break;
         }
     }
-
+    
+    free(assets[l_index].indices.p_indices);
     if(asset_c) free(assets);
 }
 
@@ -244,42 +269,44 @@ void dasDestroyTextures (
 
 /* Read das INFO_HDR information */
 void dasReadINFOHDR (
-    char **asset_name, 
-    char **description, 
-    deng_ui64_t *p_time_point, 
+    char **p_asset_name, 
+    deng_ui64_t *p_timestamp, 
+    deng_AssetMode *p_asset_mode,
     char *file_name, 
     FILE *file
 ) {
     deng_ui32_t hdr_size;
-    deng_ui8_t name_size, desc_size;
+    deng_ui8_t name_size;
     char hdr_name[8];
     size_t res;
     res = fread(hdr_name, 8 * sizeof(char), 1, file);
     
     if(strncmp(hdr_name, INFO_HEADER_NAME, 8)) {
         printf("ERROR: Failed to verify INFO_HDR in asset file %s!\n", file_name);
-        return;
+        exit(EXIT_FAILURE);
     }
 
-    res = fread(p_time_point, sizeof(deng_ui64_t), 1, file);
     res = fread(&hdr_size, sizeof(deng_ui32_t), 1, file);
+    res = fread(p_timestamp, sizeof(deng_ui64_t), 1, file);
+    
+    deng_ui8_t mode = 0;
+    res = fread(&mode, sizeof(deng_ui8_t), 1, file);
+    *p_asset_mode = (deng_AssetMode) mode;
 
     res = fread(&name_size, sizeof(deng_ui8_t), 1, file);
-    *asset_name = (char*) calloc((size_t) name_size, sizeof(char));
-    res = fread(*asset_name, sizeof(char), (size_t) name_size, file);
-
-    res = fread(&desc_size, sizeof(deng_ui8_t), 1, file);
-    *description = (char*) calloc((size_t) desc_size, sizeof(char));
-    res = fread(*description, sizeof(char), (size_t) desc_size, file);
+    *p_asset_name = (char*) calloc((size_t) name_size + 1, sizeof(char));
+    res = fread(*p_asset_name, sizeof(char), (size_t) name_size, file);
 
     if(!res) {
-        perror("Failed to read INFO_HDR\n");
-        exit(-1);
+        perror("Failed to read data from INFO_HDR\n");
+        exit(EXIT_FAILURE);
     }
 }
 
 void dasReadVERTHDR (
-    deng_VertDynamic *p_vertices, 
+    deng_VertDynamic *p_vertices,
+    deng_AssetMode file_asset_mode,
+    deng_AssetMode new_asset_mode,
     char *file_name, 
     FILE *file
 ) {
@@ -288,7 +315,7 @@ void dasReadVERTHDR (
     deng_ui32_t vert_count;
 
     size_t res;
-    res = fread(hdr_name, 8, 1, file);
+    res = fread(hdr_name, sizeof(char), 8, file);
 
     if(strncmp(hdr_name, VERTICES_HEADER_NAME, 8)) {
         printf("ERROR: Failed to verify VERT_HDR in asset file %s!\n", file_name);
@@ -299,16 +326,327 @@ void dasReadVERTHDR (
     res = fread(&vert_count, sizeof(deng_ui32_t), 1, file);
     p_vertices->size = vert_count;
 
-    p_vertices->p_texture_mapped_vert_data = (VERT_MAPPED*) malloc (
-        p_vertices->size * sizeof(VERT_MAPPED)
-    );
+    char file_str[256];
+    cm_LogWrite("vert_read.log", "#Entry point", true);
 
-    res = fread (
-        p_vertices->p_texture_mapped_vert_data, 
-        sizeof(VERT_MAPPED), 
-        p_vertices->size, 
-        file
-    );
+    switch(new_asset_mode)
+    {
+    case DENG_ASSET_MODE_3D_UNMAPPED:
+        p_vertices->p_unmapped_unnormalized_vert = (VERT_UNMAPPED_UNOR*) calloc (
+            p_vertices->size,
+            sizeof(VERT_UNMAPPED_UNOR)
+        );
+
+        switch(file_asset_mode)
+        {
+        case DENG_ASSET_MODE_3D_UNMAPPED:
+            res = fread (
+                p_vertices->p_unmapped_unnormalized_vert, 
+                sizeof(VERT_UNMAPPED_UNOR), 
+                p_vertices->size, 
+                file
+            );
+            break;
+
+        case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED: {
+            VERT_UNMAPPED_NOR *tmp_vert = (VERT_UNMAPPED_NOR*) calloc (
+                p_vertices->size,
+                sizeof(VERT_UNMAPPED_NOR)
+            );
+
+            res = fread (
+                tmp_vert,
+                sizeof(VERT_UNMAPPED_NOR),
+                p_vertices->size,
+                file
+            );
+
+            for(size_t i = 0; i < p_vertices->size; i++) {
+                p_vertices->p_unmapped_unnormalized_vert[i].vert_data = tmp_vert[i].vert_data;
+                p_vertices->p_unmapped_unnormalized_vert[i].color_data = tmp_vert[i].color_data;
+            }
+
+            free(tmp_vert);
+            break;
+        }
+
+        case DENG_ASSET_MODE_3D_TEXTURE_MAPPED: {
+            VERT_MAPPED_UNOR *tmp_vert = (VERT_MAPPED_UNOR*) calloc (
+                p_vertices->size,
+                sizeof(VERT_MAPPED_UNOR)
+            );
+            
+            res = fread (
+                tmp_vert,
+                sizeof(VERT_MAPPED_UNOR),
+                p_vertices->size,
+                file
+            );
+
+            for(size_t i = 0; i < p_vertices->size; i++) {
+                p_vertices->p_unmapped_unnormalized_vert[i].vert_data = tmp_vert[i].vert_data;
+                p_vertices->p_unmapped_unnormalized_vert[i].color_data = DEFAULT_ASSET_COLOR;
+            }
+
+            free(tmp_vert);
+            break;
+        }
+
+        case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED: {
+            VERT_MAPPED_NOR *tmp_vert = (VERT_MAPPED_NOR*) calloc (
+                p_vertices->size,
+                sizeof(VERT_MAPPED_NOR)
+            );
+
+            res = fread (
+                tmp_vert,
+                sizeof(VERT_MAPPED_NOR),
+                p_vertices->size,
+                file
+            );
+
+            for(size_t i = 0; i < p_vertices->size; i++) {
+                p_vertices->p_unmapped_unnormalized_vert[i].vert_data = tmp_vert[i].vert_data;
+                p_vertices->p_unmapped_unnormalized_vert[i].color_data = DEFAULT_ASSET_COLOR;
+            }
+
+            free(tmp_vert);
+            break;
+        }
+
+        default:
+            break;
+        }
+
+        break;
+
+    case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+        p_vertices->p_unmapped_normalized_vert = (VERT_UNMAPPED_NOR*) calloc (
+            p_vertices->size,
+            sizeof(VERT_UNMAPPED_NOR)
+        );
+
+        switch(file_asset_mode)
+        {
+        case DENG_ASSET_MODE_3D_UNMAPPED:
+        case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
+            printf("test\n");
+            fprintf (
+                stderr,
+                "Cannot read normalised vertices from non normalised asset file\n"
+            );
+            exit(EXIT_FAILURE);
+            break;
+
+        case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED: {
+            res = fread (
+                p_vertices->p_unmapped_normalized_vert,
+                sizeof(VERT_UNMAPPED_NOR),
+                p_vertices->size,
+                file
+            );
+            break;
+        }
+
+        case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED: {
+            VERT_MAPPED_NOR *tmp_vert = (VERT_MAPPED_NOR*) calloc (
+                p_vertices->size,
+                sizeof(VERT_MAPPED_NOR)
+            );
+
+            res = fread (
+                tmp_vert,
+                sizeof(VERT_MAPPED_NOR),
+                p_vertices->size,
+                file
+            );
+
+            for(size_t i = 0; i < p_vertices->size; i++) {
+                p_vertices->p_unmapped_normalized_vert[i].vert_data = tmp_vert[i].vert_data;
+                p_vertices->p_unmapped_normalized_vert[i].norm_data = tmp_vert[i].norm_data;
+                p_vertices->p_unmapped_normalized_vert[i].color_data = DEFAULT_ASSET_COLOR;
+            }
+
+            free(tmp_vert);
+            break;
+        }
+
+        default:
+            break;
+        }
+        break;
+
+    case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
+        p_vertices->p_tex_mapped_unnormalized_vert = (VERT_MAPPED_UNOR*) calloc (
+            p_vertices->size,
+            sizeof(VERT_MAPPED_UNOR)
+        );
+
+        switch(file_asset_mode)
+        {
+        case DENG_ASSET_MODE_3D_UNMAPPED:
+        case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+            fprintf (
+                stderr,
+                "Cannot read texture vertices from non texture mapped asset file\n"
+            );
+            exit(EXIT_FAILURE);
+            break;
+
+        case DENG_ASSET_MODE_3D_TEXTURE_MAPPED: {
+            res = fread (
+                p_vertices->p_tex_mapped_unnormalized_vert,
+                sizeof(VERT_MAPPED_UNOR),
+                p_vertices->size,
+                file
+            );
+            break;
+        }
+
+        case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED: {
+            VERT_MAPPED_NOR *tmp_vert = (VERT_MAPPED_NOR*) calloc (
+                p_vertices->size,
+                sizeof(VERT_MAPPED_NOR)
+            );
+            
+            res = fread (
+                tmp_vert,
+                sizeof(VERT_MAPPED_NOR),
+                p_vertices->size,
+                file
+            );
+
+            for(size_t i = 0; i < p_vertices->size; i++) {
+                printf("Hello test\n");
+                sprintf (
+                    file_str,
+                    "%f,%f,%f | %f,%f | %f,%f,%f",
+                    tmp_vert[i].vert_data.vert_x,
+                    tmp_vert[i].vert_data.vert_y,
+                    tmp_vert[i].vert_data.vert_z,
+                    tmp_vert[i].tex_data.tex_x,
+                    tmp_vert[i].tex_data.tex_y,
+                    tmp_vert[i].norm_data.nor_x,
+                    tmp_vert[i].norm_data.nor_y,
+                    tmp_vert[i].norm_data.nor_z
+                );
+                cm_LogWrite("vert_read.log", file_str, false);
+                memset(file_str, 0, 256);
+
+                p_vertices->p_tex_mapped_unnormalized_vert[i].vert_data = tmp_vert[i].vert_data;
+                p_vertices->p_tex_mapped_unnormalized_vert[i].tex_data = tmp_vert[i].tex_data;
+            }
+
+            free(tmp_vert);
+            break;
+        }
+
+        default:
+            break;
+        }
+        break;
+
+    case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
+        p_vertices->p_tex_mapped_normalized_vert = (VERT_MAPPED_NOR*) calloc (
+            p_vertices->size,
+            sizeof(VERT_MAPPED_NOR)
+        );
+
+        switch(file_asset_mode)
+        {
+        case DENG_ASSET_MODE_3D_UNMAPPED:
+        case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+        case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
+            fprintf (
+                stderr,
+                "Cannot read texture or normal vertices from non texture mapped or non normalised asset file\n"
+            );
+            exit(EXIT_FAILURE);
+            break;
+
+        case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED: {
+            res = fread (
+                p_vertices->p_tex_mapped_normalized_vert,
+                sizeof(VERT_UNMAPPED_NOR),
+                p_vertices->size,
+                file
+            );
+            break;
+        }
+
+        default:
+            break;
+        }
+        break;
+
+
+    case DENG_ASSET_MODE_DONT_CARE:
+        switch(file_asset_mode)
+        {
+        case DENG_ASSET_MODE_3D_UNMAPPED:
+            p_vertices->p_unmapped_unnormalized_vert = (VERT_UNMAPPED_UNOR*) calloc (
+                p_vertices->size,
+                sizeof(VERT_UNMAPPED_UNOR)
+            );
+
+            res = fread (
+                p_vertices->p_unmapped_unnormalized_vert, 
+                sizeof(VERT_UNMAPPED_UNOR), 
+                p_vertices->size, 
+                file
+            );
+            break;
+
+        case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+            p_vertices->p_unmapped_normalized_vert = (VERT_UNMAPPED_NOR*) calloc (
+                p_vertices->size,
+                sizeof(VERT_UNMAPPED_NOR)
+            );
+
+            res = fread (
+                p_vertices->p_unmapped_normalized_vert,
+                sizeof(VERT_MAPPED_NOR),
+                p_vertices->size,
+                file
+            );
+            break;
+        case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
+            p_vertices->p_tex_mapped_unnormalized_vert = (VERT_MAPPED_UNOR*) calloc (
+                p_vertices->size,
+                sizeof(VERT_MAPPED_UNOR)
+            );
+
+            res = fread (
+                p_vertices->p_tex_mapped_unnormalized_vert,
+                sizeof(VERT_MAPPED_UNOR),
+                p_vertices->size,
+                file
+            );
+            break;
+
+        case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
+            printf("Loading textured normalised vertices\n");
+            p_vertices->p_tex_mapped_normalized_vert = (VERT_MAPPED_NOR*) calloc (
+                p_vertices->size,
+                sizeof(VERT_MAPPED_NOR)
+            );
+
+            res = fread (
+                p_vertices->p_tex_mapped_normalized_vert,
+                sizeof(VERT_MAPPED_NOR),
+                p_vertices->size,
+                file
+            );
+            break;
+
+        default:
+            break;
+        }
+        break;
+
+    default:
+        break;
+    }
 
     if(!res) {
         perror("Failed to read VERT_HDR\n");
@@ -325,7 +663,7 @@ void dasReadINDXHDR (
     deng_ui32_t hdr_size, indices_count;
 
     size_t res;
-    res = fread(hdr_name, 8, 1, file);
+    res = fread(hdr_name, sizeof(char), 8, file);
     printf("%s\n", hdr_name);
     
     if(strncmp(hdr_name, INDICES_HEADER_NAME, 8)) {
@@ -333,7 +671,7 @@ void dasReadINDXHDR (
             "ERROR: Failed to verify INDX_HDR in asset file %s!\n", 
             file_name
         );
-        return;
+        exit(EXIT_FAILURE);
     }
 
     res = fread(&hdr_size, sizeof(deng_ui32_t), 1, file);

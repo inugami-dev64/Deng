@@ -4,7 +4,7 @@ namespace dengUtils {
 
     /* Search for certain font and return true if found */
     bool StringRasterizer::verifyFont(BitmapStr &str, std::string &out_path) {
-        size_t l_index, r_index, path_index;
+        size_t l_index, r_index, path_index = 0;
         std::string list_font_name = "";
 
         for(l_index = 0; l_index < m_fonts.size(); l_index++) {
@@ -204,11 +204,6 @@ namespace dengUtils {
                 m_library_instance, 
                 &str.font_face->glyph->bitmap, 
                 &str.unique_glyphs[index].bitmap
-            );
-
-            LOG (
-                "GLYPH_SIZE: " +
-                std::to_string(str.unique_glyphs[index].bitmap.width)
             );
 
             FT_Bitmap_Done (

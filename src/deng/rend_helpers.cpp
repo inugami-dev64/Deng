@@ -1,4 +1,6 @@
 #include "../../headers/deng/api_core.h"
+#include <string>
+#include <vulkan/vulkan_core.h>
 
 namespace deng {
 
@@ -221,11 +223,23 @@ namespace deng {
         switch (m_p_pipeline_data->pipeline_type)
         {
         case DENG_PIPELINE_TYPE_UNMAPPED_3D:
-            input_binding_desc.stride = sizeof(VERT_UNMAPPED);
+            LOG("Pipeline type unmapped unnorm");
+            input_binding_desc.stride = sizeof(VERT_UNMAPPED_UNOR);
             break;
-        
+
+        case DENG_PIPELINE_TYPE_UNMAPPED_3D_NORM:
+            LOG("Pipeline type unmapped unnorm");
+            input_binding_desc.stride = sizeof(VERT_UNMAPPED_NOR);
+            break;
+
         case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D:
-            input_binding_desc.stride = sizeof(VERT_MAPPED);
+            LOG("Pipeline type tex mapped unnorm");
+            input_binding_desc.stride = sizeof(VERT_MAPPED_UNOR);
+            break;
+
+        case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D_NORM:
+            LOG("Pipeline type tex mapped norm");
+            input_binding_desc.stride = sizeof(VERT_MAPPED_NOR);
             break;
 
         case DENG_PIPELINE_TYPE_UNMAPPED_2D:
@@ -246,35 +260,73 @@ namespace deng {
     /* Get vertex input attribute description info */
     std::vector<VkVertexInputAttributeDescription> PipelineCreator::getAttributeDescs() {
         std::vector<VkVertexInputAttributeDescription> input_attr_desc{};
-        input_attr_desc.resize(2);
 
         switch (m_p_pipeline_data->pipeline_type)
         {
         case DENG_PIPELINE_TYPE_UNMAPPED_3D:
+            input_attr_desc.resize(2);
             input_attr_desc[0].binding = 0;
             input_attr_desc[0].location = 0;
             input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-            input_attr_desc[0].offset = offsetof(VERT_UNMAPPED, vert_data);
+            input_attr_desc[0].offset = offsetof(VERT_UNMAPPED_UNOR, vert_data);
 
             input_attr_desc[1].binding = 0;
             input_attr_desc[1].location = 1;
             input_attr_desc[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-            input_attr_desc[1].offset = offsetof(VERT_UNMAPPED, color_data);
+            input_attr_desc[1].offset = offsetof(VERT_UNMAPPED_UNOR, color_data);
             break;
 
-        case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D:
+        case DENG_PIPELINE_TYPE_UNMAPPED_3D_NORM:
+            input_attr_desc.resize(3);
             input_attr_desc[0].binding = 0;
             input_attr_desc[0].location = 0;
             input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-            input_attr_desc[0].offset = offsetof(VERT_MAPPED, vert_data);
+            input_attr_desc[0].offset = offsetof(VERT_UNMAPPED_NOR, vert_data);
+
+            input_attr_desc[1].binding = 0;
+            input_attr_desc[1].location = 1;
+            input_attr_desc[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            input_attr_desc[1].offset = offsetof(VERT_UNMAPPED_NOR, color_data);
+
+            input_attr_desc[2].binding = 0;
+            input_attr_desc[2].location = 2;
+            input_attr_desc[2].format = VK_FORMAT_R32G32B32_SFLOAT;
+            input_attr_desc[2].offset = offsetof(VERT_UNMAPPED_NOR, norm_data);
+            break;
+
+        case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D:
+            input_attr_desc.resize(2);
+            input_attr_desc[0].binding = 0;
+            input_attr_desc[0].location = 0;
+            input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+            input_attr_desc[0].offset = offsetof(VERT_MAPPED_UNOR, vert_data);
 
             input_attr_desc[1].binding = 0;
             input_attr_desc[1].location = 1;
             input_attr_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
-            input_attr_desc[1].offset = offsetof(VERT_MAPPED, tex_data);
+            input_attr_desc[1].offset = offsetof(VERT_MAPPED_UNOR, tex_data);
+            break;
+
+        case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D_NORM:
+            input_attr_desc.resize(3);
+            input_attr_desc[0].binding = 0;
+            input_attr_desc[0].location = 0;
+            input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+            input_attr_desc[0].offset = offsetof(VERT_MAPPED_NOR, vert_data);
+
+            input_attr_desc[1].binding = 0;
+            input_attr_desc[1].location = 1;
+            input_attr_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
+            input_attr_desc[1].offset = offsetof(VERT_MAPPED_NOR, tex_data);
+
+            input_attr_desc[2].binding = 0;
+            input_attr_desc[2].location = 2;
+            input_attr_desc[2].format = VK_FORMAT_R32G32B32_SFLOAT;
+            input_attr_desc[2].offset = offsetof(VERT_MAPPED_NOR, norm_data);
             break;
 
         case DENG_PIPELINE_TYPE_UNMAPPED_2D:
+            input_attr_desc.resize(2);
             input_attr_desc[0].binding = 0;
             input_attr_desc[0].location = 0;
             input_attr_desc[0].format = VK_FORMAT_R32G32_SFLOAT;
@@ -287,6 +339,7 @@ namespace deng {
             break;
 
         case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D:
+            input_attr_desc.resize(2);
             input_attr_desc[0].binding = 0;
             input_attr_desc[0].location = 0;
             input_attr_desc[0].format = VK_FORMAT_R32G32_SFLOAT;
@@ -334,7 +387,16 @@ namespace deng {
         file_size = ftell(file);
         fseek(file, 0, SEEK_SET);
         vert_shader_binary_vector.resize(file_size);
-        res = fread(vert_shader_binary_vector.data(), sizeof(char), file_size, file);
+        res = fread (
+            vert_shader_binary_vector.data(), 
+            sizeof(char), 
+            file_size, 
+            file
+        );
+
+        if(res != (size_t) file_size)
+            MEM_ERR("Failed to read " + std::to_string(file_size) + "members");
+
         fclose(file);
 
         /* Get frag shader binary data */
@@ -348,7 +410,15 @@ namespace deng {
         file_size = ftell(file);
         fseek(file, 0, SEEK_SET);
         frag_shader_binary_vector.resize(file_size);
-        res = fread(frag_shader_binary_vector.data(), sizeof(char), file_size, file);
+        res = fread (
+            frag_shader_binary_vector.data(), 
+            sizeof(char), 
+            file_size, 
+            file
+        );
+
+        if(res != (size_t) file_size)
+            MEM_ERR("Failed to read " + std::to_string(file_size) + " members");
 
         /* Call shader module handler */
         m_shader_modules[0] = getShaderModule(vert_shader_binary_vector);

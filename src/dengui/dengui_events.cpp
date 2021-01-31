@@ -27,8 +27,8 @@ namespace dengui {
     ) {
         size_t l_index, r_index;
         bool is_colliding = false;
-        dengMath::vec2<float> vc;
-        dengMath::vec2<float> vn;
+        dengMath::vec2<float> *vc;
+        dengMath::vec2<float> *vn;
 
         // Check every triangle for potential collision
         switch (p_elem->color_mode)
@@ -38,15 +38,15 @@ namespace dengui {
             for(l_index = 0; l_index < (size_t) p_elem->base_vert_size; l_index++) {
                 r_index = l_index + 1;
                 if(r_index == p_elem->unmapped_vert.size()) r_index = 0;
-
-                vc = *(dengMath::vec2<deng_vec_t>*) &p_elem->unmapped_vert[l_index].vert_data;
-                vn = *(dengMath::vec2<deng_vec_t>*) &p_elem->unmapped_vert[r_index].vert_data;
+                
+                vc = (dengMath::vec2<deng_vec_t>*) &p_elem->unmapped_vert[l_index].vert_data;
+                vn = (dengMath::vec2<deng_vec_t>*) &p_elem->unmapped_vert[r_index].vert_data;
 
                 if
                 (
-                    ((vc.second >= point.second && vn.second < point.second) ||
-                    (vc.second < point.second && vn.second >= point.second)) &&
-                    (point.first < (vn.first - vc.first) * (point.second - vc.second) / (vn.second - vc.second) + vc.first)
+                    ((vc->second >= point.second && vn->second < point.second) ||
+                    (vc->second < point.second && vn->second >= point.second)) &&
+                    (point.first < (vn->first - vc->first) * (point.second - vc->second) / (vn->second - vc->second) + vc->first)
                 ) is_colliding = !is_colliding;
 
             }
@@ -57,14 +57,14 @@ namespace dengui {
                 r_index = l_index + 1;
                 if(r_index == p_elem->mapped_vert.size()) r_index = 0;
 
-                vc = *(dengMath::vec2<float>*) &p_elem->mapped_vert[l_index].vert_data;
-                vn = *(dengMath::vec2<float>*) &p_elem->mapped_vert[r_index].vert_data;
+                vc = (dengMath::vec2<float>*) &p_elem->mapped_vert[l_index].vert_data;
+                vn = (dengMath::vec2<float>*) &p_elem->mapped_vert[r_index].vert_data;
 
                 if
                 (
-                    ((vc.second >= point.second && vn.second < point.second) ||
-                    (vc.second < point.second && vn.second >= point.second)) &&
-                    (point.first < (vn.first - vc.first) * (point.second - vc.second) / (vn.second - vc.second) + vc.first)
+                    ((vc->second >= point.second && vn->second < point.second) ||
+                    (vc->second < point.second && vn->second >= point.second)) &&
+                    (point.first < (vn->first - vc->first) * (point.second - vc->second) / (vn->second - vc->second) + vc->first)
                 ) is_colliding = !is_colliding;
 
             }
@@ -128,12 +128,10 @@ namespace dengui {
                 ) {
                     // Search for active button clicks
                     for(r_index = 0; r_index < ext_mii.active_btn_c; r_index++) {
-                        LOG("BTN");
                         m_info.p_update_mut->lock();
                         switch (ext_mii.active_btn[r_index])
                         {
                         case DENG_MOUSE_BTN_1:
-                            LOG("BTN_1");
                             if(m_elem_infos[l_index].onLMBClickFunc) {
                                 m_elem_infos[l_index].onLMBClickFunc (
                                     &m_elem_infos[l_index],
@@ -143,7 +141,6 @@ namespace dengui {
                             break;
 
                         case DENG_MOUSE_BTN_2:
-                            LOG("BTN_2");
                             if(m_elem_infos[l_index].onMMBClickFunc)
                                 m_elem_infos[l_index].onMMBClickFunc (
                                     &m_elem_infos[l_index],
@@ -152,7 +149,6 @@ namespace dengui {
                             break;
 
                         case DENG_MOUSE_BTN_3:
-                            LOG("BTN_3");
                             if(m_elem_infos[l_index].onRMBClickFunc)
                                 m_elem_infos[l_index].onRMBClickFunc (
                                     &m_elem_infos[l_index],
@@ -161,7 +157,6 @@ namespace dengui {
                             break;
 
                         case DENG_MOUSE_SCROLL_DOWN:
-                            LOG("BTN_SCR_DOWN");
                             if(m_elem_infos[l_index].onScrDownFunc)
                                 m_elem_infos[l_index].onScrDownFunc (
                                     &m_elem_infos[l_index],
@@ -170,7 +165,6 @@ namespace dengui {
                             break;
 
                         case DENG_MOUSE_SCROLL_UP:
-                            LOG("BTN_SCR_UP");
                             if(m_elem_infos[l_index].onScrUpFunc)
                                 m_elem_infos[l_index].onScrUpFunc (
                                     &m_elem_infos[l_index],
@@ -318,13 +312,13 @@ namespace dengui {
                 (*m_info.p_assets)[l_index].asset_mode = DENG_ASSET_MODE_2D_TEXTURE_MAPPED;
                 (*m_info.p_assets)[l_index].vertices.size = elems[r_index].mapped_vert.size();
 
-                (*m_info.p_assets)[l_index].vertices.p_texture_mapped_vert_data_2d = (VERT_MAPPED_2D*) calloc (
+                (*m_info.p_assets)[l_index].vertices.p_tex_mapped_vert_data_2d = (VERT_MAPPED_2D*) calloc (
                     elems[r_index].mapped_vert.size(),
                     sizeof(VERT_UNMAPPED_2D)
                 );
 
                 memcpy (
-                    (*m_info.p_assets)[l_index].vertices.p_texture_mapped_vert_data_2d,
+                    (*m_info.p_assets)[l_index].vertices.p_tex_mapped_vert_data_2d,
                     elems[r_index].mapped_vert.data(),
                     elems[r_index].mapped_vert.size() * sizeof(VERT_MAPPED_2D)
                 );

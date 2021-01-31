@@ -1,7 +1,6 @@
 #ifndef DENGUI_WINDOW_H
 #define DENGUI_WINDOW_H
 
-#include <vector>
 typedef deng_ui32_t WindowID;
 // In pixels
 #define DENGUI_LIGHT_BORDER_THICKNESS       1
@@ -146,7 +145,7 @@ namespace dengui {
         dengMath::vec2<deng_vec_t> pos;
         dengMath::vec2<deng_vec_t> size;
         RectangleOrigin rec_origin;
-        std::vector<VERT_UNMAPPED> *p_vert;
+        std::vector<VERT_UNMAPPED_2D> *p_vert;
         std::vector<deng_ui32_t> *p_indices;
     };
 

@@ -3,16 +3,18 @@ import:
   windows: 
     - modules/freetype2/build.yml
 premake:
-  cc: clang
-  cxx: clang++
+  cc: gcc
+  cxx: g++
   cc_flags: 
     - Wall 
     - m64
+    - O3
     - g 
   cxx_flags: 
     - Wall 
     - m64 
     - std=c++11
+    - O3
     - g
   include_path:
     linux:
@@ -29,7 +31,7 @@ premake:
 tasks: 
   sandboxapp:
     type: exec
-    src: main/sandbox.cpp
+    src: main/sandbox_3d.cpp
     deps:
       - ldeng
       - lfreetype
@@ -50,6 +52,7 @@ tasks:
       - das/das_handler.c
       - das/data_loader.c
       - common/common.c
+      - common/hashmap.c
   
   libdeng:
     type: dynamic_lib
@@ -67,6 +70,7 @@ tasks:
       - dengui/dengui_window.cpp
       - dengui/map_editor_ui.cpp
       - common/common.c
+      - common/hashmap.c
       - das/das_handler.c
       - das/data_loader.c
       - deng/key_translation.c

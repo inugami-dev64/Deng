@@ -465,19 +465,35 @@ namespace dengMath {
             switch (asset.asset_mode)
             {
             case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
-                p_tmp_in = (dengMath::vec3<float>*) &asset.vertices.p_texture_mapped_vert_data[index].vert_data;
+                p_tmp_in = (dengMath::vec3<deng_vec_t>*) &asset.vertices.p_tex_mapped_unnormalized_vert[index].vert_data;
                 tmp_out = matrix * (*p_tmp_in);
-                asset.vertices.p_texture_mapped_vert_data[index].vert_data.vert_x = tmp_out.first;
-                asset.vertices.p_texture_mapped_vert_data[index].vert_data.vert_y = tmp_out.second;
-                asset.vertices.p_texture_mapped_vert_data[index].vert_data.vert_z = tmp_out.third;
+                asset.vertices.p_tex_mapped_unnormalized_vert[index].vert_data.vert_x = tmp_out.first;
+                asset.vertices.p_tex_mapped_unnormalized_vert[index].vert_data.vert_y = tmp_out.second;
+                asset.vertices.p_tex_mapped_unnormalized_vert[index].vert_data.vert_z = tmp_out.third;
+                break;
+
+            case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
+                p_tmp_in = (dengMath::vec3<deng_vec_t>*) &asset.vertices.p_tex_mapped_normalized_vert[index].vert_data;
+                tmp_out = matrix * (*p_tmp_in);
+                asset.vertices.p_tex_mapped_normalized_vert[index].vert_data.vert_x = tmp_out.first;
+                asset.vertices.p_tex_mapped_normalized_vert[index].vert_data.vert_y = tmp_out.second;
+                asset.vertices.p_tex_mapped_normalized_vert[index].vert_data.vert_z = tmp_out.third;
                 break;
 
             case DENG_ASSET_MODE_3D_UNMAPPED:
-                p_tmp_in = (dengMath::vec3<float>*) &asset.vertices.p_unmapped_vert_data[index]; 
+                p_tmp_in = (dengMath::vec3<deng_vec_t>*) &asset.vertices.p_unmapped_unnormalized_vert[index]; 
                 tmp_out = matrix * (*p_tmp_in);
-                asset.vertices.p_unmapped_vert_data[index].vert_data.vert_x = tmp_out.first;
-                asset.vertices.p_unmapped_vert_data[index].vert_data.vert_y = tmp_out.second;
-                asset.vertices.p_unmapped_vert_data[index].vert_data.vert_z = tmp_out.third;
+                asset.vertices.p_unmapped_unnormalized_vert[index].vert_data.vert_x = tmp_out.first;
+                asset.vertices.p_unmapped_unnormalized_vert[index].vert_data.vert_y = tmp_out.second;
+                asset.vertices.p_unmapped_unnormalized_vert[index].vert_data.vert_z = tmp_out.third;
+                break;
+
+            case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+                p_tmp_in = (dengMath::vec3<deng_vec_t>*) &asset.vertices.p_unmapped_normalized_vert[index]; 
+                tmp_out = matrix * (*p_tmp_in);
+                asset.vertices.p_unmapped_normalized_vert[index].vert_data.vert_x = tmp_out.first;
+                asset.vertices.p_unmapped_normalized_vert[index].vert_data.vert_y = tmp_out.second;
+                asset.vertices.p_unmapped_normalized_vert[index].vert_data.vert_z = tmp_out.third;
                 break;
 
             case DENG_ASSET_MODE_2D_UNMAPPED:

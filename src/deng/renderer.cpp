@@ -813,64 +813,46 @@ namespace deng {
         VkRenderPass &renderpass,
         VkSampleCountFlagBits sample_c
     ) {
-        // Vertices sizes
-        deng_ui32_t tex_mapped_3d_vert_count = 0;
-        deng_ui32_t unmapped_3d_vert_count = 0;
-        deng_ui32_t tex_mapped_2d_vert_count = 0;
-        deng_ui32_t unmapped_2d_vert_count = 0;
         size_t index;
-
-        // Count the amount of vertices for each type of assets
-        for(index = 0; index < m_p_assets->size(); index++) {
-            switch ((*m_p_assets)[index].asset_mode)
-            {
-            case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
-                tex_mapped_3d_vert_count += static_cast<deng_ui32_t>((*m_p_assets)[index].vertices.size);
-                break;
-
-            case DENG_ASSET_MODE_3D_UNMAPPED:
-                unmapped_3d_vert_count += static_cast<deng_ui32_t>((*m_p_assets)[index].vertices.size);
-                break;
-            
-            case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
-                tex_mapped_3d_vert_count += static_cast<deng_ui32_t>((*m_p_assets)[index].vertices.size);
-                break;
-
-            case DENG_ASSET_MODE_2D_UNMAPPED:
-                unmapped_2d_vert_count += static_cast<deng_ui32_t>((*m_p_assets)[index].vertices.size);
-                break;
-
-            default:
-                break;
-            }
-        }
-
-        // Make sure that vertices count isn't zero
-        if(!tex_mapped_3d_vert_count) tex_mapped_3d_vert_count++;
-        if(!unmapped_3d_vert_count) unmapped_3d_vert_count++;
-        if(!tex_mapped_2d_vert_count) tex_mapped_2d_vert_count++;
-        if(!unmapped_2d_vert_count) unmapped_2d_vert_count++;
         
         // Specify the pipiline type and layout
-        m_pipelines[UM3D_I].pipeline_type = DENG_PIPELINE_TYPE_UNMAPPED_3D;
-        m_pipelines[TM3D_I].pipeline_type = DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D;
+        m_pipelines[UM3D_UNOR_I].pipeline_type = DENG_PIPELINE_TYPE_UNMAPPED_3D;
+        m_pipelines[UM3D_NOR_I].pipeline_type = DENG_PIPELINE_TYPE_UNMAPPED_3D_NORM;
+        m_pipelines[TM3D_UNOR_I].pipeline_type = DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D;
+        m_pipelines[TM3D_NOR_I].pipeline_type = DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D_NORM;
         m_pipelines[UM2D_I].pipeline_type = DENG_PIPELINE_TYPE_UNMAPPED_2D;
         m_pipelines[TM2D_I].pipeline_type = DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D;
 
-        m_pipelines[UM3D_I].p_pipeline_layout = &m_unmapped_pl;
-        m_pipelines[TM3D_I].p_pipeline_layout = &m_texture_mapped_pl;
+        m_pipelines[UM3D_UNOR_I].p_pipeline_layout = &m_unmapped_pl;
+        m_pipelines[UM3D_NOR_I].p_pipeline_layout = &m_unmapped_pl;
+        m_pipelines[TM3D_UNOR_I].p_pipeline_layout = &m_texture_mapped_pl;
+        m_pipelines[TM3D_NOR_I].p_pipeline_layout = &m_texture_mapped_pl;
         m_pipelines[UM2D_I].p_pipeline_layout = &m_unmapped_pl;
         m_pipelines[TM2D_I].p_pipeline_layout = &m_texture_mapped_pl;
 
         PipelineCreator unmapped_pipeline_3d (
-            &m_pipelines[UM3D_I],
+            &m_pipelines[UM3D_UNOR_I],
+            device, 
+            extent, 
+            renderpass
+        );
+
+        PipelineCreator unmapped_nor_pipeline_3d (
+            &m_pipelines[UM3D_NOR_I],
             device, 
             extent, 
             renderpass
         );
 
         PipelineCreator texture_mapped_pipeline_3d (
-            &m_pipelines[TM3D_I], 
+            &m_pipelines[TM3D_UNOR_I], 
+            device, 
+            extent, 
+            renderpass
+        );
+
+        PipelineCreator texture_mapped_nor_pipeline_3d (
+            &m_pipelines[TM3D_NOR_I], 
             device, 
             extent, 
             renderpass
@@ -891,9 +873,9 @@ namespace deng {
         );
 
         std::array<VkGraphicsPipelineCreateInfo, DENG_PIPELINE_COUNT> pipeline_infos{};
-        pipeline_infos[UM3D_I] = unmapped_pipeline_3d.getGraphicsPipelineInfo (
+        pipeline_infos[UM3D_UNOR_I] = unmapped_pipeline_3d.getGraphicsPipelineInfo (
             UNMAPPED_VERT_SHADER_3D, 
-            UNMAPPED_FRAG_SHADER_3D, 
+            UNMAPPED_FRAG_SHADER, 
             (char*) "main", 
             VK_POLYGON_MODE_FILL, 
             VK_CULL_MODE_NONE, 
@@ -905,9 +887,37 @@ namespace deng {
             0
         );
 
-        pipeline_infos[TM3D_I] = texture_mapped_pipeline_3d.getGraphicsPipelineInfo (
+        pipeline_infos[UM3D_NOR_I] = unmapped_nor_pipeline_3d.getGraphicsPipelineInfo (
+            UNMAPPED_NORM_VERT_SHADER_3D, 
+            UNMAPPED_FRAG_SHADER, 
+            (char*) "main", 
+            VK_POLYGON_MODE_FILL, 
+            VK_CULL_MODE_NONE, 
+            VK_FRONT_FACE_COUNTER_CLOCKWISE, 
+            VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 
+            true, 
+            false, 
+            sample_c,
+            0
+        );
+
+        pipeline_infos[TM3D_UNOR_I] = texture_mapped_pipeline_3d.getGraphicsPipelineInfo (
             TEXTURE_MAPPED_VERT_SHADER_3D, 
-            TEXTURE_MAPPED_FRAG_SHADER_3D, 
+            TEXTURE_MAPPED_FRAG_SHADER, 
+            (char*) "main", 
+            VK_POLYGON_MODE_FILL, 
+            VK_CULL_MODE_NONE, 
+            VK_FRONT_FACE_COUNTER_CLOCKWISE, 
+            VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 
+            true, 
+            false,
+            sample_c, 
+            0
+        );
+
+        pipeline_infos[TM3D_NOR_I] = texture_mapped_nor_pipeline_3d.getGraphicsPipelineInfo (
+            TEXTURE_MAPPPED_NORM_VERT_SHADER_3D, 
+            TEXTURE_MAPPED_FRAG_SHADER, 
             (char*) "main", 
             VK_POLYGON_MODE_FILL, 
             VK_CULL_MODE_NONE, 
@@ -921,7 +931,7 @@ namespace deng {
 
         pipeline_infos[UM2D_I] = unmapped_pipeline_2d.getGraphicsPipelineInfo (
             UNMAPPED_VERT_SHADER_2D, 
-            UNMAPPED_FRAG_SHADER_2D, 
+            UNMAPPED_FRAG_SHADER, 
             (char*) "main", 
             VK_POLYGON_MODE_FILL, 
             VK_CULL_MODE_NONE, 
@@ -935,7 +945,7 @@ namespace deng {
 
         pipeline_infos[TM2D_I] = texture_mapped_pipeline_2d.getGraphicsPipelineInfo (
             TEXTURE_MAPPED_VERT_SHADER_2D, 
-            TEXTURE_MAPPED_FRAG_SHADER_2D, 
+            TEXTURE_MAPPED_FRAG_SHADER, 
             (char*) "main", 
             VK_POLYGON_MODE_FILL, 
             VK_CULL_MODE_NONE, 
@@ -1764,13 +1774,20 @@ namespace deng {
                 switch ((*m_p_assets)[l_index].asset_mode)
                 {
                 case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
-                    total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED);
+                    total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_UNOR);
                     break;
     
-                case DENG_ASSET_MODE_3D_UNMAPPED: {
-                    total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED);
+                case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
+                    total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_NOR);
                     break;
-                }
+
+                case DENG_ASSET_MODE_3D_UNMAPPED:
+                    total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED_UNOR);
+                    break;
+                
+                case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+                    total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED_NOR);
+                    break;
 
                 case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
                     total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_2D);
@@ -1824,34 +1841,55 @@ namespace deng {
                 switch ((*m_p_assets)[l_index].asset_mode)
                 {
                 case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
-                    data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED);
+                    data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_UNOR);
                     BufferCreator::populateBufferMem (
                         device, 
                         data_size, 
-                        (*m_p_assets)[l_index].vertices.p_texture_mapped_vert_data, 
+                        (*m_p_assets)[l_index].vertices.p_tex_mapped_unnormalized_vert, 
                         m_buffer_data.staging_buffer_memory, 
                         total_size
                     );
                     break;
 
-                case DENG_ASSET_MODE_3D_UNMAPPED: {
-                    data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED);
+                case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
+                    data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_NOR);
                     BufferCreator::populateBufferMem (
                         device, 
                         data_size, 
-                        (*m_p_assets)[l_index].vertices.p_unmapped_vert_data, 
+                        (*m_p_assets)[l_index].vertices.p_tex_mapped_normalized_vert, 
                         m_buffer_data.staging_buffer_memory, 
                         total_size
                     );
                     break;
-                }
+
+                case DENG_ASSET_MODE_3D_UNMAPPED:
+                    data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED_UNOR);
+                    BufferCreator::populateBufferMem (
+                        device, 
+                        data_size, 
+                        (*m_p_assets)[l_index].vertices.p_unmapped_unnormalized_vert, 
+                        m_buffer_data.staging_buffer_memory, 
+                        total_size
+                    );
+                    break;
+
+                case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+                    data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED_NOR);
+                    BufferCreator::populateBufferMem (
+                        device, 
+                        data_size, 
+                        (*m_p_assets)[l_index].vertices.p_unmapped_normalized_vert, 
+                        m_buffer_data.staging_buffer_memory, 
+                        total_size
+                    );
+                    break;
 
                 case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
                     data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_2D);
                     BufferCreator::populateBufferMem (
                         device, 
                         data_size, 
-                        (*m_p_assets)[l_index].vertices.p_texture_mapped_vert_data_2d, 
+                        (*m_p_assets)[l_index].vertices.p_tex_mapped_vert_data_2d, 
                         m_buffer_data.staging_buffer_memory, 
                         total_size
                     );
@@ -2145,7 +2183,7 @@ namespace deng {
         VkQueue g_queue, 
         VkRenderPass renderpass, 
         VkExtent2D extent,
-        dengMath::vec4<float> background,
+        dengMath::vec4<deng_vec_t> background,
         BufferData buffer_data
     ) {
         size_t l_index, r_index;
@@ -2229,12 +2267,30 @@ namespace deng {
                             vkCmdBindPipeline (
                                 (*m_p_commandbuffers)[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
-                                m_pl_data[UM3D_I].pipeline
+                                m_pl_data[UM3D_UNOR_I].pipeline
                             );
                             vkCmdBindDescriptorSets (
                                 (*m_p_commandbuffers)[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
-                                *m_pl_data[UM3D_I].p_pipeline_layout, 
+                                *m_pl_data[UM3D_UNOR_I].p_pipeline_layout, 
+                                0, 
+                                1, 
+                                &(*m_p_unmapped_ds)[l_index], 
+                                0, 
+                                nullptr
+                            );
+                            break;
+
+                        case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+                            vkCmdBindPipeline (
+                                (*m_p_commandbuffers)[l_index], 
+                                VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                                m_pl_data[UM3D_NOR_I].pipeline
+                            );
+                            vkCmdBindDescriptorSets (
+                                (*m_p_commandbuffers)[l_index], 
+                                VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                                *m_pl_data[UM3D_NOR_I].p_pipeline_layout, 
                                 0, 
                                 1, 
                                 &(*m_p_unmapped_ds)[l_index], 
@@ -2247,12 +2303,30 @@ namespace deng {
                             vkCmdBindPipeline (
                                 (*m_p_commandbuffers)[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
-                                m_pl_data[TM3D_I].pipeline
+                                m_pl_data[TM3D_UNOR_I].pipeline
                             );   
                             vkCmdBindDescriptorSets (
                                 (*m_p_commandbuffers)[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
-                                *m_pl_data[TM3D_I].p_pipeline_layout, 
+                                *m_pl_data[TM3D_UNOR_I].p_pipeline_layout, 
+                                0, 
+                                1,
+                                &findTextureImageDataByID((*m_p_assets)[r_index].tex_id).descriptor_sets[l_index], 
+                                0, 
+                                nullptr
+                            );                    
+                            break;
+
+                        case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
+                            vkCmdBindPipeline (
+                                (*m_p_commandbuffers)[l_index], 
+                                VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                                m_pl_data[TM3D_NOR_I].pipeline
+                            );   
+                            vkCmdBindDescriptorSets (
+                                (*m_p_commandbuffers)[l_index], 
+                                VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                                *m_pl_data[TM3D_NOR_I].p_pipeline_layout, 
                                 0, 
                                 1,
                                 &findTextureImageDataByID((*m_p_assets)[r_index].tex_id).descriptor_sets[l_index], 
@@ -2359,6 +2433,9 @@ namespace deng {
     /*********************************************/
     /*********************************************/
 
+    Renderer::Renderer(WindowWrap *p_win) { m_p_ww = p_win; }
+
+
     /* Submit assets for drawing */
     void Renderer::submitAssets (
         deng_Asset *assets, 
@@ -2447,7 +2524,7 @@ namespace deng {
             m_assets[asset_index].id = id_str;
             m_assets[asset_index].is_shown = true;
             m_assets[asset_index].time_point = time(NULL);
-            m_assets[asset_index].vertices.p_texture_mapped_vert_data_2d = rend_strs[l_index].vert_pos.data();
+            m_assets[asset_index].vertices.p_tex_mapped_vert_data_2d = rend_strs[l_index].vert_pos.data();
             m_assets[asset_index].vertices.size = rend_strs[l_index].vert_pos.size();
             m_assets[asset_index].indices.p_indices = rend_strs[l_index].vert_indices.data();
             m_assets[asset_index].indices.size = rend_strs[l_index].vert_indices.size();
@@ -2463,10 +2540,7 @@ namespace deng {
     }
 
     /* Set renderer hints */
-    void Renderer::setHints (
-        deng_RendererHintBits hints,
-        WindowWrap *p_win
-    ) {
+    void Renderer::setHints (deng_RendererHintBits hints) {
         // Check if VSync should be enabled
         if(hints & DENG_RENDERER_HINT_ENABLE_VSYNC)
             m_enable_vsync = true;
@@ -2483,7 +2557,7 @@ namespace deng {
         else m_enable_validation_layers = false;
 
         m_p_ic = new InstanceCreator (
-            p_win,
+            m_p_ww,
             m_enable_validation_layers
         );
 
@@ -2560,12 +2634,10 @@ namespace deng {
 
     /* Setup renderer for new rendering task */
     void Renderer::initRenderer (
-        WindowWrap *p_ww, 
         deng_RendererUsageMode usage,
         dengMath::vec4<float> background
     ) {
         m_asset_mut.lock();
-        m_p_ww = p_ww;
         m_p_sr = new dengUtils::StringRasterizer("", m_p_ww);
         m_usage_mode = usage;
 
