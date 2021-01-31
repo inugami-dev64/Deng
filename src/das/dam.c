@@ -1,13 +1,30 @@
-#include "dam.h"
+#define DAS_EXT_HANDLER
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "../../headers/common/base_types.h"
+#include "../../headers/das/das_core.h"
+#include "../../headers/das/dam.h"
+
 
 /* Count years recursively */
-uint16_t damCountYears(int64_t *p_time, uint16_t years, int n, int *p_is_leap_year) {
+deng_ui16_t damCountYears (
+    deng_i64_t *p_time, 
+    deng_ui16_t years, 
+    int n, 
+    int *p_is_leap_year
+) {
     if(n < 3 && (*p_time) - SECONDS_PER_YEAR >= 0) {
         n++;
         years++;
         (*p_time) -= SECONDS_PER_YEAR;
         *p_is_leap_year = false;
-        return damCountYears(p_time, years, n, p_is_leap_year);
+        return damCountYears (
+            p_time, 
+            years, 
+            n, 
+            p_is_leap_year
+        );
     }
     
     else if((*p_time) - SECONDS_PER_LEAP_YEAR >= 0) {
@@ -15,7 +32,12 @@ uint16_t damCountYears(int64_t *p_time, uint16_t years, int n, int *p_is_leap_ye
         (*p_time) -= SECONDS_PER_LEAP_YEAR;
         n = 0;
         *p_is_leap_year = true;
-        return damCountYears(p_time, years, n, p_is_leap_year);
+        return damCountYears (
+            p_time, 
+            years, 
+            n, 
+            p_is_leap_year
+        );
     }
 
     return years;
@@ -23,7 +45,11 @@ uint16_t damCountYears(int64_t *p_time, uint16_t years, int n, int *p_is_leap_ye
 
 
 /* Count months recursively */
-uint16_t damCountMonths(int64_t *p_time, uint16_t months, int is_leap_year) {
+deng_ui16_t damCountMonths (
+    deng_i64_t *p_time, 
+    deng_ui16_t months, 
+    int is_leap_year
+) {
     if(months <= 12) {
         // Check if month has 31 days
         if(months % 2 && (*p_time) - SECONDS_PER_31_DAY_MONTH >= 0) {
@@ -59,7 +85,7 @@ uint16_t damCountMonths(int64_t *p_time, uint16_t months, int is_leap_year) {
 
 
 /* Format date from time from epoch */
-void damFormatDate(char *date, char *time, int64_t time_from_epoch) {
+void damFormatDate(char *date, char *time, deng_i64_t time_from_epoch) {
     int is_leap_year;
     char *ch_month, *ch_day;
     ch_month = (char*) calloc(7, sizeof(char));
@@ -72,15 +98,15 @@ void damFormatDate(char *date, char *time, int64_t time_from_epoch) {
 
     // Count years since epoch
     time_from_epoch -= 2 * SECONDS_PER_YEAR;
-    uint16_t year_count = 1972 + damCountYears(&time_from_epoch, 0, 0, &is_leap_year);
+    deng_ui16_t year_count = 1972 + damCountYears(&time_from_epoch, 0, 0, &is_leap_year);
 
     // Count months from remaining time
-    uint16_t month = damCountMonths(&time_from_epoch, 1, is_leap_year);
+    deng_ui16_t month = damCountMonths(&time_from_epoch, 1, is_leap_year);
     if(month < 10) sprintf(ch_month, "0%d", month);
     else sprintf(ch_month, "%d", month);
 
     // Count day
-    uint16_t day = (uint16_t) (time_from_epoch / 86400);
+    deng_ui16_t day = (deng_ui16_t) (time_from_epoch / 86400);
     time_from_epoch %= 86400;
     if(day < 10) sprintf(ch_day, "0%d", day);
     else sprintf(ch_day, "%d", day);
@@ -90,19 +116,19 @@ void damFormatDate(char *date, char *time, int64_t time_from_epoch) {
     free(ch_day);
 
     // Count hours
-    uint16_t hour = (uint16_t) (time_from_epoch / 3600);
+    deng_ui16_t hour = (deng_ui16_t) (time_from_epoch / 3600);
     time_from_epoch %= 3600;
     if(hour < 10) sprintf(ch_hour, "0%d", hour); 
     else sprintf(ch_hour, "%d", hour);
 
     // Count minutes
-    uint16_t minute = (uint16_t) (time_from_epoch / 60);
+    deng_ui16_t minute = (deng_ui16_t) (time_from_epoch / 60);
     time_from_epoch %= 60;
     if(minute < 10) sprintf(ch_minute, "0%d", minute);
     else sprintf(ch_minute, "%d", minute);
 
-    if(time_from_epoch < 10) sprintf(ch_second, "0%d", (uint16_t) time_from_epoch);
-    else sprintf(ch_second, "%d", (uint16_t) time_from_epoch);
+    if(time_from_epoch < 10) sprintf(ch_second, "0%d", (deng_ui16_t) time_from_epoch);
+    else sprintf(ch_second, "%d", (deng_ui16_t) time_from_epoch);
     
     sprintf(time, "%s:%s:%s", ch_hour, ch_minute, ch_second);
     free(ch_hour);
@@ -111,515 +137,274 @@ void damFormatDate(char *date, char *time, int64_t time_from_epoch) {
 }
 
 
-/* Read local repository paths */
-void damReadLocalRepoConf(char ***ppp_repo_path, size_t *p_repo_count, int *p_write_repo_id) {
-    size_t l_index, r_index;
-    int is_default_found = false;
-    int is_white_space_handled;
-
-    FILE *file = fopen(repo_conf_path, "rb");
-    // Create new config file if not created
-    if(!file) {
-        file = fopen(repo_conf_path, "w");
-        fclose(file);
-        return;
-    }
-
-    fseek(file, 0, SEEK_END);
-    size_t file_size = (size_t) ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    if(file_size == 0) {
-        fclose(file);
-        return;
-    }
-
-    long *p_new_line_position = (long*) malloc(sizeof(long));
-    *p_repo_count = 0;
-    char default_ch[7];
-    size_t pos_before_white_space;
-    char *buffer;
-    char ch;
-
-    // Find the new line positions in config file
-    while(ftell(file) < file_size) {
-        fread(&ch, 1, 1, file);
-        if(ch == 0x0A) {
-            (*p_repo_count)++;
-            p_new_line_position = (long*) realloc(p_new_line_position, (*p_repo_count) * sizeof(long));
-            p_new_line_position[(*p_repo_count) - 1] = (size_t) ftell(file) - 1;
-        }
-    }
-
-    (*p_repo_count)++;
-    p_new_line_position = (long*) realloc(p_new_line_position, (*p_repo_count) * sizeof(long));
-    p_new_line_position[(*p_repo_count) - 1] = file_size;
-    *ppp_repo_path = (char**) calloc((*p_repo_count), sizeof(char*));
-    
-    fseek(file, 0, SEEK_SET);
-
-    // Read repository paths
-    for(l_index = 0; l_index < (*p_repo_count); l_index++) {
-        is_white_space_handled = false;
-        (*ppp_repo_path)[l_index] = (char*) calloc((size_t) (p_new_line_position[l_index] - ftell(file)), sizeof(char));
-
-        fread((*ppp_repo_path)[l_index], sizeof(char), p_new_line_position[l_index] - ftell(file), file);
-        fseek(file, 1L, SEEK_CUR);
-        
-        // Find whitespace
-        ch = 0x00;
-        for(r_index = 0; r_index < strlen((*ppp_repo_path)[l_index]) && ch != 0x20; r_index++)
-            ch = (*ppp_repo_path)[l_index][r_index];
-
-        if(ch == 0x20) pos_before_white_space = r_index - 1;
-        else is_white_space_handled = true;
-
-        // Check if current repo is default
-        if(!is_default_found) {
-            // Skip through whitespaces
-            for(; r_index < strlen((*ppp_repo_path)[l_index]) && ch == 0x20; r_index++)
-                ch = (*ppp_repo_path)[l_index][r_index];
-            
-            default_ch[0] = ch;
-            // Add rest of the chars to default_ch to see if current repository is marked as default
-            for(size_t default_i = 1; default_i < 7 && r_index < strlen((*ppp_repo_path)[l_index]); r_index++, default_i++)
-                default_ch[default_i] = (*ppp_repo_path)[l_index][r_index];
-            
-            // Check if repository is default and if needed extract repo name out of it
-            if(!strcmp(default_ch, "default")) {
-                is_default_found = true;
-                is_white_space_handled = true;
-
-                *p_write_repo_id = l_index + 1;
-                
-                if((*ppp_repo_path)[l_index][pos_before_white_space - 1] != '/') {
-                    buffer = (char*) calloc(pos_before_white_space + 1, sizeof(char));
-                    buffer[pos_before_white_space] = '/';
-                }
-            
-                else
-                    buffer = (char*) calloc(pos_before_white_space, sizeof(char));
-
-                for(r_index = 0; r_index < pos_before_white_space; r_index++)
-                    buffer[r_index] = (*ppp_repo_path)[l_index][r_index];
-
-                free((*ppp_repo_path)[l_index]);
-                (*ppp_repo_path)[l_index] = (char*) calloc(pos_before_white_space, sizeof(char));
-                strncpy((*ppp_repo_path)[l_index], buffer, strlen(buffer));
-                free(buffer);
-            }
-        }
-
-        // Remove unnessecary whitespaces if needed
-        if(!is_white_space_handled) {
-            if((*ppp_repo_path)[l_index][pos_before_white_space] != '/') {
-                buffer = (char*) calloc(pos_before_white_space + 1, sizeof(char));
-                buffer[pos_before_white_space] = '/';
-            }
-            
-            else
-                buffer = (char*) calloc(pos_before_white_space, sizeof(char));
-
-            
-            for(r_index = 0; r_index < pos_before_white_space; r_index++)
-                buffer[r_index] = (*ppp_repo_path)[l_index][r_index];
-            
-            free((*ppp_repo_path)[l_index]);
-            (*ppp_repo_path)[l_index] = calloc(pos_before_white_space, sizeof(char));
-            strncpy((*ppp_repo_path)[l_index], buffer, pos_before_white_space);
-            free(buffer);
-        }
-    }       
-
-    // Clean new line indices pointer
-    free(p_new_line_position);
-    
-    fclose(file);
-
-    return;
-}
-
-
 /* List all available assets in local repositories */
-void damListAssets (
-    char **repo_paths, 
-    size_t repo_count
-) {
-    DIR *dir;
+void damListAsset (char *asset_file) {
     FILE *file;
+    file = fopen(asset_file, "rb");
+    
+    if(!file) {
+        printf("Failed to read file '%s'\n", asset_file);
+        exit(EXIT_FAILURE);
+    }
 
-    size_t l_index, r_index;
+    deng_ui64_t timestamp;
+    deng_AssetMode asset_mode;
+    char *name;
 
-    char **repo_contents = (char**) malloc (
-        sizeof(char*)
+    dasReadINFOHDR (
+        &name,
+        &timestamp,
+        &asset_mode,
+        asset_file,
+        file
     );
-    size_t repo_contents_size = 0;
-    struct dirent *dir_contents = NULL;
-    char *file_ext = NULL;
-    char *file_path = NULL;
-    int found_assets = false;
 
-    // Iterate through local repositories
-    for(l_index = 0; l_index < repo_count; l_index++) {
-        dir = opendir(repo_paths[l_index]);
+    char date[24];
+    char time[24];
 
-        if(!dir) {
-            printf("ERROR: Failed to open repository directory %s%s\n", repo_paths[l_index], "!");
-            printf("Path does not exist!\n");
-            return;
-        }
+    memset(date, 0, 24);
+    memset(time, 0, 24);
 
-        // Read all files in repositories and select ones with .das extension
-        while((dir_contents = readdir(dir)) != NULL) {
-            if(dir_contents->d_type == DT_REG) {
-                file_ext = cm_GetFileExtName(dir_contents->d_name);
-               
-                if(file_ext && !strcmp(file_ext, "das")) {
-                    repo_contents_size++;
-                    // Allocate memory for another member in repo_contents
-                    repo_contents = (char**) realloc (
-                        (void*) repo_contents, 
-                        sizeof(char*)
-                    );
+    printf (
+        "Name: %s\n", 
+        name
+    );
 
-                    cm_CheckMemoryAlloc(repo_contents);
-                    
-                    // Allocate memory for string
-                    repo_contents[repo_contents_size - 1] = (char*) calloc (
-                        strlen(dir_contents->d_name) + 1, 
-                        sizeof(char)
-                    );
-                    
-                    // Copy file name to repo_contents
-                    strncpy (
-                        repo_contents[repo_contents_size - 1], 
-                        dir_contents->d_name, 
-                        strlen(dir_contents->d_name)
-                    );
-                }
-            }
-        }
+    damFormatDate (
+        date, 
+        time, 
+        timestamp
+    );
 
-        // Clean file extension
-        if(file_ext) free(file_ext);
+    printf (
+        "Date and time of creation: %s %s(UTC)\n", 
+        date,
+        time
+    );
 
-        closedir(dir);
+    switch(asset_mode)
+    {
+    case DENG_ASSET_MODE_3D_UNMAPPED:
+        printf("Vertex type: vertices only\n");
+        break;
 
-        // Display information about the asset
-        if(repo_contents_size > 0) found_assets = true;
-        for(r_index = 0; r_index < repo_contents_size; r_index++) {
-            // Create correct file path to read data from
-            if(repo_paths[l_index][strlen(repo_paths[l_index]) - 1] == '/') {
-                // Allocate memory for file path
-                file_path = (char*) calloc (
-                    strlen(repo_paths[l_index]) + strlen(repo_contents[r_index]) + 1, 
-                    sizeof(char)
-                );
-                
-                sprintf (
-                    file_path, 
-                    "%s%s", 
-                    repo_paths[l_index], 
-                    repo_contents[r_index]
-                );
-            }
+    case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+        printf("Vertex type: normalized vertices\n");
+        break;
 
-            else {
-                file_path = (char*) calloc (
-                    strlen(repo_paths[l_index]) + strlen(repo_contents[r_index]) + 2, 
-                    sizeof(char)
-                );
-
-                sprintf (
-                    file_path, 
-                    "%s/%s", 
-                    repo_paths[l_index], 
-                    repo_contents[r_index]
-                );
-            }
-
-            char *asset_name = 0;
-            char *asset_description = 0;
-            uint64_t time_point;
-
-            file = fopen(file_path, "rb");
-            // Read information form INFO_HDR
-            dasReadINFOHDR (
-                &asset_name, 
-                &asset_description, 
-                &time_point, 
-                file_path, 
-                file
-            );
-
-            // Print file 
-            printf("\n[%s]\n", repo_contents[r_index]);
-            printf("Full path: %s\n", file_path);
-            printf("Asset name: %s\n", asset_name);
-            printf("Asset description: %s\n", asset_description);
-            
-            int64_t signed_time_stamp = (int64_t) time_point;
-            char date[11], time[9];
-            damFormatDate(date, time, signed_time_stamp);
-            
-            printf("Date of creation: %s\n", date);
-            printf("Time of creation: %s(UTC)\n", time);
-
-
-            if(file_path != NULL) free(file_path);
-            if(asset_name != NULL) free(asset_name);
-            if(asset_description != NULL) free(asset_description);
-        }
-
-        // Cleanup the repo contents
-        for(r_index = 0; r_index < repo_contents_size; r_index++) 
-            if(repo_contents[r_index]) free(repo_contents[r_index]);
-        
-        free(repo_contents);
-        repo_contents = (char**) malloc(sizeof(char*));
-        repo_contents_size = 0;
-    }
-
-    if(!found_assets)
-        printf("No assets available in local repositories!\n");
-}
-
-
-/* Add new local repository path to the config file */
-int damAddRepo(char **pp_repo_path, size_t *p_repo_count, char *new_repo, int default_id) {
-    size_t index;
-    FILE *file;
-    char *buffer;
+    case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
+        printf("Vertex type: textured vertices\n");
+        break;
     
-    // Check if slash exists and if needed create temporary buffer with or without it
-    if(new_repo[strlen(new_repo) - 1] == '/') {
-        buffer = calloc(strlen(new_repo) - 1, sizeof(char));
-        strncpy(buffer, new_repo, strlen(new_repo) - 1);
-    }
+    case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
+        printf("Vertex type: normalized textured vertices\n");
+        break;
 
-    else {
-        buffer = calloc(strlen(new_repo) + 1, sizeof(char));
-        strncpy(buffer, new_repo, strlen(new_repo));
-        buffer[strlen(new_repo)] = '/';
-    }
-
-    // Confirm that new repository path does not exist
-    for(index = 0; index < (*p_repo_count); index++)
-        if(!strcmp(buffer, pp_repo_path[index]) || !strcmp(new_repo, pp_repo_path[index]))
-            return -1;
-    
-    free(buffer);
-    file = fopen(repo_conf_path, "w");
-
-    // Push new repo to repo paths 
-    (*p_repo_count)++;
-    pp_repo_path = (char**) realloc(pp_repo_path, (*p_repo_count) * sizeof(char*));
-    cm_CheckMemoryAlloc((void*) pp_repo_path);
-
-    pp_repo_path[(*p_repo_count) - 1] = (char*) calloc(strlen(new_repo), sizeof(char));
-    strncpy(pp_repo_path[(*p_repo_count) - 1], new_repo, strlen(new_repo));
-
-    // Add repository paths to config file
-    for(index = 0; index < (*p_repo_count); index++) {
-        fwrite(pp_repo_path[index], sizeof(char), strlen(pp_repo_path[index]), file);
-        if(index == (default_id + 1)) fwrite(" default", 1, 8, file);
-        if(index != (*p_repo_count) - 1) fwrite("\n", 1, 1, file);
-    }
-
-    return 0;
-}
-
-
-/* Set default local repository for assembling assets */
-void damSetDefaultRepo(char **pp_repo_paths, size_t repo_count, int id) {
-    size_t index;
-    FILE *file;
-
-    if(id > repo_count) {
-        printf("ID is out of available repositories bounds!\n");
-        printf("Update repos.conf or select different ID!\n");
-        return;
-    }
-
-    file = fopen(repo_conf_path, "w");
-
-    for(index = 0; index < repo_count; index++) {
-        fwrite(pp_repo_paths[index], sizeof(char), strlen(pp_repo_paths[index]), file);
-        if(index == (id - 1)) fwrite(" default", 1, 8, file);      
-        if(index != repo_count - 1) fwrite("\n", 1, 1, file);
-    }
-
-    fclose(file);
-
-    printf("Successfully updated default repository ID!\n");
-}
-
-
-/* List all local repos */
-void damListLocalRepos(char **pp_repo_paths, size_t repo_count, int default_id) {
-    size_t index;
-    for(index = 0; index < repo_count; index++) {
-        if(default_id - 1 == index) printf("[%ld] %s [DEFAULT]\n", index + 1, pp_repo_paths[index]);
-        else printf("[%ld] %s\n", index + 1, pp_repo_paths[index]);
-    }
-
-    if(!repo_count) {
-        printf("No local repositories are configured!\n");
-        printf("Add new repository paths with --add-repo usage flag\n");
-        printf("For more information use dam --help!\n");
+    default:
+        break;
     }
 }
 
 
 /* Assemble name and description to asset file */
-void damAssetAssemblyCaller(deng_Asset *p_asset, char **repo_paths, int repo_id) {
-    size_t index;
-    char *total_file_name;
-    char file_name_buffer[24];
-    char name_buffer[24];
-    char desc_buffer[256];
+void damAssetAssemblyCaller (
+    char *asset_name,
+    char *file_path,
+    char *out_file,
+    char *asset_use_str
+) {
+    char *ext = cm_GetFileExtName(out_file);
+    
+    // Check if file extension needs to be added
+    if(!ext || (ext && strcmp(ext, "das"))) {
+        char *tmp = (char*) calloc (
+            strlen(out_file) + 5,
+            sizeof(char)
+        );
 
-    cm_ClearBuffer(file_name_buffer, 24);
-    cm_ClearBuffer(name_buffer, 24);
-    cm_ClearBuffer(desc_buffer, 256);
+        sprintf (
+            tmp,
+            "%s.das",
+            out_file
+        );
+
+        free(out_file);
+        out_file = tmp;
+    }
     
-    // Get user input for name and description
-    printf("Enter the file name (without .das): ");
-    fgets(file_name_buffer, 24, stdin);
-    printf("Enter descriptive file name: ");
-    fgets(name_buffer, 24, stdin);
-    printf("Add description to the asset: \n");
-    fgets(desc_buffer, 256, stdin);
+    deng_Asset asset;
+    asset.id = asset_name;
+    if(!strcmp(asset_use_str, "v"))
+        asset.asset_mode = DENG_ASSET_MODE_3D_UNMAPPED;
+    else if(!strcmp(asset_use_str, "vn"))
+        asset.asset_mode = DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED;
+    else if(!strcmp(asset_use_str, "vt"))
+        asset.asset_mode = DENG_ASSET_MODE_3D_TEXTURE_MAPPED;
+    else if(!strcmp(asset_use_str, "vtn"))
+        asset.asset_mode = DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED;
+
+    dasLoadModel (
+        &asset,
+        file_path
+    );
     
-    // Remove all newlines
-    for(index = 0; index < 24; index++) { 
-        if(name_buffer[index] == 0x0A) name_buffer[index] = 0x00;
-        if(file_name_buffer[index] == 0x0A) file_name_buffer[index] = 0x00;
+    dasAssemble (
+        &asset, 
+        out_file
+    );
+    
+    // Cleanup
+    switch(asset.asset_mode) 
+    {
+    case DENG_ASSET_MODE_3D_UNMAPPED:
+        free(asset.vertices.p_unmapped_unnormalized_vert);
+        break;
+
+    case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+        free(asset.vertices.p_unmapped_normalized_vert);
+        break;
+
+    case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
+        free(asset.vertices.p_tex_mapped_unnormalized_vert);
+        break;
+
+    case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
+        free(asset.vertices.p_tex_mapped_normalized_vert);
+        break;
+
+    default:
+        break;
     }
 
-    for(index = 0; index < 256; index++)
-        if(desc_buffer[index] == 0x0A) desc_buffer[index] = 0x00;
-    
-    // Allocate memory for total name string
-    size_t total_name_size = strlen(file_name_buffer) + strlen(repo_paths[repo_id - 1]) + 5;
-    total_file_name = (char*) calloc (
-        total_name_size + 1, 
-        sizeof(char)
-    );
-
-    // Copy repo path name into total_file_name
-    sprintf (
-        total_file_name,
-        "%s%s.das",
-        repo_paths[repo_id - 1],
-        file_name_buffer
-    );
-
-    printf("total_name: %s\n", total_file_name);
-
-    p_asset->name = name_buffer;
-    p_asset->description = desc_buffer;
-
-    dasAssemble(p_asset, total_file_name);
-    free(p_asset->vertices.p_texture_mapped_vert_data);
-    free(p_asset->indices.p_indices);
-
-    free(total_file_name);
+    free(asset.indices.p_indices);
 }
 
 
 int main(int argc, char *argv[]) {
-    int write_repo_id = 0;
     size_t index;
-    
-    // Read local repository contents
-    char **pp_repo_paths;
-    size_t repo_count = 0;
-    damReadLocalRepoConf(&pp_repo_paths, &repo_count, &write_repo_id);
     
     // Main command line flags handling
     for(index = 1; index < (size_t) argc; index++) {
-        /* Currently only local repositories can be used */
-        /* Support for global repositories is a project for later */
-        // List all assets
-        if(!strcmp(argv[index], "-l") || !strcmp(argv[index], "--list")) {
-            damListAssets(pp_repo_paths, repo_count);
-            return 0;
-        }
-
-        // Add new repository path
-        else if(!strcmp(argv[index], "--add-repo")) {
-            index++;
-            DIR *test_dir;
-
-            if(index >= (size_t) argc || !(test_dir = opendir(argv[index]))) {
-                printf("Please specify correct file path!\n");
-                printf("For more information use dam --help!\n");
+        // List information about the asset
+        if(!strcmp(argv[index], "-i") || !strcmp(argv[index], "--info")) {
+            // Check if asset file is specified
+            if(index + 1 < 1) {
+                printf("No asset file specified\n");
+                TO_HELP;
                 return 0;
             }
 
-            closedir(test_dir);
-            if(damAddRepo(pp_repo_paths, &repo_count, argv[index], write_repo_id)) {
-                printf("Failed to add repo!\n");
-                printf("Repository with name %s already exists!\n", argv[index]);
-            }
-        }
-
-        // Set write repository
-        else if(!strcmp(argv[index], "--set-default-repo-id")) {
             index++;
-            if(index >= (size_t) argc) {
-                printf("Please specify the local repository path!\n");
-                printf("Try dam --local --set-write-repo-dir [DIR_ID]\n");
-                printf("For more information use dam --help!\n");
-                return 0;
-            }
-
-            else write_repo_id = atoi(argv[index]);
-
-            damSetDefaultRepo(pp_repo_paths, repo_count, write_repo_id);
-            return 0;
-        }
-
-        // List all available repositories
-        else if(!strcmp(argv[index], "--list-repos")) {
-            damListLocalRepos(pp_repo_paths, repo_count, write_repo_id);
+            damListAsset(argv[index]);
             return 0;
         }
         
-        // Assemble asset
-        else if(!strcmp(argv[index], "--assemble")) {
-            int is_obj_specified = false;
-            char *obj_path;
-            deng_Asset asset;
-            index++;
+        else if(!strcmp(argv[index], "-m")) {
+            // Find specified asset name
+            char *name = NULL;
+            char *file = NULL;
+            char *type = NULL;
+            char *out_file = NULL;
 
-            // Check is asset object file is specified
-            if((!strcmp(argv[index], "-o") || !strcmp(argv[index], "--obj-path")) && (index++) < (size_t) argc) {
-                obj_path = argv[index];
-                is_obj_specified = true;
+            if(index + 1 >= (size_t) argc) {
+                printf("No asset name specified\n");
+                TO_HELP;
+                exit(EXIT_FAILURE);
             }
 
-            // All flags are specified
-            if(is_obj_specified && write_repo_id) {
-                printf("Loading asset data...\n");
-                dasLoadModel(&asset, obj_path);
-                damAssetAssemblyCaller(&asset, pp_repo_paths, write_repo_id);
-                printf("Done!\n");
+            else {
+                out_file = argv[index + 1];
+                index++;
             }
 
-            // Object file is not specified
-            else if(!is_obj_specified) {
-                printf("Please specify the source model file!\n");
-                printf("For more information use dam --help!\n");
+            for(; index < (size_t) argc; index++) {
+                if
+                (
+                    !strcmp(argv[index], "-n") || 
+                    !strcmp(argv[index], "--name")
+                ) {
+                    // No name specified error
+                    if(index + 1 >= (size_t) argc) {
+                        printf("Name flag requires name as a parameter\n");
+                        TO_HELP;
+                        exit(EXIT_FAILURE);
+                    }
+                    
+                    index++;
+                    name = argv[index];
+                }
+                
+                else if
+                (
+                    !strcmp(argv[index], "-f") ||
+                    !strcmp(argv[index], "--file")
+                ) {
+                    // No file specified error
+                    if(index + 1 >= (size_t) argc) {
+                        printf("File flag requires file name as a parameter\n");
+                        TO_HELP;
+                        exit(EXIT_FAILURE);
+                    }
+
+                    index++;
+                    file = argv[index];
+                }
+
+                else if
+                (
+                    !strcmp(argv[index], "-t") |\
+                    !strcmp(argv[index], "--type")
+                ) {
+                    // No type specified
+                    if(index + 1 >= (size_t) argc) {
+                        printf("Asset type requires parameter\n");
+                        TO_HELP;
+                        exit(EXIT_FAILURE);
+                    }
+
+                    index++;
+                    type = argv[index];
+                }
+
+                if(name && file && type && out_file) 
+                    break;
             }
 
-            // No default write repo specified
-            else if(!write_repo_id) {
-                printf("No default repository set!\n");
-                printf("Set default repository with dam --local --set-default-repo-id [ID]\n");
-                printf("For more information use dam --help!\n");
+            // Asset file name not specified error
+            if(!file) {
+                printf("No model file specified for asset creation\n");
+                TO_HELP;
+                exit(EXIT_FAILURE);
             }
+
+            if(!name) {
+                printf("No asset name specified for asset creation\n");
+                TO_HELP;
+                exit(EXIT_FAILURE);
+            }
+
+            if(!type) {
+                printf("No asset type specified for asset creation\n");
+                TO_HELP;
+                exit(EXIT_FAILURE);
+            }
+
+            if(!out_file) 
+                out_file = "asset.das";
+            
+            printf (
+                "Making asset '%s'\n",
+                name
+            );
+
+            damAssetAssemblyCaller (
+                name,
+                file,
+                out_file,
+                type
+            );
+
+            printf("Done\n");
         }
 
         // Help
@@ -637,8 +422,8 @@ int main(int argc, char *argv[]) {
     }
 
     if(index == 1) {
-        printf("Please specify the type of repository you would like to use!\n");
-        printf("For more information use dam --help\n");
+        printf("DENG asset manager %s\n", DAM_VERSION);
+        printf("For more information use --help\n");
         return 0;
     }
 

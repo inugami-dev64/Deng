@@ -3,14 +3,14 @@
 // test passed
 int main() {
     deng::Window *p_window;
-    dengUtils::FileManager fm;
+    dengUtils::FileManager sr;
     dengCSS::CSSDataHandler css_data_handler(p_window, "ui_styling");
 
     dengCSS::CSSBodyData *p_objects_data;
     std::vector<std::string> files;
     
     LOG("test");
-    fm.getFolderContents("ui_styling", &files, DENG_FOLDER_CONTENTS_READ_MODE_RECURSIVE, DENG_FOLDER_CONTENTS_SORT_STYLE_DONT_CARE);
+    sr.getFolderContents("ui_styling", &files, DENG_FOLDER_CONTENTS_READ_MODE_RECURSIVE, DENG_FOLDER_CONTENTS_SORT_STYLE_DONT_CARE);
     css_data_handler.readClassData("body", DENG_CSS_CLASS_READ_MODE_MAIN_CLASS, {1600, 1200});
     css_data_handler.getBodyData(&p_objects_data);
 

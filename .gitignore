@@ -1,4 +1,5 @@
 .vscode/
+.cache/
 .stfolder/
 Makefile
 init.sh
@@ -8,6 +9,8 @@ build/
 rgbbitmap.log
 matobject.log
 object.log
+src/dengui/dengui_child.h
+src/dengui/dengui_child.cpp
 src/helloworld.cpp
 src/helloworld
 dependencies/lib/debug/
@@ -15,3 +18,5 @@ deng_webpage/
 assets/private
 objects/private
 main_workspace.code-workspace
+compile_commands.json
+tags

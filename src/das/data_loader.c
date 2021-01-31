@@ -1,6 +1,6 @@
 #define DAS_EXT_LOADERS
 #define DAS_GENERIC_HELPERS
-#include "das_core.h"
+#include "../../headers/das/das_core.h"
 
 static FILE *file;
 
@@ -11,13 +11,37 @@ void dasCleanCharBuffer(char *buffer, size_t size) {
 }
 
 /* Image headers initialisation */
-void dasInitBMPimageHeaders(BMPFileHeader *p_file_header, BMPInfoHeader *p_info_header, BMPColorHeader *p_color_header) {
-    *p_file_header = (BMPFileHeader) {0x4D42, 0, 0, 0, 0};
-    *p_info_header = (BMPInfoHeader) {0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0};
-    *p_color_header = (BMPColorHeader) {0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000, 0x73524742, {0}};
+void dasInitBMPimageHeaders (
+    BMPFileHeader *p_file_header, 
+    BMPInfoHeader *p_info_header, 
+    BMPColorHeader *p_color_header
+) {
+    *p_file_header = (BMPFileHeader) { 
+        0x4D42, 
+        0, 0, 0, 0
+    };
+
+    *p_info_header = (BMPInfoHeader) {
+        0, 0, 0, 1, 
+        0, 0, 0, 0, 
+        0, 0, 0
+    };
+
+    *p_color_header = (BMPColorHeader) {
+        0x00ff0000, 
+        0x0000ff00, 
+        0x000000ff, 
+        0xff000000, 
+        0x73524742, 
+        {0}
+    };
 }
 
-void dasInitTGAimageHeaders(TGATypeHeader *p_type_header, TGAColorMapHeader *p_color_map_header, TGAInfoHeader *p_info_header) {
+void dasInitTGAimageHeaders (
+    TGATypeHeader *p_type_header, 
+    TGAColorMapHeader *p_color_map_header, 
+    TGAInfoHeader *p_info_header
+) {
     *p_type_header = (TGATypeHeader) {0, 0, 0};
     *p_color_map_header = (TGAColorMapHeader) {0, 0, 0};
     *p_info_header = (TGAInfoHeader) {0, 0, 0, 0, 0, 0};
@@ -66,8 +90,12 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
     BMPFileHeader file_header;
     BMPInfoHeader info_header;
     BMPColorHeader color_header;
-    dasInitBMPimageHeaders(&file_header, &info_header, &color_header);
-    p_texture->pixel_data.p_pixel_data = (uint8_t*) malloc(sizeof(uint8_t));
+    dasInitBMPimageHeaders (
+        &file_header, 
+        &info_header, 
+        &color_header
+    );
+    p_texture->pixel_data.p_pixel_data = (deng_ui8_t*) malloc(sizeof(deng_ui8_t));
     file = fopen(file_name, "rb");
 
     if(!file) {
@@ -97,11 +125,11 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
 
     if(info_header.bit_count == 32 && info_header.size >= (sizeof(BMPInfoHeader) + sizeof(BMPColorHeader))) {
         res = fread(&color_header, sizeof(color_header), 1, file);
-        int verify_color_data = color_header.alpha_mask == 0xff000000 &&
-                                color_header.blue_mask == 0x000000ff &&
-                                color_header.green_mask == 0x0000ff00 &&
-                                color_header.red_mask == 0x00ff0000 && 
-                                color_header.color_space_type == 0x73524742;
+        deng_bool_t verify_color_data = color_header.alpha_mask == 0xff000000 &&
+                                        color_header.blue_mask == 0x000000ff &&
+                                        color_header.green_mask == 0x0000ff00 &&
+                                        color_header.red_mask == 0x00ff0000 && 
+                                        color_header.color_space_type == 0x73524742;
         
         if(!verify_color_data) {
             printf("%s%s%s\n", "ERROR: Unexpected color mask format or color space type in file ", file_name, "!");
@@ -132,21 +160,21 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
     }
 
     file_header.file_size = file_header.offset_data;
-    p_texture->pixel_data.width = (uint16_t) info_header.width;
-    p_texture->pixel_data.height = (uint16_t) info_header.height;
+    p_texture->pixel_data.width = (deng_ui16_t) info_header.width;
+    p_texture->pixel_data.height = (deng_ui16_t) info_header.height;
 
     p_texture->pixel_data.size = info_header.height * info_header.width * 4;
-    p_texture->pixel_data.p_pixel_data = (uint8_t*) realloc((void*) p_texture->pixel_data.p_pixel_data, p_texture->pixel_data.size);
+    p_texture->pixel_data.p_pixel_data = (deng_ui8_t*) realloc((void*) p_texture->pixel_data.p_pixel_data, p_texture->pixel_data.size);
     cm_CheckMemoryAlloc((void*) p_texture->pixel_data.p_pixel_data);
 
     /* No padding */
     if(info_header.bit_count == 32) {
         size_t w_index, data_index;
         int h_index;
-        uint8_t tmp_arr[info_header.height][4 * info_header.width];
+        deng_ui8_t tmp_arr[info_header.height][4 * info_header.width];
         
         for(h_index = 0; h_index < (int) info_header.height; h_index++) 
-            res = fread(tmp_arr[(size_t) h_index], 4 * info_header.width * sizeof(uint8_t), 1, file);
+            res = fread(tmp_arr[(size_t) h_index], 4 * info_header.width * sizeof(deng_ui8_t), 1, file);
 
         for(h_index = (int) info_header.height - 1, data_index = 0; h_index >= 0; h_index--)
             for(w_index = 0; w_index < 4 * info_header.width; w_index++, data_index++)
@@ -158,10 +186,10 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
         int h_index;
 
         long padding_count_per_row = 4 - ((long) info_header.width * (long) info_header.bit_count) / 8 % 4;
-        uint8_t tmp_arr[info_header.height][3 * info_header.width];
+        deng_ui8_t tmp_arr[info_header.height][3 * info_header.width];
         
         for(h_index = 0; h_index < (int) info_header.height; h_index++) {
-            res = fread(tmp_arr[(size_t) h_index], 3 * info_header.width * sizeof(uint8_t), 1, file);
+            res = fread(tmp_arr[(size_t) h_index], 3 * info_header.width * sizeof(deng_ui8_t), 1, file);
             fseek(file, padding_count_per_row, SEEK_CUR);
         }
 
@@ -191,7 +219,7 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
     TGAColorMapHeader color_header;
     TGAInfoHeader info_header;
     dasInitTGAimageHeaders(&type_header, &color_header, &info_header);
-    p_asset->pixel_data.p_pixel_data = (uint8_t*) malloc(sizeof(uint8_t));
+    p_asset->pixel_data.p_pixel_data = (deng_ui8_t*) malloc(sizeof(deng_ui8_t));
 
     file = fopen(file_name, "rb");
     if(!file) {
@@ -236,7 +264,7 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
     res = fread((void*) &info_header, sizeof(info_header), 1, file);
     
     p_asset->pixel_data.size = (size_t) (info_header.height * info_header.width * 4);
-    p_asset->pixel_data.p_pixel_data = (uint8_t*) realloc(p_asset->pixel_data.p_pixel_data, p_asset->pixel_data.size);
+    p_asset->pixel_data.p_pixel_data = (deng_ui8_t*) realloc(p_asset->pixel_data.p_pixel_data, p_asset->pixel_data.size);
     cm_CheckMemoryAlloc(p_asset->pixel_data.p_pixel_data);
     
     switch (info_header.bit_count)
@@ -246,10 +274,10 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
         if(info_header.y_origin != info_header.height) {
             size_t data_index, w_index;
             int h_index;
-            uint8_t tmp_arr[info_header.height][info_header.width * 4];
+            deng_ui8_t tmp_arr[info_header.height][info_header.width * 4];
 
             for(h_index = 0; h_index < (int) info_header.height; h_index++)
-                res = fread(tmp_arr[(size_t) h_index], 4 * info_header.width * sizeof(uint8_t), 1, file);
+                res = fread(tmp_arr[(size_t) h_index], 4 * info_header.width * sizeof(deng_ui8_t), 1, file);
 
             for(h_index = (int) info_header.height - 1, data_index = 0; h_index >= 0; h_index--) {
                 for(w_index = 0; w_index < info_header.width * 4; w_index++, data_index++)
@@ -260,7 +288,7 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
         else 
             res = fread (
                 p_asset->pixel_data.p_pixel_data, 
-                p_asset->pixel_data.size * sizeof(uint8_t), 
+                p_asset->pixel_data.size * sizeof(deng_ui8_t), 
                 1, 
                 file
             );
@@ -271,12 +299,12 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
         if(info_header.y_origin != info_header.height) {
             size_t data_index, w_index; 
             int h_index;
-            uint8_t tmp_arr[info_header.height][info_header.width * 3];
+            deng_ui8_t tmp_arr[info_header.height][info_header.width * 3];
 
             for(h_index = 0; h_index < info_header.height; h_index++)
                 res = fread (
                     tmp_arr[h_index], 
-                    3 * info_header.width * sizeof(uint8_t), 
+                    3 * info_header.width * sizeof(deng_ui8_t), 
                     1, 
                     file
                 );
@@ -293,10 +321,10 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
 
         else {
             size_t tmp_index, data_index;
-            uint8_t tmp_arr[info_header.height * info_header.width * 3];
+            deng_ui8_t tmp_arr[info_header.height * info_header.width * 3];
             res = fread (
                 tmp_arr, 
-                3 * info_header.width * info_header.height * sizeof(uint8_t), 
+                3 * info_header.width * info_header.height * sizeof(deng_ui8_t), 
                 1, 
                 file
             );
@@ -328,9 +356,16 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
 
 /* 3D model loading */
 // Callback function for loading 3d model data
-void dasLoadModel(deng_Asset *p_asset, const char *file_name) {
+void dasLoadModel (
+    deng_Asset *p_asset, 
+    char *file_name
+) {
     file = fopen(file_name, "rb");
-    if(!file) printf("ERROR: Failed to open model file: %s\n", file_name);
+    if(!file) 
+        printf (
+            "ERROR: Failed to open model file: %s\n", 
+            file_name
+        );
 
     fseek(file, 0, SEEK_END);
     long file_size = ftell(file);
@@ -341,12 +376,12 @@ void dasLoadModel(deng_Asset *p_asset, const char *file_name) {
     size_t vertices_size = 0;
     deng_ObjTextureData *p_texture_data = NULL;
     size_t texture_size = 0;
+    deng_ObjNormalData *p_norm_data = NULL;
+    size_t norm_size = 0;
 
     // Indices data variables
-    uint32_t *p_vertices_indices = NULL;
-    size_t vertices_indices_size = 0;
-    uint32_t *p_tex_vert_indices = NULL;
-    size_t tex_vert_indices_size = 0;
+    IndexSet *indices = NULL;
+    size_t indices_c = 0;
 
     char *file_ext = cm_GetFileExtName(file_name);
     if(!(file_ext && !strcmp(file_ext, "obj"))) {
@@ -360,229 +395,447 @@ void dasLoadModel(deng_Asset *p_asset, const char *file_name) {
         &vertices_size, 
         &p_texture_data, 
         &texture_size, 
+        &p_norm_data,
+        &norm_size,
+        file_name,
         file_size
     );
 
     // Load all indices from obj model file
-    dasLoadOBJindices (
-        &p_vertices_indices, 
-        &vertices_indices_size, 
-        &p_tex_vert_indices, 
-        &tex_vert_indices_size, 
-        file_size
-    );
+    switch(p_asset->asset_mode) 
+    {
+    case DENG_ASSET_MODE_3D_UNMAPPED:
+        dasLoadOBJindices (
+            &indices, 
+            false,
+            false,
+            &indices_c, 
+            file_name,
+            file_size
+        );
+        break;
 
-    // Index texture mapped vertices
-    dasIndexTexMappedVertices (
-        &p_vertices_data, 
-        vertices_size, 
-        &p_texture_data, 
-        texture_size, 
-        &p_vertices_indices, 
-        vertices_indices_size, 
-        &p_tex_vert_indices,
-        tex_vert_indices_size, 
-        p_asset
-    );
+    case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+        dasLoadOBJindices (
+            &indices, 
+            false,
+            true,
+            &indices_c, 
+            file_name,
+            file_size
+        );
+        break;
     
-    fclose(file);
-}
+    case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
+        dasLoadOBJindices (
+            &indices, 
+            true,
+            false,
+            &indices_c, 
+            file_name,
+            file_size
+        );
+        break;
 
+    case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
+        dasLoadOBJindices (
+            &indices, 
+            true,
+            true,
+            &indices_c, 
+            file_name,
+            file_size
+        );
+        break;
+
+    default:
+        break;
+    }
+
+    dasMakeIndexedVertices (
+        p_asset, 
+        indices, 
+        indices_c, 
+        p_vertices_data, 
+        p_texture_data, 
+        p_norm_data
+    );
+}
 
 /* OBJ file format */
 // Read vertices information from the file
- void dasLoadOBJmodelVertices(deng_ObjVertData **pp_vert_data, size_t *p_vert_size, deng_ObjTextureData **pp_texture_data, size_t *p_tex_size, long file_size) {
-    size_t index;
-    size_t res;
+void dasLoadOBJmodelVertices (
+    deng_ObjVertData **pp_vert_data, 
+    size_t *p_vert_size, 
+    deng_ObjTextureData **pp_texture_data, 
+    size_t *p_tex_size, 
+    deng_ObjNormalData **pp_norm_data,
+    size_t *p_norm_size,
+    char *file_name,
+    long file_size
+) {
+    size_t index = 0;
+    size_t res = 0;
     printf("Loading vertices...\n");
     unsigned char prev_tmp = 0x00, tmp = 0x00, next_tmp = 0x00;
-    char x_buffer[12], y_buffer[12], z_buffer[12];
-    dasCleanCharBuffer(x_buffer, 12);
-    dasCleanCharBuffer(y_buffer, 12);
-    dasCleanCharBuffer(z_buffer, 12);
     
-    *pp_vert_data = (deng_ObjVertData*) malloc(sizeof(deng_ObjVertData));
-    *pp_texture_data = (deng_ObjTextureData*) malloc(sizeof(deng_ObjTextureData));
+    const size_t buf_size = 24;
+    char x_buffer[buf_size]; 
+    char y_buffer[buf_size];
+    char z_buffer[buf_size];
 
-    // According to ASCII table 0x0A = \n; 0x20 = ' '; 0x76 = 'v' 
-    /* Skip the useless metadata and find the nearest vertex value */ 
-    while(!(prev_tmp == 0x0A && tmp == 0x76 && next_tmp == 0x20) && ftell(file) < file_size) {
+    memset(x_buffer, 0, buf_size);
+    memset(y_buffer, 0, buf_size);
+    memset(z_buffer, 0, buf_size);
+
+    
+    *pp_vert_data = (deng_ObjVertData*) calloc (
+        1, 
+        sizeof(deng_ObjVertData)
+    );
+    
+    *pp_texture_data = (deng_ObjTextureData*) calloc (
+        1, 
+        sizeof(deng_ObjTextureData)
+    );
+
+    *pp_norm_data = (deng_ObjNormalData*) calloc (
+        1,
+        sizeof(deng_ObjNormalData)
+    );
+    
+    *p_vert_size = 0;
+    *p_tex_size = 0;
+    *p_norm_size = 0;
+
+    // LOGGING
+    /*
+     *char file_str[128];
+     *cm_LogWrite("vert.log", "#Entry point", true);
+     */
+    // Find first vertex instance in obj file
+    prev_tmp = 0x00;
+    tmp = 0x00;
+    next_tmp = 0x00;
+    while(!(tmp == 'v' && next_tmp == 0x20) && ftell(file) < file_size) {
         prev_tmp = tmp;
         tmp = next_tmp;
         res = fread(&next_tmp, sizeof(next_tmp), 1, file);
+        if(!res) CORRUPTION_OBJ_ERR(file_name);
     }
 
+    fseek(file, -1L, SEEK_CUR);
+
     /* Find all vertices coordinates in .obj file */
-    while(prev_tmp == 0x0A && tmp == 0x76 && next_tmp == 0x20 && ftell(file) < file_size) {
+    while
+    (
+        (prev_tmp == 0x0A || prev_tmp == 0x0D || prev_tmp == 0x20) && 
+        tmp == 'v' && 
+        next_tmp == 0x20 && 
+        ftell(file) < file_size
+    ) {
         /* Get x coordinate data */
-        for(index = 0; tmp != 0x20; index++) {
+        tmp = next_tmp;
+        if(tmp != 0x20) CORRUPTION_OBJ_ERR(file_name);
+        while(tmp == 0x20) 
             res = fread(&tmp, sizeof(tmp), 1, file);
+        
+        if(!res) CORRUPTION_OBJ_ERR(file_name);
+
+        x_buffer[0] = tmp;
+        for(index = 1; tmp != 0x20; index++) {
+            res = fread(&tmp, sizeof(tmp), 1, file);
+            if(!res) CORRUPTION_OBJ_ERR(file_name);
             if(tmp != 0x20) x_buffer[index] = tmp;
         }
 
-        while(tmp == 0x20) fread(&tmp, sizeof(tmp), 1, file);
+        while(tmp == 0x20) res = fread(&tmp, sizeof(tmp), 1, file);
 
         /* Get y coordinate data */
         y_buffer[0] = tmp;
         for(index = 1; tmp != 0x20; index++) {
             res = fread(&tmp, sizeof(tmp), 1, file);
+            if(!res) CORRUPTION_OBJ_ERR(file_name);
             if(tmp != 0x20) y_buffer[index] = tmp;
         }
 
-        while(tmp == 0x20) fread(&tmp, sizeof(tmp), 1, file);
+        while(tmp == 0x20) res = fread(&tmp, sizeof(tmp), 1, file);
 
         /* Get z coordinate data */
         z_buffer[0] = tmp;
-        for(index = 1; tmp != 0x0A; index++) {
+        for(index = 1; tmp != 0x0A && tmp != 0x0D && tmp != 0x20; index++) {
             res = fread(&tmp, sizeof(tmp), 1, file);
-            if(tmp != 0x0A) z_buffer[index] = tmp;
+            if(!res) CORRUPTION_OBJ_ERR(file_name);
+            if(tmp != 0x0A && tmp != 0x0D && tmp != 0x20) 
+                z_buffer[index] = tmp;
         }
 
-        while(tmp == 0x0A) {
+        while(tmp == 0x20 || tmp == 0x0A || tmp == 0x0D) {
             prev_tmp = tmp;
             res = fread(&tmp, sizeof(tmp), 1, file); 
+            if(!res) CORRUPTION_OBJ_ERR(file_name);
         }
 
         res = fread(&next_tmp, sizeof(next_tmp), 1, file);
+        if(!res) CORRUPTION_OBJ_ERR(file_name);
 
         (*p_vert_size)++;
-        *pp_vert_data = (deng_ObjVertData*) realloc(*pp_vert_data, (*p_vert_size) * sizeof(deng_ObjVertData));
+        *pp_vert_data = (deng_ObjVertData*) realloc (
+            *pp_vert_data, 
+            (*p_vert_size) * sizeof(deng_ObjVertData)
+        );
         cm_CheckMemoryAlloc(*pp_vert_data);
-        (*pp_vert_data)[(*p_vert_size) - 1] = (deng_ObjVertData) {(float) atof(x_buffer), (float) atof(y_buffer), (float) atof(z_buffer)};
 
-        dasCleanCharBuffer(x_buffer, 12);
-        dasCleanCharBuffer(y_buffer, 12);
-        dasCleanCharBuffer(z_buffer, 12);
+        (*pp_vert_data)[(*p_vert_size) - 1] = (deng_ObjVertData) {
+            (deng_vec_t) atof(x_buffer), 
+            (deng_vec_t) atof(y_buffer), 
+            (deng_vec_t) atof(z_buffer)
+        };
+        
+        // LOGGING
+        /*
+         *sprintf (
+         *    file_str,
+         *    "v %f,%f,%f",
+         *    (*pp_vert_data)[(*p_vert_size) - 1].vert_x,
+         *    (*pp_vert_data)[(*p_vert_size) - 1].vert_y,
+         *    (*pp_vert_data)[(*p_vert_size) - 1].vert_z
+         *);
+         *cm_LogWrite("vert.log", file_str, false);
+         *memset(file_str, 0, 128);
+         */
+
+        memset(x_buffer, 0, buf_size);
+        memset(y_buffer, 0, buf_size);
+        memset(z_buffer, 0, buf_size);
     }
-
-    if(!res) {
-        printf("Failed to read vertex data from file\n");
-        exit(-1);
+    
+    // Find the beginning of texture mapping coordinate declarations
+    fseek(file, -3L, SEEK_CUR);
+    prev_tmp = 0x00;
+    tmp = 0x00;
+    next_tmp = 0x00;
+    while(!(prev_tmp == 'v' && tmp == 't' && next_tmp == 0x20) && ftell(file) < file_size) {
+        prev_tmp = tmp;
+        tmp = next_tmp;
+        res = fread(&next_tmp, sizeof(next_tmp), 1, file);
+        if(!res) CORRUPTION_OBJ_ERR(file_name);
     }
 
     /* Find all texture map coordinate data in .obj file */
-    while(prev_tmp == 0x0A && tmp == 0x76 && next_tmp == 0x74 && ftell(file) < file_size) {
+    while
+    (
+        prev_tmp == 'v' &&
+        tmp == 't' && 
+        next_tmp == 0x20 && 
+        ftell(file) < file_size
+    ) {
         /* Get x coordinate data */
-        fseek(file, 1L, SEEK_CUR);
-        for(index = 0; tmp != 0x20; index++) {
-            fread(&tmp, sizeof(tmp), 1, file);
+        tmp = next_tmp;
+        if(tmp != 0x20) CORRUPTION_OBJ_ERR(file_name);
+        while(tmp == 0x20) 
+            res = fread(&tmp, sizeof(tmp), 1, file);
+
+        if(!res) CORRUPTION_OBJ_ERR(file_name);
+
+        x_buffer[0] = tmp;
+        for(index = 1; tmp != 0x20; index++) {
+            res = fread(&tmp, sizeof(tmp), 1, file);
+            if(!res) CORRUPTION_OBJ_ERR(file_name);
             if(tmp != 0x20) x_buffer[index] = tmp;
         }
 
-        while(tmp == 0x20) fread(&tmp, sizeof(tmp), 1, file);
+        while(tmp == 0x20) res = fread(&tmp, sizeof(tmp), 1, file);
 
         /* Get y coordinate data */
         y_buffer[0] = tmp;
-        for(index = 1; tmp != 0x0A && ftell(file) < file_size; index++) {
-            fread(&tmp, sizeof(tmp), 1, file);
-            if(tmp != 0x0A) y_buffer[index] = tmp;
+        for(index = 1; tmp != 0x0A && tmp != 0x0D && tmp != 0x20 && ftell(file) < file_size; index++) {
+            res = fread(&tmp, sizeof(tmp), 1, file);
+            if(!res) CORRUPTION_OBJ_ERR(file_name);
+            if(tmp != 0x0A && tmp != 0x0D && tmp != 0x20) 
+                y_buffer[index] = tmp;
         }
 
-        while(tmp == 0x0A) {
-            prev_tmp = tmp;
-            fread(&tmp, sizeof(tmp), 1, file);
-        }
+        while((tmp == 0x0A || tmp == 0x0D || tmp == 0x20) && ftell(file) < file_size)
+            res = fread(&tmp, sizeof(tmp), 1, file);
 
-        fread(&next_tmp, sizeof(next_tmp), 1, file);
+        prev_tmp = tmp;
+        res = fread(&tmp, sizeof(tmp), 1, file);
+        res = fread(&next_tmp, sizeof(next_tmp), 1, file);
 
         (*p_tex_size)++;
-        *pp_texture_data = (deng_ObjTextureData*) realloc(*pp_texture_data, (*p_tex_size) * sizeof(deng_ObjTextureData));
-        cm_CheckMemoryAlloc(*pp_texture_data);
-        (*pp_texture_data)[(*p_tex_size) - 1] = (deng_ObjTextureData) {(float) atof(x_buffer), (float) atof(y_buffer)}; 
+        deng_ObjTextureData *tmp = (deng_ObjTextureData*) realloc (
+            *pp_texture_data, 
+            (*p_tex_size) * sizeof(deng_ObjTextureData)
+        );
+        cm_CheckMemoryAlloc(tmp);
+        (*pp_texture_data) = tmp;
+        (*pp_texture_data)[(*p_tex_size) - 1] = (deng_ObjTextureData) {
+            (deng_vec_t) atof(x_buffer), 
+            1.0f - (deng_vec_t) atof(y_buffer)
+        }; 
+
+        // LOGGING
+        /*
+         *sprintf (
+         *    file_str,
+         *    "vt %f,%f",
+         *    (*pp_texture_data)[(*p_tex_size) - 1].tex_x,
+         *    (*pp_texture_data)[(*p_tex_size) - 1].tex_y
+         *);
+         *cm_LogWrite("vert.log", file_str, false);
+         *memset(file_str, 0, 128);
+         */
+
+        memset(x_buffer, 0, buf_size);
+        memset(y_buffer, 0, buf_size);
+    }
+
+    fseek(file, -4L, SEEK_CUR);
+    // Find the beginning of texture mapping coordinate declarations
+    prev_tmp = 0x00;
+    tmp = 0x00;
+    next_tmp = 0x00;
+    while(!(prev_tmp == 'v' && tmp == 'n' && next_tmp == 0x20) && ftell(file) < file_size) {
+        prev_tmp = tmp;
+        tmp = next_tmp;
+        res = fread(&next_tmp, sizeof(next_tmp), 1, file);
+        if(!res) CORRUPTION_OBJ_ERR(file_name);
+    }
+
+    // Read all vertex normals
+    while
+    (
+        prev_tmp == 'v' &&
+        tmp == 'n' && 
+        next_tmp == 0x20 && 
+        ftell(file) < file_size
+    ) {
+        // Get x coordinate data 
+        tmp = next_tmp;
+        if(tmp != 0x20) CORRUPTION_OBJ_ERR(file_name);
+        while(tmp == 0x20) 
+            res = fread(&tmp, sizeof(tmp), 1, file);
         
-        dasCleanCharBuffer(x_buffer, 12);
-        dasCleanCharBuffer(y_buffer, 12);
-    }
-    if(!res) {
-        printf("Failed to read texture vertex data from file\n");
-        exit(-1);
-    }
+        if(!res) CORRUPTION_OBJ_ERR(file_name);
 
-    // Position of object's file stream as right now is at the beginning of vertex normals reading 
-}
-
-
-/* Get nearest index before slash */
-int32_t dasGetIndex(char *buffer, size_t cur_index) {
-    size_t end_index;
-    uint8_t is_break = false;
-    // Find string breakpoint
-    for(end_index = cur_index; end_index < strlen(buffer); end_index++) {
-        if
-        (
-            buffer[end_index] == 0x2F ||
-            buffer[end_index] == 0x20 ||
-            buffer[end_index] == 0x0A
-        ) {
-            is_break = true;
-            break;
+        // Get x coordinate data
+        x_buffer[0] = tmp;
+        for(index = 1; tmp != 0x20; index++) {
+            res = fread(&tmp, sizeof(tmp), 1, file);
+            if(!res) CORRUPTION_OBJ_ERR(file_name);
+            if(tmp != 0x20) x_buffer[index] = tmp;
         }
+
+        while(tmp == 0x20) res = fread(&tmp, sizeof(tmp), 1, file);
+
+        // Get y coordinate data 
+        y_buffer[0] = tmp;
+        for(index = 1; tmp != 0x20; index++) {
+            res = fread(&tmp, sizeof(tmp), 1, file);
+            if(!res) CORRUPTION_OBJ_ERR(file_name);
+            if(tmp != 0x20) y_buffer[index] = tmp;
+        }
+
+        while(tmp == 0x20)
+            res = fread(&tmp, sizeof(tmp), 1, file);
+
+        if(!res) CORRUPTION_OBJ_ERR(file_name);
+
+        // Get z coordinate data
+        z_buffer[0] = tmp;
+        for(index = 1; tmp != 0x20 && tmp != 0x0A && tmp != 0x0D && ftell(file) < file_size; index++) {
+            res = fread(&tmp, sizeof(tmp), 1, file);
+            if(!res) CORRUPTION_OBJ_ERR(file_name);
+            if(tmp != 0x20 && tmp != 0x0A && tmp != 0x0D)
+                z_buffer[index] = tmp;
+        }
+
+        while((tmp == 0x0A || tmp == 0x0D || tmp == 0x20) && ftell(file) < file_size)
+            res = fread(&tmp, sizeof(tmp), 1, file);
+        
+        if(!res) CORRUPTION_OBJ_ERR(file_name);
+        
+        prev_tmp = tmp;
+        res = fread(&tmp, sizeof(tmp), 1, file);
+        res = fread(&next_tmp, sizeof(next_tmp), 1, file);
+        if(!res) CORRUPTION_OBJ_ERR(file_name);
+
+        (*p_norm_size)++;
+        deng_ObjNormalData *tmp = (deng_ObjNormalData*) realloc (
+            *pp_norm_data, 
+            (*p_norm_size) * sizeof(deng_ObjNormalData)
+        );
+
+        cm_CheckMemoryAlloc(tmp);
+        (*pp_norm_data) = tmp;
+        (*pp_norm_data)[(*p_norm_size) - 1] = (deng_ObjNormalData) {
+            (deng_vec_t) atof(x_buffer), 
+            (deng_vec_t) atof(y_buffer),
+            (deng_vec_t) atof(z_buffer)
+        }; 
+        
+        // LOGGING
+        /*
+         *sprintf (
+         *    file_str,
+         *    "vn %f,%f,%f",
+         *    (*pp_norm_data)[(*p_norm_size) - 1].nor_x,
+         *    (*pp_norm_data)[(*p_norm_size) - 1].nor_y,
+         *    (*pp_norm_data)[(*p_norm_size) - 1].nor_z
+         *);
+         *cm_LogWrite("vert.log", file_str, false);
+         *memset(file_str, 0, 128);
+         */
+
+        memset(x_buffer, 0, buf_size);
+        memset(y_buffer, 0, buf_size);
+        memset(z_buffer, 0, buf_size);
     }
-
-    if(!is_break) {
-        fprintf(stderr, "ERROR: dasGetIndex(), no breakpoint found! (cur_index: %ld)\n", cur_index);
-        exit(-1);
-    }
-
-    // Allocate memory for string int
-    char *str_i = (char*) calloc (
-        end_index - cur_index + 1,
-        sizeof(char)
-    );
-
-    // Copy index to str_i
-    strncpy (
-        str_i,
-        buffer + cur_index,
-        end_index - cur_index
-    );
-
-    int32_t out_i = atol(str_i);
-    free(str_i);
-    return out_i;
 }
 
 
 /* Read obj file indices information */
- void dasLoadOBJindices (
-     uint32_t **p_vert_indices, 
-     size_t *p_vert_indices_size, 
-     uint32_t **p_tex_vert_indices, 
-     size_t *p_tex_vert_indices_size, 
-     long file_size
+void dasLoadOBJindices (
+    IndexSet **p_indices,
+    deng_bool_t read_tex_indices,
+    deng_bool_t read_norm_indices,
+    size_t *p_indices_c, 
+    char *file_name,
+    long file_size
 ) {
-    size_t l_index;
+    size_t l_index, prev_index;
     size_t res;
     printf("Loading indices...\n");
-
-    (*p_vert_indices) = (uint32_t*) malloc(sizeof(uint32_t));
-    (*p_tex_vert_indices) = (uint32_t*) malloc(sizeof(uint32_t));
-    (*p_vert_indices_size) = 0;
-    (*p_tex_vert_indices_size) = 0;
+    
+    *p_indices_c = 0;
+    (*p_indices) = (IndexSet*) calloc (
+        1,
+        sizeof(IndexSet)
+    );
 
     // Find first index declaration
     char beg_ch = 0x00;
-    char prev_bch = 0x00;
-    uint8_t is_indexed = false;
+    char prev_ch = 0x00;
+    deng_ui8_t is_indexed = false;
+    fseek(file, -4L, SEEK_CUR);
+
     while(ftell(file) < file_size) {
         res = fread(&beg_ch, 1, 1, file);
-        if(beg_ch == 'f' && (prev_bch == 0x0A || prev_bch == 0x0D)) {
+        if(beg_ch == 'f' && (prev_ch == 0x0A || prev_ch == 0x0D)) {
             is_indexed = true;
             break;
         }
 
-        prev_bch = beg_ch;
+        prev_ch = beg_ch;
     }
-
+    
     // Check for file corruption error
-    if(!is_indexed) {
-        fprintf(stderr, "Corrupted 3D model file!\n");
-        exit(-1);
-    }
+    if(!is_indexed) CORRUPTION_OBJ_ERR(file_name);
 
-    // Read all indices data from file into string buffer
+    // From now on char buffer will be used to access file data
     char *buffer = (char*) calloc (
-        file_size - (ftell(file) - 1) + 1,
+        file_size - ftell(file) + 1,
         sizeof(char)
     );
 
@@ -595,158 +848,282 @@ int32_t dasGetIndex(char *buffer, size_t cur_index) {
 
     if(!res) {
         printf("Failed to read indices from model file\n");
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
+    
+    char *vert_i_ch;
+    char *tex_i_ch;
+    char *norm_i_ch;
+
+    // LOGGING
+    /*
+     *char file_str[128];
+     *cm_LogWrite("ind_read.log", "#Entry point", true);
+     */
 
     for(l_index = 0; l_index < strlen(buffer);) {
-        // Skip to nearest number chars
-        for(; l_index < strlen(buffer); l_index++)
-            if(buffer[l_index] < 0x3A && buffer[l_index] > 0x29)
-                break;
-        
-        if(l_index == strlen(buffer)) break;
+        // Skip white spaces and index declaration
+        while
+        (
+            (buffer[l_index] == 0x20 || 
+            buffer[l_index] == 0x0A || 
+            buffer[l_index] == 0x0D ||
+            buffer[l_index] == 'f') &&
+            l_index < strlen(buffer)
+        ) l_index++;
 
-        /* Vertex indices */
-        // Reallocate memory for vertices indices
-        (*p_vert_indices_size)++;
-        (*p_vert_indices) = (uint32_t*) realloc (
-            (*p_vert_indices),
-            (*p_vert_indices_size) * sizeof(uint32_t)
+        if(l_index == strlen(buffer)) break;
+        prev_index = l_index;
+
+        // Find first '/'
+        while(buffer[l_index] != '/') l_index++;
+        vert_i_ch = (char*) calloc (
+            l_index - prev_index,
+            sizeof(char)
         );
 
-        cm_CheckMemoryAlloc((*p_vert_indices));
-        (*p_vert_indices)[(*p_vert_indices_size) - 1] = dasGetIndex(buffer, l_index);
+        strncpy (
+            vert_i_ch,
+            buffer + prev_index,
+            l_index - prev_index
+        );
+        l_index++;
+        
+        // Find second '/'
+        prev_index = l_index;
+        while(buffer[l_index] != '/') l_index++;
+        tex_i_ch = (char*) calloc (
+            l_index - prev_index,
+            sizeof(char)
+        );
 
-        // Skip chars to texture indices
-        for(; l_index < strlen(buffer); l_index++)
-            if(buffer[l_index] == 0x2F) break;
+        strncpy (
+            tex_i_ch,
+            buffer + prev_index,
+            l_index - prev_index
+        );
         l_index++;
 
-        /* Texture indices */
-        // Reallocate memory for texture indices
-        (*p_tex_vert_indices_size)++;
-        (*p_tex_vert_indices) = (uint32_t*) realloc (
-            (*p_tex_vert_indices),
-            (*p_tex_vert_indices_size) * sizeof(uint32_t)
+        // Find whitespace or newline
+        prev_index = l_index;
+        while(buffer[l_index] != 0x20 && buffer[l_index] != 0x0A)
+            l_index++;
+        
+        norm_i_ch = (char*) calloc (
+            l_index - prev_index,
+            sizeof(char)
         );
 
-        cm_CheckMemoryAlloc((*p_tex_vert_indices));
-        (*p_tex_vert_indices)[(*p_tex_vert_indices_size) - 1] = dasGetIndex(buffer, l_index);
+        strncpy (
+            norm_i_ch,
+            buffer + prev_index,
+            l_index - prev_index
+        );
+        
+        // Push indices to indexset instance
+        (*p_indices_c)++;
+        IndexSet *tmp = (IndexSet*) realloc (
+            *p_indices,
+            (*p_indices_c) * sizeof(IndexSet)
+        );
 
-        // Skip to next whitespace or newline
-        for(; l_index < strlen(buffer); l_index++)
-            if(buffer[l_index] == 0x20 || buffer[l_index] == 0x0A)
-                break; 
+        cm_CheckMemoryAlloc(tmp);
+        (*p_indices) = tmp;
+        /*memset((*p_indices) + ((*p_indices_c) - 1), 0, sizeof(IndexSet));*/
+        (*p_indices)[(*p_indices_c) - 1].vert = (deng_ui32_t) atoi(vert_i_ch);
+        if(read_tex_indices)
+            (*p_indices)[(*p_indices_c) - 1].tex = (deng_ui32_t) atoi(tex_i_ch);
+        else
+            (*p_indices)[(*p_indices_c) - 1].tex = 0;
+
+        if(read_norm_indices)
+            (*p_indices)[(*p_indices_c) - 1].norm = (deng_ui32_t) atoi(norm_i_ch);
+        else
+            (*p_indices)[(*p_indices_c) - 1].norm = 0;
+
+        // LOGGING
+        /*
+         *sprintf (
+         *    file_str,
+         *    "f %d/%d/%d",
+         *    (*p_indices)[(*p_indices_c) - 1].vert,
+         *    (*p_indices)[(*p_indices_c) - 1].tex,
+         *    (*p_indices)[(*p_indices_c) - 1].norm
+         *);
+         *cm_LogWrite("ind_read.log", file_str, false);
+         *memset(file_str, 0, 128);
+         */
+
+        free(vert_i_ch);
+        free(tex_i_ch);
+        free(norm_i_ch);
     }
 
     free(buffer);
 }
 
 
-// Index unmapped vertices
- void dasIndexUnmappedVertices (
-    deng_ObjVertData **pp_vert_data, 
-    size_t vert_size, 
-    uint32_t **pp_indices, 
-    size_t indices_size, 
-    deng_Asset *p_asset
+void dasMakeIndexedVertices (
+    deng_Asset *p_asset,
+    IndexSet *indices,
+    size_t indices_c,
+    deng_ObjVertData *p_vert_data,
+    deng_ObjTextureData *p_tex_data,
+    deng_ObjNormalData *p_norm_data
 ) {
-    p_asset->vertices.p_unmapped_vert_data = (VERT_UNMAPPED*) malloc (
-        vert_size * 
-        sizeof(VERT_UNMAPPED)
+    p_asset->indices.size = indices_c;
+    p_asset->indices.p_indices = (deng_ui32_t*) calloc (
+        indices_c,
+        sizeof(deng_ui32_t)
     );
 
-    p_asset->vertices.size = vert_size;
+    Hashmap hm;
+    newHashmap(&hm, indices_c);
+
+    size_t l_index, r_index = 0;
     
-    p_asset->indices.p_indices = (uint32_t*) malloc(indices_size * sizeof(uint32_t));
-    p_asset->indices.size = indices_size;
+    // Allocate initial values for vertices
+    switch(p_asset->asset_mode)
+    {
+    case DENG_ASSET_MODE_3D_UNMAPPED:
+        p_asset->vertices.p_unmapped_unnormalized_vert = (VERT_UNMAPPED_UNOR*) calloc (
+            1,
+            sizeof(VERT_UNMAPPED_UNOR)
+        );
+        break;
 
-    size_t index;
-    for(index = 0; index < vert_size; index++)
-        p_asset->vertices.p_unmapped_vert_data[index].vert_data = (*pp_vert_data)[index];
+    case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+        p_asset->vertices.p_unmapped_normalized_vert = (VERT_UNMAPPED_NOR*) calloc (
+            1,
+            sizeof(VERT_UNMAPPED_NOR)
+        );
+        break;
 
-    for(index = 0; index < indices_size; index++)
-        p_asset->indices.p_indices[index] = (*pp_indices)[index]; 
-}
+    case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
+        p_asset->vertices.p_tex_mapped_unnormalized_vert = (VERT_MAPPED_UNOR*) calloc (
+            1,
+            sizeof(VERT_MAPPED_UNOR)
+        );
+        break;
 
+    case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
+        p_asset->vertices.p_tex_mapped_normalized_vert = (VERT_MAPPED_NOR*) calloc (
+            1,
+            sizeof(VERT_MAPPED_NOR)
+        );
+        break;
 
-// Index texture mapped vertices
- void dasIndexTexMappedVertices (
-    deng_ObjVertData **p_vert_data, 
-    size_t vert_size, 
-    deng_ObjTextureData **p_tex_data, 
-    size_t tex_size, 
-    uint32_t **p_vert_indices, 
-    size_t vert_indices_size, 
-    uint32_t **p_tex_indices, 
-    size_t tex_indices_size, 
-    deng_Asset *p_asset
-) {
-    size_t l_index, r_index;
-
-    printf("Indexing...\n");
-    // Allocate memory for temporary vertices array
-    VERT_MAPPED *tmp_vert = (VERT_MAPPED*) calloc (
-        vert_indices_size,
-        sizeof(VERT_MAPPED)
-    );
-
-    // Initialise asset vertices values
-    p_asset->vertices.p_texture_mapped_vert_data = (VERT_MAPPED*) calloc (
-        1,
-        sizeof(VERT_MAPPED)
-    );
-    p_asset->vertices.size = 0;
-
-    // Initialise asset indices values
-    p_asset->indices.p_indices = (uint32_t*) calloc (
-        vert_indices_size,
-        sizeof(uint32_t)
-    );
-    p_asset->indices.size = vert_indices_size;
-
-    // Save all data to tmp vertices
-    for(l_index = 0; l_index < vert_indices_size; l_index++) {
-        tmp_vert[l_index].vert_data = (*p_vert_data)[(*p_vert_indices)[l_index] - 1];
-        tmp_vert[l_index].tex_data = (*p_tex_data)[(*p_tex_indices)[l_index] - 1];
+    default:
+        break;
     }
 
-    /* Vertex deduplication */
-    uint8_t is_prev_instance;
-    for(l_index = 0; l_index < vert_indices_size; l_index++) {
-        // Find previous instance of same vertex
-        is_prev_instance = false;
-        for(r_index = 0; r_index < p_asset->vertices.size; r_index++) {
-            if
-            (
-                p_asset->vertices.p_texture_mapped_vert_data[r_index].vert_data.vert_x == tmp_vert[l_index].vert_data.vert_x &&
-                p_asset->vertices.p_texture_mapped_vert_data[r_index].vert_data.vert_y == tmp_vert[l_index].vert_data.vert_y &&
-                p_asset->vertices.p_texture_mapped_vert_data[r_index].vert_data.vert_z == tmp_vert[l_index].vert_data.vert_z &&
-                p_asset->vertices.p_texture_mapped_vert_data[r_index].tex_data.tex_x == tmp_vert[l_index].tex_data.tex_x &&
-                p_asset->vertices.p_texture_mapped_vert_data[r_index].tex_data.tex_y == 1.0f - tmp_vert[l_index].tex_data.tex_y
-            ) {
-                is_prev_instance = true; 
+    // LOGGING
+    /*
+     *char file_str[256];
+     *cm_LogWrite("vert_write.log", "#Entry point", true);
+     */
+
+    for(l_index = 0; l_index < indices_c; l_index++) {
+        if(!findValue(&hm, &indices[l_index], sizeof(IndexSet))) {
+            // Allocate memory for vertices
+            r_index++;
+            pushToHashmap (
+                &hm, 
+                &indices[l_index], 
+                sizeof(IndexSet), 
+                (void*) r_index
+            );
+            
+            switch(p_asset->asset_mode)
+            {
+            case DENG_ASSET_MODE_3D_UNMAPPED: {
+                VERT_UNMAPPED_UNOR *tmp = (VERT_UNMAPPED_UNOR*) realloc (
+                    p_asset->vertices.p_unmapped_unnormalized_vert,
+                    r_index * sizeof(VERT_UNMAPPED_UNOR)
+                );
+                cm_CheckMemoryAlloc(tmp);
+
+                p_asset->vertices.p_unmapped_unnormalized_vert = tmp;
+                p_asset->vertices.p_unmapped_unnormalized_vert[r_index - 1].vert_data = p_vert_data[indices[l_index].vert - 1];
+                p_asset->vertices.p_unmapped_unnormalized_vert[r_index - 1].color_data = DEFAULT_ASSET_COLOR;
+                break;
+            }
+
+            case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED: {
+                VERT_UNMAPPED_NOR *tmp = (VERT_UNMAPPED_NOR*) realloc (
+                    p_asset->vertices.p_unmapped_normalized_vert,
+                    r_index * sizeof(VERT_UNMAPPED_NOR)
+                );
+                cm_CheckMemoryAlloc(tmp);
+                
+                p_asset->vertices.p_unmapped_normalized_vert = tmp;
+                p_asset->vertices.p_unmapped_normalized_vert[r_index - 1].vert_data = p_vert_data[indices[l_index].vert - 1];
+                p_asset->vertices.p_unmapped_normalized_vert[r_index - 1].norm_data = p_norm_data[indices[l_index].norm - 1];
+                p_asset->vertices.p_unmapped_normalized_vert[r_index - 1].color_data = DEFAULT_ASSET_COLOR;
+                break;
+            }
+
+            case DENG_ASSET_MODE_3D_TEXTURE_MAPPED: {
+                VERT_MAPPED_UNOR *tmp = (VERT_MAPPED_UNOR*) realloc (
+                    p_asset->vertices.p_tex_mapped_unnormalized_vert,
+                    r_index * sizeof(VERT_MAPPED_UNOR)
+                );
+                cm_CheckMemoryAlloc(tmp);
+
+                p_asset->vertices.p_tex_mapped_unnormalized_vert = tmp;
+                p_asset->vertices.p_tex_mapped_unnormalized_vert[r_index - 1].vert_data = p_vert_data[indices[l_index].vert - 1];
+                p_asset->vertices.p_tex_mapped_unnormalized_vert[r_index - 1].tex_data = p_tex_data[indices[l_index].tex - 1];
+                break;
+            }
+
+            case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED: {
+                VERT_MAPPED_NOR *tmp = (VERT_MAPPED_NOR*) realloc (
+                    p_asset->vertices.p_tex_mapped_normalized_vert,
+                    r_index * sizeof(VERT_MAPPED_NOR)
+                );
+                cm_CheckMemoryAlloc(tmp);
+
+                p_asset->vertices.p_tex_mapped_normalized_vert = tmp;
+                p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].vert_data = p_vert_data[indices[l_index].vert - 1];
+                p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].tex_data = p_tex_data[indices[l_index].tex - 1];
+                p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].norm_data = p_norm_data[indices[l_index].norm - 1];
+
+                // LOGGING
+                /*
+                 *sprintf (
+                 *    file_str,
+                 *    "%f,%f,%f | %f,%f | %f,%f,%f",
+                 *    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].vert_data.vert_x,
+                 *    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].vert_data.vert_y,
+                 *    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].vert_data.vert_z,
+                 *    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].tex_data.tex_x,
+                 *    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].tex_data.tex_y,
+                 *    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].norm_data.nor_x,
+                 *    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].norm_data.nor_y,
+                 *    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].norm_data.nor_z
+                 *);
+                 *cm_LogWrite("vert_write.log", file_str, false);
+                 *memset(file_str, 0, 256);
+                 */
+                break;
+            }
+
+            default:
                 break;
             }
         }
-
-        // Check if previous instance of same vertex is found
-        if(is_prev_instance) p_asset->indices.p_indices[l_index] = r_index;
-        else {
-            p_asset->vertices.size++;
-            p_asset->vertices.p_texture_mapped_vert_data = (VERT_MAPPED*) realloc (
-                p_asset->vertices.p_texture_mapped_vert_data,
-                sizeof(VERT_MAPPED) * p_asset->vertices.size
-            );
-
-            cm_CheckMemoryAlloc(p_asset->vertices.p_texture_mapped_vert_data);
-
-            p_asset->vertices.p_texture_mapped_vert_data[p_asset->vertices.size - 1].vert_data = tmp_vert[l_index].vert_data;
-            p_asset->vertices.p_texture_mapped_vert_data[p_asset->vertices.size - 1].tex_data.tex_x = tmp_vert[l_index].tex_data.tex_x;
-            p_asset->vertices.p_texture_mapped_vert_data[p_asset->vertices.size - 1].tex_data.tex_y = 1.0f - tmp_vert[l_index].tex_data.tex_y;
-            p_asset->indices.p_indices[l_index] = p_asset->vertices.size - 1;
+    }
+    
+    p_asset->vertices.size = r_index;
+    void *p_in;
+    for(l_index = 0; l_index < indices_c; l_index++) {
+        if(!(p_in = findValue(&hm, &indices[l_index], sizeof(IndexSet)))) {
+            printf("Hashmap error occured, this should not happen :(\n");
+            exit(EXIT_FAILURE);
         }
+
+        p_asset->indices.p_indices[l_index] = (deng_ui32_t) ((deng_ui64_t) p_in - 1);
     }
 
-    free(tmp_vert);
+    free(hm.map_data);
 }
