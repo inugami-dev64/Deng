@@ -2372,6 +2372,9 @@ namespace deng {
                                 nullptr
                             );
                             break;
+
+                        default:
+                            break;
                         }
 
                         // Draw assets

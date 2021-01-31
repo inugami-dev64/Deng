@@ -508,8 +508,11 @@ void dasLoadOBJmodelVertices (
     *p_tex_size = 0;
     *p_norm_size = 0;
 
-    char file_str[128];
-    cm_LogWrite("vert.log", "#Entry point", true);
+    // LOGGING
+    /*
+     *char file_str[128];
+     *cm_LogWrite("vert.log", "#Entry point", true);
+     */
     // Find first vertex instance in obj file
     prev_tmp = 0x00;
     tmp = 0x00;
@@ -590,15 +593,17 @@ void dasLoadOBJmodelVertices (
         };
         
         // LOGGING
-        sprintf (
-            file_str,
-            "v %f,%f,%f",
-            (*pp_vert_data)[(*p_vert_size) - 1].vert_x,
-            (*pp_vert_data)[(*p_vert_size) - 1].vert_y,
-            (*pp_vert_data)[(*p_vert_size) - 1].vert_z
-        );
-        cm_LogWrite("vert.log", file_str, false);
-        memset(file_str, 0, 128);
+        /*
+         *sprintf (
+         *    file_str,
+         *    "v %f,%f,%f",
+         *    (*pp_vert_data)[(*p_vert_size) - 1].vert_x,
+         *    (*pp_vert_data)[(*p_vert_size) - 1].vert_y,
+         *    (*pp_vert_data)[(*p_vert_size) - 1].vert_z
+         *);
+         *cm_LogWrite("vert.log", file_str, false);
+         *memset(file_str, 0, 128);
+         */
 
         memset(x_buffer, 0, buf_size);
         memset(y_buffer, 0, buf_size);
@@ -671,14 +676,16 @@ void dasLoadOBJmodelVertices (
         }; 
 
         // LOGGING
-        sprintf (
-            file_str,
-            "vt %f,%f",
-            (*pp_texture_data)[(*p_tex_size) - 1].tex_x,
-            (*pp_texture_data)[(*p_tex_size) - 1].tex_y
-        );
-        cm_LogWrite("vert.log", file_str, false);
-        memset(file_str, 0, 128);
+        /*
+         *sprintf (
+         *    file_str,
+         *    "vt %f,%f",
+         *    (*pp_texture_data)[(*p_tex_size) - 1].tex_x,
+         *    (*pp_texture_data)[(*p_tex_size) - 1].tex_y
+         *);
+         *cm_LogWrite("vert.log", file_str, false);
+         *memset(file_str, 0, 128);
+         */
 
         memset(x_buffer, 0, buf_size);
         memset(y_buffer, 0, buf_size);
@@ -768,22 +775,18 @@ void dasLoadOBJmodelVertices (
             (deng_vec_t) atof(z_buffer)
         }; 
         
-        printf (
-            "%s,%s,%s\n",
-            x_buffer,
-            y_buffer,
-            z_buffer
-        );
         // LOGGING
-        sprintf (
-            file_str,
-            "vn %f,%f,%f",
-            (*pp_norm_data)[(*p_norm_size) - 1].nor_x,
-            (*pp_norm_data)[(*p_norm_size) - 1].nor_y,
-            (*pp_norm_data)[(*p_norm_size) - 1].nor_z
-        );
-        cm_LogWrite("vert.log", file_str, false);
-        memset(file_str, 0, 128);
+        /*
+         *sprintf (
+         *    file_str,
+         *    "vn %f,%f,%f",
+         *    (*pp_norm_data)[(*p_norm_size) - 1].nor_x,
+         *    (*pp_norm_data)[(*p_norm_size) - 1].nor_y,
+         *    (*pp_norm_data)[(*p_norm_size) - 1].nor_z
+         *);
+         *cm_LogWrite("vert.log", file_str, false);
+         *memset(file_str, 0, 128);
+         */
 
         memset(x_buffer, 0, buf_size);
         memset(y_buffer, 0, buf_size);
@@ -852,8 +855,11 @@ void dasLoadOBJindices (
     char *tex_i_ch;
     char *norm_i_ch;
 
-    char file_str[128];
-    cm_LogWrite("ind_read.log", "#Entry point", true);
+    // LOGGING
+    /*
+     *char file_str[128];
+     *cm_LogWrite("ind_read.log", "#Entry point", true);
+     */
 
     for(l_index = 0; l_index < strlen(buffer);) {
         // Skip white spaces and index declaration
@@ -935,15 +941,19 @@ void dasLoadOBJindices (
         else
             (*p_indices)[(*p_indices_c) - 1].norm = 0;
 
-        sprintf (
-            file_str,
-            "f %d/%d/%d",
-            (*p_indices)[(*p_indices_c) - 1].vert,
-            (*p_indices)[(*p_indices_c) - 1].tex,
-            (*p_indices)[(*p_indices_c) - 1].norm
-        );
-        cm_LogWrite("ind_read.log", file_str, false);
-        memset(file_str, 0, 128);
+        // LOGGING
+        /*
+         *sprintf (
+         *    file_str,
+         *    "f %d/%d/%d",
+         *    (*p_indices)[(*p_indices_c) - 1].vert,
+         *    (*p_indices)[(*p_indices_c) - 1].tex,
+         *    (*p_indices)[(*p_indices_c) - 1].norm
+         *);
+         *cm_LogWrite("ind_read.log", file_str, false);
+         *memset(file_str, 0, 128);
+         */
+
         free(vert_i_ch);
         free(tex_i_ch);
         free(norm_i_ch);
@@ -1008,8 +1018,10 @@ void dasMakeIndexedVertices (
     }
 
     // LOGGING
-    char file_str[256];
-    cm_LogWrite("vert_write.log", "#Entry point", true);
+    /*
+     *char file_str[256];
+     *cm_LogWrite("vert_write.log", "#Entry point", true);
+     */
 
     for(l_index = 0; l_index < indices_c; l_index++) {
         if(!findValue(&hm, &indices[l_index], sizeof(IndexSet))) {
@@ -1077,20 +1089,22 @@ void dasMakeIndexedVertices (
                 p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].norm_data = p_norm_data[indices[l_index].norm - 1];
 
                 // LOGGING
-                sprintf (
-                    file_str,
-                    "%f,%f,%f | %f,%f | %f,%f,%f",
-                    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].vert_data.vert_x,
-                    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].vert_data.vert_y,
-                    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].vert_data.vert_z,
-                    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].tex_data.tex_x,
-                    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].tex_data.tex_y,
-                    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].norm_data.nor_x,
-                    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].norm_data.nor_y,
-                    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].norm_data.nor_z
-                );
-                cm_LogWrite("vert_write.log", file_str, false);
-                memset(file_str, 0, 256);
+                /*
+                 *sprintf (
+                 *    file_str,
+                 *    "%f,%f,%f | %f,%f | %f,%f,%f",
+                 *    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].vert_data.vert_x,
+                 *    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].vert_data.vert_y,
+                 *    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].vert_data.vert_z,
+                 *    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].tex_data.tex_x,
+                 *    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].tex_data.tex_y,
+                 *    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].norm_data.nor_x,
+                 *    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].norm_data.nor_y,
+                 *    p_asset->vertices.p_tex_mapped_normalized_vert[r_index - 1].norm_data.nor_z
+                 *);
+                 *cm_LogWrite("vert_write.log", file_str, false);
+                 *memset(file_str, 0, 256);
+                 */
                 break;
             }
 

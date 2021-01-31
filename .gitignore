@@ -13,10 +13,10 @@ src/dengui/dengui_child.h
 src/dengui/dengui_child.cpp
 src/helloworld.cpp
 src/helloworld
-src/tags
 dependencies/lib/debug/
 deng_webpage/
 assets/private
 objects/private
 main_workspace.code-workspace
 compile_commands.json
+tags

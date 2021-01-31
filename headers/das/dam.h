@@ -21,9 +21,7 @@ char *help_text =
     " -m [ASSET]           Create DENG new asset\n"
     "   -f / --file [MODEL]  Specify 3D model for asset creation\n"
     "   -n / --name [NAME]   Specify asset name\n"
-    "   -t / --type v, vt, vn, vtr  Specify asset type\n"
-    " --notex               No texture coordinates\n"
-    " --nonormals           No vertex normals\n";
+    "   -t / --type v, vt, vn, vtr  Specify asset type\n";
 
 char *repo_conf_path = "repos.conf";
 

@@ -76,7 +76,6 @@ void dasAssembleINFOHDR (
     deng_ui8_t asset_name_size = (deng_ui8_t) strlen(asset_name);
     deng_ui32_t hdr_size = 22 + (deng_ui32_t) asset_name_size;
     
-    printf("Timestamp: %ld\n", timestamp);
     fwrite(INFO_HEADER_NAME, sizeof(char), 8, file);
     fwrite(&hdr_size, sizeof(deng_ui32_t), 1, file);
     fwrite(&timestamp, sizeof(deng_ui64_t), 1, file);
@@ -135,7 +134,6 @@ void dasAssembleVERTHDR (
         break;
 
     case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
-        printf("Write test\n");
         hdr_size = 16 + 32 * hdr_vert_c;
         fwrite(&hdr_size, sizeof(deng_ui32_t), 1, file);
         fwrite(&hdr_vert_c, sizeof(deng_ui32_t), 1, file);

@@ -142,8 +142,6 @@ void damListAsset (char *asset_file) {
     FILE *file;
     file = fopen(asset_file, "rb");
     
-    size_t res = 0;
-    
     if(!file) {
         printf("Failed to read file '%s'\n", asset_file);
         exit(EXIT_FAILURE);
