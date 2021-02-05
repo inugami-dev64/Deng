@@ -1,37 +1,78 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#define DENG_CAMERA_DEFAULT_X 0.0f
-#define DENG_CAMERA_DEFAULT_Y 0.0f
-#define DENG_CAMERA_DEFAULT_Z 1.0f
-
-#define DENG_CAMERA_BASE_SPEED_X 0.001
-#define DENG_CAMERA_BASE_SPEED_Y 0.001
-#define DENG_CAMERA_BASE_SPEED_Z -0.0007
-
-#define DENG_MOUSE_BASE_SENSITIVITY_X 4.0
-#define DENG_MOUSE_BASE_SENSIVITY_Y 1.0
 
 namespace deng {
+
+    /* Base value structs */
+    struct CameraBaseValues {
+        WindowWrap *m_p_ww;
+        deng_vec_t m_draw_distance;
+        deng_vec_t m_FOV; // Radians
+    };
+
     
-    class Camera
-    {
+    struct EventBaseValues {
+        deng_i32_t m_prev_active_btn_c;
+        dengMath::vec2<deng_vec_t> m_mouse_pos;
+        dengMath::vec2<deng_vec_t> m_mouse_sens;
+    };
+
+
+    // Non mov callback function pointer callback type declaration
+    typedef void(*FPPCamNonMovementCallback)(dengMath::vec2<deng_vec_t> *p_vmp);
+
+    /* Perspective first person camera event classe */
+    class FPPCameraEv : private EventBaseValues {
     private:
-        dengMath::vec2<float> m_zero_camera_rotation_mouse_pos;
-        WindowWrap *m_p_window_wrap;
-        dengMath::vec2<float> m_mouse_sens;
-        dengMath::vec2<float> m_mouse_pos; 
-        dengMath::vec4<float> m_movement_speed;
+        dengUtils::Timer m_mov_timer;
+        dengUtils::Timer m_input_mode_timer;
+        dengMath::vec4<deng_vec_t> m_move_speed;
+        dengMath::vec3<deng_MovementEvent> m_movements;
+        deng_bool_t is_set = false;
+        dengMath::vec2<deng_vec_t> m_frozen_mouse_pos = {0.0f, 0.0f};
+        FPPCamNonMovementCallback m_callback;
+
+    private:
+        void findMovementType(WindowWrap *p_ww);
         
-        float m_draw_distance; // distance
-        float m_FOV; // in degrees
+        void checkForInputModeChange (
+            WindowWrap *p_ww,
+            dengMath::ViewMatrix *p_vm
+        );
 
-        float m_current_rotation_from_X_axis;
-        dengMath::vec2<float> m_camera_max_left_corner_coord;
-        dengMath::vec2<float> m_camera_max_centre_point_coord;
-        dengMath::vec2<float> m_camera_max_right_corner_coord;
+        void updateMouseEvData(WindowWrap *p_ww);
+        void setCameraViewRotation (
+            WindowWrap *p_ww, 
+            dengMath::ViewMatrix *p_vm
+        );
 
+        void update (
+            WindowWrap *p_ww, 
+            FPPCamera *p_cam
+        );
 
+        deng_bool_t keyEvHandler(deng_Key key);
+
+    public:
+        FPPCameraEv (
+            WindowWrap *p_ww,
+            dengMath::vec2<deng_vec_t> mouse_mov_speed_mul,
+            dengMath::vec3<deng_vec_t> camera_mov_speed_mul,
+            FPPCamNonMovementCallback callback
+        );
+
+        void updateEv (
+            WindowWrap *p_ww, 
+            FPPCamera *p_cam
+        );
+        dengMath::vec4<deng_vec_t> getMoveSpeed();
+    };
+
+        
+    /* First person perspective camera class */
+    class FPPCamera : private FPPCameraEv, private CameraBaseValues {
+    private:
         deng_i32_t m_prev_active_c;
         bool m_is_init;
 
@@ -40,35 +81,28 @@ namespace deng {
         dengMath::ProjectionMatrix *p_projection_matrix;
 
     public:
-        Camera (
-            const dengMath::vec3<float> &camera_movement_speed_multiplier, 
-            const dengMath::vec2<float> &mouse_movement_speed_multiplier, 
-            const float &FOV, 
-            const float &near_plane, 
-            const float &far_plane, 
+        FPPCamera (
+            const dengMath::vec3<deng_vec_t> &camera_mov_speed_mul, 
+            const dengMath::vec2<deng_vec_t> &mouse_mov_speed_mul, 
+            const deng_vec_t &FOV, 
+            const deng_vec_t &near_plane, 
+            const deng_vec_t &far_plane, 
+            FPPCamNonMovementCallback callback,
             WindowWrap *p_window
         );
-        ~Camera();
-        void updateCursorPos();
-        void setCameraViewRotation();
+        ~FPPCamera();
 
-        void setMousePosition(dengMath::vec2<float> &mouse_pos);
-        void getMousePosition(dengMath::vec2<float> *mouse_pos);
+        // Move camera position according to its coordinates
+        void moveW();
+        void moveRW();
+        void moveU();
+        void moveRU();
+        void moveV();
+        void moveRV();
 
-        void moveF();
-        void moveB();
-        void moveR();
-        void moveL();
-        void moveUp();
-        void moveDown();
-
+        // Wrapper around event update
+        void update(); 
     };
-
-    //class OrthoGraphicCamera2D {
-    //private:
-        //WindowWrap *m_p_ww;
-        //deng_vec_t m_x_rot;
-    //}
 }
 
 #endif

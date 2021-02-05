@@ -334,7 +334,7 @@ namespace deng {
         void updateUniformBufferData (
             VkDevice device, 
             const deng_ui32_t current_image, 
-            Camera *p_camera, 
+            FPPCamera *p_camera, 
             deng_CameraUniformFlagBits flag_bits
         );
 
@@ -449,8 +449,7 @@ namespace deng {
         std::mutex m_asset_mut;        
 
         // Renderer utilities
-        Camera *m_p_camera;
-        dengMath::Events *m_p_ev;
+        FPPCamera *m_p_camera;
         dengUtils::Timer m_timer;
         WindowWrap *m_p_ww = NULL;
 

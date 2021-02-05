@@ -1,4 +1,5 @@
 #include "../../headers/deng/api_core.h"
+#include <string>
 
 namespace dengUtils {
 
@@ -79,7 +80,11 @@ namespace dengUtils {
     // Find unique glyphs and index them according to the text
     std::vector<char> StringRasterizer::indexGlyphs(BitmapStr &str) {
         std::vector<char> unique_chars;
-        str.rend_text = (BitmapChar*) malloc(sizeof(BitmapChar) * strlen(str.text));
+        LOG("REND_TEXT_ALLOC_LEN: " + std::to_string(strlen(str.text)));
+        str.rend_text = (BitmapChar*) calloc (
+            strlen(str.text) + 1,
+            sizeof(BitmapChar)
+        );
         
         size_t l_index, r_index;
         bool is_found = false;
@@ -469,6 +474,7 @@ namespace dengUtils {
         deng_bool_t is_max = false;
         deng_px_t cur_px_width = 0.0;
         
+        LOG("RAS_STR_TEXT: " + std::string(ras_str.text));
         for(l_index = 0; l_index < (deng_i32_t) strlen(ras_str.text); l_index++) {
             // Check if the current size is bigger than maximum size
             if(cur_px_width >= max_px_width) { 

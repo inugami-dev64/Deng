@@ -2008,7 +2008,7 @@ namespace deng {
     void ResourceAllocator::updateUniformBufferData (
         VkDevice device, 
         const deng_ui32_t current_image, 
-        Camera *p_camera, 
+        FPPCamera *p_camera, 
         deng_CameraUniformFlagBits flag_bits
     ) {
         dengMath::UniformData ubo;
@@ -2650,16 +2650,15 @@ namespace deng {
         ext_mii.mouse_coords = {0, 0};
         ext_mii.mouse_input = DENG_INPUT_MOVEMENT;
 
-        m_p_camera = new Camera (
+        m_p_camera = new FPPCamera (
             {1.2f, 1.2f, 1.2f}, 
             {0.2f, 0.2f}, 
             65.0f, 
             DENG_DEFAULT_NEAR_PLANE, 
             DENG_DEFAULT_FAR_PLANE, 
+            NULL,
             m_p_ww
         );
-
-        m_p_ev = new dengMath::Events(m_p_ww, m_p_camera);
 
         m_p_scc = new SwapChainCreator (
             m_p_ic->getDev(),
@@ -2854,7 +2853,7 @@ namespace deng {
             else fps++;
             
             deng_UpdateWindow(m_p_ww->getWindow());
-            m_p_ev->update();
+            m_p_camera->update();
 
             m_update_mut.lock();
             if(m_cmd_update) {
