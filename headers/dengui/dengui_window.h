@@ -29,7 +29,7 @@ typedef deng_ui32_t WindowID;
 // Default window parametres
 #define DENGUI_TITLEBAR_HEIGHT              0.05f
 #define DENGUI_TITLEBAR_ELEM_MARGIN         0.005f
-#define DENGUI_DEFAULT_FONT_FILE            "SourceCodePro-Regular.ttf"
+#define DENGUI_DEFAULT_FONT_FILE            "SourceCodePro-Regular"
 
 // Main window element ids
 #define DENGUI_FORM_ID                      "form"

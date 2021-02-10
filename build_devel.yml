@@ -62,10 +62,10 @@ tasks:
       - deng/window.cpp
       - deng/rend_helpers.cpp
       - deng/deng_math.cpp
-      - deng/events.cpp
       - utils/font.cpp
       - utils/timer.cpp
       - utils/shapes.cpp
+      - utils/grid_generator.cpp
       - dengui/dengui_events.cpp
       - dengui/dengui_window.cpp
       - dengui/map_editor_ui.cpp

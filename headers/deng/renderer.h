@@ -1,7 +1,6 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include <vulkan/vulkan_core.h>
 namespace deng {
 
     #ifdef __DENG_API_CORE
@@ -46,7 +45,7 @@ namespace deng {
         VkRenderPass m_renderpass;
         VkSwapchainKHR m_swapchain;
         VkPresentModeKHR m_present_mode;
-        VkExtent2D m_extent;
+        VkExtent2D m_ext;
         VkFormat m_format;
         VkSurfaceFormatKHR m_surface_format;
         std::vector<VkImage> m_swapchain_images;
@@ -89,7 +88,7 @@ namespace deng {
     class InstanceCreator : private VulkanInstanceInfo, private VulkanDeviceInfo {
     private:
         // Supported device properties flags
-        bool m_tex_linear_filtering_support;
+        deng_bool_t m_tex_linear_filtering_support;
 
         // Required vulkan extensions
         std::vector<const char*> m_required_extension_names;
@@ -97,12 +96,12 @@ namespace deng {
         const char *m_p_validation_layer = "VK_LAYER_KHRONOS_validation";
 
     private:
-        void mkInstance(bool &enable_validation_layers);
-        bool checkValidationLayerSupport();
+        void mkInstance(deng_bool_t &enable_validation_layers);
+        deng_bool_t checkValidationLayerSupport();
         void findSupportedProperties();
         void mkDebugMessenger();
         void selectPhysicalDevice();
-        void mkLogicalDevice(bool &enable_validation_layers);
+        void mkLogicalDevice(deng_bool_t &enable_validation_layers);
         void mkWindowSurface();
 
         // Debug messenger
@@ -120,7 +119,7 @@ namespace deng {
     public:
         InstanceCreator (
             WindowWrap *p_window_wrap, 
-            bool enable_validation_layers
+            deng_bool_t enable_validation_layers
         );
 
         static void destroyDebugUtils (
@@ -129,7 +128,7 @@ namespace deng {
         );
 
     public:
-        bool getLFSupport();
+        deng_bool_t getLFSupport();
         VkInstance getIns();
         VkDevice getDev();
         VkSampleCountFlagBits getMaxSampleCount();
@@ -198,7 +197,7 @@ namespace deng {
         void mkPipelineLayouts(VkDevice &device);
         void mkGraphicsPipelines (
             VkDevice &device, 
-            VkExtent2D &extent, 
+            VkExtent2D &ext, 
             VkRenderPass &renderpass,
             VkSampleCountFlagBits sample_c
         );
@@ -210,7 +209,7 @@ namespace deng {
     public:
         DescriptorCreator (
             VkDevice device,
-            VkExtent2D extent,
+            VkExtent2D ext,
             VkRenderPass renderpass, 
             std::vector<deng_Asset> *p_assets, 
             std::vector<TextureImageData> *p_textures, 
@@ -259,28 +258,33 @@ namespace deng {
             VkPhysicalDevice &gpu, 
             size_t sc_img_size
         );
+
         void mkTextureSampler (
             VkDevice &device,
             VkSampler &sampler,
             deng_ui32_t mip_levels
         );
+
         void mkFrameBuffers (
             VkDevice &device, 
             VkRenderPass &renderpass, 
-            VkExtent2D &extent, 
+            VkExtent2D &ext, 
             std::vector<VkImageView> &sc_img_views
         );
+
         void mkColorResources (
             VkDevice &device,
             VkPhysicalDevice &gpu,
-            VkExtent2D &extent,
+            VkExtent2D &ext,
             VkFormat sc_color_format
         );
+
         void mkDepthResources (
             VkDevice &device, 
             VkPhysicalDevice &gpu, 
-            VkExtent2D &extent
+            VkExtent2D &ext
         );
+
         void mkMipMaps (
             VkDevice &device,
             VkCommandPool &cmd_pool,
@@ -295,11 +299,12 @@ namespace deng {
         ResourceAllocator (
             VkDevice device, 
             VkPhysicalDevice gpu, 
-            VkExtent2D extent, 
+            VkExtent2D ext, 
             VkSampleCountFlagBits sample_c,
             VkRenderPass renderpass, 
             std::vector<VkImageView> sc_img_views,
-            VkFormat sc_color_format
+            VkFormat sc_color_format,
+            deng_bool_t init_res
         );
         
         void setAssetsData (
@@ -311,7 +316,7 @@ namespace deng {
             VkDevice device, 
             VkPhysicalDevice gpu, 
             VkCommandPool command_pool,
-            bool is_lf_supported, 
+            deng_bool_t is_lf_supported, 
             VkQueue g_queue, 
             size_t sc_img_size
         );
@@ -334,7 +339,8 @@ namespace deng {
         void updateUniformBufferData (
             VkDevice device, 
             const deng_ui32_t current_image, 
-            Camera *p_camera, 
+            void *p_camera, 
+            deng_CameraType cam_type,
             deng_CameraUniformFlagBits flag_bits
         );
 
@@ -384,7 +390,8 @@ namespace deng {
     public:
         DrawCaller (
             VkDevice device,
-            QueueFamilyFinder qff
+            QueueFamilyFinder qff,
+            deng_bool_t init_draw_caller
         );
         
         void setAssetsData (
@@ -404,8 +411,8 @@ namespace deng {
             VkDevice device, 
             VkQueue g_queue, 
             VkRenderPass renderpass, 
-            VkExtent2D extent,
-            dengMath::vec4<float> background,
+            VkExtent2D ext,
+            dengMath::vec4<deng_vec_t> background,
             BufferData buffer_data
         );
 
@@ -420,7 +427,6 @@ namespace deng {
         std::vector<VkCommandBuffer> *getComBufs();
     };
 
-
     class Renderer {   
     private:
         InstanceCreator *m_p_ic = NULL;
@@ -433,15 +439,15 @@ namespace deng {
         
         // Render usage specifications
         deng_RendererUsageMode m_usage_mode;
-        bool m_enable_vsync;
-        bool m_enable_validation_layers;
-        bool m_count_fps;
+        deng_bool_t m_enable_vsync;
+        deng_bool_t m_enable_validation_layers;
+        deng_bool_t m_count_fps;
         VkSampleCountFlagBits m_msaa_sample_count = VK_SAMPLE_COUNT_1_BIT;
-        dengMath::vec3<float> m_clear_color;
+        dengMath::vec3<deng_vec_t> m_clear_color;
 
         // View distance settings
-        const float m_near_plane = DENG_DEFAULT_NEAR_PLANE;
-        const float m_far_plane = DENG_DEFAULT_FAR_PLANE;
+        const deng_vec_t m_near_plane = DENG_DEFAULT_NEAR_PLANE;
+        const deng_vec_t m_far_plane = DENG_DEFAULT_FAR_PLANE;
 
         // Assets, buffers and texture images
         std::vector<deng_Asset> m_assets;
@@ -449,13 +455,13 @@ namespace deng {
         std::mutex m_asset_mut;        
 
         // Renderer utilities
-        Camera *m_p_camera;
-        dengMath::Events *m_p_ev;
+        void *m_p_camera = NULL;
+        deng_CameraType m_main_camera_type;
         dengUtils::Timer m_timer;
         WindowWrap *m_p_ww = NULL;
 
         // GUI objects
-        bool m_cmd_update = false;
+        deng_bool_t m_cmd_update = false;
         std::mutex m_update_mut;
         dengui::MapEditor *m_p_map_editor;
 
@@ -464,7 +470,11 @@ namespace deng {
         void makeFrame();
 
     public:
-        Renderer(WindowWrap *p_win); 
+        Renderer (
+            WindowWrap *p_win,
+            void *p_cam,
+            deng_CameraType camera_type
+        ); 
         void submitAssets (
             deng_Asset *assets, 
             deng_i32_t size

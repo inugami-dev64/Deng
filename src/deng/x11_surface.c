@@ -30,6 +30,8 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
     p_window->width = width;
     p_window->height = height;
     p_window->window_title = title;
+
+    printf("CURSOR: %s\n", p_window->virtual_mouse_position.cursor);
     p_window->virtual_mouse_position.is_enabled = 0;
     p_window->virtual_mouse_position.movement_x = 0;
     p_window->virtual_mouse_position.movement_y = 0;
@@ -38,7 +40,8 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
 
     p_window->x11_handler.p_display = XOpenDisplay(NULL);
     p_window->x11_handler.screen = DefaultScreen (
-        p_window->x11_handler.p_display);
+        p_window->x11_handler.p_display 
+    );
 
     XSizeHints size_hints;
 
@@ -315,8 +318,11 @@ void deng_GetMousePos (
         p_window->virtual_mouse_position.movement_x = x - p_window->virtual_mouse_position.orig_x;
         p_window->virtual_mouse_position.movement_y = y - p_window->virtual_mouse_position.orig_y;
 
-        if(x != p_window->virtual_mouse_position.orig_x || y != p_window->virtual_mouse_position.orig_y) 
-            deng_SetMouseCoords (
+        if
+        (
+            x != p_window->virtual_mouse_position.orig_x || 
+            y != p_window->virtual_mouse_position.orig_y
+        )   deng_SetMouseCoords (
                 p_window, 
                 p_window->virtual_mouse_position.orig_x, 
                 p_window->virtual_mouse_position.orig_y
@@ -360,7 +366,7 @@ static void __SetCursor (
     case true:
         cursor = XcursorLibraryLoadCursor (
             p_window->x11_handler.p_display, 
-            DENG_CURSOR_DEFAULT
+            "dnd_none"
         );
         break;
     
@@ -383,7 +389,7 @@ int __ErrorHandler (
     printf("Loop end\n");
     deng_IsRunningVar = false;
 
-    return 0;
+    return EXIT_FAILURE;
 }
 
 
@@ -394,9 +400,10 @@ void deng_SetMouseCursorMode (
     switch(mouse_mode) 
     {
     case DENG_MOUSE_MODE_VIRTUAL:
+        printf("Hidden cursor %s\n", p_window->virtual_mouse_position.cursor);
         __SetCursor (
             p_window, 
-            DENG_CURSOR_HIDDEN, 
+            p_window->virtual_mouse_position.cursor, 
             false
         );
         p_window->virtual_mouse_position.is_enabled = false;

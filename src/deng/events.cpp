@@ -1,60 +1,15 @@
 #include "../../headers/deng/api_core.h"
 
-// Shared data
-extern dengui::MouseInputInfo ext_mii;
-
 namespace dengMath {
-    Events::Events(deng::WindowWrap *p_win, deng::Camera *p_camera) {
-        m_is_key_registered.first = false;
+    Events::Events (
+        deng::WindowWrap *p_win, 
+        deng::Camera *p_camera
+    ) {
         m_p_camera = p_camera;
         m_p_window_wrap = p_win;
     }
 
     void Events::getMovementType() {
-        if
-        (
-            deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_W) && 
-            !deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_S)
-        ) m_movements.third = DENG_MOVEMENT_FORWARD;
-        
-
-        else if
-        (
-            !deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_W) && 
-            deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_S)
-        ) m_movements.third = DENG_MOVEMENT_BACKWARD;
-
-        else 
-            m_movements.third = DENG_MOVEMENT_NONE;
-
-
-        if
-        (
-            deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_A) && 
-            !deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_D)
-        ) m_movements.first = DENG_MOVEMENT_LEFTWARD;
-
-        else if
-        (
-            !deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_A) && 
-            deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_D)
-        ) m_movements.first = DENG_MOVEMENT_RIGHTWARD;
-
-        else m_movements.first = DENG_MOVEMENT_NONE;
-
-        if(deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_SPACE) && 
-        !deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_LEFT_CTRL)) {
-            m_movements.second = DENG_MOVEMENT_UPWARD;
-        }
-
-        else if(!deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_SPACE) && 
-        deng_IsKeyActive(m_p_window_wrap->getWindow(), DENG_KEY_LEFT_CTRL)) {
-            m_movements.second = DENG_MOVEMENT_DOWNWARD;
-        }
-
-        else {
-            m_movements.second = DENG_MOVEMENT_NONE;
-        }
     }
 
     void Events::checkForInputModeChange() {
@@ -72,7 +27,12 @@ namespace dengMath {
             ) {
 
                 #if CAMERA_MOUSE_DEBUG
-                    LOG("frozen_mouse_position x:" + std::to_string(m_frozen_mouse_position.first) + "/" + std::to_string(m_frozen_mouse_position.second));
+                    LOG (
+                        "frozen_mouse_position x:" + 
+                        std::to_string(m_frozen_mouse_position.first) + 
+                        "/" + 
+                        std::to_string(m_frozen_mouse_position.second)
+                    );
                 #endif
                 
                 m_p_window_wrap->setInputMode(DENG_INPUT_NONMOVEMENT);

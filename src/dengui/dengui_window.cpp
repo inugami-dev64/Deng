@@ -27,7 +27,10 @@ namespace dengui {
         std::vector<WindowElement> elems;
         (*pp_window)->makeWindow (
             p_wi, 
-            {(deng_ui32_t) draw_bounds.first, (deng_ui32_t) draw_bounds.second}
+            {
+                (deng_ui32_t) draw_bounds.first, 
+                (deng_ui32_t) draw_bounds.second
+            }
         );
         elems = (*pp_window)->getWindowElements();
         p_ev->pushWindowElements (

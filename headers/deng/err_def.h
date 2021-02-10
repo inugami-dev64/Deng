@@ -7,6 +7,7 @@
     #define WARNME(x) std::cout << "WARNING: " << x << std::endl
 #else
     #define LOG(x)
+    #define WARNME(x)
     #define ERRME(x)
 #endif
 

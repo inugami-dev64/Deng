@@ -11,7 +11,7 @@ namespace dengui {
         // Create main side window for map editor
         WindowInfo wi;
         wi.fl_b = DENG_MAP_UI_MAIN_WINDOW_FLAGS;
-        wi.id = "THIS NAME IS TOO LONG TO BE A TITLE NAME LOLOLOLOL XDDDDDD!";
+        wi.id = "DENG map editor";
         wi.pc = DENG_MAP_UI_PRIMARY_COLOR;
         wi.sc = DENG_MAP_UI_SECONDARY_COLOR;
         wi.tc = DENG_MAP_UI_TERTIARY_COLOR;
@@ -30,6 +30,10 @@ namespace dengui {
         );
     }
 
+    MapEditor::~MapEditor() {
+        delete m_p_ev;
+        delete m_p_main_win;
+    }
 
     /* Event handler class instance getter */
     Events *MapEditor::getEv() { return m_p_ev; }

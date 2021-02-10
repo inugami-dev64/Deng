@@ -1,35 +1,25 @@
 #ifndef GRID_GENERATOR_H
 #define GRID_GENERATOR_H
 
-#define DENG_GRID_TRIANGLE_THICKNESS -0.0001
+#define DENG_DEFAULT_GRID_COLOR {0.8f, 0.8f, 0.8f, 1.0f}
+#define DENG_GRID_THICKNESS 0.005f
+
 namespace dengUtils {
-
-    class GridManager {
+    
+    class GridGenerator {
     private:
-        float m_max_vertex_buffer_distance;
-        float *m_p_grid_lenght;
-        float *m_p_grid_width;
-
-        float *m_p_grid_color_r;
-        float *m_p_grid_color_g;
-        float *m_p_grid_color_b;
-
-        // first element represents x axis and second element represents z axis
-        dengMath::vec2<deng_i32_t> m_min_vertices;
-        dengMath::vec2<deng_i32_t> m_max_vertices;
-
-        SpecifiedObject *m_grid;
-
-    private:
-        dengMath::vec2<float*> getOrdereredVertexDataElements(const deng_ui32_t index, const deng_CoordinateAxisType &axis);
-        void generateAxisLineVertices(dengMath::vec2<deng_i32_t> &min_vertices, dengMath::vec2<deng_i32_t> &max_vertices, const deng_CoordinateAxisType &axis, deng_i32_t &index);
+        dengMath::vec4<deng_vec_t> m_color;
+        deng_vec_t m_grid_len;
+        deng_ui32_t m_row_c;
+        deng_Asset m_asset;
 
     public:
-        GridManager(SpecifiedObject *grid, const float &max_distance, float *p_grid_height, float *p_grid_width, float *p_color_r, float *p_color_g, float *p_color_b);
-        ~GridManager();
-        void updateVertices(dengMath::vec4<float> camera_position);
-        void generateVertices(dengMath::vec4<float> camera_position);
-        void generateIndices();
+        GridGenerator (
+            dengMath::vec4<deng_vec_t> color, 
+            deng_vec_t len,
+            deng_ui32_t row_c
+        );
+        deng_Asset getGrid();
     };
 }
 

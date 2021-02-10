@@ -32,7 +32,7 @@ namespace dengui {
 
         deng::ResourceAllocator *p_ra;
         deng::DrawCaller *p_dc;
-        bool *p_update_flag;
+        deng_bool_t *p_update_flag;
         std::mutex *p_update_mut;
         std::mutex *p_frame_mut;
 

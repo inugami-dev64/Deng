@@ -4,7 +4,16 @@
 /* Header file for all forward class and struct declarations */
 
 namespace deng {
-    // core/renderer.h
+    // deng/deng_math.h
+    struct vec4;
+    struct vec3;
+    struct vec2;
+
+    class mat2;
+    class mat3;
+    class mat4;
+
+    // deng/renderer.h
     struct VulkanInstanceInfo;
     struct VulkanSwapChainInfo;
     struct VulkanDescriptorInfo;
@@ -16,13 +25,16 @@ namespace deng {
     class DrawCaller;
     class Renderer;
 
-    // core/window.h
+    // deng/window.h
     class WindowWrap;
 
-    // core/camera.h
-    class Camera;
+    // deng/camera.h
+    struct CameraBaseValues;
+    struct EventBaseValues;
+    class FPPCameraEv;
+    class FPPCamera;
 
-    // core/rend_helpers.h
+    // deng/rend_helpers.h
     struct BufferData;
     struct TextureImageData;
     struct HardwareSpecs;

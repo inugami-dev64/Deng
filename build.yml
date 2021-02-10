@@ -7,12 +7,12 @@ premake:
   cc_flags: 
     - Wall
     - m64
-    - O2
+    - O3
   cxx_flags: 
     - Wall
     - m64 
     - std=c++11
-    - O2
+    - O3
   include_path:
     linux:
       - "/usr/include/freetype2"
@@ -43,15 +43,15 @@ tasks:
       - deng/window.cpp
       - deng/rend_helpers.cpp
       - deng/deng_math.cpp
-      - deng/events.cpp
       - utils/font.cpp
       - utils/timer.cpp
       - utils/shapes.cpp
+      - utils/grid_generator.cpp
       - dengui/dengui_events.cpp
       - dengui/dengui_window.cpp
       - dengui/map_editor_ui.cpp
-      - common/hashmap.c
       - common/common.c
+      - common/hashmap.c
       - das/das_handler.c
       - das/data_loader.c
       - deng/key_translation.c
