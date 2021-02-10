@@ -38,7 +38,7 @@ namespace dengUtils {
                     ext_index + 1 < (deng_i32_t) m_fonts[l_index].size()
                 ) {
                     // Check for supported font file formats
-                    for(r_index = 0; r_index < C_ARR_SIZE(font_formats); r_index++) {
+                    for(r_index = 0; r_index < (deng_i32_t) C_ARR_SIZE(font_formats); r_index++) {
                         if(!strcmp(m_fonts[l_index].c_str() + ext_index + 1, font_formats[r_index])) {
                             is_supported = true;
                             break;     

@@ -8,7 +8,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define C_ARR_SIZE(x) sizeof(x) / sizeof(x[0])
+#define C_ARR_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
     // Get the file extension from file name
     char *cm_GetFileExtName(const char *file_name);

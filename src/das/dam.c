@@ -86,7 +86,7 @@ deng_ui16_t damCountMonths (
 
 /* Format date from time from epoch */
 void damFormatDate(char *date, char *time, deng_i64_t time_from_epoch) {
-    int is_leap_year;
+    int is_leap_year = false;
     char *ch_month, *ch_day;
     ch_month = (char*) calloc(7, sizeof(char));
     ch_day = (char*) calloc(7, sizeof(char));
