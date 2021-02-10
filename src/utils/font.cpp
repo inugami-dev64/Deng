@@ -1,33 +1,57 @@
 #include "../../headers/deng/api_core.h"
-#include <string>
+const char *font_formats[] = {"otf", "ttf"};
 
 namespace dengUtils {
 
     /* Search for certain font and return true if found */
-    bool StringRasterizer::verifyFont(BitmapStr &str, std::string &out_path) {
-        size_t l_index, r_index, path_index = 0;
+    deng_bool_t StringRasterizer::verifyFont (
+        BitmapStr &str, 
+        std::string &out_path
+    ) {
+        size_t l_index; 
+        deng_i32_t r_index, ext_index, path_index;
         std::string list_font_name = "";
+        deng_bool_t is_supported = false;
 
+        // Check if specified font name matches any fonts from fonts vector
         for(l_index = 0; l_index < m_fonts.size(); l_index++) {
-            // Extract font name from the font file path
-            // Find last instance of slash
-            for(r_index = 0; r_index < m_fonts[l_index].size(); r_index++)
-                if(m_fonts[l_index][r_index] == 0x2F) path_index = r_index; 
-
-            // Populate list_font_name string with found font file
-            path_index++;
-            for(r_index = path_index; r_index < m_fonts[l_index].size(); r_index++)
-                list_font_name += m_fonts[l_index][r_index];
-
-            if(str.font_file == list_font_name) {
-                out_path = m_fonts[l_index];
-                LOG("Found font file: " + out_path);
-                return true;
+            // Find file extension
+            for(ext_index = m_fonts[l_index].size() - 1; ext_index >= 0; ext_index--) {
+                if(m_fonts[l_index][ext_index] == '.') 
+                    break;
             }
-
-            list_font_name = "";
+            
+            if((size_t) ext_index >= strlen(str.font_file)) {
+                // Extract font name from font file path
+                for(path_index = ext_index - 1; path_index >= 0; path_index--) {
+                    if(m_fonts[l_index][path_index] == '/')
+                        break;
+                }
+                    
+                path_index++;
+                // Check if extracted string is equal to specified string
+                if 
+                (
+                    ext_index - path_index >= (deng_i32_t) strlen(str.font_file) ?
+                    !strncmp(m_fonts[l_index].c_str() + path_index, str.font_file, strlen(str.font_file)) :
+                    !strncmp(m_fonts[l_index].c_str() + path_index, str.font_file, ext_index - path_index) &&
+                    ext_index + 1 < (deng_i32_t) m_fonts[l_index].size()
+                ) {
+                    // Check for supported font file formats
+                    for(r_index = 0; r_index < C_ARR_SIZE(font_formats); r_index++) {
+                        if(!strcmp(m_fonts[l_index].c_str() + ext_index + 1, font_formats[r_index])) {
+                            is_supported = true;
+                            break;     
+                        }
+                    }
+                    printf("font_file: %s\n", m_fonts[l_index].c_str());
+                    if(is_supported) {
+                        out_path = m_fonts[l_index];
+                        return true;  
+                    }
+                }
+            }
         }
-
         LOG("No font file found");
         return false;
     }
@@ -87,7 +111,7 @@ namespace dengUtils {
         );
         
         size_t l_index, r_index;
-        bool is_found = false;
+        deng_bool_t is_found = false;
 
         // Find if chars repeat in text, sort and index them
         for(l_index = 0; l_index < strlen(str.text); l_index++) {
@@ -355,7 +379,7 @@ namespace dengUtils {
         
         dengMath::vec2<deng_i32_t> gl_rel_draw_coords;
         deng_i32_t gl_index;
-        bool draw_width, draw_height;
+        deng_bool_t draw_width, draw_height;
         
         // y axis iteration
         for(l_index = 0, t_index = 0, g_index = 0; l_index < str.box_size.second; l_index++) {
@@ -467,14 +491,11 @@ namespace dengUtils {
             DENG_COORD_AXIS_X
         );
 
-        LOG("MAX_HEIGHT: " + std::to_string(max_px_width));
-
         // Count the total size of the string
         deng_i32_t l_index;        
         deng_bool_t is_max = false;
         deng_px_t cur_px_width = 0.0;
         
-        LOG("RAS_STR_TEXT: " + std::string(ras_str.text));
         for(l_index = 0; l_index < (deng_i32_t) strlen(ras_str.text); l_index++) {
             // Check if the current size is bigger than maximum size
             if(cur_px_width >= max_px_width) { 

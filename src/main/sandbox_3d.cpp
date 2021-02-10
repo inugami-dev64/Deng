@@ -3,7 +3,32 @@
 
 int main() {
     deng::WindowWrap window(1280, 980, "Game!");
-    deng::Renderer rend(&window);
+
+    deng::EditorCamera ed_cam (
+        0.2f,
+        {0.0f, 0.0f, 0.0f}, 
+        {0.7f, 0.7f},
+        dengMath::Conversion::degToRad(65.0f), 
+        DENG_DEFAULT_NEAR_PLANE, 
+        DENG_DEFAULT_FAR_PLANE, 
+        &window
+    );
+
+    //deng::FPPCamera fpp_cam (
+        //{1.2f, 1.2f, 1.2f}, 
+        //{0.7f, 0.7f}, 
+        //dengMath::Conversion::degToRad(65.0f), 
+        //DENG_DEFAULT_NEAR_PLANE, 
+        //DENG_DEFAULT_FAR_PLANE, 
+        //NULL, 
+        //&window
+    //);
+
+    deng::Renderer rend (
+        &window, 
+        &ed_cam, 
+        DENG_CAMERA_EDITOR
+    );
 
     rend.setHints (
         DENG_RENDERER_HINT_SHOW_FPS_COUNTER |
@@ -13,16 +38,26 @@ int main() {
     );
     
     std::array<deng_Asset, 2> assets;
+    dengMath::ModelMatrix viking_mat;
+    viking_mat.setRotation(PI / 2, PI, 0);
+    viking_mat.setScale(1.0f, 1.0f, 1.0f);
+
     dasReadAsset(&assets[0], "../../assets/viking_norm.das", DENG_ASSET_MODE_DONT_CARE);
     assets[0].tex_id = (char*) "viking";
     assets[0].id = (char*) "viking_room";
     assets[0].is_shown = true;
+    dengMath::applyModelMatrix(assets[0], viking_mat.getModelMatrix());
 
     deng_Texture viking_tex;
     dasLoadTexture(&viking_tex, "../../textures/viking_room.tga");
     viking_tex.id = (char*) "viking";
     
-    dengUtils::GridGenerator grid_gen(DENG_DEFAULT_GRID_COLOR, 50.0f, 150);
+    dengUtils::GridGenerator grid_gen (
+        DENG_DEFAULT_GRID_COLOR, 
+        50.0f, 
+        150
+    );
+
     assets[1] = grid_gen.getGrid();
     assets[1].is_shown = true;
 

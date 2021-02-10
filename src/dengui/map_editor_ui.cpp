@@ -30,6 +30,10 @@ namespace dengui {
         );
     }
 
+    MapEditor::~MapEditor() {
+        delete m_p_ev;
+        delete m_p_main_win;
+    }
 
     /* Event handler class instance getter */
     Events *MapEditor::getEv() { return m_p_ev; }

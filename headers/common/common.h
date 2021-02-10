@@ -8,8 +8,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define C_ARR_SIZE(x) sizeof(x) / sizeof(x[0])
 
-    /* This library hosts most of the general commonly used functions */
     // Get the file extension from file name
     char *cm_GetFileExtName(const char *file_name);
     // Trim string from beginning and end

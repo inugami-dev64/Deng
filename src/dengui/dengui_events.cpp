@@ -15,6 +15,7 @@ namespace dengui {
     }
 
     Events::~Events() {
+        size_t index;
         delete m_info.p_dc;
         delete m_info.p_ra;
     }

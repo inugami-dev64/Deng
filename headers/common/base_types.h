@@ -67,6 +67,7 @@ enum deng_CoordinateAxisType {
     DENG_COORD_AXIS_Z = 2
 };
 
+
 /* Movement mode specifier */
 enum deng_MovementEvent {
     DENG_MOVEMENT_NONE = -1,
@@ -77,6 +78,7 @@ enum deng_MovementEvent {
     DENG_MOVEMENT_UPWARD = 4,
     DENG_MOVEMENT_DOWNWARD = 5
 };
+
 
 /* Pipeline type specifier */
 enum deng_PipelineType {
@@ -95,12 +97,14 @@ enum deng_InputMode {
     DENG_INPUT_MOVEMENT = 1
 };
 
+
 /* Triangle angle specifier */
 enum deng_TriangleAngleType {
     DENG_TRIANGLE_ANGLE_ALPHA = 0,
     DENG_TRIANGLE_ANGLE_BETA = 1,
     DENG_TRIANGLE_ANGLE_GAMMA = 2
 };
+
 
 /* Renderer usage mode */
 enum deng_RendererUsageMode {
@@ -109,11 +113,23 @@ enum deng_RendererUsageMode {
     DENG_RENDERER_USAGE_GAME_MODE = 2,
 };
 
+
 /* Camera type specifier */
 enum deng_CameraType {
     DENG_CAMERA_FPP     = 0,
     DENG_CAMERA_EDITOR  = 1
 };
+
+
+/* Editor camera event specifier */
+enum deng_EditorCameraEvent {
+    DENG_EDITOR_CAMERA_NONE         = -1,
+    DENG_EDITOR_CAMERA_Z_MOV_IN     = 0,
+    DENG_EDITOR_CAMERA_Z_MOV_OUT    = 1,
+    DENG_EDITOR_CAMERA_MOUSE_ROTATE = 2
+};
+
+
 
 #define DENG_KEY_PRESS_INTERVAL         200 // ms
 #define DENG_MOVEMENT_INTERVAL          17 // ms
@@ -125,4 +141,11 @@ enum deng_CameraType {
 #define DENG_FPP_CAMERA_DEFAULT_POS_X   0.0f
 #define DENG_FPP_CAMERA_DEFAULT_POS_Y   0.5f
 #define DENG_FPP_CAMERA_DEFAULT_POS_Z   0.5f
+
+// World coordinates
+#define DENG_EDITOR_CAMERA_DEFAULT_POS_X    0.0f
+#define DENG_EDITOR_CAMERA_DEFAULT_POS_Y    0.0f
+#define DENG_EDITOR_CAMERA_DEFAULT_POS_Z    3.0f
+#define DENG_EDITOR_CAMERA_DEFAULT_X_ROT    dengMath::Conversion::degToRad(-30.0f)
+#define DENG_EDITOR_CAMERA_DEFAULT_Y_ROT    dengMath::Conversion::degToRad(30.0f)
 #endif

@@ -10,6 +10,7 @@ namespace deng {
     static deng_ui16_t texture_c = 0;
     static deng_ui16_t asset_c = 0; 
 
+
     /************************************************/
     /************************************************/
     /************ InstanceCreator class *************/
@@ -18,7 +19,7 @@ namespace deng {
 
     InstanceCreator::InstanceCreator (
         WindowWrap *p_window_wrap, 
-        bool enable_validation_layers
+        deng_bool_t enable_validation_layers
     ) {
         m_required_extension_names.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
         m_p_win = p_window_wrap;
@@ -35,7 +36,7 @@ namespace deng {
 
 
     /* Create new vulkan instance */
-    void InstanceCreator::mkInstance(bool &enable_validation_layers) {
+    void InstanceCreator::mkInstance(deng_bool_t &enable_validation_layers) {
         // Set up Vulkan application info
         VkApplicationInfo appinfo{};
         appinfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -46,9 +47,9 @@ namespace deng {
         appinfo.apiVersion = VK_API_VERSION_1_0;
 
         // Set up instance create info
-        VkInstanceCreateInfo instance_createInfo{}; 
-        instance_createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        instance_createInfo.pApplicationInfo = &appinfo;
+        VkInstanceCreateInfo instance_createinfo{}; 
+        instance_createinfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        instance_createinfo.pApplicationInfo = &appinfo;
 
         // Get all required extensions
         deng_ui32_t extension_count;
@@ -57,11 +58,14 @@ namespace deng {
             &extension_count, 
             static_cast<int>(enable_validation_layers)
         );
-        instance_createInfo.enabledExtensionCount = extension_count;
-        instance_createInfo.ppEnabledExtensionNames = extensions;
-        LOG("Required extensions count is: " + std::to_string(instance_createInfo.enabledExtensionCount));
+        instance_createinfo.enabledExtensionCount = extension_count;
+        instance_createinfo.ppEnabledExtensionNames = extensions;
+        LOG (
+            "Required extensions count is: " + 
+            std::to_string(instance_createinfo.enabledExtensionCount)
+        );
         
-        VkDebugUtilsMessengerCreateInfoEXT debug_createInfo{};
+        VkDebugUtilsMessengerCreateInfoEXT debug_createinfo{};
         
         // Check for validatation layer support
         if(enable_validation_layers && !checkValidationLayerSupport())
@@ -69,38 +73,38 @@ namespace deng {
 
         else if(enable_validation_layers && checkValidationLayerSupport()) {
             // Set up instance info to support validation layers
-            instance_createInfo.enabledLayerCount = 1;
-            instance_createInfo.ppEnabledLayerNames = &m_p_validation_layer;
-            instance_createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debug_createInfo;
+            instance_createinfo.enabledLayerCount = 1;
+            instance_createinfo.ppEnabledLayerNames = &m_p_validation_layer;
+            instance_createinfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debug_createinfo;
 
             // Set up debug messenger createinfo
-            debug_createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-            debug_createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-            debug_createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-            debug_createInfo.pfnUserCallback = InstanceCreator::debugCallback;
+            debug_createinfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+            debug_createinfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+            debug_createinfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+            debug_createinfo.pfnUserCallback = InstanceCreator::debugCallback;
         }
 
         else if(!enable_validation_layers) {
             // Set up instance info to not support validation layers
             LOG("Vulkan validation layers are disabled");
-            instance_createInfo.enabledLayerCount = 0;
-            instance_createInfo.pNext = nullptr;
+            instance_createinfo.enabledLayerCount = 0;
+            instance_createinfo.pNext = nullptr;
         }
         
         // Create new Vulkan instance
-        if(vkCreateInstance(&instance_createInfo, nullptr, &m_instance) != VK_SUCCESS)
+        if(vkCreateInstance(&instance_createinfo, nullptr, &m_instance) != VK_SUCCESS)
             VK_INSTANCE_ERR("failed to create an instance!");
     }
 
 
     /* Check if Vulkan validation layers are available */
-    bool InstanceCreator::checkValidationLayerSupport() {
+    deng_bool_t InstanceCreator::checkValidationLayerSupport() {
         deng_ui32_t layer_count;
         vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
 
         std::vector<VkLayerProperties> available_layers(layer_count);
         vkEnumerateInstanceLayerProperties(&layer_count, available_layers.data());
-        bool is_layer = false;
+        deng_bool_t is_layer = false;
 
         for(const VkLayerProperties &properties : available_layers) {
             if(!strcmp(m_p_validation_layer, properties.layerName)) {
@@ -197,7 +201,7 @@ namespace deng {
 
     
     /* Create logical Vulkan device */ 
-    void InstanceCreator::mkLogicalDevice(bool &enable_validation_layers) {
+    void InstanceCreator::mkLogicalDevice(deng_bool_t &enable_validation_layers) {
         if (
             !m_qff.findGraphicsFamily(m_gpu) || 
             !m_qff.findPresentSupportFamily(m_gpu, m_surface)
@@ -352,7 +356,7 @@ namespace deng {
     VkSurfaceKHR InstanceCreator::getSu() { return m_surface; }
     QueueFamilyFinder InstanceCreator::getQFF() { return m_qff; } 
     VkDebugUtilsMessengerEXT InstanceCreator::getDMEXT() { return m_debug_mes; }
-    bool InstanceCreator::getLFSupport() { return m_tex_linear_filtering_support; }
+    deng_bool_t InstanceCreator::getLFSupport() { return m_tex_linear_filtering_support; }
     VkSampleCountFlagBits InstanceCreator::getMaxSampleCount() { return m_max_sample_count; }
 
     
@@ -390,7 +394,7 @@ namespace deng {
 
     /* Initialise swapchain settings in order to create swapchain */
     void SwapChainCreator::mkSwapChainSettings() {
-        bool found_suitable_format = false;
+        deng_bool_t found_suitable_format = false;
         for(const VkSurfaceFormatKHR &surface_format : m_p_sc_details->getFormats()) {
             if 
             (
@@ -407,7 +411,7 @@ namespace deng {
             m_surface_format = m_p_sc_details->getFormats()[0];
         }
 
-        bool foundSuitablePresentMode = false;
+        deng_bool_t foundSuitablePresentMode = false;
         for(const VkPresentModeKHR &presentFormat : m_p_sc_details->getPresentModes()) {
             // Check which present modes are available
             switch (presentFormat)
@@ -456,11 +460,11 @@ namespace deng {
         (
             m_p_sc_details->getCapabilities().currentExtent.width != UINT32_MAX && 
             m_p_sc_details->getCapabilities().currentExtent.height != UINT32_MAX
-        ) m_extent = m_p_sc_details->getCapabilities().currentExtent;
+        ) m_ext = m_p_sc_details->getCapabilities().currentExtent;
 
         else {
-            m_extent.width = m_p_win->getSize().first;
-            m_extent.height = m_p_win->getSize().second;
+            m_ext.width = m_p_win->getSize().first;
+            m_ext.height = m_p_win->getSize().second;
         }
     }
 
@@ -487,7 +491,7 @@ namespace deng {
         swapchain_createinfo.minImageCount = min_image_count;
         swapchain_createinfo.imageFormat = m_surface_format.format;
         swapchain_createinfo.imageColorSpace = m_surface_format.colorSpace;
-        swapchain_createinfo.imageExtent = m_extent;
+        swapchain_createinfo.imageExtent = m_ext;
         swapchain_createinfo.imageArrayLayers = 1;
         swapchain_createinfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
@@ -669,7 +673,7 @@ namespace deng {
     
     /* SwapChainCreator getters */
     VkRenderPass SwapChainCreator::getRp() { return m_renderpass; }
-    VkExtent2D SwapChainCreator::getExt() { return m_extent; }
+    VkExtent2D SwapChainCreator::getExt() { return m_ext; }
     VkSwapchainKHR SwapChainCreator::getSC() { return m_swapchain; }
     VkFormat SwapChainCreator::getSF() { return m_surface_format.format; }
     std::vector<VkImage> SwapChainCreator::getSCImg() { return m_swapchain_images; }
@@ -1204,34 +1208,37 @@ namespace deng {
         VkSampleCountFlagBits sample_c, 
         VkRenderPass renderpass, 
         std::vector<VkImageView> sc_img_views,
-        VkFormat sc_color_format
+        VkFormat sc_color_format,
+        deng_bool_t init_res
     ) {
         m_sample_count = sample_c;
-        mkUniformBuffers (
-            device, 
-            gpu, 
-            sc_img_views.size()
-        );
-        
-        mkColorResources (
-            device, 
-            gpu, 
-            extent, 
-            sc_color_format
-        );
-        
-        mkDepthResources (
-            device, 
-            gpu, 
-            extent
-        );
+        if(init_res) {
+            mkUniformBuffers (
+                device, 
+                gpu, 
+                sc_img_views.size()
+            );
+            
+            mkColorResources (
+                device, 
+                gpu, 
+                extent, 
+                sc_color_format
+            );
+            
+            mkDepthResources (
+                device, 
+                gpu, 
+                extent
+            );
 
-        mkFrameBuffers (
-            device, 
-            renderpass, 
-            extent, 
-            sc_img_views
-        );
+            mkFrameBuffers (
+                device, 
+                renderpass, 
+                extent, 
+                sc_img_views
+            );
+        }
     }
 
 
@@ -1579,7 +1586,7 @@ namespace deng {
         VkDevice device, 
         VkPhysicalDevice gpu, 
         VkCommandPool command_pool,
-        bool is_lf, 
+        deng_bool_t is_lf, 
         VkQueue g_queue, 
         size_t sc_img_size
     ) {
@@ -1817,6 +1824,7 @@ namespace deng {
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
             &m_buffer_data.staging_buffer
         );
+
         BufferCreator::allocateMemory (
             device, 
             gpu, 
@@ -2008,14 +2016,28 @@ namespace deng {
     void ResourceAllocator::updateUniformBufferData (
         VkDevice device, 
         const deng_ui32_t current_image, 
-        FPPCamera *p_camera, 
+        void *p_camera, 
+        deng_CameraType cam_type,
         deng_CameraUniformFlagBits flag_bits
     ) {
         dengMath::UniformData ubo;
         ubo.cam_flag_bits = flag_bits;
         
-        p_camera->view_matrix.getViewMatrix(&ubo.view);
-        p_camera->p_projection_matrix->getProjectionMatrix(&ubo.projection);
+        switch(cam_type)
+        {
+        case DENG_CAMERA_FPP:
+            ((FPPCamera*) p_camera)->view_matrix.getViewMatrix(&ubo.view);
+            ((FPPCamera*) p_camera)->p_projection_matrix->getProjectionMatrix(&ubo.projection);
+            break;
+
+        case DENG_CAMERA_EDITOR:
+            ((EditorCamera*) p_camera)->view_matrix.getViewMatrix(&ubo.view);
+            ((EditorCamera*) p_camera)->p_projection_matrix->getProjectionMatrix(&ubo.projection);
+            break;
+
+        default:
+            break;
+        }
 
         ubo.cam_flag_bits = DENG_CAMERA_UNIFORM_NO_CAMERA_MODE_2D | DENG_CAMERA_UNIFORM_PERSPECTIVE_CAMERA_MODE_3D;
 
@@ -2083,10 +2105,13 @@ namespace deng {
     /********** DrawCaller class methods **********/
     DrawCaller::DrawCaller (
         VkDevice device,
-        QueueFamilyFinder qff
+        QueueFamilyFinder qff,
+        deng_bool_t init_draw_caller
     ) {
         m_qff = qff;
-        mkSynchronisation(device);
+
+        if(init_draw_caller)
+            mkSynchronisation(device);
     }
 
 
@@ -2435,8 +2460,15 @@ namespace deng {
     /********** Renderer class methods ***********/
     /*********************************************/
     /*********************************************/
-
-    Renderer::Renderer(WindowWrap *p_win) { m_p_ww = p_win; }
+    Renderer::Renderer (
+        WindowWrap *p_win,
+        void *p_cam,
+        deng_CameraType camera_type
+    ) { 
+        m_p_camera = p_cam;
+        m_main_camera_type = camera_type;
+        m_p_ww = p_win; 
+    }
 
 
     /* Submit assets for drawing */
@@ -2638,7 +2670,7 @@ namespace deng {
     /* Setup renderer for new rendering task */
     void Renderer::initRenderer (
         deng_RendererUsageMode usage,
-        dengMath::vec4<float> background
+        dengMath::vec4<deng_vec_t> background
     ) {
         m_asset_mut.lock();
         m_p_sr = new dengUtils::StringRasterizer("", m_p_ww);
@@ -2648,17 +2680,7 @@ namespace deng {
         ext_mii.active_btn = m_p_ww->getWindow()->active_keys.p_btn;
         ext_mii.active_btn_c = m_p_ww->getWindow()->active_keys.btn_count;
         ext_mii.mouse_coords = {0, 0};
-        ext_mii.mouse_input = DENG_INPUT_MOVEMENT;
-
-        m_p_camera = new FPPCamera (
-            {1.2f, 1.2f, 1.2f}, 
-            {0.2f, 0.2f}, 
-            65.0f, 
-            DENG_DEFAULT_NEAR_PLANE, 
-            DENG_DEFAULT_FAR_PLANE, 
-            NULL,
-            m_p_ww
-        );
+        ext_mii.mouse_input = m_p_ww->getInputMode();
 
         m_p_scc = new SwapChainCreator (
             m_p_ic->getDev(),
@@ -2676,12 +2698,14 @@ namespace deng {
             m_msaa_sample_count,
             m_p_scc->getRp(), 
             m_p_scc->getSCImgViews(),
-            m_p_scc->getSF()
+            m_p_scc->getSF(),
+            true
         );
 
         m_p_dc = new DrawCaller (
             m_p_ic->getDev(),
-            m_p_ic->getQFF()
+            m_p_ic->getQFF(),
+            true
         );
 
         m_p_dc->mkCommandPool(m_p_ic->getDev());
@@ -2713,7 +2737,8 @@ namespace deng {
             ev_info.p_update_mut = &m_update_mut;
             ev_info.p_dc = new DrawCaller (
                 m_p_ic->getDev(),
-                m_p_ic->getQFF()
+                m_p_ic->getQFF(),
+                false
             );
 
             ev_info.p_dc->setAssetsData (
@@ -2734,7 +2759,8 @@ namespace deng {
                 m_msaa_sample_count,
                 m_p_scc->getRp(),
                 m_p_scc->getSCImgViews(),
-                m_p_scc->getSF()
+                m_p_scc->getSF(),
+                false
             );
 
             ev_info.p_ra->setAssetsData (
@@ -2838,9 +2864,6 @@ namespace deng {
         if(m_count_fps)
             begin = std::chrono::steady_clock::now();
         
-        // Set input type as movement
-        m_p_ww->setInputMode(DENG_INPUT_MOVEMENT);
-        
         deng_ui32_t fps = 0;
         while(deng_IsRunning(m_p_ww->getWindow())) {
             if(m_count_fps) end = std::chrono::steady_clock::now();
@@ -2853,7 +2876,19 @@ namespace deng {
             else fps++;
             
             deng_UpdateWindow(m_p_ww->getWindow());
-            m_p_camera->update();
+            switch(m_main_camera_type)
+            {
+            case DENG_CAMERA_FPP:
+                ((FPPCamera*) m_p_camera)->update();
+                break;
+
+            case DENG_CAMERA_EDITOR:
+                ((EditorCamera*) m_p_camera)->update();
+                break;
+            
+            default:
+                break;
+            }
 
             m_update_mut.lock();
             if(m_cmd_update) {
@@ -2931,6 +2966,7 @@ namespace deng {
             m_p_ic->getDev(), 
             m_p_dc->current_frame, 
             m_p_camera, 
+            m_main_camera_type,
             DENG_CAMERA_UNIFORM_NO_CAMERA_MODE_2D | 
             DENG_CAMERA_UNIFORM_PERSPECTIVE_CAMERA_MODE_3D
         );
@@ -3075,6 +3111,7 @@ namespace deng {
 
         // Clean ubo buffer data 
         for(index = 0; index < m_p_ra->getBD().mat_uniform_buffers.size(); index++) {
+            LOG("Destroying UBO");
             vkDestroyBuffer (
                 m_p_ic->getDev(), 
                 m_p_ra->getBD().mat_uniform_buffers[index], 
@@ -3103,6 +3140,7 @@ namespace deng {
 
         // Clean texture images
         for(index = 0; index < m_textures.size(); index++) {
+            LOG("Destroying textures");
             vkDestroySampler (
                 m_p_ic->getDev(),
                 m_textures[index].sampler, 
@@ -3150,6 +3188,16 @@ namespace deng {
             *m_p_ra->getBD().p_main_buffer_memory, 
             nullptr
         );
+
+        switch(m_usage_mode) 
+        {
+        case DENG_RENDERER_USAGE_MAP_EDITOR:
+            delete m_p_map_editor;
+            break;
+
+        default:
+            break;
+        }
 
         // Clean semaphores and fences
         for(index = 0; index < DENG_MAX_FRAMES_IN_FLIGHT; index++) {
@@ -3201,7 +3249,6 @@ namespace deng {
             m_p_ic->getIns(), 
             nullptr
         );
-
 
         // Free memory from all renderer creator class instances
         if(m_p_ic)

@@ -1,15 +1,14 @@
-#ifndef REND_UTILS_H
-#define REND_UTILS_H
+#ifndef FONT_H
+#define FONT_H
 #include <ft2build.h>
 #include <freetype/ftbitmap.h>
-#include FT_FREETYPE_H
 
 #ifdef __linux__
-#define DEFAULT_FONT_PATH "/usr/share/fonts"
+    #define DEFAULT_FONT_PATH "/usr/share/fonts"
 #endif
 
 #ifdef _WIN32
-#define DEFAULT_FONT_PATH "C:/Windows/Fonts"
+    #define DEFAULT_FONT_PATH "C:/Windows/Fonts"
 #endif
 
 namespace dengUtils {
@@ -49,7 +48,11 @@ namespace dengUtils {
         std::vector<std::string> m_fonts;
 
     protected:
-        bool verifyFont(BitmapStr &str, std::string &out_path);
+        deng_bool_t verifyFont (
+            BitmapStr &str, 
+            std::string &out_path
+        );
+
         deng_px_t findTextSizePx(BitmapStr &str);
         deng_vec_t findTextSizeVec(BitmapStr &str);
         std::vector<char> indexGlyphs(BitmapStr &str);

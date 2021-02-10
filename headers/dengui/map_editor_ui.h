@@ -31,8 +31,8 @@
 namespace dengui {
     class MapEditor {
     private:
-        Events *m_p_ev;
-        Window *m_p_main_win;
+        Events *m_p_ev = NULL;
+        Window *m_p_main_win = NULL;
         std::vector<Window*> m_assets_windows;
         std::vector<Window*> m_texture_windows;
     
@@ -42,10 +42,11 @@ namespace dengui {
             dengUtils::StringRasterizer *p_sr
         );
 
+        ~MapEditor();
+
     // Getters
     public:
         Events *getEv();
-
     };
 }
 

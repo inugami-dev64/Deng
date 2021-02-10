@@ -48,6 +48,8 @@ typedef enum deng_SurfaceWindowMode {
 
 typedef struct deng_VirtualMousePosition {
     bool_t is_enabled;
+    char *cursor;
+    bool_t is_lib_cur;
     float x;
     float y;
     float orig_x;
@@ -62,8 +64,9 @@ typedef struct deng_VirtualMousePosition {
     ButtonReleaseMask | LeaveWindowMask | \
     FocusChangeMask | PointerMotionMask
     
-    #define DENG_CURSOR_HIDDEN "xcursor/invisible"
-    #define DENG_CURSOR_DEFAULT "default"
+    #define DENG_CURSOR_HIDDEN (char*) "xcursor/invisible"
+    #define DENG_CURSOR_DEFAULT (char*) "default"
+    #define DENG_CURSOR_ROTATE (char*) "plus"
     #define DEFAULT_WINDOW_BORDER 5
 
     typedef struct deng_SurfaceX11 {

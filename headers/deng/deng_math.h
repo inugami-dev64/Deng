@@ -3,9 +3,9 @@
 #include <string>
 #define PI 3.1415926f
 
-#define DENG_FFP_CAMERA_RIGHT_SIDE      (dengMath::vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, 0.0f}
-#define DENG_FFP_CAMERA_UP_SIDE         (dengMath::vec4<deng_vec_t>) {0.0f, -1.0f, 0.0f, 0.0f}
-#define DENG_FFP_CAMERA_FORWARD_SIDE    (dengMath::vec4<deng_vec_t>) {0.0f, 0.0f, -1.0f, 0.0f}
+#define DENG_CAMERA_RIGHT_SIDE      (dengMath::vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, 0.0f}
+#define DENG_CAMERA_UP_SIDE         (dengMath::vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, 0.0f}
+#define DENG_CAMERA_FORWARD_SIDE    (dengMath::vec4<deng_vec_t>) {0.0f, 0.0f, -1.0f, 0.0f}
 
 namespace dengMath {
     
@@ -33,6 +33,37 @@ namespace dengMath {
                 third - vec.third
             };
         }
+
+        vec4<T> operator*(const T &c) {
+            return (vec4<T>) {
+                c * first,
+                c * second,
+                c * third,
+                c * fourth
+            };
+        }
+
+        void operator*=(const T &c) {
+            first *= c;
+            second *= c;
+            third *= c;
+            fourth *= c;
+        }
+
+        void operator+=(const vec4<T> &vec) {
+            first += vec.first;
+            second += vec.second;
+            third += vec.third;
+            fourth += vec.fourth;
+        }
+
+        void operator-=(const vec4<T> &vec) {
+            first -= vec.first;
+            second -= vec.second;
+            third -= vec.third;
+            fourth -= vec.fourth;
+        }
+
 
         deng_bool_t operator==(vec4<T> vector) { 
             return (deng_bool_t) {
@@ -87,7 +118,32 @@ namespace dengMath {
             };
         }
 
-        
+        vec3<T> operator*(const T &c) {
+            return (vec3<T>) {
+                c * first,
+                c * second,
+                c * third,
+            };
+        }
+
+        void operator*=(const T &c) {
+            first *= c;
+            second *= c;
+            third *= c;
+        }
+
+        void operator+=(const vec3<T> &vec) {
+            first += vec.first;
+            second += vec.second;
+            third += vec.third;
+        }
+
+        void operator-=(const vec3<T> &vec) {
+            first -= vec.first;
+            second -= vec.second;
+            third -= vec.third;
+        }
+
         deng_bool_t operator==(vec3<T> vector) { 
             return (deng_bool_t) {
                 first == vector.first && 
@@ -135,6 +191,29 @@ namespace dengMath {
                 second - vec.second
             };
         }
+
+        vec2<T> operator*(const T &c) {
+            return (vec2<T>) {
+                c * first,
+                c * second,
+            };
+        }
+
+        void operator*=(const T &c) {
+            first *= c;
+            second *= c;
+        }
+
+        void operator+=(const vec2<T> &vec) {
+            first += vec.first;
+            second += vec.second;
+        }
+
+        void operator-=(const vec2<T> &vec) {
+            first -= vec.first;
+            second -= vec.second;
+        }
+
 
         deng_bool_t operator==(vec2<T> vector) { 
             return (deng_bool_t) {
@@ -791,7 +870,6 @@ namespace dengMath {
         deng_vec_t m_x_rot;
         deng_vec_t m_y_rot;
 
-
         vec4<deng_vec_t> m_right_side;
         vec4<deng_vec_t> m_up_side;
         vec4<deng_vec_t> m_forward_side;
@@ -807,18 +885,28 @@ namespace dengMath {
         void setCameraPosition(const vec4<deng_vec_t> &camera_pos);
         void addToPosition (
             const vec4<deng_vec_t> &movement_speed, 
-            const deng_CoordinateAxisType &movement_type, 
-            const deng_bool_t &substract
+            const deng_CoordinateAxisType &movement_type
         );
 
-        void setRotation (
+        void setCameraRotation (
             deng_vec_t x_rot, 
             deng_vec_t y_rot
         );
 
-        void setTransformationMatrix();
+        void setPointRotation (
+            dengMath::vec3<deng_vec_t> point,
+            deng_vec_t x_rot,
+            deng_vec_t y_rot
+        );
+
+        void setTransformationMatrix(deng_bool_t is_abs_cam_sys);
         void getViewMatrix(mat4<deng_vec_t> *view_mat);
         vec4<deng_vec_t> getPosition();
+        void getSidesInWorldCoords (
+            vec4<deng_vec_t> *p_right_side,
+            vec4<deng_vec_t> *p_up_side,
+            vec4<deng_vec_t> *p_forward_side
+        );
     };
 
     class ProjectionMatrix {
@@ -869,50 +957,21 @@ namespace dengMath {
         const deng_TriangleAngleType &triangle_angle_type
     );
 
-    deng_vec_t getVector2DRotation(vec2<vec2<deng_vec_t>> vector_bounds);
-
     struct Conversion {
         static deng_vec_t degToRad(const deng_vec_t &deg);
         static deng_vec_t radToDeg(const deng_vec_t &rad);
+
         static deng_px_t vector2DSizeToPixelSize (
             const deng_vec_t &vec_size, 
             const vec2<deng_ui32_t> &window_size, 
             const deng_CoordinateAxisType &axis_type
         );
+
         static deng_vec_t pixelSizeToVector2DSize (
             const deng_px_t &pixel_size, 
             const vec2<deng_ui32_t> &window_size, 
             const deng_CoordinateAxisType &axis_type
         );
-
-        std::unordered_map<char, int> hex_definitions;
-        
-        Conversion() {
-            hex_definitions['0'] = 0;
-            hex_definitions['1'] = 1;
-            hex_definitions['2'] = 2;
-            hex_definitions['3'] = 3;
-            hex_definitions['4'] = 4;
-            hex_definitions['5'] = 5;
-            hex_definitions['6'] = 6;
-            hex_definitions['7'] = 7;
-            hex_definitions['8'] = 8;
-            hex_definitions['9'] = 9;
-            hex_definitions['a'] = 10;
-            hex_definitions['A'] = 10;
-            hex_definitions['b'] = 11;
-            hex_definitions['B'] = 11;
-            hex_definitions['c'] = 12;
-            hex_definitions['C'] = 12;
-            hex_definitions['d'] = 13;
-            hex_definitions['D'] = 13;
-            hex_definitions['e'] = 14;
-            hex_definitions['E'] = 14;
-            hex_definitions['f'] = 15;
-            hex_definitions['F'] = 15;
-        }
-
-        deng_ui32_t hexToDec(const std::string &hex_value);
     };
 
     // data handling methods 

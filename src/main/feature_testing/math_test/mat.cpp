@@ -42,16 +42,9 @@ void printmat(dengMath::mat4<deng_vec_t> mat) {
 
 int main() {
     dengMath::mat3<deng_vec_t> test_mat3 = {
-        {2.0f, -1.0f, 6.12f},
-        {1.5f, 15.0f, 8.9f},
-        {-9.6f, -1.2f, 18.2f}
-    }; 
-
-    dengMath::mat4<deng_vec_t> test_mat4 = {
-        {2.0f, -1.0f, 6.12f, 8.69f},
-        {1.5f, 15.0f, 8.9f, -17.2},
-        {-9.6f, -1.2f, 18.2f, -3.14},
-        {9.5f, 1.5f, 4.5f, 8.5f}
+        {1.0f, 0.0f, 0.12f},
+        {0.0f, 1.0f, 0.9f},
+        {0.0f, 0.0f, 1.0f}
     }; 
 
     // Print 3x3 matrix, inverse and product of A x A^-1
@@ -61,11 +54,5 @@ int main() {
     printmat(inv_mat3);
     printmat(test_mat3 * inv_mat3);
 
-    // Print 4x4 matrix, inverse and product of A x A^-1
-    printf("DET: %f\n", dengMath::mat4<deng_vec_t>::det(test_mat4));
-    printmat(test_mat4);
-    dengMath::mat4<deng_vec_t> inv_mat4 = test_mat4.inv();
-    printmat(inv_mat4);
-    printmat(test_mat4 * inv_mat4);
     return EXIT_SUCCESS;
 }
