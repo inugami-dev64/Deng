@@ -640,6 +640,6 @@ namespace dengMath {
         // Triangle semi perimeter
         deng_vec_t s = (a + b + c) / 2;
 
-        return std::sqrt((s * (s - a) * (s - b) * (s - c)));
+        return sqrt((s * (s - a) * (s - b) * (s - c)));
     }
 }  
