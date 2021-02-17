@@ -9,8 +9,6 @@ build/
 rgbbitmap.log
 matobject.log
 object.log
-src/dengui/dengui_child.h
-src/dengui/dengui_child.cpp
 src/helloworld.cpp
 src/helloworld
 dependencies/lib/debug/

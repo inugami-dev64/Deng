@@ -1,6 +1,6 @@
 #ifndef DENGUI_CHILD_H
 #define DENGUI_CHILD_H
-#define DENGUI_PUSH_BUTTON_LABEL_PADDING    7.0 // px
+#define DENGUI_PUSH_BUTTON_LABEL_PADDING    10.0 // px
 
 namespace dengui {
     /* Specify size information about parent window */
