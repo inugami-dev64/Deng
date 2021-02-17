@@ -12,14 +12,17 @@ namespace dengui {
         Events *p_ev,
         deng_bool_t realloc_res
     ) {
+        for(size_t i = 0; i < p_wi->id.size(); i++) {
+            if(p_wi->id[i] == 0x20)
+                p_wi->id[i] = '_';
+        }
+
         (*pp_window) = new Window (
             p_wi->wt, 
             p_wi->id, 
             p_sr,
             draw_bounds
         );
-        (*pp_window)->setPos(p_wi->pos);
-        (*pp_window)->setSize(p_wi->size);
         (*pp_window)->setPC(&p_wi->pc);
         (*pp_window)->setSC(&p_wi->sc);
         (*pp_window)->setTC(&p_wi->tc);
@@ -53,7 +56,7 @@ namespace dengui {
         VkQueue g_queue,
         VkRenderPass renderpass,
         VkExtent2D extent,
-        dengMath::vec4<float> background,
+        dengMath::vec4<deng_vec_t> background,
         dengMath::vec2<deng_ui32_t> draw_area
     ) {
         EventInfo ev_info;
@@ -94,6 +97,10 @@ namespace dengui {
         m_wt = wt;
         m_id = id;
         m_p_sr = p_sr;
+    }
+
+    Window::~Window() {
+        free(m_p_base);
     }
     
 
@@ -209,7 +216,7 @@ namespace dengui {
         switch (p_wi->wt)
         {
         case WINDOW_TYPE_FLOATING:
-            // Create floating window rectangle
+            // Create deng_vec_ting window rectangle
             tmp_pos = p_wi->pos;
             tmp_size = p_wi->size;
             break;
@@ -254,14 +261,22 @@ namespace dengui {
             m_win_elems[m_win_elems.size() - 1].unmapped_vert
         );
 
-        m_win_elems[m_win_elems.size() - 1].indices = {0, 1, 2, 2, 3, 0};
+        m_p_base = (VERT_UNMAPPED_2D*) calloc (
+            m_win_elems[m_win_elems.size() - 1].unmapped_vert.size(),
+            sizeof(VERT_UNMAPPED_2D)
+        );
 
+        memcpy ( 
+            m_p_base, 
+            m_win_elems[m_win_elems.size() - 1].unmapped_vert.data(), 
+            m_win_elems[m_win_elems.size() - 1].unmapped_vert.size() * sizeof(VERT_UNMAPPED_2D)
+        );
+
+        m_win_elems[m_win_elems.size() - 1].indices = {0, 1, 2, 2, 3, 0};
         m_win_elems[m_win_elems.size() - 1].parent_id = p_wi->id;
         m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_FORM_ID;
         m_win_elems[m_win_elems.size() - 1].is_visible = true;
         m_win_elems[m_win_elems.size() - 1].is_interactive = false;
-        m_win_elems[m_win_elems.size() - 1].base_vert_size = (deng_i32_t) m_win_elems[m_win_elems.size() - 1].unmapped_vert.size();
-        m_win_elems[m_win_elems.size() - 1].base_indices_size = (deng_i32_t) m_win_elems[m_win_elems.size() - 1].indices.size();
         m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
         m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = NULL;
         m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
@@ -300,8 +315,6 @@ namespace dengui {
         m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_TITLEBAR_ID;
         m_win_elems[m_win_elems.size() - 1].is_visible = true;
         m_win_elems[m_win_elems.size() - 1].is_interactive = false;
-        m_win_elems[m_win_elems.size() - 1].base_vert_size = (deng_i32_t) m_win_elems[m_win_elems.size() - 1].unmapped_vert.size();
-        m_win_elems[m_win_elems.size() - 1].base_indices_size = (deng_i32_t) m_win_elems[m_win_elems.size() - 1].indices.size();
         m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
         m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = NULL;
         m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
@@ -363,6 +376,7 @@ namespace dengui {
             true,
             rel_tri_pos
         );
+        m_win_elems[m_win_elems.size() - 1].col_vert_bounds = {0, 3};
         m_win_elems[m_win_elems.size() - 1].indices = {0, 1, 2};
         // addGenTriangle (
         //     tmp_pos, 
@@ -380,8 +394,6 @@ namespace dengui {
         m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_MINIMISE_TRIANGLE_ID;
         m_win_elems[m_win_elems.size() - 1].is_visible = true;
         m_win_elems[m_win_elems.size() - 1].is_interactive = true;
-        m_win_elems[m_win_elems.size() - 1].base_vert_size = (deng_i32_t) m_win_elems[m_win_elems.size() - 1].unmapped_vert.size();
-        m_win_elems[m_win_elems.size() - 1].base_indices_size = (deng_i32_t) m_win_elems[m_win_elems.size() - 1].indices.size();
         m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
         m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = minTriangleCallback;
         m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
@@ -444,12 +456,11 @@ namespace dengui {
         );
 
         m_win_elems[m_win_elems.size() - 1].indices = {0, 1, 2};
+        m_win_elems[m_win_elems.size() - 1].col_vert_bounds = {0, 3};
         m_win_elems[m_win_elems.size() - 1].parent_id = p_wi->id;
         m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_MAXIMISE_TRIANGLE_ID;
         m_win_elems[m_win_elems.size() - 1].is_visible = false;
         m_win_elems[m_win_elems.size() - 1].is_interactive = true;
-        m_win_elems[m_win_elems.size() - 1].base_vert_size = (deng_i32_t) m_win_elems[m_win_elems.size() - 1].unmapped_vert.size();
-        m_win_elems[m_win_elems.size() - 1].base_indices_size = (deng_i32_t) m_win_elems[m_win_elems.size() - 1].indices.size();
         m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
         m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = dengui::maxTriangleCallback;
         m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
@@ -484,7 +495,11 @@ namespace dengui {
             deng_win_bounds,
             REC_ORIGIN_VERTEX_TOP_RIGHT,
             str,
-            {(unsigned char) (color.first * 255), (unsigned char) (color.second * 255), (unsigned char) (color.third * 255)},
+            {
+                (unsigned char) (color.first * 255), 
+                (unsigned char) (color.second * 255), 
+                (unsigned char) (color.third * 255)
+            },
             form_vert,
             m_win_elems[m_win_elems.size() - 1].mapped_vert,
             m_win_elems[m_win_elems.size() - 1].indices,
@@ -496,8 +511,6 @@ namespace dengui {
         m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_CLOSE_BTN_ID;
         m_win_elems[m_win_elems.size() - 1].is_visible = true;
         m_win_elems[m_win_elems.size() - 1].is_interactive = true;
-        m_win_elems[m_win_elems.size() - 1].base_vert_size = (deng_i32_t) m_win_elems[m_win_elems.size() - 1].unmapped_vert.size();
-        m_win_elems[m_win_elems.size() - 1].base_indices_size = (deng_i32_t) m_win_elems[m_win_elems.size() - 1].indices.size();
         m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_TEXTURE_MAPPED;
         m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = closeBtnCallback;
         m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
@@ -505,6 +518,13 @@ namespace dengui {
         m_win_elems[m_win_elems.size() - 1].onScrUpFunc = NULL;
         m_win_elems[m_win_elems.size() - 1].onScrDownFunc = NULL;
     }
+
+
+    /* Attach child element to main window */
+    void Window::attachChild (
+        void *child,
+        ChildElementType element_type
+    ) { m_child_elements.push_back({child, element_type}); }
 
 
     /* Rasterise and create the title string vertices */
@@ -517,7 +537,7 @@ namespace dengui {
         dengMath::vec2<deng_vec_t> tmp_pos;
         dengMath::vec2<deng_vec_t> titlebar_size;
         dengUtils::BitmapStr str;
-        str.text = p_wi->id.c_str();
+        str.text = p_wi->label.c_str();
         
         deng_vec_t font_size = DENGUI_TITLEBAR_HEIGHT - (2 * DENGUI_TITLEBAR_ELEM_MARGIN);
 
@@ -538,13 +558,6 @@ namespace dengui {
         tmp_pos.first = -box_width / titlebar_size.first;
         tmp_pos.second = -1.0f + DENGUI_TITLEBAR_ELEM_MARGIN / titlebar_size.second;
         
-        LOG (
-            "TITLE_POS: " +
-            std::to_string(tmp_pos.first) + 
-            ", " +
-            std::to_string(tmp_pos.second)
-        );
-
         // Rasterise the string
         str.text = title;
         m_win_elems.resize(m_win_elems.size() + 1);
@@ -594,8 +607,6 @@ namespace dengui {
         m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_TEXTURE_MAPPED;
         m_win_elems[m_win_elems.size() - 1].is_interactive = false;
         m_win_elems[m_win_elems.size() - 1].is_visible = true;
-        m_win_elems[m_win_elems.size() - 1].base_vert_size = (deng_i32_t) m_win_elems[m_win_elems.size() - 1].unmapped_vert.size();
-        m_win_elems[m_win_elems.size() - 1].base_indices_size = (deng_i32_t) m_win_elems[m_win_elems.size() - 1].indices.size();
         m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = NULL;
         m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
         m_win_elems[m_win_elems.size() - 1].onRMBClickFunc = NULL;
@@ -645,7 +656,11 @@ namespace dengui {
                 p_wi,
                 draw_bounds,
                 form_vert,
-                {(unsigned char) (p_wi->sc.first * 255), (unsigned char) (p_wi->sc.second * 255), (unsigned char) (p_wi->sc.third * 255)}  
+                {
+                    (unsigned char) (p_wi->sc.first * 255), 
+                    (unsigned char) (p_wi->sc.second * 255), 
+                    (unsigned char) (p_wi->sc.third * 255)
+                }  
             );
 
             dengUtils::BorderGenerator::generateBorders (
@@ -679,17 +694,57 @@ namespace dengui {
 
 
     // Window class getters 
-    dengMath::vec4<float> Window::getPC() { return m_primary_color; }
-    dengMath::vec4<float> Window::getSC() { return m_secondary_color; }
-    dengMath::vec4<float> Window::getTC() { return m_tertiary_color; }
+    dengMath::vec4<deng_vec_t> Window::getPC() { return m_primary_color; }
+    dengMath::vec4<deng_vec_t> Window::getSC() { return m_secondary_color; }
+    dengMath::vec4<deng_vec_t> Window::getTC() { return m_tertiary_color; }
 
-    std::vector<WindowElement> Window::getWindowElements() { return m_win_elems; }
+    std::vector<WindowElement> Window::getWindowElements() { 
+        std::vector<WindowElement> out_elems;
+        out_elems.insert (
+            out_elems.end(),
+            m_win_elems.begin(),
+            m_win_elems.end()
+        ); 
+        
+        std::vector<WindowElement> tmp_elems;
+        for(size_t i = 0; i < m_child_elements.size(); i++) {
+            // Cast child element pointers to corresponding types */
+            switch(m_child_elements[i].second)
+            {
+            case CHILD_ELEMENT_TYPE_PUSH_BUTTON:
+                tmp_elems = ((ChildPushButton*) m_child_elements[i].first)->getWindowElements();
+                out_elems.insert (
+                    out_elems.end(),
+                    tmp_elems.begin(),
+                    tmp_elems.end()
+                );
+                break;
+            
+            default:
+                break;
+            }
+        }
+
+        return out_elems; 
+    }
+
+    ParentInfo Window::getParentInfo() {
+        ParentInfo out_pi;
+        out_pi.id = (char*) calloc (
+            m_id.size() + 1,
+            sizeof(char)
+        );
+
+        strcpy(out_pi.id, m_id.c_str());
+        out_pi.vert = m_p_base;
+
+        return out_pi;
+    }
+
     std::string Window::getId() { return m_id; }
 
     // Window class setters
-    void Window::setPC(dengMath::vec4<float> *p_pc) { m_primary_color = *p_pc; }
-    void Window::setSC(dengMath::vec4<float> *p_sc) { m_secondary_color = *p_sc; }
-    void Window::setTC(dengMath::vec4<float> *p_tc) { m_tertiary_color = *p_tc; }
-    void Window::setPos(dengMath::vec2<float> &pos) { m_pos = pos; }
-    void Window::setSize(dengMath::vec2<float> &size) { m_size = size; }
+    void Window::setPC(dengMath::vec4<deng_vec_t> *p_pc) { m_primary_color = *p_pc; }
+    void Window::setSC(dengMath::vec4<deng_vec_t> *p_sc) { m_secondary_color = *p_sc; }
+    void Window::setTC(dengMath::vec4<deng_vec_t> *p_tc) { m_tertiary_color = *p_tc; }
 }

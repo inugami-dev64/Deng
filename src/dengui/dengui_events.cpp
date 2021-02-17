@@ -1,4 +1,5 @@
 #include "../../headers/deng/api_core.h" 
+#include <string>
 
 extern dengui::MouseInputInfo ext_mii;
 
@@ -22,22 +23,23 @@ namespace dengui {
 
     /* Find triangle based collision */
     deng_bool_t Events::findCollision (
-        dengMath::vec2<float> point, 
+        dengMath::vec2<deng_vec_t> point, 
         WindowElement *p_elem
     ) {
         size_t l_index, r_index;
         bool is_colliding = false;
-        dengMath::vec2<float> *vc;
-        dengMath::vec2<float> *vn;
+        dengMath::vec2<deng_vec_t> *vc;
+        dengMath::vec2<deng_vec_t> *vn;
 
         // Check every triangle for potential collision
         switch (p_elem->color_mode)
         {
         case ELEMENT_COLOR_MODE_UNMAPPED:
             // printf("MOUSE: %f, %f\n", point.first, point.second);
-            for(l_index = 0; l_index < (size_t) p_elem->base_vert_size; l_index++) {
+            for(l_index = p_elem->col_vert_bounds.first; l_index < p_elem->col_vert_bounds.second; l_index++) {
                 r_index = l_index + 1;
-                if(r_index == p_elem->unmapped_vert.size()) r_index = 0;
+                if(r_index == p_elem->col_vert_bounds.second) 
+                    r_index = p_elem->col_vert_bounds.first;
                 
                 vc = (dengMath::vec2<deng_vec_t>*) &p_elem->unmapped_vert[l_index].vert_data;
                 vn = (dengMath::vec2<deng_vec_t>*) &p_elem->unmapped_vert[r_index].vert_data;
@@ -53,12 +55,13 @@ namespace dengui {
             break;
 
         case ELEMENT_COLOR_MODE_TEXTURE_MAPPED:
-            for(l_index = 0; l_index < (size_t) p_elem->base_vert_size; l_index++) {
+            for(l_index = p_elem->col_vert_bounds.first; l_index < p_elem->col_vert_bounds.second; l_index++) {
                 r_index = l_index + 1;
-                if(r_index == p_elem->mapped_vert.size()) r_index = 0;
+                if(r_index == p_elem->col_vert_bounds.second) 
+                    r_index = p_elem->col_vert_bounds.first;
 
-                vc = (dengMath::vec2<float>*) &p_elem->mapped_vert[l_index].vert_data;
-                vn = (dengMath::vec2<float>*) &p_elem->mapped_vert[r_index].vert_data;
+                vc = (dengMath::vec2<deng_vec_t>*) &p_elem->mapped_vert[l_index].vert_data;
+                vn = (dengMath::vec2<deng_vec_t>*) &p_elem->mapped_vert[r_index].vert_data;
 
                 if
                 (
@@ -101,7 +104,7 @@ namespace dengui {
     void Events::inputPoll() {
         size_t l_index; 
         deng_i32_t r_index;
-        dengMath::vec2<float> vec_mouse;
+        dengMath::vec2<deng_vec_t> vec_mouse;
         while(deng_IsRunning(m_p_win)) {
             m_info.p_res_mut->lock();
             // Check if collision with any element has happened and if click callback should be triggered
@@ -109,13 +112,13 @@ namespace dengui {
                 std::lock_guard<std::mutex> lck(ext_mii.mut);
 
                 vec_mouse.first = dengMath::Conversion::pixelSizeToVector2DSize (
-                    (double) ext_mii.mouse_coords.first,
+                    (deng_px_t) ext_mii.mouse_coords.first,
                     m_info.deng_window_area,
                     DENG_COORD_AXIS_X
                 ) - 1.0f;
 
                 vec_mouse.second = dengMath::Conversion::pixelSizeToVector2DSize (
-                    (double) ext_mii.mouse_coords.second,
+                    (deng_px_t) ext_mii.mouse_coords.second,
                     m_info.deng_window_area,
                     DENG_COORD_AXIS_Y
                 ) - 1.0f;
@@ -238,7 +241,7 @@ namespace dengui {
 
         // Resize assets to elements size
         l_index = m_info.p_assets->size();
-        m_info.p_assets->resize (m_info.p_assets->size() + elems.size());
+        m_info.p_assets->resize(m_info.p_assets->size() + elems.size());
         
         // Check if new window name is present
         deng_bool_t is_prev_win = false;
@@ -264,16 +267,15 @@ namespace dengui {
 
             sprintf ( 
                 elems[r_index].asset_id,
-                "!W:%s/%s",
-                elems[r_index].child_id.c_str(),
-                elems[r_index].parent_id.c_str()
+                "X: %s#%s",
+                elems[r_index].parent_id.c_str(),
+                elems[r_index].child_id.c_str()
             );
 
             // Base asset information
             (*m_info.p_assets)[l_index].id = elems[r_index].asset_id;
             (*m_info.p_assets)[l_index].is_shown = elems[r_index].is_visible;
             (*m_info.p_assets)[l_index].indices.size = elems[r_index].indices.size();
-
             (*m_info.p_assets)[l_index].indices.p_indices = (deng_ui32_t*) calloc (
                 elems[r_index].indices.size(),
                 sizeof(deng_ui32_t)
@@ -293,28 +295,26 @@ namespace dengui {
                 m_info.p_textures->resize(tex_index + 1);
                 (*m_info.p_textures)[tex_index].texture.pixel_data.width = elems[r_index].tex_box.first;
                 (*m_info.p_textures)[tex_index].texture.pixel_data.height = elems[r_index].tex_box.second;
-                (*m_info.p_textures)[tex_index].texture.pixel_data.size = 
-                elems[r_index].tex_box.first * elems[r_index].tex_box.second * 4;
+                (*m_info.p_textures)[tex_index].texture.pixel_data.size = elems[r_index].texture.size();
                 (*m_info.p_textures)[tex_index].texture.id = elems[r_index].asset_id;
                 
                 (*m_info.p_textures)[tex_index].texture.pixel_data.p_pixel_data = (deng_ui8_t*) calloc (
                     (*m_info.p_textures)[tex_index].texture.pixel_data.size,
                     sizeof(deng_ui8_t)
                 );
-                
+
                 memcpy (
                     (*m_info.p_textures)[tex_index].texture.pixel_data.p_pixel_data,
                     elems[r_index].texture.data(),
-                    elems[r_index].texture.size()
+                    elems[r_index].texture.size() * sizeof(deng_ui8_t)
                 );
 
                 (*m_info.p_assets)[l_index].tex_id = elems[r_index].asset_id;
                 (*m_info.p_assets)[l_index].asset_mode = DENG_ASSET_MODE_2D_TEXTURE_MAPPED;
                 (*m_info.p_assets)[l_index].vertices.size = elems[r_index].mapped_vert.size();
-
                 (*m_info.p_assets)[l_index].vertices.p_tex_mapped_vert_data_2d = (VERT_MAPPED_2D*) calloc (
-                    elems[r_index].mapped_vert.size(),
-                    sizeof(VERT_UNMAPPED_2D)
+                    (*m_info.p_assets)[l_index].vertices.size,
+                    sizeof(VERT_MAPPED_2D)
                 );
 
                 memcpy (
@@ -338,7 +338,6 @@ namespace dengui {
                     elems[r_index].unmapped_vert.data(),
                     elems[r_index].unmapped_vert.size() * sizeof(VERT_UNMAPPED_2D)
                 );
-                
                 break;
             
             default:
@@ -369,8 +368,13 @@ namespace dengui {
         
         // Find all current window elements
         for(l_index = 0; l_index < m_elem_infos.size(); l_index++) {
-            if(m_elem_infos[l_index].parent_id == parent_id)
-                tmp_we.push_back(m_elem_infos[l_index]);
+            if (
+                !strncmp (
+                    m_elem_infos[l_index].parent_id.c_str(),
+                    parent_id.c_str(),
+                    parent_id.size()
+                )
+            ) tmp_we.push_back(m_elem_infos[l_index]);
         }
 
         // Update visibilities
@@ -439,13 +443,14 @@ namespace dengui {
         WindowElement *p_cur_elem,
         Events *p_ev
     ) {
-        LOG("minimising...");
         size_t l_index;
         std::vector<WindowElement> *p_elems;
         p_elems = p_ev->getElems();
 
         // Hide all elements exept maximise triangle
         for(l_index = 0; l_index < p_elems->size(); l_index++) {
+            LOG("CUR_PARENT: " + std::string(p_cur_elem->parent_id));
+            LOG("ELEM_PARENT: " + std::string((*p_elems)[l_index].parent_id));
             if 
             (
                 !strcmp (
@@ -453,10 +458,30 @@ namespace dengui {
                     DENGUI_MAXIMISE_TRIANGLE_ID   
                 ) &&
                 (*p_elems)[l_index].parent_id == p_cur_elem->parent_id
-            ) (*p_elems)[l_index].is_visible = true;
+            ) {
+                (*p_elems)[l_index].is_visible = true;
+                LOG("Enabled " + std::string((*p_elems)[l_index].child_id));
+            }
 
-            else if((*p_elems)[l_index].parent_id == p_cur_elem->parent_id) 
+            else if (
+                !strncmp (
+                    (*p_elems)[l_index].parent_id.c_str(), 
+                    p_cur_elem->parent_id.c_str(),
+                    p_cur_elem->parent_id.size()
+                )
+            ) {
+                LOG("Disabled " + std::string((*p_elems)[l_index].child_id));
                 (*p_elems)[l_index].is_visible = false;
+            }
+            
+            printf (
+                "CMP_RES: %d\n",
+                strncmp (
+                    (*p_elems)[l_index].parent_id.c_str(), 
+                    p_cur_elem->parent_id.c_str(),
+                    p_cur_elem->parent_id.size()
+                )
+            );
         }
 
         p_ev->updateAssetsVisibility(p_cur_elem->parent_id);
@@ -468,7 +493,6 @@ namespace dengui {
         WindowElement *p_cur_elem,
         Events *p_ev
     ) {
-        LOG("closing...");
         deng_i32_t l_index;
         std::vector<WindowElement> *p_elems;
         p_elems = p_ev->getElems();
@@ -507,8 +531,13 @@ namespace dengui {
                 (*p_elems)[l_index].parent_id == p_cur_elem->parent_id
             ) (*p_elems)[l_index].is_visible = false;
 
-            else if((*p_elems)[l_index].parent_id == p_cur_elem->parent_id) 
-                (*p_elems)[l_index].is_visible = true;
+            else if (
+                !strncmp (
+                    (*p_elems)[l_index].parent_id.c_str(),
+                    p_cur_elem->parent_id.c_str(),
+                    p_cur_elem->parent_id.size()
+                )
+            ) (*p_elems)[l_index].is_visible = true;
         }
 
         p_ev->updateAssetsVisibility(p_cur_elem->parent_id);

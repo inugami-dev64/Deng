@@ -66,6 +66,7 @@ tasks:
       - utils/timer.cpp
       - utils/shapes.cpp
       - utils/grid_generator.cpp
+      - dengui/dengui_child.cpp
       - dengui/dengui_events.cpp
       - dengui/dengui_window.cpp
       - dengui/map_editor_ui.cpp

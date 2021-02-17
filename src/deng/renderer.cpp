@@ -1776,6 +1776,7 @@ namespace deng {
 
         // Count total amount of bytes needed to allocate for assets 
         for(l_index = 0; l_index < m_p_assets->size(); l_index++) {
+            LOG("ASSET: " + std::string((*m_p_assets)[l_index].id));
             if((*m_p_assets)[l_index].is_shown) {
                 (*m_p_assets)[l_index].vertices.memory_offset = total_size;
                 switch ((*m_p_assets)[l_index].asset_mode)
@@ -2779,7 +2780,8 @@ namespace deng {
                 m_asset_mut.unlock();
                 m_p_map_editor = new dengui::MapEditor (
                     ev_info, 
-                    m_p_sr
+                    m_p_sr,
+                    m_p_ww->getSize()
                 );
                 m_asset_mut.lock();
                 break;

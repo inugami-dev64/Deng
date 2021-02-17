@@ -46,8 +46,27 @@ namespace deng {
     struct VulkanDeviceInfo;
     class PipelineCreator;
     class SwapChainDetails;
+}
 
-    // 
+namespace dengui {
+    // dengui/dengui_child.h
+    struct ParentInfo;
+    struct PushButtonInfo;
+    class ChildPushButton;
+    
+    // dengui/dengui_events.h
+    struct MouseInputInfo;
+    struct EventInfo;
+    class Events;
+
+    // dengui/dengui_window.h
+    struct WindowUpdateInfo;
+    struct SharedWindowUpdateInfos;
+    struct WindowElement;
+    struct WindowInfo;
+    struct WindowShapeInfo;
+    class BaseWindowShapes;
+    class Window;
 }
 
 #endif

@@ -16,7 +16,7 @@ namespace dengui {
      * Read-only for events thread                               */
     struct MouseInputInfo {
         std::mutex mut;
-        dengMath::vec2<float> mouse_coords;
+        dengMath::vec2<deng_vec_t> mouse_coords;
         deng_InputMode mouse_input;
         deng_MouseButton *active_btn;
         deng_i32_t active_btn_c;
@@ -42,7 +42,7 @@ namespace dengui {
         VkCommandPool commandpool;
         VkQueue g_queue;
         VkExtent2D extent;
-        dengMath::vec4<float> background;
+        dengMath::vec4<deng_vec_t> background;
     };
 
 
@@ -54,7 +54,7 @@ namespace dengui {
         std::vector<WindowElement> m_elem_infos;
         std::mutex m_elem_mut;
 
-        dengMath::vec2<float> m_cur_pos;
+        dengMath::vec2<deng_vec_t> m_cur_pos;
         std::string m_click_elem_name;
 
         EventInfo m_info;
@@ -62,7 +62,7 @@ namespace dengui {
     private:
 
         deng_bool_t findCollision (
-            dengMath::vec2<float> point, 
+            dengMath::vec2<deng_vec_t> point, 
             WindowElement *p_elem
         );
         void inputPoll();

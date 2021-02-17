@@ -1,8 +1,9 @@
 #include "../../headers/deng/api_core.h"
-const char *font_formats[] = {"otf", "ttf"};
+
 
 namespace dengUtils {
 
+    const char *font_formats[] = {"otf", "ttf"};
     /* Search for certain font and return true if found */
     deng_bool_t StringRasterizer::verifyFont (
         BitmapStr &str, 
@@ -104,7 +105,6 @@ namespace dengUtils {
     // Find unique glyphs and index them according to the text
     std::vector<char> StringRasterizer::indexGlyphs(BitmapStr &str) {
         std::vector<char> unique_chars;
-        LOG("REND_TEXT_ALLOC_LEN: " + std::to_string(strlen(str.text)));
         str.rend_text = (BitmapChar*) calloc (
             strlen(str.text) + 1,
             sizeof(BitmapChar)
@@ -185,7 +185,7 @@ namespace dengUtils {
     void StringRasterizer::mkGlyphs (
         BitmapStr &str, 
         deng_ui16_t px_size, 
-        dengMath::vec2<float> pos, 
+        dengMath::vec2<deng_vec_t> pos, 
         dengMath::vec3<unsigned char> color
     ) {
         size_t index;
@@ -297,7 +297,7 @@ namespace dengUtils {
             FONT_ERR("Failed to find font file!");
         
         str.font_file = path_str.c_str();
-        deng_vec_t px_size = (float) dengMath::Conversion::vector2DSizeToPixelSize (
+        deng_vec_t px_size = (deng_vec_t) dengMath::Conversion::vector2DSizeToPixelSize (
             (deng_px_t) vec_size,
             m_p_win->getSize(),
             DENG_COORD_AXIS_Y
@@ -406,20 +406,20 @@ namespace dengUtils {
                         str.tex_data[t_index + 2] = color.first;
                         str.tex_data[t_index + 3] = 0xff; 
                     }
-                    // Foreground pixel (white/transparent)
+                    // Foreground pixel (user defined/transparent)
                     else {
-                        str.tex_data[t_index] = 0xff;
-                        str.tex_data[t_index + 1] = 0xff;
-                        str.tex_data[t_index + 2] = 0xff;
+                        str.tex_data[t_index] = color.third;
+                        str.tex_data[t_index + 1] = color.second;
+                        str.tex_data[t_index + 2] = color.first;
                         str.tex_data[t_index + 3] = 0x00;
                     }
                 }
 
                 // Foreground pixel (white/transparent)
                 else {
-                    str.tex_data[t_index] = 0xff;
-                    str.tex_data[t_index + 1] = 0xff;
-                    str.tex_data[t_index + 2] = 0xff;
+                    str.tex_data[t_index] = color.third;
+                    str.tex_data[t_index + 1] = color.second;
+                    str.tex_data[t_index + 2] = color.first;
                     str.tex_data[t_index + 3] = 0x00;
                 }
 
@@ -552,4 +552,123 @@ namespace dengUtils {
 
         return out_str;
     }   
+
+
+    /* Render label for ui box shaped elements */
+    BitmapStr StringRasterizer::renderLabel (
+        dengMath::vec2<deng_vec_t> parent_cont_size,
+        deng_px_t px_padding,
+        dengMath::vec2<deng_vec_t> parent_elem_top_left,
+        dengMath::vec2<deng_vec_t> size,
+        dengMath::vec2<deng_vec_t> origin,
+        dengMath::vec3<unsigned char> color,
+        const char *font_file,
+        const char *label
+    ) {
+        BitmapStr out_label;
+
+        // Find the padding size in vector size
+        dengMath::vec2<deng_vec_t> vec_padding;
+        vec_padding.first = dengMath::Conversion::pixelSizeToVector2DSize (
+            px_padding, 
+            m_p_win->getSize(),
+            DENG_COORD_AXIS_X 
+        );
+
+        vec_padding.second = dengMath::Conversion::pixelSizeToVector2DSize (
+            px_padding, 
+            m_p_win->getSize(), 
+            DENG_COORD_AXIS_Y
+        );
+
+        // Find the absolute size of the child object
+        dengMath::vec2<deng_vec_t> abs_size;
+        abs_size.first = dengMath::Conversion::findAbsSize (
+            parent_cont_size.first,
+            size.first
+        );
+
+        abs_size.second = dengMath::Conversion::findAbsSize (
+            parent_cont_size.second,
+            size.second
+        );
+
+        deng_vec_t text_height = getMaxHeight (
+            label,
+            font_file,
+            abs_size.first - 2 * vec_padding.first
+        );
+
+        deng_vec_t label_height;
+        deng_vec_t max_label_height = dengMath::Conversion::findAbsSize (
+            parent_cont_size.second, 
+            size.second
+        );
+        
+        // Check if text heigth exceeds maximum label height value
+        if(text_height >= max_label_height)
+            label_height = max_label_height;
+        else 
+            label_height = text_height;
+
+        out_label.text = label;
+        newVecStr (
+            out_label, 
+            font_file, 
+            label_height, 
+            color,
+            {
+                parent_elem_top_left.first + abs_size.first / 2,
+                parent_elem_top_left.second + abs_size.second / 2
+            },
+            origin
+        );
+
+        return out_label;
+    }
+
+
+    /* Find maximum height allowed by specified width */
+    deng_vec_t StringRasterizer::getMaxHeight (
+        const char *str,
+        const char *font_name,
+        deng_vec_t max_width
+    ) {
+        printf("Max width %f\n", max_width);
+        // Rasterize string with height 1.0
+        BitmapStr bm_str;
+        bm_str.text = str;
+
+        newVecStr (
+            bm_str,
+            font_name,
+            1.0f,
+            {0x00, 0x00},
+            {0.0f, 0.0f},
+            {0.0f, 0.0f}
+        );
+
+        deng_vec_t out_val = (deng_vec_t) bm_str.box_size.second / 
+                             (deng_vec_t) bm_str.box_size.first * 
+                             max_width;
+        cleanBitmapString(bm_str);
+
+        return out_val;
+    }
+
+
+    /* Clean rasterised font data */
+    void StringRasterizer::cleanBitmapString(BitmapStr &str) {
+        if(str.rend_text)
+            free(str.rend_text);
+        
+        size_t i;
+        for(i = 0; i < str.unique_glyphs.size(); i++)
+            FT_Bitmap_Done (
+                m_library_instance, 
+                &str.unique_glyphs[i].bitmap
+            );
+
+        FT_Done_Face(str.font_face);
+    }
 }

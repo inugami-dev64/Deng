@@ -1,6 +1,5 @@
 #ifndef DENGUI_WINDOW_H
 #define DENGUI_WINDOW_H
-
 typedef deng_ui32_t WindowID;
 // In pixels
 #define DENGUI_LIGHT_BORDER_THICKNESS       1
@@ -43,7 +42,6 @@ typedef deng_ui32_t WindowID;
 #define DENGUI_CLOSE_BTN                    "[X]"                  
 
 namespace dengui {
-
     /* Window type enums */
     enum WindowType {
         WINDOW_TYPE_FLOATING        = 0,
@@ -51,15 +49,6 @@ namespace dengui {
         WINDOW_TYPE_STATIC_LEFT     = 2,
         WINDOW_TYPE_STATIC_TOP      = 3,
         WINDOW_TYPE_STATIC_BOTTOM   = 4
-    };
-
-
-    /* Specify window border thickness (px) */
-    enum WindowBorder {
-        WINDOW_BORDER_NONE      = 0,
-        WINDOW_BORDER_LIGHT     = 2,
-        WINDOW_BORDER_MEDIUM    = 4,
-        WINDOW_BORDER_HEAVY     = 7    
     };
 
 
@@ -74,7 +63,7 @@ namespace dengui {
 
     /* Window update hint struct for information about buffer update */
     struct WindowUpdateInfo {
-        bool update;
+        deng_bool_t update;
         std::vector<VERT_UNMAPPED_2D> unmapped_vert;
         std::vector<VERT_MAPPED_2D> mapped_vert;
         std::vector<deng_ui32_t> indices; 
@@ -88,25 +77,14 @@ namespace dengui {
         std::mutex mut;
     };
 
-
-    /* Drop-down menu class for menubar */
-    class DropDownMenu {
-    private:
-        std::vector<std::string> m_elem_names;
-        std::vector<WindowID> m_parent_ids;
-    public:
-        DropDownMenu(dengMath::vec3<float> color, WindowBorder border);
-        void pushElement(std::string elem_name, WindowID redir_id);
-    };
-
     
     /* Struct to share between main thread and ui event thread */
     struct WindowElement {
         std::string child_id;
         std::string parent_id;
         char *asset_id;
-        bool is_visible;
-        bool is_interactive;
+        deng_bool_t is_visible;
+        deng_bool_t is_interactive;
 
         void (*onLMBClickFunc)(WindowElement*, Events*);
         void (*onMMBClickFunc)(WindowElement*, Events*);
@@ -114,8 +92,7 @@ namespace dengui {
         void (*onScrUpFunc)(WindowElement*, Events*);
         void (*onScrDownFunc)(WindowElement*, Events*);
         ElementColorMode color_mode;
-        deng_i32_t base_vert_size;
-        deng_i32_t base_indices_size;
+        dengMath::vec2<size_t> col_vert_bounds;
         std::vector<VERT_UNMAPPED_2D> unmapped_vert;
         std::vector<VERT_MAPPED_2D> mapped_vert;
         std::vector<deng_ui32_t> indices;
@@ -126,15 +103,16 @@ namespace dengui {
 
     /* Window info struct */
     struct WindowInfo {
+        std::string label;
         std::string id;
         WindowType wt;
         WindowBorder border;
         denguiWindowFlagBits fl_b;
-        dengMath::vec4<float> pc;
-        dengMath::vec4<float> sc;
-        dengMath::vec4<float> tc;
-        dengMath::vec2<float> pos;
-        dengMath::vec2<float> size;
+        dengMath::vec4<deng_vec_t> pc;
+        dengMath::vec4<deng_vec_t> sc;
+        dengMath::vec4<deng_vec_t> tc;
+        dengMath::vec2<deng_vec_t> pos;
+        dengMath::vec2<deng_vec_t> size;
 
         WindowInfo();
     };
@@ -179,11 +157,12 @@ namespace dengui {
 
 
     /* Main window class */
-    class Window : private BaseWindowShapes{
+    class Window : private BaseWindowShapes {
     private:
         std::string m_id;
         dengUtils::StringRasterizer *m_p_sr;
         std::vector<WindowElement> m_win_elems;
+        std::vector<std::pair<void*, ChildElementType>> m_child_elements;
         
         /* Primary color specifies the window background color          *
          * Secondary color specifies the window elements (buttons,      *
@@ -193,12 +172,10 @@ namespace dengui {
         dengMath::vec4<deng_vec_t> m_secondary_color;
         dengMath::vec4<deng_vec_t> m_tertiary_color;
 
-        // Window boundaries and position
-        dengMath::vec2<float> m_size;
-        dengMath::vec2<float> m_pos;
+        VERT_UNMAPPED_2D *m_p_base;
 
-        // Color specification boolean for checking if window
-        bool m_is_color_spec;
+        // Color specification deng_bool_tean for checking if window
+        deng_bool_t m_is_color_spec;
         WindowType m_wt;
     
     private:    
@@ -232,12 +209,13 @@ namespace dengui {
             VERT_UNMAPPED_2D *form_vert
         );
 
+
     // Getters and setters
     public:
         // Color getters
-        dengMath::vec4<float> getPC();
-        dengMath::vec4<float> getSC();
-        dengMath::vec4<float> getTC();
+        dengMath::vec4<deng_vec_t> getPC();
+        dengMath::vec4<deng_vec_t> getSC();
+        dengMath::vec4<deng_vec_t> getTC();
 
         // Get all window elements 
         std::vector<WindowElement> getWindowElements();
@@ -245,13 +223,9 @@ namespace dengui {
         std::string getId();
 
         // Color setters
-        void setPC(dengMath::vec4<float> *p_pc);
-        void setSC(dengMath::vec4<float> *p_sc);
-        void setTC(dengMath::vec4<float> *p_tc);
-
-        // Position and size setters
-        void setPos(dengMath::vec2<float> &pos);
-        void setSize(dengMath::vec2<float> &size);
+        void setPC(dengMath::vec4<deng_vec_t> *p_pc);
+        void setSC(dengMath::vec4<deng_vec_t> *p_sc);
+        void setTC(dengMath::vec4<deng_vec_t> *p_tc);
 
     public:
         Window (
@@ -260,11 +234,19 @@ namespace dengui {
             dengUtils::StringRasterizer *p_sr,
             dengMath::vec2<deng_ui32_t> window_bounds
         );
+        ~Window();
 
         void makeWindow (
             WindowInfo *p_wi,
             dengMath::vec2<deng_ui32_t> draw_bounds
         );
+
+        void attachChild (
+            void *child,
+            ChildElementType element_type
+        );
+
+        ParentInfo getParentInfo();
     };
 
 
@@ -287,7 +269,7 @@ namespace dengui {
         VkQueue g_queue,
         VkRenderPass renderpass,
         VkExtent2D extent,
-        dengMath::vec4<float> background,
+        dengMath::vec4<deng_vec_t> background,
         dengMath::vec2<deng_ui32_t> draw_area
     );    
 
@@ -300,14 +282,6 @@ namespace dengui {
         Events *p_ev,
         deng_bool_t realloc_res
     );
-
-    
-    /* Attach child to the window */
-    // void attachChild (
-    //     Window *p_window,
-    //     Events *p_ev,
-    //     ChildInfo child_info
-    // );
 }
 
 #endif

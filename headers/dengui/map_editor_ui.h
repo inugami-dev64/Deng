@@ -1,6 +1,7 @@
 #ifndef GUI_BINDINGS_H
 #define GUI_BINDINGS_H
 
+#include "dengui_child.h"
 #ifdef __DENG_USE_GUI
     // Main editor window
     #define DENG_MAP_UI_MAIN_WINDOW_FLAGS       DENGUI_WINDOW_FLAG_NO_MOVE | \
@@ -25,7 +26,7 @@
     #define DENG_MAP_UI_TERTIARY_COLOR          DENGUI_DEFAULT_TERTIARY_COLOR
 
     // Default border mode
-    #define DENG_MAP_UI_BORDER                  dengui::WINDOW_BORDER_MEDIUM
+    #define DENG_MAP_UI_BORDER                  dengui::BORDER_MEDIUM
 #endif
 
 namespace dengui {
@@ -35,11 +36,23 @@ namespace dengui {
         Window *m_p_main_win = NULL;
         std::vector<Window*> m_assets_windows;
         std::vector<Window*> m_texture_windows;
+        dengMath::vec2<deng_ui32_t> m_win_size;
+        dengUtils::StringRasterizer *m_p_sr = NULL;
+        ChildPushButton *m_p_pb = NULL;
+        ChildContainer *m_p_cont = NULL;
+
+    private:
+        static void testCallback (
+            WindowElement* p_elem, 
+            Events *p_ev
+        );
+        void genTestObjects();
     
     public:
         MapEditor (
             EventInfo &ev_info,
-            dengUtils::StringRasterizer *p_sr
+            dengUtils::StringRasterizer *p_sr,
+            dengMath::vec2<deng_ui32_t> window_size
         );
 
         ~MapEditor();

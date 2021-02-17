@@ -19,19 +19,8 @@
 // Window description flags
 typedef unsigned char denguiWindowFlagBits; 
 
-namespace dengui {
-    class Events;
-    struct WindowElement;
-}
-
-namespace deng {
-    class ResourceAllocator;
-    class DescriptorCreator;
-    class DrawCaller;
-}
-
-#include "dengui_child.h"
 #include "dengui_events.h"
+#include "dengui_child.h"
 #include "dengui_window.h"
 
 #endif

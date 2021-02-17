@@ -33,7 +33,7 @@ namespace dengUtils {
         std::array<deng_ui32_t, 6> vert_indices;
         dengMath::vec2<deng_i32_t> box_size;
 
-        BitmapChar *rend_text;
+        BitmapChar *rend_text = NULL;
         FT_Face font_face;
 
         void operator=(const char* input) { text = input; }
@@ -102,7 +102,7 @@ namespace dengUtils {
             dengMath::vec2<deng_vec_t> origin
         );
 
-        /* Check for the width of rasterised textbox */
+        /* Check for the width of rasterised textbox and reduce string length if needed */
         char *strRasterWidthTrim (
             const char *str,
             const char *font_name,
@@ -111,6 +111,28 @@ namespace dengUtils {
             dengMath::vec2<deng_ui32_t> deng_window_size,
             deng_vec_t *p_out_width
         );
+
+        /* Get the maximum height of text from specified maximum width */
+        deng_vec_t getMaxHeight (
+            const char *str,
+            const char *font_name,
+            deng_vec_t max_width
+        );
+
+        /* Rasterise label for ui elements */
+        BitmapStr renderLabel (
+            dengMath::vec2<deng_vec_t> parent_cont_size,
+            deng_px_t px_padding,
+            dengMath::vec2<deng_vec_t> parent_elem_top_left,
+            dengMath::vec2<deng_vec_t> size,
+            dengMath::vec2<deng_vec_t> origin,
+            dengMath::vec3<unsigned char> color,
+            const char *font_file,
+            const char *label
+        );
+
+        /* Clean rasterised string */
+        void cleanBitmapString(BitmapStr &str);
     };
 }
 

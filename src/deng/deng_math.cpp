@@ -12,48 +12,6 @@
 #include "../../headers/deng/deng_math.h"
 
 namespace dengMath {
-    deng_vec_t getFractionNumerator (
-        const deng_vec_t &value_numerator, 
-        const deng_vec_t &value_denominator, 
-        const deng_vec_t &equivalent_denominator
-    ) {
-        return (
-            value_numerator * 
-            equivalent_denominator / 
-            value_denominator
-        );
-    }
-
-    deng_vec_t getVectorLengthFromBounds(vec2<vec2<deng_vec_t>> vector_bounds) {
-        vec2<deng_vec_t> vector_coordinates = vector_bounds.second - vector_bounds.first;
-        return static_cast<deng_vec_t>(sqrt(pow(vector_coordinates.first, 2) + pow(vector_coordinates.second, 2)));
-    }
-
-    deng_vec_t getTriangleAnglesFromEdges(const vec3<deng_vec_t> &triangle_edges, const deng_TriangleAngleType &triangle_angle_type) {
-        switch (triangle_angle_type)
-        {
-        case DENG_TRIANGLE_ANGLE_ALPHA:
-            return Conversion::radToDeg(static_cast<deng_vec_t>(asin(sqrt((triangle_edges.first + triangle_edges.second - triangle_edges.third) * (triangle_edges.first - triangle_edges.second + triangle_edges.third) * (-triangle_edges.first + triangle_edges.second + triangle_edges.third) * 
-            (triangle_edges.first + triangle_edges.second + triangle_edges.third)) / 2 * triangle_edges.second * triangle_edges.third)));
-            break;
-        
-        case DENG_TRIANGLE_ANGLE_BETA:
-            return Conversion::radToDeg(static_cast<deng_vec_t>(asin(sqrt((triangle_edges.first + triangle_edges.second - triangle_edges.third) * (triangle_edges.first - triangle_edges.second + triangle_edges.third) * (-triangle_edges.first + triangle_edges.second + triangle_edges.third) * 
-            (triangle_edges.first + triangle_edges.second + triangle_edges.third)) / 2 * triangle_edges.first * triangle_edges.third)));
-            break;
-
-        case DENG_TRIANGLE_ANGLE_GAMMA:
-            return Conversion::radToDeg(static_cast<deng_vec_t>(asin(sqrt((triangle_edges.first + triangle_edges.second - triangle_edges.third) * (triangle_edges.first - triangle_edges.second + triangle_edges.third) * (-triangle_edges.first + triangle_edges.second + triangle_edges.third) * 
-            (triangle_edges.first + triangle_edges.second + triangle_edges.third)) / 2 * triangle_edges.first * triangle_edges.second)));
-            break;
-
-        default:
-            break;
-        }
-
-        return 0.0f;
-    }
-
 
     /* Generic conversion methods */
     deng_vec_t Conversion::degToRad(const deng_vec_t &deg) {
@@ -133,6 +91,54 @@ namespace dengMath {
 
         return 0.0f;
     }
+
+    
+    /* Convert child relative coordinate to absolute coordinate */
+    vec2<deng_vec_t> Conversion::findAbsPosition (
+        VERT_UNMAPPED_2D *vert,
+        vec2<deng_vec_t> child_pos
+    ) {
+        dengMath::vec2<deng_vec_t> size;
+        size.first = vert[1].vert_data.vert_x - vert[0].vert_data.vert_x;
+        size.second = vert[3].vert_data.vert_y - vert[0].vert_data.vert_y;
+       
+        return (vec2<deng_vec_t>) {
+            vert[0].vert_data.vert_x + (child_pos.first + 1.0f) / 2 * size.first,
+            vert[0].vert_data.vert_y + (child_pos.second + 1.0f) / 2 * size.second
+        };
+    }
+
+
+    /* Convert child relative size to absolute size */
+    deng_vec_t Conversion::findAbsSize (
+        deng_vec_t parent_size,
+        deng_vec_t child_size
+    ) { return parent_size / 2 * child_size; }
+
+
+    /* Convert absolute size to relative size */
+    deng_vec_t Conversion::findRelSize (
+        deng_vec_t parent_size, 
+        deng_vec_t abs_size
+    ) { return abs_size / parent_size * 2; }
+
+
+    /* Convert absolute position to relative position */
+    vec2<deng_vec_t> Conversion::findRelPosition (
+        VERT_UNMAPPED_2D *vert, 
+        vec2<deng_vec_t> abs_pos
+    ) {
+        dengMath::vec2<deng_vec_t> size;
+        size.first = vert[1].vert_data.vert_x - vert[0].vert_data.vert_x;
+        size.second = vert[3].vert_data.vert_y - vert[0].vert_data.vert_y;
+
+        return (vec2<deng_vec_t>) {
+            2 * (abs_pos.first + vert[0].vert_data.vert_x) / size.first - 1.0f,
+            2 * (abs_pos.second + vert[0].vert_data.vert_y) / size.second - 1.0f
+        };
+
+    }
+
 
     ModelMatrix::ModelMatrix() {
         setTransformation(0.0f, 0.0f, 0.0f);

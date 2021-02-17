@@ -20,7 +20,7 @@ namespace dengUtils {
             DENG_COORD_AXIS_UNDEFINED
         );
 
-
+        LOG("VERT_BORDER_LEN: " + std::to_string(2 * (vert.size() - vert_offset)));
         std::vector<VERT_UNMAPPED_2D> border_verts(2 * (vert.size() - vert_offset));
         std::vector<deng_ui32_t> border_indices(6 * (vert.size() - vert_offset));
 
@@ -44,18 +44,18 @@ namespace dengUtils {
             deng_vec_t border_sine, border_cosine;
             // Make b vector magnitude the same as a vector
             deng_vec_t mag_a = (deng_vec_t) sqrt (
-                (double) (a_vec.first * a_vec.first) +
-                (double) (a_vec.second * a_vec.second)
+                (deng_px_t) (a_vec.first * a_vec.first) +
+                (deng_px_t) (a_vec.second * a_vec.second)
             );
 
             deng_vec_t sin_b = b_vec.second / (deng_vec_t) sqrt (
-                (double) (b_vec.first * b_vec.first) +
-                (double) (b_vec.second * b_vec.second)
+                (deng_px_t) (b_vec.first * b_vec.first) +
+                (deng_px_t) (b_vec.second * b_vec.second)
             );
 
             deng_vec_t cos_b = b_vec.first / (deng_vec_t) sqrt (
-                (double) (b_vec.first * b_vec.first) +
-                (double) (b_vec.second * b_vec.second)
+                (deng_px_t) (b_vec.first * b_vec.first) +
+                (deng_px_t) (b_vec.second * b_vec.second)
             );
 
             b_vec.first = mag_a * cos_b;
@@ -64,8 +64,8 @@ namespace dengUtils {
             norm_vec = a_vec + b_vec;
 
             border_sine = norm_vec.second / (deng_vec_t) sqrt (
-                (double) (norm_vec.first * norm_vec.first) +
-                (double) (norm_vec.second * norm_vec.second)
+                (deng_px_t) (norm_vec.first * norm_vec.first) +
+                (deng_px_t) (norm_vec.second * norm_vec.second)
             );
 
             border_cosine = -norm_vec.first / sqrt (
@@ -90,13 +90,13 @@ namespace dengUtils {
             if(p_index < 0) p_index = (deng_i32_t) border_verts.size() - 1;
             if(n_index >= (deng_i32_t) border_verts.size()) n_index = 0;
 
-            border_indices[push_index] = (deng_ui32_t) (c_index + 1) + (deng_ui32_t) vert.size();
-            border_indices[push_index + 1] = (deng_ui32_t) n_index + (deng_ui32_t) vert.size();
-            border_indices[push_index + 2] = (deng_ui32_t) c_index + (deng_ui32_t) vert.size();
+            border_indices[push_index] = (deng_ui32_t) (c_index + 1) + (deng_ui32_t) vert.size() - vert_offset;
+            border_indices[push_index + 1] = (deng_ui32_t) n_index + (deng_ui32_t) vert.size() - vert_offset;
+            border_indices[push_index + 2] = (deng_ui32_t) c_index + (deng_ui32_t) vert.size() - vert_offset;
 
-            border_indices[push_index + 3] = (deng_ui32_t) (c_index + 1) + (deng_ui32_t) vert.size();
-            border_indices[push_index + 4] = (deng_ui32_t) p_index + (deng_ui32_t) vert.size();
-            border_indices[push_index + 5] = (deng_ui32_t) c_index + (deng_ui32_t) vert.size();
+            border_indices[push_index + 3] = (deng_ui32_t) (c_index + 1) + (deng_ui32_t) vert.size() - vert_offset;
+            border_indices[push_index + 4] = (deng_ui32_t) p_index + (deng_ui32_t) vert.size() - vert_offset;
+            border_indices[push_index + 5] = (deng_ui32_t) c_index + (deng_ui32_t) vert.size() - vert_offset;
         }
 
         if(new_vert) vert.clear();
@@ -271,6 +271,19 @@ namespace dengUtils {
         dengMath::vec2<deng_vec_t> outer_rec_size;
         outer_rec_size.first = outer_rec[1].vert_data.vert_x - outer_rec[0].vert_data.vert_x;
         outer_rec_size.second = outer_rec[3].vert_data.vert_y - outer_rec[0].vert_data.vert_y;
+        LOG (
+            "OUT_REC_SIZE: " +
+            std::to_string(outer_rec_size.first) + 
+            ", " +
+            std::to_string(outer_rec_size.second)
+        );
+
+        LOG (
+            "POS: " + 
+            std::to_string(pos.first) +
+            ", " +
+            std::to_string(pos.second)
+        );
         
         dengMath::vec2<deng_vec_t> abs_pos;
         abs_pos.first = (pos.first + 1.0f) * outer_rec_size.first / 2 + outer_rec[0].vert_data.vert_x;
@@ -691,7 +704,7 @@ namespace dengUtils {
         if(vert_c < DENG_CIRCLE_MIN_VERT_COUNT) 
             vert_c = DENG_CIRCLE_MIN_VERT_COUNT;
 
-        deng_vec_t step = dengMath::Conversion::degToRad(360.0f / (float) vert_c);
+        deng_vec_t step = dengMath::Conversion::degToRad(360.0f / (deng_vec_t) vert_c);
 
         deng_i32_t l_index, n_index, i;
         std::vector<VERT_UNMAPPED_2D> cir_vert;

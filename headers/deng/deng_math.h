@@ -933,30 +933,6 @@ namespace dengMath {
         deng_CameraUniformFlagBits cam_flag_bits;
     };
 
-    // generic math functions
-    deng_px_t exp(deng_px_t base, int exp);
-    deng_vec_t exp(deng_vec_t base, int exp);
-
-    vec2<deng_vec_t> getCartesianCoordsPoint (
-        const vec2<deng_vec_t> &centre, 
-        const deng_vec_t &angle, 
-        const deng_vec_t &distance, 
-        const deng_bool_t &inverted_y_axis
-    );
-
-    deng_vec_t getFractionNumerator (
-        const deng_vec_t &value_numerator, 
-        const deng_vec_t &value_denominator, 
-        const deng_vec_t &equivalent_denominator
-    );
-
-    deng_vec_t getVectorLengthFromBounds(vec2<vec2<deng_vec_t>> vector_bounds);
-
-    deng_vec_t getTriangleAnglesFromEdges (
-        const vec3<deng_vec_t> &triangle_edges, 
-        const deng_TriangleAngleType &triangle_angle_type
-    );
-
     struct Conversion {
         static deng_vec_t degToRad(const deng_vec_t &deg);
         static deng_vec_t radToDeg(const deng_vec_t &rad);
@@ -972,46 +948,33 @@ namespace dengMath {
             const vec2<deng_ui32_t> &window_size, 
             const deng_CoordinateAxisType &axis_type
         );
+
+        static vec2<deng_vec_t> findAbsPosition (
+            VERT_UNMAPPED_2D *vert,
+            vec2<deng_vec_t> child_pos
+        );
+
+        static deng_vec_t findAbsSize (
+            deng_vec_t parent_size,
+            deng_vec_t child_size
+        );
+
+        static deng_vec_t findRelSize (
+            deng_vec_t parent_size,
+            deng_vec_t abs_size
+        );
+
+        static vec2<deng_vec_t> findRelPosition (
+            VERT_UNMAPPED_2D *vert,
+            vec2<deng_vec_t> abs_pos
+        );
     };
-
-    // data handling methods 
-    template<typename T>
-    static T getSmallestElement(std::vector<T> *p_elements_vector);
-    template<typename T>
-    static T getLargestElement(std::vector<T> *p_elements_vector);
-
-    template<typename T>
-    static void sortInGrowingOrder(std::vector<T> *p_elements_vector);
-    template<typename T>
-    static void sortInDecliningOrder(std::vector<T> *p_elements_vector);
-
-    template<typename T>
-    static void sortVectorInGrowingOrder (
-        std::vector<T> *p_elements_vector, 
-        deng_CoordinateAxisType coord_axis_type
-    );
-    
-    template<typename T>
-    static void sortVectorInDecliningOrder (
-        std::vector<T> *p_elements_vector, 
-        deng_CoordinateAxisType coord_axis_type
-    );
-
-    // in order to use this function the class used in std::vector must have const char *description as a public class variable
-    template<typename T>
-    static T *findElementByDescription (
-        std::vector<T> *p_vector, 
-        const char *description
-    );
 
     // Calculate new asset vertices according to model matrix
     void applyModelMatrix (
         deng_Asset &asset, 
         mat4<deng_vec_t> matrix
     );
-
-    // Generic trigonometric calculation functions
-    deng_vec_t trSurface2D(std::array<vec2<deng_vec_t>, 3> tr_verts);
 }
 
 #endif
