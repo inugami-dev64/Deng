@@ -12,12 +12,13 @@ layout(binding = 0) uniform UniformData {
 
 layout(location = 0) in vec2 in_position;
 layout(location = 1) in vec2 in_tex_position;
+layout(location = 2) in uint in_hier;
 
 layout(location = 1) out vec2 frag_tex_position;
 
 void main() {
     if((ubo.ubo_flag_bits & OrthographicCameraMode2D) == OrthographicCameraMode2D)
-        gl_Position = ubo.view * vec4(in_position, 0.0f, 1.0f);
+        gl_Position = ubo.view * vec4(in_position, float(in_hier), 1.0f);
     
     else gl_Position = vec4(in_position, 0.0f, 1.0f);
         

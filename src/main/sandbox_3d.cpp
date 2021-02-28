@@ -39,14 +39,18 @@ int main() {
     
     std::array<deng_Asset, 2> assets;
     dengMath::ModelMatrix viking_mat;
-    viking_mat.setRotation(PI / 2, PI, 0);
+    viking_mat.setRotation(PI / 2, 0.0f, 0.0f);
     viking_mat.setScale(1.0f, 1.0f, 1.0f);
 
     dasReadAsset(&assets[0], "../../assets/viking_norm.das", DENG_ASSET_MODE_DONT_CARE);
     assets[0].tex_id = (char*) "viking";
     assets[0].id = (char*) "viking_room";
     assets[0].is_shown = true;
-    dengMath::applyModelMatrix(assets[0], viking_mat.getModelMatrix());
+    dengMath::mat4<deng_vec_t> mmat = viking_mat.getModelMatrix();
+    dengMath::Transformer::apply3DModelMatrix (
+        assets[0], 
+        mmat
+    );
 
     deng_Texture viking_tex;
     dasLoadTexture(&viking_tex, "../../textures/viking_room.tga");
@@ -70,5 +74,5 @@ int main() {
     );
 
     rend.run();
-    return 0;
+    return EXIT_SUCCESS;
 }

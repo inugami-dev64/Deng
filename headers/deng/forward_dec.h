@@ -62,11 +62,18 @@ namespace dengui {
     // dengui/dengui_window.h
     struct WindowUpdateInfo;
     struct SharedWindowUpdateInfos;
+    struct ElementBaseData;
     struct WindowElement;
+    struct DDMElement;
     struct WindowInfo;
     struct WindowShapeInfo;
     class BaseWindowShapes;
     class Window;
+    typedef void(*DDMCallback)(DDMElement*, Events*);
+    typedef void(*WindowCallback)(WindowElement*, Events*);
+
+    // dengui/collision.h
+    struct Collision2D;
 }
 
 #endif

@@ -15,6 +15,7 @@ namespace dengUtils {
             std::vector<deng_ui32_t> &indices,
             dengMath::vec4<deng_vec_t> color,
             dengMath::vec2<deng_ui32_t> deng_window_size,
+            deng_ui32_t hier_level,
             deng_px_t border_thickness 
         );
     };
@@ -51,6 +52,7 @@ namespace dengUtils {
             dengMath::vec2<deng_vec_t> size,
             dengMath::vec2<deng_vec_t> origin,
             dengMath::vec4<deng_vec_t> color,
+            deng_ui32_t hier_level,
             std::vector<VERT_UNMAPPED_2D> &vert   
         );
 
@@ -61,6 +63,7 @@ namespace dengUtils {
             dengMath::vec2<deng_vec_t> origin,
             VERT_UNMAPPED_2D *outer_rec,
             dengMath::vec4<deng_vec_t> color,
+            deng_ui32_t hier_level,
             std::vector<VERT_UNMAPPED_2D> &vert
         );
 
@@ -68,6 +71,7 @@ namespace dengUtils {
             dengMath::vec2<deng_vec_t> pos,
             dengMath::vec2<deng_vec_t> size,
             dengMath::vec2<deng_vec_t> origin,
+            deng_ui32_t hier_level,
             std::vector<VERT_MAPPED_2D> &vert
         );
 
@@ -77,6 +81,7 @@ namespace dengUtils {
             deng_bool_t is_abs_size,
             dengMath::vec2<deng_vec_t> origin,
             VERT_UNMAPPED_2D *outer_rec,
+            deng_ui32_t hier_level,
             std::vector<VERT_MAPPED_2D> &vert
         );
 
@@ -87,6 +92,7 @@ namespace dengUtils {
             dengMath::vec2<deng_vec_t> size,
             dengMath::vec2<deng_vec_t> origin,
             dengMath::vec4<deng_vec_t> color,
+            deng_ui32_t hier_level,
             deng_px_t border_width,
             dengMath::vec4<deng_vec_t> border_color
         );
@@ -97,6 +103,7 @@ namespace dengUtils {
             const char *asset_desc,
             dengMath::vec2<deng_vec_t> pos,
             dengMath::vec2<deng_vec_t> size,
+            deng_ui32_t hier_level,
             dengMath::vec2<deng_vec_t> origin
         );
 
@@ -110,6 +117,7 @@ namespace dengUtils {
             dengMath::vec4<deng_vec_t> color,
             VERT_UNMAPPED_2D *outer_rec,
             deng_px_t border_width,
+            deng_ui32_t hier_level,
             dengMath::vec4<deng_vec_t> border_color
         );
 
@@ -122,6 +130,7 @@ namespace dengUtils {
             deng_bool_t is_abs_size,
             dengMath::vec2<deng_vec_t> origin,
             dengMath::vec4<deng_vec_t> color,
+            deng_ui32_t hier_level,
             VERT_UNMAPPED_2D *outer_rec
         );
     };
@@ -139,7 +148,8 @@ namespace dengUtils {
             dengMath::vec2<deng_vec_t> tri_rec_size,
             dengMath::vec2<deng_vec_t> tri_rec_origin,
             dengMath::vec4<deng_vec_t> color,
-            std::vector<dengMath::vec2<deng_vec_t>> tri_rec_triangle_pos 
+            deng_ui32_t hier_level,
+            std::array<dengMath::vec2<deng_vec_t>, 3> tri_rec_triangle_pos 
         );
 
         static void generateRelTriangle (
@@ -150,7 +160,8 @@ namespace dengUtils {
             dengMath::vec2<deng_vec_t> tri_rec_origin,
             dengMath::vec4<deng_vec_t> color,
             deng_bool_t is_abs_size,
-            std::vector<dengMath::vec2<deng_vec_t>> tri_rec_triangle_pos
+            deng_ui32_t hier_level,
+            std::array<dengMath::vec2<deng_vec_t>, 3> tri_rec_triangle_pos
         );
 
         deng_Asset makeAbsTriangleAsset (
@@ -160,8 +171,9 @@ namespace dengUtils {
             dengMath::vec2<deng_vec_t> tri_rec_size,
             dengMath::vec2<deng_vec_t> tri_rec_origin,
             dengMath::vec4<deng_vec_t> color, 
-            std::vector<dengMath::vec2<deng_vec_t>> tri_rec_triangle_pos,
+            std::array<dengMath::vec2<deng_vec_t>, 3> tri_rec_triangle_pos,
             deng_px_t border_width,
+            deng_ui32_t hier_level,
             dengMath::vec4<deng_vec_t> border_color
         );
 
@@ -173,9 +185,10 @@ namespace dengUtils {
             dengMath::vec2<deng_vec_t> tri_rec_size,
             dengMath::vec2<deng_vec_t> tri_rec_origin,
             dengMath::vec4<deng_vec_t> color,
-            std::vector<dengMath::vec2<deng_vec_t>> tri_rec_triangle_pos,
+            std::array<dengMath::vec2<deng_vec_t>, 3> tri_rec_triangle_pos,
             deng_px_t border_width,
             dengMath::vec4<deng_vec_t> border_color,
+            deng_ui32_t hier_level,
             deng_bool_t is_abs_size
         );
     };
@@ -193,6 +206,7 @@ namespace dengUtils {
             std::vector<deng_ui32_t> &indices,
             dengMath::vec2<deng_vec_t> pos,
             deng_vec_t radius,
+            deng_ui32_t hier_level,
             dengMath::vec4<deng_vec_t> color
         );
 
@@ -202,6 +216,7 @@ namespace dengUtils {
             dengMath::vec2<deng_vec_t> pos,
             deng_vec_t radius,
             dengMath::vec4<deng_vec_t> color,
+            deng_ui32_t hier_level,
             VERT_UNMAPPED_2D *outer_rec
         );
 
@@ -212,6 +227,7 @@ namespace dengUtils {
             deng_vec_t radius,
             dengMath::vec4<deng_vec_t> color,
             deng_px_t border_width,
+            deng_ui32_t hier_level,
             dengMath::vec4<deng_vec_t> border_color
         );
 
@@ -223,6 +239,7 @@ namespace dengUtils {
             dengMath::vec4<deng_vec_t> color,
             VERT_UNMAPPED_2D *surround_rec,
             deng_px_t border_width,
+            deng_ui32_t hier_level,
             dengMath::vec4<deng_vec_t> border_color
         );
     };

@@ -564,9 +564,9 @@ namespace dengMath {
     
 
     // Apply model matrix for 3d asset
-    void applyModelMatrix (
+    void Transformer::apply3DModelMatrix (
         deng_Asset &asset, 
-        mat4<deng_vec_t> matrix
+        mat4<deng_vec_t> &mat
     ) {
         size_t index;
         dengMath::vec3<deng_vec_t> *p_tmp_in;
@@ -577,7 +577,7 @@ namespace dengMath {
             {
             case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
                 p_tmp_in = (dengMath::vec3<deng_vec_t>*) &asset.vertices.p_tex_mapped_unnormalized_vert[index].vert_data;
-                tmp_out = matrix * (*p_tmp_in);
+                tmp_out = mat * (*p_tmp_in);
                 asset.vertices.p_tex_mapped_unnormalized_vert[index].vert_data.vert_x = tmp_out.first;
                 asset.vertices.p_tex_mapped_unnormalized_vert[index].vert_data.vert_y = tmp_out.second;
                 asset.vertices.p_tex_mapped_unnormalized_vert[index].vert_data.vert_z = tmp_out.third;
@@ -585,7 +585,7 @@ namespace dengMath {
 
             case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
                 p_tmp_in = (dengMath::vec3<deng_vec_t>*) &asset.vertices.p_tex_mapped_normalized_vert[index].vert_data;
-                tmp_out = matrix * (*p_tmp_in);
+                tmp_out = mat * (*p_tmp_in);
                 asset.vertices.p_tex_mapped_normalized_vert[index].vert_data.vert_x = tmp_out.first;
                 asset.vertices.p_tex_mapped_normalized_vert[index].vert_data.vert_y = tmp_out.second;
                 asset.vertices.p_tex_mapped_normalized_vert[index].vert_data.vert_z = tmp_out.third;
@@ -593,7 +593,7 @@ namespace dengMath {
 
             case DENG_ASSET_MODE_3D_UNMAPPED:
                 p_tmp_in = (dengMath::vec3<deng_vec_t>*) &asset.vertices.p_unmapped_unnormalized_vert[index]; 
-                tmp_out = matrix * (*p_tmp_in);
+                tmp_out = mat * (*p_tmp_in);
                 asset.vertices.p_unmapped_unnormalized_vert[index].vert_data.vert_x = tmp_out.first;
                 asset.vertices.p_unmapped_unnormalized_vert[index].vert_data.vert_y = tmp_out.second;
                 asset.vertices.p_unmapped_unnormalized_vert[index].vert_data.vert_z = tmp_out.third;
@@ -601,51 +601,81 @@ namespace dengMath {
 
             case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
                 p_tmp_in = (dengMath::vec3<deng_vec_t>*) &asset.vertices.p_unmapped_normalized_vert[index]; 
-                tmp_out = matrix * (*p_tmp_in);
+                tmp_out = mat * (*p_tmp_in);
                 asset.vertices.p_unmapped_normalized_vert[index].vert_data.vert_x = tmp_out.first;
                 asset.vertices.p_unmapped_normalized_vert[index].vert_data.vert_y = tmp_out.second;
                 asset.vertices.p_unmapped_normalized_vert[index].vert_data.vert_z = tmp_out.third;
                 break;
 
-            case DENG_ASSET_MODE_2D_UNMAPPED:
-            case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
-                WARNME("2D assets are not supported in applyModelMatrix()!");
-                WARNME("Use applyModelMatrix2D() instead!");
-                return;
             default:
-                break;
+                WARNME("Invalid asset vertices type in dengMath::Transformer::apply3DModelMatrix()!");
+                return;
             }
         }
     }
 
-    
-    /* Calculate triangle surface area based on triangle vertices */
-    deng_vec_t trSurface2D (
-        std::array<vec2<deng_vec_t>, 3> 
-        tr_verts
+
+    void Transformer::apply3DModelMatrix (
+        vec2<deng_ui32_t> asset_bounds,
+        std::vector<deng_Asset> *p_assets,
+        mat4<deng_vec_t> &mat
     ) {
-        // Find triangle sides
-        deng_vec_t a = 
-            sqrt (
-                (tr_verts[1].first - tr_verts[0].first) * (tr_verts[1].first - tr_verts[0].first) + 
-                (tr_verts[1].second - tr_verts[0].second) * (tr_verts[1].second - tr_verts[0].second)
+        if(asset_bounds.second > p_assets->size())
+            return;
+        for(size_t i = asset_bounds.first; i < asset_bounds.second; i++) {
+            Transformer::apply3DModelMatrix (
+                p_assets->at(i),
+                mat
             );
+        }
+    }
 
-        deng_vec_t b =
-            sqrt (
-                (tr_verts[2].first - tr_verts[1].first) * (tr_verts[2].first - tr_verts[1].first) +
-                (tr_verts[2].second - tr_verts[1].second) * (tr_verts[2].second - tr_verts[1].second)
+
+    void Transformer::apply2DModelMatrix (
+        deng_Asset &asset,
+        mat3<deng_vec_t> &mat
+    ) {
+        size_t index;
+        dengMath::vec2<deng_vec_t> *p_tmp_in;
+        dengMath::vec3<deng_vec_t> tmp_out;
+
+        for(index = 0; index < asset.vertices.size; index++) {
+            switch (asset.asset_mode)
+            {
+            case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
+                p_tmp_in = (dengMath::vec2<deng_vec_t>*) &asset.vertices.p_tex_mapped_vert_data_2d[index].vert_data;
+                tmp_out = mat * (*p_tmp_in);
+                asset.vertices.p_tex_mapped_vert_data_2d[index].vert_data.vert_x = tmp_out.first;
+                asset.vertices.p_tex_mapped_vert_data_2d[index].vert_data.vert_y = tmp_out.second;
+                break;
+
+            case DENG_ASSET_MODE_2D_UNMAPPED:
+                p_tmp_in = (dengMath::vec2<deng_vec_t>*) &asset.vertices.p_unmapped_vert_data_2d[index].vert_data;
+                tmp_out = mat * (*p_tmp_in);
+                asset.vertices.p_unmapped_vert_data_2d[index].vert_data.vert_x = tmp_out.first;
+                asset.vertices.p_unmapped_vert_data_2d[index].vert_data.vert_y = tmp_out.second;
+                break;
+
+            default:
+                WARNME("Invalid asset vertices type in dengMath::Transformer::apply2DModelMatrix()!");
+                return;
+            }
+        }
+    }
+
+
+    void Transformer::apply2DModelMatrix (
+        vec2<deng_ui32_t> asset_bounds,
+        std::vector<deng_Asset> *p_assets,
+        mat3<deng_vec_t> &mat
+    ) {
+        //if(asset_bounds.second > p_assets->size())
+            //return;
+        for(size_t i = asset_bounds.first; i < asset_bounds.second; i++) {
+            Transformer::apply2DModelMatrix (
+                p_assets->at(i),
+                mat
             );
-
-        deng_vec_t c =
-            sqrt (
-                (tr_verts[2].first - tr_verts[0].first) * (tr_verts[2].first - tr_verts[0].first) +
-                (tr_verts[2].second - tr_verts[0].second) * (tr_verts[2].second - tr_verts[0].second)
-            );
-
-        // Triangle semi perimeter
-        deng_vec_t s = (a + b + c) / 2;
-
-        return sqrt((s * (s - a) * (s - b) * (s - c)));
+        }
     }
 }  

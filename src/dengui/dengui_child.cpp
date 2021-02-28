@@ -5,7 +5,7 @@ namespace dengui {
 
     /*********************************************/
     /*********************************************/
-    /******** Push button class methods **********/
+    /******** PUSH BUTTON CLASS METHODS **********/
     /*********************************************/
     /*********************************************/
 
@@ -38,6 +38,7 @@ namespace dengui {
                 m_info.background_color.col_b,
                 m_info.background_color.col_a
             },
+            DENGUI_CHILD_PUSH_BUTTON_LEVEL,
             m_vert
         );
 
@@ -47,19 +48,21 @@ namespace dengui {
         );
 
         // Rasterise button label
-        m_label = m_p_sr->renderLabel (
+        m_label = m_p_sr->renderRelLabel (
             {
                 m_parent_info.vert[1].vert_data.vert_x - m_parent_info.vert[0].vert_data.vert_x,
                 m_parent_info.vert[3].vert_data.vert_y - m_parent_info.vert[0].vert_data.vert_y
             },
-            DENGUI_PUSH_BUTTON_LABEL_PADDING, 
+            DENGUI_DEFAULT_LABEL_PADDING, 
             {
                 m_vert[0].vert_data.vert_x,
                 m_vert[0].vert_data.vert_y
             },
+            {1.0f, 1.0f},
             m_info.size, 
             m_info.origin,
             m_info.color,
+            DENGUI_CHILD_PUSH_BUTTON_LEVEL,
             DENGUI_DEFAULT_FONT_FILE,
             m_info.label
         );
@@ -76,6 +79,7 @@ namespace dengui {
                 m_info.border_color.col_a
             }, 
             window_size,
+            DENGUI_CHILD_PUSH_BUTTON_LEVEL,
             m_info.border
         );
     }
@@ -89,7 +93,6 @@ namespace dengui {
         w_elems[0].child_id = std::string(m_info.id);
         w_elems[0].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
         w_elems[0].parent_id = std::string(m_parent_info.id);
-        w_elems[0].is_visible = true;
         w_elems[0].is_interactive = true;
         w_elems[0].unmapped_vert = m_vert;
         w_elems[0].col_vert_bounds = {0, 4};
@@ -106,7 +109,6 @@ namespace dengui {
                               std::string(m_label.text);
         w_elems[1].color_mode = ELEMENT_COLOR_MODE_TEXTURE_MAPPED;
         w_elems[1].parent_id = std::string(m_parent_info.id);
-        w_elems[1].is_visible = true;
         w_elems[1].is_interactive = true;
         w_elems[1].mapped_vert.insert (
             w_elems[1].mapped_vert.end(),
@@ -170,6 +172,7 @@ namespace dengui {
                 m_info.background_color.col_b,
                 m_info.background_color.col_a
             },
+            DENGUI_CHILD_CONTAINER_LEVEL,
             m_vert
         );
 
@@ -203,6 +206,7 @@ namespace dengui {
                 m_info.border_color.col_a
             },
             m_window_size, 
+            DENGUI_CHILD_CONTAINER_LEVEL,
             m_info.border
         );
 
@@ -248,6 +252,7 @@ namespace dengui {
                 m_info.titlebar_info.background_color.col_b,
                 m_info.titlebar_info.background_color.col_a
             },
+            DENGUI_CHILD_CONTAINER_LEVEL,
             m_vert
         );
 
@@ -268,6 +273,7 @@ namespace dengui {
                 m_info.border_color.col_a
             },
             m_window_size,
+            DENGUI_CHILD_CONTAINER_LEVEL,
             m_info.border
         );
 
@@ -290,12 +296,12 @@ namespace dengui {
 
         // Generate title label if needed
         if(m_info.titlebar_info.add_label) {
-            m_label = m_p_sr->renderLabel (
+            m_label = m_p_sr->renderRelLabel (
                 {
                     m_parent_info.vert[1].vert_data.vert_x - m_parent_info.vert[0].vert_data.vert_x,
                     m_parent_info.vert[3].vert_data.vert_y - m_parent_info.vert[0].vert_data.vert_y
                 },
-                DENGUI_PUSH_BUTTON_LABEL_PADDING,
+                DENGUI_DEFAULT_LABEL_PADDING,
                 {
                     m_vert[m_titlebar_vert_bounds.first].vert_data.vert_x,
                     m_vert[m_titlebar_vert_bounds.first].vert_data.vert_y
@@ -304,8 +310,10 @@ namespace dengui {
                     m_info.size.first,
                     m_info.titlebar_info.titlebar_height
                 },
+                {1.0f, 1.0f},
                 m_info.origin,
                 m_info.titlebar_info.color,
+                DENGUI_CHILD_CONTAINER_LEVEL,
                 DENGUI_DEFAULT_FONT_FILE,
                 m_info.titlebar_info.label
             );
@@ -426,7 +434,6 @@ namespace dengui {
         out_vec[0].child_id = std::string(m_info.id);
         out_vec[0].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
         out_vec[0].parent_id = std::string(m_parent_info.id);
-        out_vec[0].is_visible = true;
         out_vec[0].is_interactive = false;
         out_vec[0].unmapped_vert = vert_vec;
         out_vec[0].col_vert_bounds = {0, 0};
@@ -476,7 +483,6 @@ namespace dengui {
             out_vec[out_vec.size() - 1].child_id = "titlebar";
             out_vec[out_vec.size() - 1].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
             out_vec[out_vec.size() - 1].parent_id = std::string(m_parent_info.id) + "#" + std::string(m_info.id);
-            out_vec[out_vec.size() - 1].is_visible = true;
             out_vec[out_vec.size() - 1].is_interactive = false;
             out_vec[out_vec.size() - 1].unmapped_vert = vert_vec;
             out_vec[out_vec.size() - 1].col_vert_bounds = {0, 0};
@@ -492,7 +498,6 @@ namespace dengui {
                 out_vec[out_vec.size() - 1].child_id = m_info.titlebar_info.label;
                 out_vec[out_vec.size() - 1].color_mode = ELEMENT_COLOR_MODE_TEXTURE_MAPPED;
                 out_vec[out_vec.size() - 1].parent_id = std::string(m_parent_info.id) + "#" + std::string(m_info.id) + "#titlebar";
-                out_vec[out_vec.size() - 1].is_visible = true;
                 out_vec[out_vec.size() - 1].is_interactive = false;
                 out_vec[out_vec.size() - 1].mapped_vert.insert (
                     out_vec[out_vec.size() - 1].mapped_vert.end(),
@@ -537,7 +542,316 @@ namespace dengui {
                 );
             }
         }
-
         return out_vec;
+    }
+
+
+
+    /**********************************************************/
+    /**********************************************************/
+    /******** General drop down menu element classes **********/
+    /**********************************************************/
+    /**********************************************************/
+
+    DropDownElement::DropDownElement (
+        char *parent_id,
+        dengMath::vec2<deng_ui32_t> window_size,
+        DropDownElementInfo info,
+        dengMath::vec2<deng_vec_t> size,
+        deng_vec_t y_offset,
+        dengUtils::StringRasterizer *p_sr,
+        deng_ObjColorData background_color,
+        deng_ObjColorData border_color,
+        dengMath::vec3<unsigned char> color,
+        WindowBorder border
+    ) {
+        m_p_sr = p_sr;
+        m_parent_id = parent_id;
+        m_info = info;
+
+        // Create main body for element
+        dengUtils::RectangleGenerator::generateUnmappedAbsRec (
+            {0.0f, y_offset},
+            size,
+            {-1.0f, -1.0f},
+            {
+                background_color.col_r,
+                background_color.col_g,
+                background_color.col_b,
+                background_color.col_a
+            },
+            DENGUI_DROP_DOWN_LIST_LEVEL,
+            m_vert
+        );
+
+        m_indices.insert (
+            m_indices.end(),
+            {0, 1, 2, 2, 3, 0}
+        );
+
+        dengUtils::BorderGenerator::generateBorders (
+            m_vert,
+            false,
+            0,
+            m_indices,
+            {
+                border_color.col_r,
+                border_color.col_g,
+                border_color.col_b,
+                border_color.col_a
+            },
+            window_size,
+            DENGUI_DROP_DOWN_LIST_LEVEL,
+            border
+        );
+
+        // Check if show more triangle needs to be generated 
+        if(m_info.is_expandable) {
+            deng_ui32_t ind_offset = (deng_ui32_t) m_indices.size();
+
+            dengMath::vec2<deng_vec_t> rec_pos;
+            rec_pos.first = 1.0f + DENGUI_DEFAULT_LABEL_PADDING;
+            rec_pos.second = 1.0f + DENGUI_DEFAULT_LABEL_PADDING;
+
+            dengMath::vec2<deng_vec_t> rec_size;
+            rec_size.first = DENGUI_DROP_DOWN_LIST_TRIANGLE_SIZE;
+            rec_size.second = 2.0f - 2 * DENGUI_DEFAULT_LABEL_PADDING;
+
+            dengUtils::TriangleGenerator::generateRelTriangle (
+                m_vert,
+                m_vert.data(),
+                rec_pos,
+                rec_size,
+                {1.0f, 1.0f},
+                m_info.show_more_tri_color,
+                false,
+                DENGUI_DROP_DOWN_LIST_LEVEL,
+                DENGUI_DROP_DOWN_LIST_TRIANGLE
+            );
+
+            m_indices.insert (
+                m_indices.end(),
+                {ind_offset, ind_offset + 1, ind_offset + 2}        
+            );
+        }
+
+        // Rasterize label for dropdown element 
+        dengMath::vec2<deng_vec_t> raster_size = size;
+        if(m_info.is_expandable)
+            raster_size.first -= dengMath::Conversion::findAbsSize (
+                size.first,
+                DENGUI_DROP_DOWN_LIST_TRIANGLE_SIZE
+            );
+
+        m_label = m_p_sr->renderAbsLabel (
+            DENGUI_DEFAULT_LABEL_PADDING,
+            {0.0f, y_offset}, 
+            {1.0f, 1.0f},
+            raster_size,
+            {0.0f, 0.0f},
+            color,
+            DENGUI_DROP_DOWN_LIST_LEVEL,
+            DENGUI_DEFAULT_FONT_FILE, 
+            m_info.label 
+        );
+    }
+
+    //DropDownElement::~DropDownElement() 
+    //{ m_p_sr->cleanBitmapString(m_label); }
+
+    
+    /* Get all window elements related to drop down window element */
+    std::vector<DDMElement> DropDownElement::getElems(dengMath::vec2<deng_ui32_t> deng_win_size) {
+        std::vector<DDMElement> out_elems(2);
+
+        // Main rectangle part
+        out_elems[0].child_id = "";
+        out_elems[0].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
+        out_elems[0].parent_id = std::string(cm_StrReplaceCh(m_parent_id, 0x20, '_'));
+        out_elems[0].unmapped_vert = m_vert;
+        out_elems[0].indices = m_indices;
+        out_elems[0].col_vert_bounds = {0, 4};
+        out_elems[0].onLMBClickFunc = m_info.lmb_callback;
+        out_elems[0].onMMBClickFunc = m_info.mmb_callback;
+        out_elems[0].onRMBClickFunc = m_info.rmb_callback;
+        out_elems[0].onHoverFunc = m_info.hover_callback;
+
+        // Label part
+        out_elems[1].child_id = std::string(cm_StrReplaceCh(m_label.text, 0x20, '_'));
+        out_elems[1].color_mode = ELEMENT_COLOR_MODE_TEXTURE_MAPPED;
+        out_elems[1].parent_id = std::string(cm_StrReplaceCh(m_parent_id, 0x20, '_'));
+        out_elems[1].mapped_vert.insert (
+            out_elems[1].mapped_vert.end(),
+            m_label.vert_pos.begin(),
+            m_label.vert_pos.end()
+        );
+        out_elems[1].indices.insert (
+            out_elems[1].indices.end(),
+            m_label.vert_indices.begin(),
+            m_label.vert_indices.end()
+        );
+        out_elems[1].texture = m_label.tex_data;
+        out_elems[1].col_vert_bounds = {0, 4};
+        out_elems[1].tex_box = m_label.box_size;
+        out_elems[1].onLMBClickFunc = m_info.lmb_callback;
+        out_elems[1].onMMBClickFunc = m_info.mmb_callback;
+        out_elems[1].onRMBClickFunc = m_info.rmb_callback;
+        out_elems[1].onHoverFunc = m_info.hover_callback;
+
+        return out_elems;
+    }
+
+    
+    /***************************************************/
+    /***************************************************/
+    /******* Cursor drop down menu class methods *******/
+    /***************************************************/
+    /***************************************************/
+    CursorDropDownMenu::CursorDropDownMenu (
+        DropDownMenuInfo &info,
+        dengMath::vec2<deng_ui32_t> win_size    
+    ) { 
+        m_info = info; 
+        m_win_size = win_size;
+    }
+
+    
+    /* Create empty menu window elements */
+    std::vector<DDMElement> CursorDropDownMenu::mkEmptyMenu() {
+        std::vector<DDMElement> out_elems(2);
+        std::vector<VERT_UNMAPPED_2D> vert;
+        std::vector<deng_ui32_t> indices;
+
+        // Menu body
+        dengUtils::RectangleGenerator::generateUnmappedAbsRec (
+            {0.0f, 0.0f},
+            m_info.size,
+            {-1.0f, -1.0f},
+            {
+                m_info.background_color.col_r,
+                m_info.background_color.col_g,
+                m_info.background_color.col_b,
+                m_info.background_color.col_a
+            },
+            DENGUI_DROP_DOWN_LIST_LEVEL,
+            vert
+        );
+
+        indices.insert (
+            indices.end(),
+            {0, 1, 2, 2, 3, 0}
+        );
+
+        dengUtils::BorderGenerator::generateBorders (
+            vert,
+            false,
+            0,
+            indices,
+            {
+                m_info.border_color.col_r,
+                m_info.border_color.col_g,
+                m_info.border_color.col_b,
+                m_info.border_color.col_a
+            },
+            m_win_size,
+            DENGUI_DROP_DOWN_LIST_LEVEL,
+            m_info.border
+        );
+
+        out_elems[0].child_id = std::string(m_info.id);
+        out_elems[0].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
+        out_elems[0].parent_id = "";
+        out_elems[0].unmapped_vert = vert;
+        out_elems[0].col_vert_bounds = {0, 4};
+        out_elems[0].indices = indices;
+        out_elems[0].onLMBClickFunc = NULL;
+        out_elems[0].onMMBClickFunc = NULL;
+        out_elems[0].onRMBClickFunc = NULL;
+
+        // Label rasterization
+        dengUtils::BitmapStr str = m_info.p_sr->renderAbsLabel (
+            DENGUI_DEFAULT_LABEL_PADDING,
+            {vert[0].vert_data.vert_x, vert[0].vert_data.vert_y},
+            {1.0f, 1.0f},
+            m_info.size,
+            {0.0f, 0.0f},
+            m_info.color,
+            DENGUI_DROP_DOWN_LIST_LEVEL,
+            DENGUI_DEFAULT_FONT_FILE,
+            "(none)"
+        );
+
+        out_elems[1].child_id = "(none)";
+        out_elems[1].color_mode = ELEMENT_COLOR_MODE_TEXTURE_MAPPED;
+        out_elems[1].parent_id = std::string(m_info.id);
+        out_elems[1].mapped_vert.insert (
+            out_elems[1].mapped_vert.end(),
+            str.vert_pos.begin(),
+            str.vert_pos.end()
+        );
+        out_elems[1].col_vert_bounds = {0, 4};
+        out_elems[1].indices.insert (
+            out_elems[1].indices.end(),
+            str.vert_indices.begin(),
+            str.vert_indices.end()
+        );
+        out_elems[1].texture = str.tex_data;
+        out_elems[1].tex_box = str.box_size;
+        out_elems[1].onLMBClickFunc = NULL;
+        out_elems[1].onMMBClickFunc = NULL;
+        out_elems[1].onRMBClickFunc = NULL;
+
+        return out_elems;
+    }
+
+
+    /* Attach elements to drop down menu */
+    void CursorDropDownMenu::attachMenuElement(DropDownElementInfo &elem_info) {
+        DropDownElement elem (
+            m_info.id, 
+            m_win_size,
+            elem_info,
+            m_info.size,
+            m_menu_elems.size() * m_info.size.second,
+            m_info.p_sr,
+            m_info.background_color,
+            m_info.border_color,
+            m_info.color,
+            m_info.border
+        );
+
+        m_menu_elems.push_back(elem);
+    }
+
+
+    /* Get drop down menu id */
+    std::string CursorDropDownMenu::getId() { return std::string(m_info.id); } 
+
+
+    /* Get all elements related to drop down menu */
+    std::vector<DDMElement> CursorDropDownMenu::getElems() {
+        std::vector<DDMElement> out_elems;
+        std::vector<DDMElement> tmp_elems;
+
+        for(size_t i = 0; i < m_menu_elems.size(); i++) {
+            tmp_elems = m_menu_elems[i].getElems(m_win_size);
+
+            out_elems.insert (
+                out_elems.end(),
+                tmp_elems.begin(),
+                tmp_elems.end()
+            );
+        }
+
+        if(!out_elems.size()) {
+            tmp_elems = mkEmptyMenu();
+            out_elems.insert (
+                out_elems.end(),
+                tmp_elems.begin(),
+                tmp_elems.end()
+            );
+        }
+
+        return out_elems;
     }
 }

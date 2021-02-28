@@ -1,12 +1,11 @@
 #ifndef GUI_BINDINGS_H
 #define GUI_BINDINGS_H
 
-#include "dengui_child.h"
 #ifdef __DENG_USE_GUI
     // Main editor window
     #define DENG_MAP_UI_MAIN_WINDOW_FLAGS       DENGUI_WINDOW_FLAG_NO_MOVE | \
-                                                DENGUI_WINDOW_FLAG_NO_RESIZE | \
-                                                DENGUI_WINDOW_FLAG_NO_CLOSE
+                                                DENGUI_WINDOW_FLAG_NO_RESIZE 
+
     #define DENG_MAP_UI_MAIN_WINDOW_TYPE        dengui::WINDOW_TYPE_STATIC_RIGHT
 
     // Asset windows
@@ -42,10 +41,7 @@ namespace dengui {
         ChildContainer *m_p_cont = NULL;
 
     private:
-        static void testCallback (
-            WindowElement* p_elem, 
-            Events *p_ev
-        );
+        std::vector<DropDownElementInfo> getDDMElemInfos();
         void genTestObjects();
     
     public:

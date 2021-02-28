@@ -49,12 +49,14 @@
 #include "camera.h"
 
 #include "../utils/shapes.h"
+#include "../utils/collision.h"
 #include "rend_helpers.h"
 #include "../utils/font.h"
-#include "../dengui/dengui.h"
 #include "../utils/grid_generator.h"
 
 // Editor UI classes
+#include "../dengui/dengui.h"
+#include "../dengui/ui_callbacks.h"
 #include "../dengui/map_editor_ui.h"
 #include "renderer.h"
 

@@ -59,11 +59,11 @@ namespace deng {
         std::array<PipelineData, DENG_PIPELINE_COUNT> m_pipelines;
         std::vector<VkDescriptorSet> m_unmapped_descriptor_sets;
         VkPipelineLayout m_unmapped_pl;
-        VkPipelineLayout m_texture_mapped_pl;
+        VkPipelineLayout m_tex_mapped_pl;
         VkDescriptorPool m_unmapped_desc_pool;
-        VkDescriptorPool m_texture_mapped_desc_pool;
+        VkDescriptorPool m_tex_mapped_desc_pool;
         VkDescriptorSetLayout m_unmapped_desc_set_layout;
-        VkDescriptorSetLayout m_texture_mapped_desc_set_layout;
+        VkDescriptorSetLayout m_tex_mapped_desc_set_layout;
     };
 
 
@@ -96,20 +96,20 @@ namespace deng {
         const char *m_p_validation_layer = "VK_LAYER_KHRONOS_validation";
 
     private:
-        void mkInstance(deng_bool_t &enable_validation_layers);
-        deng_bool_t checkValidationLayerSupport();
-        void findSupportedProperties();
-        void mkDebugMessenger();
-        void selectPhysicalDevice();
-        void mkLogicalDevice(deng_bool_t &enable_validation_layers);
-        void mkWindowSurface();
+        void __mkInstance(deng_bool_t &enable_validation_layers);
+        deng_bool_t __checkValidationLayerSupport();
+        void __findSupportedProperties();
+        void __mkDebugMessenger();
+        void __selectPhysicalDevice();
+        void __mkLogicalDevice(deng_bool_t &enable_validation_layers);
+        void __mkWindowSurface();
 
         // Debug messenger
-        VkResult mkDebugMessenger (
+        VkResult __mkDebugMessenger (
             const VkDebugUtilsMessengerCreateInfoEXT *p_messenger_createinfo
         );
 
-        static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback (
+        static VKAPI_ATTR VkBool32 VKAPI_CALL __debugCallback (
             VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, 
             VkDebugUtilsMessageTypeFlagsEXT message_type, 
             const VkDebugUtilsMessengerCallbackDataEXT *p_callback_data, 
@@ -146,14 +146,14 @@ namespace deng {
         VkSampleCountFlagBits m_msaa_sample_c;
     
     private:
-        void mkSwapChainSettings();
-        void mkSwapChain (
+        void __mkSwapChainSettings();
+        void __mkSwapChain (
             VkSurfaceKHR &surface, 
             deng_ui32_t g_queue_i, 
             deng_ui32_t p_queue_i
         );
-        void mkRenderPass();
-        void mkSCImageViews();
+        void __mkRenderPass();
+        void __mkSCImageViews();
     
     public:
         SwapChainCreator (
@@ -190,20 +190,25 @@ namespace deng {
     private:
         std::vector<deng_Asset> *m_p_assets = NULL;
         std::vector<TextureImageData> *m_p_textures = NULL;
-        deng_ui32_t m_texture_descriptor_size;
+        deng_ui32_t m_tex_cap = 0;
 
     private:
-        void mkDescriptorSetLayouts(VkDevice &device);
-        void mkPipelineLayouts(VkDevice &device);
-        void mkGraphicsPipelines (
+        void __mkDescriptorSetLayouts(VkDevice &device);
+        void __mkPipelineLayouts(VkDevice &device);
+        void __mkGraphicsPipelines (
             VkDevice &device, 
             VkExtent2D &ext, 
             VkRenderPass &renderpass,
             VkSampleCountFlagBits sample_c
         );
-        void mkDescriptorPools (
-            VkDevice &device, 
-            size_t sc_img_c
+        void __mkUnmappedDescPool (
+            const VkDevice &device, 
+            deng_ui32_t sc_img_c
+        );
+
+        void __mkTexMappedDescPool (
+            const VkDevice &device,
+            deng_ui32_t sc_img_c
         );
 
     public:
@@ -224,14 +229,24 @@ namespace deng {
         );
         
         void mkTexMappedDS (
-            VkDevice device, 
+            const VkDevice &device, 
             size_t sc_img_size, 
-            BufferData buffer_data
+            const dengMath::vec2<deng_ui32_t> &tex_bounds,
+            BufferData *p_bd
         );
 
-        void updateDescriptorPools (
-            VkDevice device,
-            size_t sc_img_c
+        void updateTexDescriptors (
+            const VkDevice &device,
+            size_t sc_img_c,
+            deng_bool_t new_ds,
+            dengMath::vec2<deng_ui32_t> *p_tex_bounds,
+            BufferData *p_bd
+        );
+
+        void syncTextures (
+            const VkDevice &device,
+            size_t sc_img_c,
+            BufferData *p_bd
         );
 
     public:
@@ -253,39 +268,39 @@ namespace deng {
         std::vector<TextureImageData> *m_p_textures;
 
     private:
-        void mkUniformBuffers (
+        void __mkUniformBuffers (
             VkDevice &device, 
             VkPhysicalDevice &gpu, 
             size_t sc_img_size
         );
 
-        void mkTextureSampler (
+        void __mkTextureSampler (
             VkDevice &device,
             VkSampler &sampler,
             deng_ui32_t mip_levels
         );
 
-        void mkFrameBuffers (
+        void __mkFrameBuffers (
             VkDevice &device, 
             VkRenderPass &renderpass, 
             VkExtent2D &ext, 
             std::vector<VkImageView> &sc_img_views
         );
 
-        void mkColorResources (
+        void __mkColorResources (
             VkDevice &device,
             VkPhysicalDevice &gpu,
             VkExtent2D &ext,
             VkFormat sc_color_format
         );
 
-        void mkDepthResources (
+        void __mkDepthResources (
             VkDevice &device, 
             VkPhysicalDevice &gpu, 
             VkExtent2D &ext
         );
 
-        void mkMipMaps (
+        void __mkMipMaps (
             VkDevice &device,
             VkCommandPool &cmd_pool,
             VkImage image,
@@ -306,6 +321,7 @@ namespace deng {
             VkFormat sc_color_format,
             deng_bool_t init_res
         );
+
         
         void setAssetsData (
             std::vector<deng_Asset> *p_assets, 
@@ -317,6 +333,7 @@ namespace deng {
             VkPhysicalDevice gpu, 
             VkCommandPool command_pool,
             deng_bool_t is_lf_supported, 
+            dengMath::vec2<deng_ui32_t> tex_bounds,
             VkQueue g_queue, 
             size_t sc_img_size
         );
@@ -328,14 +345,6 @@ namespace deng {
             VkQueue g_queue
         );
         
-        void reMkBuffers (
-            VkDevice device, 
-            VkPhysicalDevice gpu, 
-            VkCommandPool command_pool,
-            VkQueue g_queue,
-            std::vector<VkCommandBuffer> *p_com_bufs
-        );
-
         void updateUniformBufferData (
             VkDevice device, 
             const deng_ui32_t current_image, 
@@ -344,14 +353,16 @@ namespace deng {
             deng_CameraUniformFlagBits flag_bits
         );
 
-        void updateMainBuffer (
-            VkDevice device,            
-            VkBuffer *p_main_buf,
-            VkDeviceMemory *p_main_buf_mem
+        void remapAssetVerts (
+            VkDevice device,
+            VkPhysicalDevice gpu,
+            VkCommandPool cmd_pool,
+            VkQueue g_queue,
+            dengMath::vec2<deng_ui32_t> asset_bounds
         );
-        
+
     public:
-        BufferData getBD();
+        BufferData *getBD();
         std::vector<VkFramebuffer> getFB();
         VkImage getDepImg();
         VkDeviceMemory getDepImgMem();
@@ -373,12 +384,12 @@ namespace deng {
         QueueFamilyFinder m_qff;
 
         // Commandpools and commandbuffers
-        VkCommandPool *m_p_commandpool = NULL;
-        std::vector<VkCommandBuffer> *m_p_commandbuffers = NULL;
+        VkCommandPool m_cmd_pool;
+        std::vector<VkCommandBuffer> m_cmd_bufs;
 
     private:
-        void mkSynchronisation(VkDevice &device);
-        TextureImageData findTextureImageDataByID(char *id);
+        void __mkSynchronisation(VkDevice &device);
+        TextureImageData __findTextureImageDataByID(char *id);
 
     public:
         // Needed for synchronising frames
@@ -407,24 +418,25 @@ namespace deng {
 
         void mkCommandPool(VkDevice device);
 
-        void recordDrawCommands (
+        void allocateMainCmdBuffers (
             VkDevice device, 
             VkQueue g_queue, 
             VkRenderPass renderpass, 
             VkExtent2D ext,
             dengMath::vec4<deng_vec_t> background,
-            BufferData buffer_data
+            const BufferData &bd
         );
 
-        void updateCommandBuffers (
-            VkDevice device,
-            std::vector<VkCommandBuffer> *p_cmd_bufs,
-            VkCommandPool *p_cmd_pool
+        void recordMainCmdBuffers (
+            VkRenderPass renderpass,
+            VkExtent2D ext,
+            dengMath::vec4<deng_vec_t> background,
+            const BufferData &bd
         );
     
     public:
-        VkCommandPool *getComPool();
-        std::vector<VkCommandBuffer> *getComBufs();
+        VkCommandPool getComPool();
+        const std::vector<VkCommandBuffer> &getComBufs();
     };
 
     class Renderer {   
@@ -443,7 +455,7 @@ namespace deng {
         deng_bool_t m_enable_validation_layers;
         deng_bool_t m_count_fps;
         VkSampleCountFlagBits m_msaa_sample_count = VK_SAMPLE_COUNT_1_BIT;
-        dengMath::vec3<deng_vec_t> m_clear_color;
+        dengMath::vec4<deng_vec_t> m_background_color;
 
         // View distance settings
         const deng_vec_t m_near_plane = DENG_DEFAULT_NEAR_PLANE;
@@ -460,14 +472,19 @@ namespace deng {
         dengUtils::Timer m_timer;
         WindowWrap *m_p_ww = NULL;
 
-        // GUI objects
-        deng_bool_t m_cmd_update = false;
-        std::mutex m_update_mut;
         dengui::MapEditor *m_p_map_editor;
 
+        // GUI update flags
+        std::mutex m_update_mut;
+        deng_bool_t m_cmd_update = false;
+        deng_bool_t m_remap_assets = false;
+        dengMath::vec2<deng_ui32_t> m_remap_asset_bounds = {0, 0};
+        deng_bool_t m_update_main_buffer = false;
+
     private:
-        void cleanup();
-        void makeFrame();
+        void __cleanup();
+        void __cleanAssets();
+        void __makeFrame();
 
     public:
         Renderer (
@@ -500,6 +517,9 @@ namespace deng {
             deng_RendererUsageMode usage, 
             dengMath::vec4<deng_vec_t> background
         );
+
+        /* Prepare the renderer for incoming updates */
+
         void run();        
     };
 }

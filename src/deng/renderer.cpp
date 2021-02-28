@@ -1,3 +1,5 @@
+#include <string>
+#include <vulkan/vulkan_core.h>
 #define __DENG_API_CORE
 #include "../../headers/deng/api_core.h"
 
@@ -24,19 +26,19 @@ namespace deng {
         m_required_extension_names.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
         m_p_win = p_window_wrap;
 
-        mkInstance(enable_validation_layers);
-        mkWindowSurface();
+        __mkInstance(enable_validation_layers);
+        __mkWindowSurface();
         if(enable_validation_layers)
-            mkDebugMessenger();
+            __mkDebugMessenger();
         
-        selectPhysicalDevice();
-        findSupportedProperties();
-        mkLogicalDevice(enable_validation_layers);
+        __selectPhysicalDevice();
+        __findSupportedProperties();
+        __mkLogicalDevice(enable_validation_layers);
     }
 
 
     /* Create new vulkan instance */
-    void InstanceCreator::mkInstance(deng_bool_t &enable_validation_layers) {
+    void InstanceCreator::__mkInstance(deng_bool_t &enable_validation_layers) {
         // Set up Vulkan application info
         VkApplicationInfo appinfo{};
         appinfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -68,10 +70,10 @@ namespace deng {
         VkDebugUtilsMessengerCreateInfoEXT debug_createinfo{};
         
         // Check for validatation layer support
-        if(enable_validation_layers && !checkValidationLayerSupport())
+        if(enable_validation_layers && !__checkValidationLayerSupport())
             VK_INSTANCE_ERR("validation layers usage specified, but none are available!");
 
-        else if(enable_validation_layers && checkValidationLayerSupport()) {
+        else if(enable_validation_layers && __checkValidationLayerSupport()) {
             // Set up instance info to support validation layers
             instance_createinfo.enabledLayerCount = 1;
             instance_createinfo.ppEnabledLayerNames = &m_p_validation_layer;
@@ -81,7 +83,7 @@ namespace deng {
             debug_createinfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
             debug_createinfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
             debug_createinfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-            debug_createinfo.pfnUserCallback = InstanceCreator::debugCallback;
+            debug_createinfo.pfnUserCallback = InstanceCreator::__debugCallback;
         }
 
         else if(!enable_validation_layers) {
@@ -98,7 +100,7 @@ namespace deng {
 
 
     /* Check if Vulkan validation layers are available */
-    deng_bool_t InstanceCreator::checkValidationLayerSupport() {
+    deng_bool_t InstanceCreator::__checkValidationLayerSupport() {
         deng_ui32_t layer_count;
         vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
 
@@ -118,12 +120,12 @@ namespace deng {
 
 
     /* Make debug messenger for Vulkan validation layer */
-    void InstanceCreator::mkDebugMessenger() {
+    void InstanceCreator::__mkDebugMessenger() {
         VkDebugUtilsMessengerCreateInfoEXT messenger_createinfo{};
         messenger_createinfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
         messenger_createinfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
         messenger_createinfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-        messenger_createinfo.pfnUserCallback = InstanceCreator::debugCallback;
+        messenger_createinfo.pfnUserCallback = InstanceCreator::__debugCallback;
         
         auto debugUtilsMessengerCreator_fun = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(m_instance, "vkCreateDebugUtilsMessengerEXT");
 
@@ -140,7 +142,7 @@ namespace deng {
 
 
     /* Callback method for Vulkan validation layer debugging */
-    VKAPI_ATTR VkBool32 VKAPI_CALL InstanceCreator::debugCallback (
+    VKAPI_ATTR VkBool32 VKAPI_CALL InstanceCreator::__debugCallback (
         VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, 
         VkDebugUtilsMessageTypeFlagsEXT message_type, 
         const VkDebugUtilsMessengerCallbackDataEXT *p_callback_data, 
@@ -152,7 +154,7 @@ namespace deng {
 
     
     /* Select appropriate graphics device */
-    void InstanceCreator::selectPhysicalDevice() {
+    void InstanceCreator::__selectPhysicalDevice() {
         deng_ui32_t device_count;
         deng_ui32_t score;
         vkEnumeratePhysicalDevices (
@@ -178,7 +180,7 @@ namespace deng {
         // Iterate through every potential gpu device
         for(deng_ui32_t i = 0; i < device_count; i++) {
             score = HardwareSpecs::getDeviceScore (
-                &devices[i], 
+                devices[i], 
                 m_required_extension_names
             );
             SwapChainDetails swapchain_details (
@@ -201,16 +203,19 @@ namespace deng {
 
     
     /* Create logical Vulkan device */ 
-    void InstanceCreator::mkLogicalDevice(deng_bool_t &enable_validation_layers) {
+    void InstanceCreator::__mkLogicalDevice(deng_bool_t &enable_validation_layers) {
         if (
             !m_qff.findGraphicsFamily(m_gpu) || 
             !m_qff.findPresentSupportFamily(m_gpu, m_surface)
         ) VK_INSTANCE_ERR("queue supporting GPU not found!");
 
         std::array<VkDeviceQueueCreateInfo, 2> queue_createinfos;
-        std::array<deng_ui32_t, 2> queue_families_indexes = {m_qff.getGraphicsQFIndex(), m_qff.getPresentQFIndex()};
+        std::array<deng_ui32_t, 2> queue_families_indexes = {
+            m_qff.getGraphicsQFIndex(), 
+            m_qff.getPresentQFIndex()
+        };
 
-        float queue_priority = 1.0f;
+        deng_vec_t queue_priority = 1.0f;
 
         // Create device queue creatinfos for present and graphics queues
         for(deng_ui32_t i = 0; i < 2; i++) {
@@ -261,14 +266,14 @@ namespace deng {
 
     
     /* Create window surface with deng surface library */
-    void InstanceCreator::mkWindowSurface() {
+    void InstanceCreator::__mkWindowSurface() {
         if(deng_InitVKSurface(m_p_win->getWindow(), &m_instance, &m_surface) != VK_SUCCESS)
             VK_INSTANCE_ERR("failed to create window surface!");
     }
 
 
     /* Find the maximum supported sample count for anti-aliasing (MSAA) */
-    void InstanceCreator::findSupportedProperties() {
+    void InstanceCreator::__findSupportedProperties() {
         VkPhysicalDeviceProperties props;
         vkGetPhysicalDeviceProperties(m_gpu, &props);
 
@@ -381,19 +386,19 @@ namespace deng {
         
         m_p_sc_details = new SwapChainDetails(gpu, surface);
 
-        mkSwapChainSettings();
-        mkSwapChain (
+        __mkSwapChainSettings();
+        __mkSwapChain (
             surface, 
             m_qff.getGraphicsQFIndex(), 
             m_qff.getPresentQFIndex()
         );
-        mkSCImageViews();
-        mkRenderPass();
+        __mkSCImageViews();
+        __mkRenderPass();
     }
 
 
     /* Initialise swapchain settings in order to create swapchain */
-    void SwapChainCreator::mkSwapChainSettings() {
+    void SwapChainCreator::__mkSwapChainSettings() {
         deng_bool_t found_suitable_format = false;
         for(const VkSurfaceFormatKHR &surface_format : m_p_sc_details->getFormats()) {
             if 
@@ -470,7 +475,7 @@ namespace deng {
 
 
     /* Create swapchain */
-    void SwapChainCreator::mkSwapChain (
+    void SwapChainCreator::__mkSwapChain (
         VkSurfaceKHR &surface, 
         deng_ui32_t g_queue_i, 
         deng_ui32_t p_queue_i
@@ -534,7 +539,7 @@ namespace deng {
 
 
     /* Create render pass */
-    void SwapChainCreator::mkRenderPass() {
+    void SwapChainCreator::__mkRenderPass() {
         VkAttachmentDescription color_attachment{};
         color_attachment.format = m_surface_format.format;
         color_attachment.samples = m_msaa_sample_c;
@@ -608,12 +613,12 @@ namespace deng {
 
 
     /* Create swapchain image views */
-    void SwapChainCreator::mkSCImageViews() {
+    void SwapChainCreator::__mkSCImageViews() {
         m_swapchain_image_views.resize(m_swapchain_images.size());
 
         for(deng_ui32_t i = 0; i < m_swapchain_image_views.size(); i++) {
             VkImageViewCreateInfo createInfo = 
-            BufferCreator::getImageViewInfo (
+            ImageCreator::getImageViewInfo (
                 m_swapchain_images[i], 
                 m_surface_format.format, 
                 VK_IMAGE_ASPECT_COLOR_BIT,
@@ -636,14 +641,14 @@ namespace deng {
         vkDeviceWaitIdle(m_device);
 
         SCCleanup();
-        mkSwapChainSettings();
-        mkSwapChain (
+        __mkSwapChainSettings();
+        __mkSwapChain (
             surface, 
             m_qff.getGraphicsQFIndex(),
             m_qff.getPresentQFIndex() 
         );
-        mkRenderPass();
-        mkSCImageViews();
+        __mkRenderPass();
+        __mkSCImageViews();
     }
 
 
@@ -697,23 +702,29 @@ namespace deng {
     ) {
         m_p_assets = p_assets;
         m_p_textures = p_textures;
-        mkDescriptorSetLayouts(device);   
-        mkPipelineLayouts(device);
-        mkGraphicsPipelines (
+        __mkDescriptorSetLayouts(device);   
+        __mkPipelineLayouts(device);
+        __mkGraphicsPipelines (
             device, 
             extent, 
             renderpass, 
             sample_c
         );
-        mkDescriptorPools (
+
+        __mkUnmappedDescPool (
             device, 
-            sc_img_size
+            (deng_ui32_t) sc_img_size
+        );
+
+        __mkTexMappedDescPool (
+            device, 
+            (deng_ui32_t) sc_img_size
         );
     }
 
 
     /* Create descriptor set layouts */
-    void DescriptorCreator::mkDescriptorSetLayouts(VkDevice &device) {
+    void DescriptorCreator::__mkDescriptorSetLayouts(VkDevice &device) {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
         VkDescriptorSetLayoutCreateInfo layout_createinfo{};
 
@@ -770,14 +781,14 @@ namespace deng {
                 device, 
                 &texture_mapped_layout_createinfo, 
                 nullptr, 
-                &m_texture_mapped_desc_set_layout
+                &m_tex_mapped_desc_set_layout
             ) != VK_SUCCESS
         ) VK_DESC_ERR("failed to create descriptor set layout for texture mapped assets!");
     }
 
 
     /* Create pipeline layouts */
-    void DescriptorCreator::mkPipelineLayouts(VkDevice &device) {
+    void DescriptorCreator::__mkPipelineLayouts(VkDevice &device) {
         // Set up pipeline layout info struct
         VkPipelineLayoutCreateInfo pipeline_layout_createinfo{};
         pipeline_layout_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -797,21 +808,21 @@ namespace deng {
         ) VK_DESC_ERR("failed to create pipeline layout for unmapped objects!");
 
         // Create pipeline layout for texture mapped assets
-        pipeline_layout_createinfo.pSetLayouts = &m_texture_mapped_desc_set_layout;
+        pipeline_layout_createinfo.pSetLayouts = &m_tex_mapped_desc_set_layout;
         if
         (
             vkCreatePipelineLayout (
                 device, 
                 &pipeline_layout_createinfo, 
                 nullptr, 
-                &m_texture_mapped_pl
+                &m_tex_mapped_pl
             ) != VK_SUCCESS
         ) VK_DESC_ERR("failed to create pipeline layout for textured objects!");
     }
 
 
     /* Create graphics pipelines for different assets */
-    void DescriptorCreator::mkGraphicsPipelines (
+    void DescriptorCreator::__mkGraphicsPipelines (
         VkDevice &device, 
         VkExtent2D &extent, 
         VkRenderPass &renderpass,
@@ -829,10 +840,10 @@ namespace deng {
 
         m_pipelines[UM3D_UNOR_I].p_pipeline_layout = &m_unmapped_pl;
         m_pipelines[UM3D_NOR_I].p_pipeline_layout = &m_unmapped_pl;
-        m_pipelines[TM3D_UNOR_I].p_pipeline_layout = &m_texture_mapped_pl;
-        m_pipelines[TM3D_NOR_I].p_pipeline_layout = &m_texture_mapped_pl;
+        m_pipelines[TM3D_UNOR_I].p_pipeline_layout = &m_tex_mapped_pl;
+        m_pipelines[TM3D_NOR_I].p_pipeline_layout = &m_tex_mapped_pl;
         m_pipelines[UM2D_I].p_pipeline_layout = &m_unmapped_pl;
-        m_pipelines[TM2D_I].p_pipeline_layout = &m_texture_mapped_pl;
+        m_pipelines[TM2D_I].p_pipeline_layout = &m_tex_mapped_pl;
 
         PipelineCreator unmapped_pipeline_3d (
             &m_pipelines[UM3D_UNOR_I],
@@ -961,6 +972,8 @@ namespace deng {
             0
         );
 
+        LOG("Test");
+
         std::array<VkPipeline, DENG_PIPELINE_COUNT> pipelines;
         if
         (
@@ -978,76 +991,116 @@ namespace deng {
             for(index = 0; index < pipelines.size(); index++)
                 m_pipelines[index].pipeline = pipelines[index];
         }
+        LOG("Test");
     }
 
 
-    /* Create descriptor pool */
-    void DescriptorCreator::mkDescriptorPools (
-        VkDevice &device, 
-        size_t sc_img_size
+    /* Create descriptor pool for descriptor sets without texture sampling */
+    void DescriptorCreator::__mkUnmappedDescPool (
+        const VkDevice &device,
+        deng_ui32_t sc_img_c
     ) {
-        // Create and set up descriptor pool size struct for uniform buffers
-        std::vector<VkDescriptorPoolSize> descriptor_pool_sizes{};
+        VkDescriptorPoolSize desc_pool_size;
         VkDescriptorPoolCreateInfo desc_pool_createinfo{};
 
-        descriptor_pool_sizes.resize(1);
-        descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptor_pool_sizes[0].descriptorCount = (deng_ui32_t) sc_img_size;
-        desc_pool_createinfo.maxSets = (deng_ui32_t) sc_img_size;
+        desc_pool_size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        desc_pool_size.descriptorCount = sc_img_c;
 
         // Set up descriptor pool createinfo 
         desc_pool_createinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        desc_pool_createinfo.poolSizeCount = (deng_ui32_t) descriptor_pool_sizes.size();
-        desc_pool_createinfo.pPoolSizes = descriptor_pool_sizes.data();
+        desc_pool_createinfo.poolSizeCount = 1;
+        desc_pool_createinfo.pPoolSizes = &desc_pool_size;
+        desc_pool_createinfo.maxSets = sc_img_c;
 
         // Create descriptor pool for unmapped assets 
         if(vkCreateDescriptorPool(device, &desc_pool_createinfo, nullptr, &m_unmapped_desc_pool) != VK_SUCCESS)
             VK_DESC_ERR("failed to create descriptor pool for unmapped assets");
+    }
 
-        // Set up descriptor pool size struct for uniform buffers and combined image sampler
-        descriptor_pool_sizes.resize(2);
-        descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptor_pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+
+    
+    /* Create descriptor pool for descriptor sets without texture sampling */
+    void DescriptorCreator::__mkTexMappedDescPool (
+        const VkDevice &device,
+        deng_ui32_t sc_img_c
+    ) {
+        std::array<VkDescriptorPoolSize, 2> desc_pool_sizes;
+        VkDescriptorPoolCreateInfo desc_pool_createinfo{};
+        m_tex_cap += 2 * m_p_textures->size();
+
+        desc_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        desc_pool_sizes[0].descriptorCount = m_tex_cap * sc_img_c;
+        desc_pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        desc_pool_sizes[1].descriptorCount = m_tex_cap * sc_img_c;
+
+        desc_pool_createinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        desc_pool_createinfo.poolSizeCount = (deng_ui32_t) desc_pool_sizes.size();
+        desc_pool_createinfo.pPoolSizes = desc_pool_sizes.data();
+        desc_pool_createinfo.maxSets = m_tex_cap * sc_img_c;
+        desc_pool_createinfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
         
-        if(m_p_textures->size())
-            m_texture_descriptor_size = (deng_ui32_t) m_p_textures->size() * sc_img_size; 
-        
-        else 
-            m_texture_descriptor_size = 1;
-
-        descriptor_pool_sizes[0].descriptorCount = m_texture_descriptor_size;
-        descriptor_pool_sizes[1].descriptorCount = m_texture_descriptor_size;
-        desc_pool_createinfo.maxSets = m_texture_descriptor_size;
-
-        // Modify descriptor pool createinfo
-        desc_pool_createinfo.poolSizeCount = (deng_ui32_t) descriptor_pool_sizes.size();
-        desc_pool_createinfo.pPoolSizes = descriptor_pool_sizes.data();
-
-        // Create descriptor pool for texture mapped assets
-        if(vkCreateDescriptorPool(device, &desc_pool_createinfo, nullptr, &m_texture_mapped_desc_pool) != VK_SUCCESS)
+        if(vkCreateDescriptorPool(device, &desc_pool_createinfo, NULL, &m_tex_mapped_desc_pool) != VK_SUCCESS)
             VK_DESC_ERR("failed to create descriptor pool for texture mapped assets");
     }
 
 
-    void DescriptorCreator::updateDescriptorPools (
-        VkDevice device,
-        size_t sc_img_c
+    void DescriptorCreator::updateTexDescriptors (
+        const VkDevice &device,
+        size_t sc_img_c,
+        deng_bool_t new_ds,
+        dengMath::vec2<deng_ui32_t> *p_tex_bounds,
+        BufferData *p_bd
     ) {
-        vkDestroyDescriptorPool (
-            device, 
-            m_unmapped_desc_pool, 
-            nullptr
-        );
-        
-        vkDestroyDescriptorPool (
-            device, 
-            m_texture_mapped_desc_pool, 
-            nullptr
+
+        LOG("TEX_CAP: " + std::to_string(m_tex_cap));
+        if(m_tex_cap <= m_p_textures->size()) {
+            vkDestroyDescriptorPool (
+                device, 
+                m_tex_mapped_desc_pool, 
+                nullptr
+            );
+
+            __mkTexMappedDescPool (
+                device,
+                sc_img_c
+            );
+
+            mkTexMappedDS (
+                device,
+                sc_img_c,
+                {0, (deng_ui32_t) m_p_textures->size()},
+                p_bd
+            );
+        }
+
+        if(new_ds && p_tex_bounds->second - p_tex_bounds->first) {
+            mkTexMappedDS (
+                device,
+                sc_img_c,
+                *p_tex_bounds,
+                p_bd
+            );
+        }
+    }
+
+
+    /* Syncronise descriptor pool with textures count */
+    void DescriptorCreator::syncTextures (
+        const VkDevice &device, 
+        size_t sc_img_c, 
+        BufferData *p_bd
+    ) {
+        vkResetDescriptorPool (
+            device,
+            m_tex_mapped_desc_pool,
+            0
         );
 
-        mkDescriptorPools (
+        mkTexMappedDS (
             device,
-            sc_img_c
+            sc_img_c,
+            {0, (deng_ui32_t) m_p_textures->size()},
+            p_bd
         );
     }
 
@@ -1111,9 +1164,10 @@ namespace deng {
 
     /* Create texture mapped descriptor sets */
     void DescriptorCreator::mkTexMappedDS (
-        VkDevice device, 
+        const VkDevice &device, 
         size_t sc_img_size, 
-        BufferData buffer_data
+        const dengMath::vec2<deng_ui32_t> &tex_bounds,
+        BufferData *p_bd
     ) {
         size_t l_index, r_index;
         // Set up multiple info structures
@@ -1127,14 +1181,14 @@ namespace deng {
         allocinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 
         for(l_index = 0; l_index < tmp_descriptor_set_layouts.size(); l_index++)
-            tmp_descriptor_set_layouts[l_index] = m_texture_mapped_desc_set_layout;
+            tmp_descriptor_set_layouts[l_index] = m_tex_mapped_desc_set_layout;
 
-        allocinfo.descriptorPool = m_texture_mapped_desc_pool;
+        allocinfo.descriptorPool = m_tex_mapped_desc_pool;
         allocinfo.descriptorSetCount = tmp_descriptor_set_layouts.size();   
         allocinfo.pSetLayouts = tmp_descriptor_set_layouts.data();
         
         // Iterate through every texture and create descritor sets for them
-        for(l_index = 0; l_index < m_p_textures->size(); l_index++) {
+        for(l_index = tex_bounds.first; l_index < tex_bounds.second; l_index++) {
             (*m_p_textures)[l_index].descriptor_sets.resize(sc_img_size);
 
             // Allocate descriptor sets
@@ -1144,7 +1198,7 @@ namespace deng {
             // Iterate through every descriptor set and update it
             for(r_index = 0; r_index < sc_img_size; r_index++) {
                 // Set up descriptor buffer info 
-                bufferinfo.buffer = buffer_data.mat_uniform_buffers[r_index];
+                bufferinfo.buffer = p_bd->mat_uniform_buffers[r_index];
                 bufferinfo.offset = 0;
                 bufferinfo.range = sizeof(dengMath::UniformData);
 
@@ -1187,12 +1241,12 @@ namespace deng {
     /* DescriptorCreator getters */
     std::array<PipelineData, DENG_PIPELINE_COUNT> DescriptorCreator::getPipelines() { return m_pipelines; }
     VkPipelineLayout DescriptorCreator::getUnmappedPL() { return m_unmapped_pl; }
-    VkPipelineLayout DescriptorCreator::getTexMappedPL() { return m_texture_mapped_pl; }
+    VkPipelineLayout DescriptorCreator::getTexMappedPL() { return m_tex_mapped_pl; }
     std::vector<VkDescriptorSet> *DescriptorCreator::getUnmappedDS() { return &m_unmapped_descriptor_sets; }
     VkDescriptorSetLayout DescriptorCreator::getUnmappedDSL() { return m_unmapped_desc_set_layout; }
-    VkDescriptorSetLayout DescriptorCreator::getTexMappedDSL() { return m_texture_mapped_desc_set_layout; }
+    VkDescriptorSetLayout DescriptorCreator::getTexMappedDSL() { return m_tex_mapped_desc_set_layout; }
     VkDescriptorPool DescriptorCreator::getUnmappedDP() { return m_unmapped_desc_pool; }
-    VkDescriptorPool DescriptorCreator::getTexMappedDP() { return m_texture_mapped_desc_pool; }
+    VkDescriptorPool DescriptorCreator::getTexMappedDP() { return m_tex_mapped_desc_pool; }
 
 
     /*********************************************************/
@@ -1213,26 +1267,26 @@ namespace deng {
     ) {
         m_sample_count = sample_c;
         if(init_res) {
-            mkUniformBuffers (
+            __mkUniformBuffers (
                 device, 
                 gpu, 
                 sc_img_views.size()
             );
             
-            mkColorResources (
+            __mkColorResources (
                 device, 
                 gpu, 
                 extent, 
                 sc_color_format
             );
             
-            mkDepthResources (
+            __mkDepthResources (
                 device, 
                 gpu, 
                 extent
             );
 
-            mkFrameBuffers (
+            __mkFrameBuffers (
                 device, 
                 renderpass, 
                 extent, 
@@ -1243,7 +1297,7 @@ namespace deng {
 
 
     /* Create uniform buffers, but not populate them */
-    void ResourceAllocator::mkUniformBuffers (
+    void ResourceAllocator::__mkUniformBuffers (
         VkDevice &device, 
         VkPhysicalDevice &gpu, 
         size_t sc_img_size
@@ -1264,13 +1318,13 @@ namespace deng {
                 gpu, 
                 data_size, 
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
-                &m_buffer_data.mat_uniform_buffers[index]
+                m_buffer_data.mat_uniform_buffers[index]
             );
             BufferCreator::allocateMemory (
                 device, 
                 gpu, 
                 memory_requirements.size, 
-                &m_buffer_data.mat_uniform_buffer_mem[index], 
+                m_buffer_data.mat_uniform_buffer_mem[index], 
                 memory_requirements.memoryTypeBits, 
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
                 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
@@ -1287,7 +1341,7 @@ namespace deng {
 
 
     /* Create texture sampler */
-    void ResourceAllocator::mkTextureSampler (
+    void ResourceAllocator::__mkTextureSampler (
         VkDevice &device,
         VkSampler &sampler,
         deng_ui32_t mip_levels
@@ -1308,7 +1362,7 @@ namespace deng {
         sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
         sampler_info.mipLodBias = 0.0f;
         sampler_info.minLod = 0.0f;
-        sampler_info.maxLod = static_cast<float>(mip_levels);
+        sampler_info.maxLod = static_cast<deng_vec_t>(mip_levels);
 
         // Create texture sampler 
         if(vkCreateSampler(device, &sampler_info, nullptr, &sampler) != VK_SUCCESS)
@@ -1317,7 +1371,7 @@ namespace deng {
     
 
     /* Create framebuffers */
-    void ResourceAllocator::mkFrameBuffers (
+    void ResourceAllocator::__mkFrameBuffers (
         VkDevice &device, 
         VkRenderPass &renderpass, 
         VkExtent2D &extent, 
@@ -1348,13 +1402,13 @@ namespace deng {
 
 
     /* Create color resources for multisampling */
-    void ResourceAllocator::mkColorResources (
+    void ResourceAllocator::__mkColorResources (
         VkDevice &device,
         VkPhysicalDevice &gpu,
         VkExtent2D &extent,
         VkFormat sc_color_format
     ) {
-        VkMemoryRequirements mem_req = BufferCreator::makeImage (
+        VkMemoryRequirements mem_req = ImageCreator::makeImage (
             device,
             gpu,
             m_color_image,
@@ -1372,7 +1426,7 @@ namespace deng {
             device,
             gpu,
             mem_req.size,
-            &m_color_image_mem,
+            m_color_image_mem,
             mem_req.memoryTypeBits,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
         );
@@ -1384,7 +1438,7 @@ namespace deng {
             0
         );
 
-        VkImageViewCreateInfo image_view_createinfo = BufferCreator::getImageViewInfo (
+        VkImageViewCreateInfo image_view_createinfo = ImageCreator::getImageViewInfo (
             m_color_image,
             sc_color_format,
             VK_IMAGE_ASPECT_COLOR_BIT,
@@ -1397,12 +1451,12 @@ namespace deng {
 
 
     /* Create depth resources for depth buffering */
-    void ResourceAllocator::mkDepthResources (
+    void ResourceAllocator::__mkDepthResources (
         VkDevice &device, 
         VkPhysicalDevice &gpu, 
         VkExtent2D &extent
     ) {
-        VkMemoryRequirements memory_requirements = BufferCreator::makeImage (
+        VkMemoryRequirements memory_requirements = ImageCreator::makeImage (
             device, 
             gpu, 
             m_depth_image, 
@@ -1419,7 +1473,7 @@ namespace deng {
             device, 
             gpu, 
             memory_requirements.size,
-            &m_depth_image_mem,  
+            m_depth_image_mem,  
             memory_requirements.memoryTypeBits, 
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
         );
@@ -1431,7 +1485,7 @@ namespace deng {
             0
         );
 
-        VkImageViewCreateInfo image_view_createinfo = BufferCreator::getImageViewInfo (
+        VkImageViewCreateInfo image_view_createinfo = ImageCreator::getImageViewInfo (
             m_depth_image, 
             VK_FORMAT_D32_SFLOAT, 
             VK_IMAGE_ASPECT_DEPTH_BIT,
@@ -1453,7 +1507,7 @@ namespace deng {
     } 
 
 
-    void ResourceAllocator::mkMipMaps (
+    void ResourceAllocator::__mkMipMaps (
         VkDevice &device,
         VkCommandPool &cmd_pool,
         VkImage image,
@@ -1587,6 +1641,7 @@ namespace deng {
         VkPhysicalDevice gpu, 
         VkCommandPool command_pool,
         deng_bool_t is_lf, 
+        dengMath::vec2<deng_ui32_t> tex_bounds,
         VkQueue g_queue, 
         size_t sc_img_size
     ) {
@@ -1595,7 +1650,8 @@ namespace deng {
         deng_ui32_t mip_levels = 0;
 
         // Iterate through assets an check if it is texture mapped
-        for(index = 0; index < m_p_textures->size(); index++) {
+        for(index = tex_bounds.first; index < tex_bounds.second; index++) {
+            LOG("TEX_ID, INDEX: " + std::string(m_p_textures->at(index).texture.id) + ", " + std::to_string(index));
             (*m_p_textures)[index].descriptor_sets.resize(sc_img_size);
             // Check if mipmapping is supported
             if(is_lf) {
@@ -1617,14 +1673,14 @@ namespace deng {
                 gpu, 
                 (*m_p_textures)[index].texture.pixel_data.size, 
                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-                &m_buffer_data.staging_buffer
+                m_buffer_data.staging_buffer
             );
 
             BufferCreator::allocateMemory (
                 device, 
                 gpu, 
                 memory_requirements.size,
-                &m_buffer_data.staging_buffer_memory,  
+                m_buffer_data.staging_buffer_memory,  
                 memory_requirements.memoryTypeBits, 
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
                 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
@@ -1635,7 +1691,7 @@ namespace deng {
                 m_buffer_data.staging_buffer_memory, 
                 0
             );
-            BufferCreator::populateBufferMem (
+            BufferCreator::cpyToBufferMem (
                 device, 
                 memory_requirements.size, 
                 (*m_p_textures)[index].texture.pixel_data.p_pixel_data, 
@@ -1644,7 +1700,7 @@ namespace deng {
             );
 
             // Create new image and populate the memory for it
-            memory_requirements = BufferCreator::makeImage (
+            memory_requirements = ImageCreator::makeImage (
                 device, 
                 gpu, 
                 (*m_p_textures)[index].image, 
@@ -1663,7 +1719,7 @@ namespace deng {
                 device, 
                 gpu, 
                 memory_requirements.size,
-                &(*m_p_textures)[index].image_mem,  
+                (*m_p_textures)[index].image_mem,  
                 memory_requirements.memoryTypeBits, 
                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
             );
@@ -1675,7 +1731,7 @@ namespace deng {
             );
 
             // Copy data from staging buffer to texture image
-            BufferCreator::transitionImageLayout (
+            ImageCreator::transitionImageLayout (
                 device, 
                 (*m_p_textures)[index].image, 
                 command_pool, 
@@ -1685,7 +1741,8 @@ namespace deng {
                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                 mip_levels
             );
-            BufferCreator::copyBufferToImage (
+
+            ImageCreator::copyBufferToImage (
                 device, 
                 command_pool, 
                 g_queue, 
@@ -1697,7 +1754,7 @@ namespace deng {
 
             // Additional mipmap enable / disable flags should be implemented
             if(is_lf) {
-                mkMipMaps (
+                __mkMipMaps (
                     device,
                     command_pool,
                     (*m_p_textures)[index].image,
@@ -1709,7 +1766,7 @@ namespace deng {
             }
 
             else {
-                BufferCreator::transitionImageLayout (
+                ImageCreator::transitionImageLayout (
                     device,
                     (*m_p_textures)[index].image,
                     command_pool,
@@ -1733,7 +1790,7 @@ namespace deng {
                 nullptr
             );
                 
-            VkImageViewCreateInfo viewinfo = BufferCreator::getImageViewInfo (
+            VkImageViewCreateInfo viewinfo = ImageCreator::getImageViewInfo (
                 (*m_p_textures)[index].image, 
                 VK_FORMAT_B8G8R8A8_SRGB, 
                 VK_IMAGE_ASPECT_COLOR_BIT,
@@ -1751,7 +1808,7 @@ namespace deng {
             ) VK_RES_ERR("Failed to create texture image view!");
 
             // Create texture sampler for every texture
-            mkTextureSampler (
+            __mkTextureSampler (
                 device, 
                 (*m_p_textures)[index].sampler,
                 mip_levels
@@ -1771,48 +1828,51 @@ namespace deng {
         VkDeviceSize total_size = 0, data_size = 0;
         VkMemoryRequirements memory_requirements;
 
-        m_buffer_data.p_main_buffer = new VkBuffer;
-        m_buffer_data.p_main_buffer_memory = new VkDeviceMemory;
-
         // Count total amount of bytes needed to allocate for assets 
         for(l_index = 0; l_index < m_p_assets->size(); l_index++) {
-            LOG("ASSET: " + std::string((*m_p_assets)[l_index].id));
-            if((*m_p_assets)[l_index].is_shown) {
-                (*m_p_assets)[l_index].vertices.memory_offset = total_size;
-                switch ((*m_p_assets)[l_index].asset_mode)
-                {
-                case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
-                    total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_UNOR);
-                    break;
-    
-                case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
-                    total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_NOR);
-                    break;
+            (*m_p_assets)[l_index].vertices.memory_offset = total_size;
+            //LOG (
+                //"ASSET, OFFSET: " + 
+                //std::string((*m_p_assets)[l_index].id) + 
+                //", " + 
+                //std::to_string((*m_p_assets)[l_index].is_shown) +
+                //"; " +
+                //std::to_string((*m_p_assets)[l_index].vertices.memory_offset)
+            //);
 
-                case DENG_ASSET_MODE_3D_UNMAPPED:
-                    total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED_UNOR);
-                    break;
-                
-                case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
-                    total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED_NOR);
-                    break;
+            switch ((*m_p_assets)[l_index].asset_mode)
+            {
+            case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
+                total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_UNOR);
+                break;
 
-                case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
-                    total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_2D);
-                    break;
+            case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
+                total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_NOR);
+                break;
 
-                case DENG_ASSET_MODE_2D_UNMAPPED:
-                    total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED_2D);
-                    break;
-                
-                default:
-                    break;
-                }
+            case DENG_ASSET_MODE_3D_UNMAPPED:
+                total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED_UNOR);
+                break;
+            
+            case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+                total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED_NOR);
+                break;
 
-                // Add indices to the buffer byte count
-                (*m_p_assets)[l_index].indices.memory_offset = total_size;
-                total_size += (*m_p_assets)[l_index].indices.size * sizeof(deng_ui32_t);
+            case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
+                total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_2D);
+                break;
+
+            case DENG_ASSET_MODE_2D_UNMAPPED:
+                total_size += (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED_2D);
+                break;
+            
+            default:
+                break;
             }
+
+            // Add indices to the buffer byte count
+            (*m_p_assets)[l_index].indices.memory_offset = total_size;
+            total_size += (*m_p_assets)[l_index].indices.size * sizeof(deng_ui32_t);
         }
 
         LOG("Main buffer size is: " + std::to_string(total_size));
@@ -1823,14 +1883,14 @@ namespace deng {
             gpu, 
             total_size, 
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-            &m_buffer_data.staging_buffer
+            m_buffer_data.staging_buffer
         );
 
         BufferCreator::allocateMemory (
             device, 
             gpu, 
             memory_requirements.size,
-            &m_buffer_data.staging_buffer_memory,  
+            m_buffer_data.staging_buffer_memory,  
             memory_requirements.memoryTypeBits, 
             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | 
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
@@ -1846,94 +1906,92 @@ namespace deng {
         // Assign correct offsets for buffers and populate buffer memory
         for(l_index = 0, total_size = 0; l_index < m_p_assets->size(); l_index++) {
             // Populate staging buffer memory with vertices data
-            if((*m_p_assets)[l_index].is_shown) {
-                switch ((*m_p_assets)[l_index].asset_mode)
-                {
-                case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
-                    data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_UNOR);
-                    BufferCreator::populateBufferMem (
-                        device, 
-                        data_size, 
-                        (*m_p_assets)[l_index].vertices.p_tex_mapped_unnormalized_vert, 
-                        m_buffer_data.staging_buffer_memory, 
-                        total_size
-                    );
-                    break;
-
-                case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
-                    data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_NOR);
-                    BufferCreator::populateBufferMem (
-                        device, 
-                        data_size, 
-                        (*m_p_assets)[l_index].vertices.p_tex_mapped_normalized_vert, 
-                        m_buffer_data.staging_buffer_memory, 
-                        total_size
-                    );
-                    break;
-
-                case DENG_ASSET_MODE_3D_UNMAPPED:
-                    data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED_UNOR);
-                    BufferCreator::populateBufferMem (
-                        device, 
-                        data_size, 
-                        (*m_p_assets)[l_index].vertices.p_unmapped_unnormalized_vert, 
-                        m_buffer_data.staging_buffer_memory, 
-                        total_size
-                    );
-                    break;
-
-                case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
-                    data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED_NOR);
-                    BufferCreator::populateBufferMem (
-                        device, 
-                        data_size, 
-                        (*m_p_assets)[l_index].vertices.p_unmapped_normalized_vert, 
-                        m_buffer_data.staging_buffer_memory, 
-                        total_size
-                    );
-                    break;
-
-                case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
-                    data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_2D);
-                    BufferCreator::populateBufferMem (
-                        device, 
-                        data_size, 
-                        (*m_p_assets)[l_index].vertices.p_tex_mapped_vert_data_2d, 
-                        m_buffer_data.staging_buffer_memory, 
-                        total_size
-                    );
-                    break;
-
-                case DENG_ASSET_MODE_2D_UNMAPPED: {
-                    data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED_2D);
-                    BufferCreator::populateBufferMem (
-                        device, 
-                        data_size, 
-                        (*m_p_assets)[l_index].vertices.p_unmapped_vert_data_2d,
-                        m_buffer_data.staging_buffer_memory, 
-                        total_size
-                    );
-                    break;
-                }
-
-                default:
-                    break;
-                }
-
-                total_size += data_size;
-
-                // Populate staging memory with indices data
-                data_size = (*m_p_assets)[l_index].indices.size * sizeof(deng_ui32_t);
-                BufferCreator::populateBufferMem (
+            switch ((*m_p_assets)[l_index].asset_mode)
+            {
+            case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
+                data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_UNOR);
+                BufferCreator::cpyToBufferMem (
                     device, 
                     data_size, 
-                    (*m_p_assets)[l_index].indices.p_indices, 
+                    (*m_p_assets)[l_index].vertices.p_tex_mapped_unnormalized_vert, 
                     m_buffer_data.staging_buffer_memory, 
                     total_size
                 );
+                break;
 
-                total_size += data_size;
+            case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
+                data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_NOR);
+                BufferCreator::cpyToBufferMem (
+                    device, 
+                    data_size, 
+                    (*m_p_assets)[l_index].vertices.p_tex_mapped_normalized_vert, 
+                    m_buffer_data.staging_buffer_memory, 
+                    total_size
+                );
+                break;
+
+            case DENG_ASSET_MODE_3D_UNMAPPED:
+                data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED_UNOR);
+                BufferCreator::cpyToBufferMem (
+                    device, 
+                    data_size, 
+                    (*m_p_assets)[l_index].vertices.p_unmapped_unnormalized_vert, 
+                    m_buffer_data.staging_buffer_memory, 
+                    total_size
+                );
+                break;
+
+            case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+                data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED_NOR);
+                BufferCreator::cpyToBufferMem (
+                    device, 
+                    data_size, 
+                    (*m_p_assets)[l_index].vertices.p_unmapped_normalized_vert, 
+                    m_buffer_data.staging_buffer_memory, 
+                    total_size
+                );
+                break;
+
+            case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
+                data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_MAPPED_2D);
+                BufferCreator::cpyToBufferMem (
+                    device, 
+                    data_size, 
+                    (*m_p_assets)[l_index].vertices.p_tex_mapped_vert_data_2d, 
+                    m_buffer_data.staging_buffer_memory, 
+                    total_size
+                );
+                break;
+
+            case DENG_ASSET_MODE_2D_UNMAPPED: {
+                data_size = (*m_p_assets)[l_index].vertices.size * sizeof(VERT_UNMAPPED_2D);
+                BufferCreator::cpyToBufferMem (
+                    device, 
+                    data_size, 
+                    (*m_p_assets)[l_index].vertices.p_unmapped_vert_data_2d,
+                    m_buffer_data.staging_buffer_memory, 
+                    total_size
+                );
+                break;
             }
+
+            default:
+                break;
+            }
+
+            total_size += data_size;
+
+            // Populate staging memory with indices data
+            data_size = (*m_p_assets)[l_index].indices.size * sizeof(deng_ui32_t);
+            BufferCreator::cpyToBufferMem (
+                device, 
+                data_size, 
+                (*m_p_assets)[l_index].indices.p_indices, 
+                m_buffer_data.staging_buffer_memory, 
+                total_size
+            );
+
+            total_size += data_size;
         }
 
         // Push data from staging buffer to main buffer
@@ -1944,28 +2002,31 @@ namespace deng {
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | 
             VK_BUFFER_USAGE_INDEX_BUFFER_BIT | 
             VK_BUFFER_USAGE_TRANSFER_DST_BIT, 
-            m_buffer_data.p_main_buffer
+            m_buffer_data.main_buffer
         );
+
         BufferCreator::allocateMemory (
             device, 
             gpu, 
             memory_requirements.size, 
-            m_buffer_data.p_main_buffer_memory, 
+            m_buffer_data.main_buffer_memory, 
             memory_requirements.memoryTypeBits, 
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
         );
+
         vkBindBufferMemory (
             device, 
-            *m_buffer_data.p_main_buffer, 
-            *m_buffer_data.p_main_buffer_memory, 
+            m_buffer_data.main_buffer, 
+            m_buffer_data.main_buffer_memory, 
             0
         );
+
         BufferCreator::copyBufferToBuffer (
             device, 
             command_pool, 
             g_queue, 
             m_buffer_data.staging_buffer, 
-            *m_buffer_data.p_main_buffer, 
+            m_buffer_data.main_buffer, 
             total_size, 
             0
         );
@@ -1973,43 +2034,6 @@ namespace deng {
         // Perform staging buffer cleanup
         vkDestroyBuffer(device, m_buffer_data.staging_buffer, nullptr);
         vkFreeMemory(device, m_buffer_data.staging_buffer_memory, nullptr);
-    }
-
-
-    /* Reallocate buffers according to the amount of assets */
-    void ResourceAllocator::reMkBuffers (
-        VkDevice device,
-        VkPhysicalDevice gpu,
-        VkCommandPool command_pool,
-        VkQueue g_queue,
-        std::vector<VkCommandBuffer> *p_com_bufs
-    ) {
-        // Free all current resources 
-        vkFreeCommandBuffers (
-            device, 
-            command_pool, 
-            (deng_ui32_t) p_com_bufs->size(), 
-            p_com_bufs->data()
-        );
-
-        vkDestroyBuffer (
-            device, 
-            *m_buffer_data.p_main_buffer, 
-            nullptr
-        );
-
-        vkFreeMemory (
-            device, 
-            *m_buffer_data.p_main_buffer_memory, 
-            nullptr
-        );
-
-        mkBuffers (
-            device, 
-            gpu, 
-            command_pool, 
-            g_queue
-        );
     }
 
 
@@ -2040,7 +2064,8 @@ namespace deng {
             break;
         }
 
-        ubo.cam_flag_bits = DENG_CAMERA_UNIFORM_NO_CAMERA_MODE_2D | DENG_CAMERA_UNIFORM_PERSPECTIVE_CAMERA_MODE_3D;
+        ubo.cam_flag_bits = DENG_CAMERA_UNIFORM_NO_CAMERA_MODE_2D | 
+                            DENG_CAMERA_UNIFORM_PERSPECTIVE_CAMERA_MODE_3D;
 
         void *data;
         vkMapMemory (
@@ -2064,36 +2089,193 @@ namespace deng {
     }
 
 
-    /* Change to new main buffer */
-    void ResourceAllocator::updateMainBuffer (
+    /* Remap asset vertices to main buffer */
+    void ResourceAllocator::remapAssetVerts (
         VkDevice device,
-        VkBuffer *p_main_buf,
-        VkDeviceMemory *p_main_buf_mem
+        VkPhysicalDevice gpu,
+        VkCommandPool cmd_pool,
+        VkQueue g_queue,
+        dengMath::vec2<deng_ui32_t> asset_bounds
     ) {
-        if(m_buffer_data.p_main_buffer && m_buffer_data.p_main_buffer_memory) {
-            vkFreeMemory (
-                device,
-                *m_buffer_data.p_main_buffer_memory,
-                nullptr
-            );
+        // Verify asset bounds
+        if(asset_bounds.first >= m_p_assets->size() || asset_bounds.second > m_p_assets->size()) 
+            RUN_ERR("remapAssetVerts(): Invalid asset vertices bounds!");
+        
+        // Find maximum vertex memory usage
+        VkDeviceSize max_mem = 0;
+        for(size_t i = asset_bounds.first; i < asset_bounds.second; i++) {
+            switch(m_p_assets->at(i).asset_mode) 
+            {
+            case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
+                if(max_mem < m_p_assets->at(i).vertices.size * sizeof(VERT_MAPPED_UNOR))
+                    max_mem = m_p_assets->at(i).vertices.size * sizeof(VERT_MAPPED_UNOR);
+                break;
 
-            vkDestroyBuffer (
-                device,
-                *m_buffer_data.p_main_buffer,
-                nullptr
-            );
+            case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
+                if(max_mem < m_p_assets->at(i).vertices.size * sizeof(VERT_MAPPED_NOR))
+                    max_mem = m_p_assets->at(i).vertices.size * sizeof(VERT_MAPPED_NOR);
+                break;
 
-            delete m_buffer_data.p_main_buffer;
-            delete m_buffer_data.p_main_buffer_memory;    
+            case DENG_ASSET_MODE_3D_UNMAPPED:
+                if(max_mem < m_p_assets->at(i).vertices.size * sizeof(VERT_UNMAPPED_UNOR))
+                    max_mem = m_p_assets->at(i).vertices.size * sizeof(VERT_UNMAPPED_UNOR);
+                break;
+
+            case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+                if(max_mem < m_p_assets->at(i).vertices.size * sizeof(VERT_UNMAPPED_NOR))
+                    max_mem = m_p_assets->at(i).vertices.size * sizeof(VERT_UNMAPPED_NOR);
+                break;
+
+            case DENG_ASSET_MODE_2D_UNMAPPED:
+                if(max_mem < m_p_assets->at(i).vertices.size * sizeof(VERT_UNMAPPED_2D))
+                    max_mem = m_p_assets->at(i).vertices.size * sizeof(VERT_UNMAPPED_2D);
+                break;
+
+            case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
+                if(max_mem < m_p_assets->at(i).vertices.size * sizeof(VERT_UNMAPPED_2D))
+                    max_mem = m_p_assets->at(i).vertices.size * sizeof(VERT_UNMAPPED_2D);
+                break;
+
+            default:
+                break;
+            }
         }
 
-        m_buffer_data.p_main_buffer = p_main_buf;
-        m_buffer_data.p_main_buffer_memory = p_main_buf_mem;
+        // Allocate memory for staging buffer
+        VkMemoryRequirements mem_req;
+        mem_req = BufferCreator::makeBuffer (
+            device,
+            gpu,
+            max_mem,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            m_buffer_data.staging_buffer
+
+        );
+
+        BufferCreator::allocateMemory (
+            device,
+            gpu,
+            mem_req.size,
+            m_buffer_data.staging_buffer_memory,
+            mem_req.memoryTypeBits,
+            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT |
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+        );
+
+        vkBindBufferMemory (
+            device,
+            m_buffer_data.staging_buffer,
+            m_buffer_data.staging_buffer_memory,
+            0
+        );
+
+        // Update main buffer 
+        VkDeviceSize offset = 0;
+        VkDeviceSize size = 0;
+        for(size_t i = asset_bounds.first; i < asset_bounds.second; i++) {
+            switch(m_p_assets->at(i).asset_mode) 
+            {
+            case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
+                offset = m_p_assets->at(i).vertices.memory_offset;
+                size = m_p_assets->at(i).vertices.size * sizeof(VERT_MAPPED_UNOR);
+
+                BufferCreator::cpyToBufferMem ( 
+                    device,
+                    size,
+                    m_p_assets->at(i).vertices.p_tex_mapped_unnormalized_vert,
+                    m_buffer_data.staging_buffer_memory,
+                    0 
+                );
+                break;
+
+            case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
+                offset = m_p_assets->at(i).vertices.memory_offset;
+                size = m_p_assets->at(i).vertices.size * sizeof(VERT_MAPPED_NOR);
+
+                BufferCreator::cpyToBufferMem ( 
+                    device,
+                    size,
+                    m_p_assets->at(i).vertices.p_tex_mapped_normalized_vert,
+                    m_buffer_data.staging_buffer_memory,
+                    0 
+                );
+                break;
+
+            case DENG_ASSET_MODE_3D_UNMAPPED:
+                offset = m_p_assets->at(i).vertices.memory_offset;
+                size = m_p_assets->at(i).vertices.size * sizeof(VERT_UNMAPPED_UNOR);
+
+                BufferCreator::cpyToBufferMem ( 
+                    device,
+                    size,
+                    m_p_assets->at(i).vertices.p_unmapped_unnormalized_vert,
+                    m_buffer_data.staging_buffer_memory,
+                    0 
+                );
+                break;
+
+            case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+                offset = m_p_assets->at(i).vertices.memory_offset;
+                size = m_p_assets->at(i).vertices.size * sizeof(VERT_UNMAPPED_NOR);
+
+                BufferCreator::cpyToBufferMem ( 
+                    device,
+                    size,
+                    m_p_assets->at(i).vertices.p_unmapped_normalized_vert,
+                    m_buffer_data.staging_buffer_memory,
+                    0 
+                );
+                break;
+
+            case DENG_ASSET_MODE_2D_UNMAPPED:
+                offset = m_p_assets->at(i).vertices.memory_offset;
+                size = m_p_assets->at(i).vertices.size * sizeof(VERT_UNMAPPED_2D);
+
+                BufferCreator::cpyToBufferMem ( 
+                    device,
+                    size,
+                    m_p_assets->at(i).vertices.p_unmapped_vert_data_2d,
+                    m_buffer_data.staging_buffer_memory,
+                    0 
+                );
+                break;
+
+            case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
+                offset = m_p_assets->at(i).vertices.memory_offset;
+                size = m_p_assets->at(i).vertices.size * sizeof(VERT_MAPPED_2D);
+
+                BufferCreator::cpyToBufferMem ( 
+                    device,
+                    size,
+                    m_p_assets->at(i).vertices.p_tex_mapped_vert_data_2d,
+                    m_buffer_data.staging_buffer_memory,
+                    0 
+                );
+                break;
+
+            default:
+                break;
+            }
+
+
+            BufferCreator::copyBufferToBuffer (
+                device,
+                cmd_pool,
+                g_queue,
+                m_buffer_data.staging_buffer,
+                m_buffer_data.main_buffer,
+                size,
+                offset
+            );
+        }
+
+        vkDestroyBuffer(device, m_buffer_data.staging_buffer, NULL);
+        vkFreeMemory(device, m_buffer_data.staging_buffer_memory, NULL);
     }
 
 
     /* ResourceAllocator class getters */
-    BufferData ResourceAllocator::getBD() { return m_buffer_data; }
+    BufferData *ResourceAllocator::getBD() { return &m_buffer_data; }
     std::vector<VkFramebuffer> ResourceAllocator::getFB() { return m_framebuffers; }
     VkImage ResourceAllocator::getDepImg() { return m_depth_image; }
     VkDeviceMemory ResourceAllocator::getDepImgMem() { return m_depth_image_mem; }
@@ -2112,7 +2294,7 @@ namespace deng {
         m_qff = qff;
 
         if(init_draw_caller)
-            mkSynchronisation(device);
+            __mkSynchronisation(device);
     }
 
 
@@ -2121,16 +2303,16 @@ namespace deng {
         VkCommandPoolCreateInfo commandpool_createinfo{};
         commandpool_createinfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
         commandpool_createinfo.queueFamilyIndex = m_qff.getGraphicsQFIndex();
+        commandpool_createinfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
         // Create commandpool
-        m_p_commandpool = new VkCommandPool;
-        if(vkCreateCommandPool(device, &commandpool_createinfo, nullptr, m_p_commandpool) != VK_SUCCESS)
+        if(vkCreateCommandPool(device, &commandpool_createinfo, nullptr, &m_cmd_pool) != VK_SUCCESS)
             VK_DRAWCMD_ERR("failed to create command pool");
     }
 
 
     /* Find correct texture by ID specified by the asset */
-    TextureImageData DrawCaller::findTextureImageDataByID(char *id) {
+    TextureImageData DrawCaller::__findTextureImageDataByID(char *id) {
         size_t l_index;
         for(l_index = 0; l_index < m_p_textures->size(); l_index++) {
             if(!strcmp(id, (*m_p_textures)[l_index].texture.id))
@@ -2143,7 +2325,7 @@ namespace deng {
 
 
     /* Create semaphores and fences for synchronising frames */
-    void DrawCaller::mkSynchronisation(VkDevice &device) {
+    void DrawCaller::__mkSynchronisation(VkDevice &device) {
         // Resize semaphores 
         image_available_semaphore_set.resize(DENG_MAX_FRAMES_IN_FLIGHT);
         render_finished_semaphore_set.resize(DENG_MAX_FRAMES_IN_FLIGHT);
@@ -2164,12 +2346,14 @@ namespace deng {
                     nullptr, 
                     &image_available_semaphore_set[i]
                 ) != VK_SUCCESS ||
+
                 vkCreateSemaphore (
                     device, 
                     &semaphore_info, 
                     nullptr, 
                     &render_finished_semaphore_set[i]
                 ) != VK_SUCCESS ||
+
                 vkCreateFence (
                     device, 
                     &fence_createInfo, 
@@ -2204,25 +2388,22 @@ namespace deng {
 
 
     /* Record draw command buffers for assets */ 
-    void DrawCaller::recordDrawCommands (
+    void DrawCaller::allocateMainCmdBuffers (
         VkDevice device, 
         VkQueue g_queue, 
         VkRenderPass renderpass, 
-        VkExtent2D extent,
+        VkExtent2D ext,
         dengMath::vec4<deng_vec_t> background,
-        BufferData buffer_data
+        const BufferData &bd
     ) {
-        size_t l_index, r_index;
-
-        m_p_commandbuffers = new std::vector<VkCommandBuffer>;
-        m_p_commandbuffers->resize(m_framebuffers.size());
+        m_cmd_bufs.resize(m_framebuffers.size());
 
         // Set up commandbuffer allocate info
         VkCommandBufferAllocateInfo commandbuffer_allocation_info{};
         commandbuffer_allocation_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        commandbuffer_allocation_info.commandPool = *m_p_commandpool;
+        commandbuffer_allocation_info.commandPool = m_cmd_pool;
         commandbuffer_allocation_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        commandbuffer_allocation_info.commandBufferCount = static_cast<deng_ui32_t>(m_p_commandbuffers->size());
+        commandbuffer_allocation_info.commandBufferCount = static_cast<deng_ui32_t>(m_cmd_bufs.size());
 
         // Allocate command buffers
         if
@@ -2230,17 +2411,35 @@ namespace deng {
             vkAllocateCommandBuffers (
                 device, 
                 &commandbuffer_allocation_info, 
-                m_p_commandbuffers->data()
+                m_cmd_bufs.data()
             )
         ) VK_DRAWCMD_ERR("failed to allocate command buffers");
         
+        recordMainCmdBuffers (
+            renderpass,
+            ext,
+            background,
+            bd
+        );
+    }
+
+
+    /* Record main commandbuffers */
+    void DrawCaller::recordMainCmdBuffers (
+        VkRenderPass renderpass,
+        VkExtent2D ext,
+        dengMath::vec4<deng_vec_t> background,
+        const BufferData &bd
+    ) {
+        size_t l_index, r_index;
+
         // Start iterating through commandbuffers to submit draw calls
-        for(l_index = 0; l_index < m_p_commandbuffers->size(); l_index++) {
+        for(l_index = 0; l_index < m_cmd_bufs.size(); l_index++) {
             VkCommandBufferBeginInfo commandbuffer_begininfo{};
             commandbuffer_begininfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
             // Begin recording command buffer
-            if(vkBeginCommandBuffer((*m_p_commandbuffers)[l_index], &commandbuffer_begininfo) != VK_SUCCESS)
+            if(vkBeginCommandBuffer(m_cmd_bufs[l_index], &commandbuffer_begininfo) != VK_SUCCESS)
                 VK_DRAWCMD_ERR("failed to begin recording command buffers");
 
             // Set up renderpass begin info
@@ -2249,12 +2448,16 @@ namespace deng {
             renderpass_begininfo.renderPass = renderpass;
             renderpass_begininfo.framebuffer = m_framebuffers[l_index];
             renderpass_begininfo.renderArea.offset = {0, 0};
-            renderpass_begininfo.renderArea.extent = extent;
+            renderpass_begininfo.renderArea.extent = ext;
 
             // Set up clear values
             std::array<VkClearValue, 2> clear_values;
-            clear_values[0].color = 
-            {background.first, background.second, background.third, background.fourth};
+            clear_values[0].color = (VkClearColorValue) {
+                background.first, 
+                background.second, 
+                background.third, 
+                background.fourth
+            };
             clear_values[1].depthStencil = {1.0f, 0};
 
             // Add clear values to renderpass begin info
@@ -2264,7 +2467,7 @@ namespace deng {
             
             // Start a new render pass
             vkCmdBeginRenderPass (
-                (*m_p_commandbuffers)[l_index], 
+                m_cmd_bufs[l_index], 
                 &renderpass_begininfo, 
                 VK_SUBPASS_CONTENTS_INLINE
             );
@@ -2272,16 +2475,16 @@ namespace deng {
                 for(r_index = 0; r_index < m_p_assets->size(); r_index++) {
                     if((*m_p_assets)[r_index].is_shown) {
                         vkCmdBindVertexBuffers (
-                            (*m_p_commandbuffers)[l_index], 
+                            m_cmd_bufs[l_index], 
                             0, 
                             1, 
-                            buffer_data.p_main_buffer, 
+                            &bd.main_buffer, 
                             &(*m_p_assets)[r_index].vertices.memory_offset
                         );
 
                         vkCmdBindIndexBuffer (
-                            (*m_p_commandbuffers)[l_index], 
-                            *buffer_data.p_main_buffer, 
+                            m_cmd_bufs[l_index], 
+                            bd.main_buffer, 
                             (*m_p_assets)[r_index].indices.memory_offset, 
                             VK_INDEX_TYPE_UINT32
                         );
@@ -2291,17 +2494,17 @@ namespace deng {
                         {
                         case DENG_ASSET_MODE_3D_UNMAPPED:
                             vkCmdBindPipeline (
-                                (*m_p_commandbuffers)[l_index], 
+                                m_cmd_bufs[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 m_pl_data[UM3D_UNOR_I].pipeline
                             );
                             vkCmdBindDescriptorSets (
-                                (*m_p_commandbuffers)[l_index], 
+                                m_cmd_bufs[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 *m_pl_data[UM3D_UNOR_I].p_pipeline_layout, 
                                 0, 
                                 1, 
-                                &(*m_p_unmapped_ds)[l_index], 
+                                &m_p_unmapped_ds->at(l_index), 
                                 0, 
                                 nullptr
                             );
@@ -2309,12 +2512,12 @@ namespace deng {
 
                         case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
                             vkCmdBindPipeline (
-                                (*m_p_commandbuffers)[l_index], 
+                                m_cmd_bufs[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 m_pl_data[UM3D_NOR_I].pipeline
                             );
                             vkCmdBindDescriptorSets (
-                                (*m_p_commandbuffers)[l_index], 
+                                m_cmd_bufs[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 *m_pl_data[UM3D_NOR_I].p_pipeline_layout, 
                                 0, 
@@ -2327,17 +2530,17 @@ namespace deng {
 
                         case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
                             vkCmdBindPipeline (
-                                (*m_p_commandbuffers)[l_index], 
+                                m_cmd_bufs[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 m_pl_data[TM3D_UNOR_I].pipeline
                             );   
                             vkCmdBindDescriptorSets (
-                                (*m_p_commandbuffers)[l_index], 
+                                m_cmd_bufs[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 *m_pl_data[TM3D_UNOR_I].p_pipeline_layout, 
                                 0, 
                                 1,
-                                &findTextureImageDataByID((*m_p_assets)[r_index].tex_id).descriptor_sets[l_index], 
+                                &__findTextureImageDataByID((*m_p_assets)[r_index].tex_id).descriptor_sets[l_index], 
                                 0, 
                                 nullptr
                             );                    
@@ -2345,17 +2548,17 @@ namespace deng {
 
                         case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
                             vkCmdBindPipeline (
-                                (*m_p_commandbuffers)[l_index], 
+                                m_cmd_bufs[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 m_pl_data[TM3D_NOR_I].pipeline
                             );   
                             vkCmdBindDescriptorSets (
-                                (*m_p_commandbuffers)[l_index], 
+                                m_cmd_bufs[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 *m_pl_data[TM3D_NOR_I].p_pipeline_layout, 
                                 0, 
                                 1,
-                                &findTextureImageDataByID((*m_p_assets)[r_index].tex_id).descriptor_sets[l_index], 
+                                &__findTextureImageDataByID((*m_p_assets)[r_index].tex_id).descriptor_sets[l_index], 
                                 0, 
                                 nullptr
                             );                    
@@ -2363,13 +2566,13 @@ namespace deng {
 
                         case DENG_ASSET_MODE_2D_UNMAPPED:
                             vkCmdBindPipeline (
-                                (*m_p_commandbuffers)[l_index], 
+                                m_cmd_bufs[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 m_pl_data[UM2D_I].pipeline
                             );
 
                             vkCmdBindDescriptorSets (
-                                (*m_p_commandbuffers)[l_index], 
+                                m_cmd_bufs[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 *m_pl_data[UM2D_I].p_pipeline_layout, 
                                 0, 
@@ -2383,17 +2586,17 @@ namespace deng {
 
                         case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
                             vkCmdBindPipeline (
-                                (*m_p_commandbuffers)[l_index], 
+                                m_cmd_bufs[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 m_pl_data[TM2D_I].pipeline
                             );
                             vkCmdBindDescriptorSets (
-                                (*m_p_commandbuffers)[l_index], 
+                                m_cmd_bufs[l_index], 
                                 VK_PIPELINE_BIND_POINT_GRAPHICS, 
                                 *m_pl_data[TM2D_I].p_pipeline_layout, 
                                 0, 
                                 1, 
-                                &findTextureImageDataByID((*m_p_assets)[r_index].id).descriptor_sets[l_index], 
+                                &__findTextureImageDataByID((*m_p_assets)[r_index].id).descriptor_sets[l_index], 
                                 0, 
                                 nullptr
                             );
@@ -2405,7 +2608,7 @@ namespace deng {
 
                         // Draw assets
                         vkCmdDrawIndexed (
-                            (*m_p_commandbuffers)[l_index], 
+                            m_cmd_bufs[l_index], 
                             (*m_p_assets)[r_index].indices.size, 
                             1, 
                             0, 
@@ -2416,44 +2619,18 @@ namespace deng {
                 }
 
             // End render pass
-            vkCmdEndRenderPass((*m_p_commandbuffers)[l_index]);
+            vkCmdEndRenderPass(m_cmd_bufs[l_index]);
 
             // Stop recording commandbuffer
-            if(vkEndCommandBuffer((*m_p_commandbuffers)[l_index]) != VK_SUCCESS)
+            if(vkEndCommandBuffer(m_cmd_bufs[l_index]) != VK_SUCCESS)
                 VK_DRAWCMD_ERR("failed to end recording command buffer");
         }
     }
 
 
-    /* Update commandbuffers */
-    void DrawCaller::updateCommandBuffers (
-        VkDevice device,
-        std::vector<VkCommandBuffer> *p_cmd_bufs,
-        VkCommandPool *p_cmd_pool
-    ) {
-        vkFreeCommandBuffers (
-            device,
-            *m_p_commandpool,
-            m_p_commandbuffers->size(),
-            m_p_commandbuffers->data()
-        );
-
-        vkDestroyCommandPool (
-            device,
-            *m_p_commandpool,
-            nullptr
-        );
-
-        delete m_p_commandpool;
-        delete m_p_commandbuffers;
-        m_p_commandbuffers = p_cmd_bufs;
-        m_p_commandpool = p_cmd_pool;
-    }
-
-
     /* DrawCaller getter methods */
-    VkCommandPool *DrawCaller::getComPool() { return m_p_commandpool; }
-    std::vector<VkCommandBuffer> *DrawCaller::getComBufs() { return m_p_commandbuffers; }
+    VkCommandPool DrawCaller::getComPool() { return m_cmd_pool; }
+    const std::vector<VkCommandBuffer> &DrawCaller::getComBufs() { return m_cmd_bufs; }
 
 
     /*********************************************/
@@ -2676,6 +2853,7 @@ namespace deng {
         m_asset_mut.lock();
         m_p_sr = new dengUtils::StringRasterizer("", m_p_ww);
         m_usage_mode = usage;
+        m_background_color = background;
 
         // Default shared data initialisation
         ext_mii.active_btn = m_p_ww->getWindow()->active_keys.p_btn;
@@ -2710,7 +2888,6 @@ namespace deng {
         );
 
         m_p_dc->mkCommandPool(m_p_ic->getDev());
-
         m_p_desc_c = new DescriptorCreator (
             m_p_ic->getDev(), 
             m_p_scc->getExt(), 
@@ -2720,58 +2897,24 @@ namespace deng {
             m_p_scc->getSCImg().size(),
             m_msaa_sample_count
         );
-
         
         // Check if gui windows need to be generated
         if(m_usage_mode != DENG_RENDERER_USAGE_GAME_MODE) {
             dengui::EventInfo ev_info;
             ev_info.background = background;
             ev_info.deng_window_area = m_p_ww->getSize();
-            ev_info.device = m_p_ic->getDev();
-            ev_info.gpu = m_p_ic->getGpu();
-            ev_info.renderpass = m_p_scc->getRp();
-            ev_info.extent = m_p_scc->getExt();
-            ev_info.g_queue = m_p_ic->getQFF().graphics_queue;
-            ev_info.p_assets = &m_assets;
             ev_info.p_frame_mut = &m_frame_mut;
-            ev_info.p_update_flag = &m_cmd_update;
-            ev_info.p_update_mut = &m_update_mut;
-            ev_info.p_dc = new DrawCaller (
-                m_p_ic->getDev(),
-                m_p_ic->getQFF(),
-                false
-            );
-
-            ev_info.p_dc->setAssetsData (
-                &m_assets,
-                &m_textures 
-            );
-
-            ev_info.p_dc->setMiscData (
-                m_p_desc_c->getPipelines(),
-                m_p_ra->getFB(),
-                m_p_desc_c->getUnmappedDS()
-            );
-
-            ev_info.p_ra = new ResourceAllocator (
-                m_p_ic->getDev(),
-                m_p_ic->getGpu(),
-                m_p_scc->getExt(),
-                m_msaa_sample_count,
-                m_p_scc->getRp(),
-                m_p_scc->getSCImgViews(),
-                m_p_scc->getSF(),
-                false
-            );
-
-            ev_info.p_ra->setAssetsData (
-                &m_assets,
-                &m_textures
-            );
-
             ev_info.p_res_mut = &m_asset_mut;
+            ev_info.sc_img_size = m_p_scc->getSCImg().size();
+            ev_info.p_assets = &m_assets;
             ev_info.p_textures = &m_textures;
+            ev_info.ext = m_p_scc->getExt();
             ev_info.renderpass = m_p_scc->getRp();
+
+            ev_info.p_dc = m_p_dc;
+            ev_info.p_ic = m_p_ic;
+            ev_info.p_ra = m_p_ra;
+            ev_info.p_desc_c = m_p_desc_c;
 
             switch (m_usage_mode)
             {
@@ -2789,11 +2932,6 @@ namespace deng {
             default:
                 break;
             }
-
-            m_p_desc_c->updateDescriptorPools (
-                m_p_ic->getDev(), 
-                m_p_scc->getSCImg().size()
-            );
         }
 
 
@@ -2806,16 +2944,25 @@ namespace deng {
         m_p_ra->mkTextureImages (
             m_p_ic->getDev(), 
             m_p_ic->getGpu(), 
-            *m_p_dc->getComPool(), 
+            m_p_dc->getComPool(), 
             m_p_ic->getLFSupport(),
+            {0, (deng_ui32_t) m_textures.size()},
             m_p_ic->getQFF().graphics_queue, 
             m_p_scc->getSCImg().size()
+        );
+
+        m_p_desc_c->updateTexDescriptors (
+            m_p_ic->getDev(),
+            m_p_scc->getSCImg().size(),
+            false,
+            NULL,
+            m_p_ra->getBD()
         );
 
         m_p_ra->mkBuffers (
             m_p_ic->getDev(), 
             m_p_ic->getGpu(), 
-            *m_p_dc->getComPool(), 
+            m_p_dc->getComPool(), 
             m_p_ic->getQFF().graphics_queue
         );
 
@@ -2823,14 +2970,15 @@ namespace deng {
         m_p_desc_c->mkUnmappedDS (
             m_p_ic->getDev(), 
             m_p_scc->getSCImg().size(), 
-            m_p_ra->getBD()
+            *m_p_ra->getBD()
         );
 
-        m_p_desc_c->mkTexMappedDS (
-            m_p_ic->getDev(), 
-            m_p_scc->getSCImg().size(), 
-            m_p_ra->getBD()
-        );
+        //m_p_desc_c->mkTexMappedDS (
+            //m_p_ic->getDev(), 
+            //m_p_scc->getSCImg().size(), 
+            //{0, (deng_ui32_t) m_textures.size()},
+            //m_p_ra->getBD()
+        //);
 
         // Record draw calls to command buffers 
         m_p_dc->setAssetsData (
@@ -2844,13 +2992,13 @@ namespace deng {
             m_p_desc_c->getUnmappedDS() 
         );
         
-        m_p_dc->recordDrawCommands (
+        m_p_dc->allocateMainCmdBuffers (
             m_p_ic->getDev(), 
             m_p_ic->getQFF().graphics_queue, 
             m_p_scc->getRp(), 
             m_p_scc->getExt(),
             background,
-            m_p_ra->getBD()
+            *m_p_ra->getBD()
         );
 
         m_asset_mut.unlock();
@@ -2892,49 +3040,19 @@ namespace deng {
                 break;
             }
 
-            m_update_mut.lock();
-            if(m_cmd_update) {
-                LOG("Updating window");
-                switch (m_usage_mode)
-                {
-                case DENG_RENDERER_USAGE_MAP_EDITOR:
-                    vkDeviceWaitIdle(m_p_ic->getDev());
-                    vkQueueWaitIdle(m_p_ic->getQFF().graphics_queue);
-                    vkQueueWaitIdle(m_p_ic->getQFF().present_queue);
-                    m_p_ra->updateMainBuffer (
-                        m_p_ic->getDev(),
-                        m_p_map_editor->getEv()->getMainBuffer(),
-                        m_p_map_editor->getEv()->getMainBufMem()
-                    );
-
-                    m_p_dc->updateCommandBuffers (
-                        m_p_ic->getDev(),
-                        m_p_map_editor->getEv()->getCmdBuffers(),
-                        m_p_map_editor->getEv()->getCmdPool()
-                    );
-
-                    LOG("CMD_BUF_C: " + std::to_string(m_p_map_editor->getEv()->getCmdBuffers()->size()));
-                    break;
-                
-                default:
-                    break;
-                }
-
-                m_cmd_update = false;
-            }
-            m_update_mut.unlock();
             m_frame_mut.lock();
-            makeFrame();
+            __makeFrame();
             m_frame_mut.unlock();
+            std::this_thread::sleep_for(std::chrono::microseconds(50));
         }
         
         vkDeviceWaitIdle(m_p_ic->getDev());
-        cleanup();
+        __cleanup();
     }
 
 
     /* Frame update functions */
-    void Renderer::makeFrame() {
+    void Renderer::__makeFrame() {
         // Call Vulkan fence waiter method
         vkWaitForFences (
             m_p_ic->getDev(), 
@@ -2986,7 +3104,7 @@ namespace deng {
         submitinfo.pWaitSemaphores = wait_semaphores;
         submitinfo.pWaitDstStageMask = wait_stages;
         submitinfo.commandBufferCount = 1;
-        submitinfo.pCommandBuffers = &(*m_p_dc->getComBufs())[image_index];
+        submitinfo.pCommandBuffers = &m_p_dc->getComBufs()[image_index];
         submitinfo.signalSemaphoreCount = 1;
         submitinfo.pSignalSemaphores = signal_semaphores;
 
@@ -3026,7 +3144,8 @@ namespace deng {
 
 
     /* Cleanup the renderer before destruction */
-    void Renderer::cleanup() {
+    void Renderer::__cleanup() {
+        m_asset_mut.unlock();
         size_t index;
         // Clean depth image resources
         vkDestroyImageView (
@@ -3073,9 +3192,9 @@ namespace deng {
         // Clean commandbuffers and commandpools
         vkFreeCommandBuffers (
             m_p_ic->getDev(), 
-            *m_p_dc->getComPool(), 
-            m_p_dc->getComBufs()->size(), 
-            m_p_dc->getComBufs()->data()
+            m_p_dc->getComPool(), 
+            m_p_dc->getComBufs().size(), 
+            m_p_dc->getComBufs().data()
         );
 
         // Clean pipeline related data
@@ -3112,17 +3231,17 @@ namespace deng {
         m_p_scc->SCCleanup();
 
         // Clean ubo buffer data 
-        for(index = 0; index < m_p_ra->getBD().mat_uniform_buffers.size(); index++) {
+        for(index = 0; index < m_p_ra->getBD()->mat_uniform_buffers.size(); index++) {
             LOG("Destroying UBO");
             vkDestroyBuffer (
                 m_p_ic->getDev(), 
-                m_p_ra->getBD().mat_uniform_buffers[index], 
+                m_p_ra->getBD()->mat_uniform_buffers[index], 
                 nullptr
             );
 
             vkFreeMemory (
                 m_p_ic->getDev(), 
-                m_p_ra->getBD().mat_uniform_buffer_mem[index], 
+                m_p_ra->getBD()->mat_uniform_buffer_mem[index], 
                 nullptr
             );
         }
@@ -3141,29 +3260,7 @@ namespace deng {
         );
 
         // Clean texture images
-        for(index = 0; index < m_textures.size(); index++) {
-            LOG("Destroying textures");
-            vkDestroySampler (
-                m_p_ic->getDev(),
-                m_textures[index].sampler, 
-                nullptr
-            );
-            vkDestroyImageView (
-                m_p_ic->getDev(), 
-                m_textures[index].image_view, 
-                nullptr
-            );
-            vkDestroyImage (
-                m_p_ic->getDev(), 
-                m_textures[index].image, 
-                nullptr
-            );
-            vkFreeMemory (
-                m_p_ic->getDev(), 
-                m_textures[index].image_mem, 
-                nullptr
-            );
-        }
+        __cleanAssets();
 
         // Clean descriptor set layouts
         vkDestroyDescriptorSetLayout (
@@ -3181,13 +3278,13 @@ namespace deng {
         // Clean main buffer data
         vkDestroyBuffer (
             m_p_ic->getDev(), 
-            *m_p_ra->getBD().p_main_buffer, 
+            m_p_ra->getBD()->main_buffer, 
             nullptr
         );
 
         vkFreeMemory (
             m_p_ic->getDev(), 
-            *m_p_ra->getBD().p_main_buffer_memory, 
+            m_p_ra->getBD()->main_buffer_memory, 
             nullptr
         );
 
@@ -3222,7 +3319,7 @@ namespace deng {
 
         vkDestroyCommandPool (
             m_p_ic->getDev(), 
-            *m_p_dc->getComPool(), 
+            m_p_dc->getComPool(), 
             nullptr
         );
 
@@ -3265,5 +3362,35 @@ namespace deng {
             delete m_p_dc;
         if(m_p_sr)
             delete m_p_sr;
+    }
+
+
+    /* Clean all assets and asset textures */
+    void Renderer::__cleanAssets() {
+        m_asset_mut.lock();
+        for(size_t index = 0; index < m_textures.size(); index++) {
+            LOG("Destroying textures");
+            vkDestroySampler (
+                m_p_ic->getDev(),
+                m_textures[index].sampler, 
+                nullptr
+            );
+            vkDestroyImageView (
+                m_p_ic->getDev(), 
+                m_textures[index].image_view, 
+                nullptr
+            );
+            vkDestroyImage (
+                m_p_ic->getDev(), 
+                m_textures[index].image, 
+                nullptr
+            );
+            vkFreeMemory (
+                m_p_ic->getDev(), 
+                m_textures[index].image_mem, 
+                nullptr
+            );
+        }
+        m_asset_mut.unlock();
     }
 } 

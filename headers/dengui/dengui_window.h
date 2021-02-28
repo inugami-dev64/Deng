@@ -1,45 +1,47 @@
 #ifndef DENGUI_WINDOW_H
 #define DENGUI_WINDOW_H
-typedef deng_ui32_t WindowID;
+
 // In pixels
-#define DENGUI_LIGHT_BORDER_THICKNESS       1
-#define DENGUI_MEDIUM_BORDER_THICKNESS      2
-#define DENGUI_HEAVY_BORDER_THICKNESS       5
+#define DENGUI_LIGHT_BORDER_THICKNESS           1
+#define DENGUI_MEDIUM_BORDER_THICKNESS          2
+#define DENGUI_HEAVY_BORDER_THICKNESS           5
 
 // Define default colors
-#define DENGUI_DEFAULT_PRIMARY_COLOR        {0.0f, 1.0f, 1.0f, 0.5f}
-#define DENGUI_DEFAULT_SECONDARY_COLOR      {1.0f, 1.0f, 1.0f, 1.0f}
-#define DENGUI_DEFAULT_TERTIARY_COLOR       {0.0f, 0.2f, 1.0f, 1.0f}
+#define DENGUI_DEFAULT_PRIMARY_COLOR            {0.0f, 1.0f, 1.0f, 0.5f}
+#define DENGUI_DEFAULT_SECONDARY_COLOR          {1.0f, 1.0f, 1.0f, 1.0f}
+#define DENGUI_DEFAULT_TERTIARY_COLOR           {0.0f, 0.2f, 1.0f, 1.0f}
 
 // Define default position and size
-#define DENGUI_DEFAULT_POS                  {0.0f, 0.0f}
-#define DENGUI_DEFAULT_SIZE                 {0.1f, 0.1f}
+#define DENGUI_DEFAULT_POS                      {0.0f, 0.0f}
+#define DENGUI_DEFAULT_SIZE                     {0.1f, 0.1f}
 
 // Window flags
-#define DENGUI_WINDOW_FLAG_NULL             0x00
-#define DENGUI_WINDOW_FLAG_MENUBAR          0x01
-#define DENGUI_WINDOW_FLAG_NO_COLLAPSE      0x02
-#define DENGUI_WINDOW_FLAG_NO_MOVE          0x04
-#define DENGUI_WINDOW_FLAG_NO_TITLEBAR      0x08
-#define DENGUI_WINDOW_FLAG_ALWAYS_ON_TOP    0x10
-#define DENGUI_WINDOW_FLAG_NO_RESIZE        0x20
-#define DENGUI_WINDOW_FLAG_NO_CLOSE         0x40
+#define DENGUI_WINDOW_FLAG_NULL                 0x00
+#define DENGUI_WINDOW_FLAG_MENUBAR              0x01
+#define DENGUI_WINDOW_FLAG_NO_COLLAPSE          0x02
+#define DENGUI_WINDOW_FLAG_NO_MOVE              0x04
+#define DENGUI_WINDOW_FLAG_NO_TITLEBAR          0x08
+#define DENGUI_WINDOW_FLAG_ALWAYS_ON_TOP        0x10
+#define DENGUI_WINDOW_FLAG_NO_RESIZE            0x20
+#define DENGUI_WINDOW_FLAG_NO_CLOSE             0x40
 
 // Default window parametres
-#define DENGUI_TITLEBAR_HEIGHT              0.05f
-#define DENGUI_TITLEBAR_ELEM_MARGIN         0.005f
-#define DENGUI_DEFAULT_FONT_FILE            "SourceCodePro-Regular"
+#define DENGUI_TITLEBAR_HEIGHT                  0.05f
+#define DENGUI_TITLEBAR_ELEM_MARGIN             0.005f
+#define DENGUI_DEFAULT_LABEL_PADDING            5.0 // px
+#define DENGUI_DEFAULT_FONT_FILE                "PressStart2P-Regular"
 
 // Main window element ids
-#define DENGUI_FORM_ID                      "form"
-#define DENGUI_TITLEBAR_ID                  "titlebar"
-#define DENGUI_MINIMISE_TRIANGLE_ID         "min_triangle"
-#define DENGUI_MAXIMISE_TRIANGLE_ID         "max_triangle"
-#define DENGUI_CLOSE_BTN_ID                 "close_btn"
-#define DENGUI_TITLE_ID                     "title"
+#define DENGUI_FORM_ID                          "form"
+#define DENGUI_TITLEBAR_ID                      "titlebar"
+#define DENGUI_MINIMISE_TRIANGLE_ID             "min_triangle"
+#define DENGUI_MAXIMISE_TRIANGLE_ID             "max_triangle"
+#define DENGUI_CLOSE_BTN_ID                     "close_btn"
+#define DENGUI_TITLE_ID                         "title"
 
 // Default string buttons 
-#define DENGUI_CLOSE_BTN                    "[X]"                  
+#define DENGUI_CLOSE_BTN                        "[X]"
+#define DENGUI_WINDOW_LEVEL                     0
 
 namespace dengui {
     /* Window type enums */
@@ -49,15 +51,6 @@ namespace dengui {
         WINDOW_TYPE_STATIC_LEFT     = 2,
         WINDOW_TYPE_STATIC_TOP      = 3,
         WINDOW_TYPE_STATIC_BOTTOM   = 4
-    };
-
-
-    /* Specify text box origin vertex */
-    enum RectangleOrigin {
-        REC_ORIGIN_VERTEX_TOP_LEFT       = 0,
-        REC_ORIGIN_VERTEX_TOP_RIGHT      = 1,
-        REC_ORIGIN_VERTEX_BOTTOM_LEFT    = 2,
-        REC_ORIGIN_VERTEX_BOTTOM_RIGHT   = 3
     };
 
 
@@ -77,20 +70,11 @@ namespace dengui {
         std::mutex mut;
     };
 
-    
-    /* Struct to share between main thread and ui event thread */
-    struct WindowElement {
+
+    struct ElementBaseData {
         std::string child_id;
         std::string parent_id;
         char *asset_id;
-        deng_bool_t is_visible;
-        deng_bool_t is_interactive;
-
-        void (*onLMBClickFunc)(WindowElement*, Events*);
-        void (*onMMBClickFunc)(WindowElement*, Events*);
-        void (*onRMBClickFunc)(WindowElement*, Events*);
-        void (*onScrUpFunc)(WindowElement*, Events*);
-        void (*onScrDownFunc)(WindowElement*, Events*);
         ElementColorMode color_mode;
         dengMath::vec2<size_t> col_vert_bounds;
         std::vector<VERT_UNMAPPED_2D> unmapped_vert;
@@ -100,6 +84,25 @@ namespace dengui {
         dengMath::vec2<deng_i32_t> tex_box;
     };
 
+    /* Struct to share between main thread and ui event thread */
+    struct WindowElement : public ElementBaseData {
+        deng_bool_t is_interactive;
+        deng_bool_t is_drag_point;
+        WindowCallback onLMBClickFunc;
+        WindowCallback onMMBClickFunc;
+        WindowCallback onRMBClickFunc;
+        WindowCallback onHoverFunc;
+        WindowCallback onScrUpFunc;
+        WindowCallback onScrDownFunc;
+    };
+
+
+    struct DDMElement : public ElementBaseData {
+        DDMCallback onLMBClickFunc;  
+        DDMCallback onMMBClickFunc;  
+        DDMCallback onRMBClickFunc;  
+        DDMCallback onHoverFunc;
+    };
 
     /* Window info struct */
     struct WindowInfo {
@@ -122,42 +125,13 @@ namespace dengui {
     struct WindowShapeInfo {
         dengMath::vec2<deng_vec_t> pos;
         dengMath::vec2<deng_vec_t> size;
-        RectangleOrigin rec_origin;
         std::vector<VERT_UNMAPPED_2D> *p_vert;
         std::vector<deng_ui32_t> *p_indices;
     };
 
 
-    class BaseWindowShapes {
-    private:
-        dengUtils::StringRasterizer *m_p_sr;
-        dengMath::vec2<deng_ui32_t> m_window_bounds;
-
-    public:
-        BaseWindowShapes (
-            dengUtils::StringRasterizer *p_sr,
-            dengMath::vec2<deng_ui32_t> &window_bounds
-        );
-
-        // Add text object to window according to its relative position
-        void addRelText (
-            dengMath::vec2<deng_vec_t> pos,
-            deng_vec_t text_size,
-            dengMath::vec2<deng_ui32_t> draw_bounds,
-            RectangleOrigin rec_origin,
-            dengUtils::BitmapStr text,
-            dengMath::vec3<unsigned char> color,
-            VERT_UNMAPPED_2D *form_vert,
-            std::vector<VERT_MAPPED_2D> &vert,
-            std::vector<deng_ui32_t> &indices,
-            std::vector<deng_ui8_t> &tex,
-            dengMath::vec2<deng_i32_t> &tex_size
-        );
-    };
-
-
     /* Main window class */
-    class Window : private BaseWindowShapes {
+    class Window {
     private:
         std::string m_id;
         dengUtils::StringRasterizer *m_p_sr;
@@ -255,23 +229,6 @@ namespace dengui {
     /******** Initialisation functions **********/
     /********************************************/
     /********************************************/
-    
-    /* Create new DENGUI events handler */
-    void beginEventHandler (
-        Events *p_ev,
-        std::vector<deng_Asset> *p_assets,
-        std::vector<deng::TextureImageData> *p_textures,
-        std::mutex *p_asset_mut,
-        deng::DrawCaller *p_dc,
-        deng::ResourceAllocator *p_ra,
-        deng::DescriptorCreator *p_desc_c,
-        VkDevice device,
-        VkQueue g_queue,
-        VkRenderPass renderpass,
-        VkExtent2D extent,
-        dengMath::vec4<deng_vec_t> background,
-        dengMath::vec2<deng_ui32_t> draw_area
-    );    
 
     /* Create new window instance */
     void beginWindow (
@@ -281,6 +238,13 @@ namespace dengui {
         dengUtils::StringRasterizer *p_sr,
         Events *p_ev,
         deng_bool_t realloc_res
+    );
+
+
+    /* Destory window instance */
+    void destroyWindow (
+        Window *p_win,
+        Events *p_ev
     );
 }
 

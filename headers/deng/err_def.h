@@ -16,6 +16,7 @@
 #define MEM_ERR(x)              throw std::runtime_error(std::string("Failed to allocate memory: ") + x)
 #define MATH_ERR(x)             throw std::runtime_error(std::string("Math error: ") + x)
 #define FONT_ERR(x)             throw std::runtime_error(std::string("Font rasterisation error: ") + x)
+#define RUN_ERR(x)              throw std::runtime_error(x)
 
 // Vulkan related
 #define VK_GEN_ERR(x)           throw std::runtime_error(std::string("Vulkan general error: ") + x)
@@ -27,6 +28,6 @@
 #define VK_PIPELINEC_ERR(x)     throw std::runtime_error(std::string("Vulkan pipeline creation error: ") + x)
 #define VK_BUFFER_ERR(x)        throw std::runtime_error(std::string("Vulkan buffer error: ") + x)
 #define VK_FRAME_ERR(x)         throw std::runtime_error(std::string("Vulkan frame error: ") + x)
-#define VK_VAL_LAYER(x)         std::cerr << "VL: " << x << std::endl
+#define VK_VAL_LAYER(x)         std::cout << "VL: " << x << std::endl
 
 #endif

@@ -45,7 +45,6 @@ namespace dengUtils {
                             break;     
                         }
                     }
-                    printf("font_file: %s\n", m_fonts[l_index].c_str());
                     if(is_supported) {
                         out_path = m_fonts[l_index];
                         return true;  
@@ -211,8 +210,6 @@ namespace dengUtils {
             px_size
         );
 
-        LOG("FNT_PX_SIZE: " + std::to_string(px_size));
-        
         if(res) return;
 
         // Index chars and get unique vector characters
@@ -252,6 +249,7 @@ namespace dengUtils {
         deng_ui16_t px_size,
         dengMath::vec3<unsigned char> color,
         dengMath::vec2<deng_vec_t> pos,
+        deng_ui32_t hier_level,
         dengMath::vec2<deng_vec_t> origin
     ) {
         std::string path_str;
@@ -274,6 +272,7 @@ namespace dengUtils {
         mkTextbox (
             str,
             width,
+            hier_level,
             color,
             pos,
             origin
@@ -288,6 +287,7 @@ namespace dengUtils {
         deng_vec_t vec_size,
         dengMath::vec3<unsigned char> color,
         dengMath::vec2<deng_vec_t> pos,
+        deng_ui32_t hier_level,
         dengMath::vec2<deng_vec_t> origin
     ) {
         std::string path_str;
@@ -315,6 +315,7 @@ namespace dengUtils {
         mkTextbox (
             str,
             width,
+            hier_level,
             color,
             pos,
             origin
@@ -326,6 +327,7 @@ namespace dengUtils {
     void StringRasterizer::mkTextbox (
         BitmapStr &str,
         deng_px_t px_width,
+        deng_ui32_t hier_level,
         dengMath::vec3<unsigned char> color,
         dengMath::vec2<deng_vec_t> pos, 
         dengMath::vec2<deng_vec_t> origin
@@ -365,13 +367,6 @@ namespace dengUtils {
             str.box_size.first * 
             str.box_size.second * 
             4
-        );
-
-        LOG (
-            "TEXT_SIZE_PX: " +
-            std::to_string(str.box_size.first) +
-            ", " +
-            std::to_string(str.box_size.second)
         );
 
         origin_offset.first = 0;
@@ -441,6 +436,7 @@ namespace dengUtils {
             pos,
             vec_size,
             origin,
+            hier_level,
             tmp_vec
         );
 
@@ -551,18 +547,18 @@ namespace dengUtils {
         }
 
         return out_str;
-    }   
+    }
 
 
-    /* Render label for ui box shaped elements */
-    BitmapStr StringRasterizer::renderLabel (
-        dengMath::vec2<deng_vec_t> parent_cont_size,
-        deng_px_t px_padding,
-        dengMath::vec2<deng_vec_t> parent_elem_top_left,
-        dengMath::vec2<deng_vec_t> size,
-        dengMath::vec2<deng_vec_t> origin,
-        dengMath::vec3<unsigned char> color,
-        const char *font_file,
+    BitmapStr StringRasterizer::renderAbsLabel (
+        deng_px_t px_padding, 
+        dengMath::vec2<deng_vec_t> parent_elem_top_left, 
+        dengMath::vec2<deng_vec_t> top_left_margin,
+        dengMath::vec2<deng_vec_t> size, 
+        dengMath::vec2<deng_vec_t> origin, 
+        dengMath::vec3<unsigned char> color, 
+        deng_ui32_t hier_level,
+        const char *font_file, 
         const char *label
     ) {
         BitmapStr out_label;
@@ -581,29 +577,14 @@ namespace dengUtils {
             DENG_COORD_AXIS_Y
         );
 
-        // Find the absolute size of the child object
-        dengMath::vec2<deng_vec_t> abs_size;
-        abs_size.first = dengMath::Conversion::findAbsSize (
-            parent_cont_size.first,
-            size.first
-        );
-
-        abs_size.second = dengMath::Conversion::findAbsSize (
-            parent_cont_size.second,
-            size.second
-        );
-
         deng_vec_t text_height = getMaxHeight (
             label,
             font_file,
-            abs_size.first - 2 * vec_padding.first
+            size.first - 2 * vec_padding.first
         );
 
         deng_vec_t label_height;
-        deng_vec_t max_label_height = dengMath::Conversion::findAbsSize (
-            parent_cont_size.second, 
-            size.second
-        );
+        deng_vec_t max_label_height = size.second - 2 * vec_padding.second;
         
         // Check if text heigth exceeds maximum label height value
         if(text_height >= max_label_height)
@@ -618,13 +599,55 @@ namespace dengUtils {
             label_height, 
             color,
             {
-                parent_elem_top_left.first + abs_size.first / 2,
-                parent_elem_top_left.second + abs_size.second / 2
+                parent_elem_top_left.first + (top_left_margin.first / 2 * size.first),
+                parent_elem_top_left.second + (top_left_margin.second / 2 * size.second)
             },
+            hier_level,
             origin
         );
 
         return out_label;
+    }
+
+
+    /* Render label for ui box shaped elements */
+    BitmapStr StringRasterizer::renderRelLabel (
+        dengMath::vec2<deng_vec_t> parent_cont_size,
+        deng_px_t px_padding,
+        dengMath::vec2<deng_vec_t> parent_elem_top_left,
+        dengMath::vec2<deng_vec_t> top_left_margin,
+        dengMath::vec2<deng_vec_t> size,
+        dengMath::vec2<deng_vec_t> origin,
+        dengMath::vec3<unsigned char> color,
+        deng_ui32_t hier_level,
+        const char *font_file,
+        const char *label
+    ) {
+        // Find the absolute size of the child object
+        dengMath::vec2<deng_vec_t> abs_size;
+        abs_size.first = dengMath::Conversion::findAbsSize (
+            parent_cont_size.first,
+            size.first
+        );
+
+        abs_size.second = dengMath::Conversion::findAbsSize (
+            parent_cont_size.second,
+            size.second
+        );
+        
+        BitmapStr out_str = renderAbsLabel (
+            px_padding,
+            parent_elem_top_left,
+            top_left_margin,
+            abs_size,
+            origin,
+            color,
+            hier_level,
+            font_file,
+            label
+        );
+
+        return out_str;
     }
 
 
@@ -634,7 +657,6 @@ namespace dengUtils {
         const char *font_name,
         deng_vec_t max_width
     ) {
-        printf("Max width %f\n", max_width);
         // Rasterize string with height 1.0
         BitmapStr bm_str;
         bm_str.text = str;
@@ -645,6 +667,7 @@ namespace dengUtils {
             1.0f,
             {0x00, 0x00},
             {0.0f, 0.0f},
+            0,
             {0.0f, 0.0f}
         );
 

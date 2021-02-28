@@ -58,17 +58,44 @@ char *cm_TrimString(const char *str, size_t beg_index, size_t end_pos) {
 }
 
 
-/* Make all lowercase chars into uppercase chars */
-char *cm_MakeUpperCase(const char *str) {
-    deng_i32_t index;
-    char *l_str = (char*) str;
-    
-    for(index = 0; index < strlen(l_str); index++) {
-        if(l_str[index] > 0x60 && l_str[index] < 0x7B) 
-            l_str[index] -= 0x20;
+/* Replace all chars with other char*/
+char *cm_StrReplaceCh (
+    const char *str,
+    char find_ch,
+    char rep_ch
+) {
+    char *out_str = (char*) str;
+    for(size_t i = 0; i < strlen(out_str); i++) {
+        if(out_str[i] == find_ch)
+            out_str[i] = rep_ch;
     }
 
-    return l_str;
+    return out_str;
+}
+
+
+/* Make all lowercase chars into uppercase chars */
+char *cm_MakeUpperCase(const char *str) {
+    char *out_str = (char*) str;
+    
+    for(size_t i = 0; i < strlen(out_str); i++) {
+        if(out_str[i] > 0x60 && out_str[i] < 0x7B) 
+            out_str[i] -= 0x20;
+    }
+
+    return out_str;
+}
+
+
+/* Make all uppercase chars into lowercase chars */
+char *cm_MakeLowerCase(const char *str) {
+    char *out_str = (char*) str;
+    for(size_t i = 0; i < strlen(str); i++) {
+        if(out_str[i] > 0x40 && out_str[i] < 0x5B)
+            out_str[i] += 0x20;
+    }
+
+    return out_str;
 }
 
 

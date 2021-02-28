@@ -69,6 +69,7 @@ namespace dengUtils {
         void mkTextbox (
             BitmapStr &str, 
             deng_px_t text_width,
+            deng_ui32_t hier_level,
             dengMath::vec3<unsigned char> color,
             dengMath::vec2<deng_vec_t> pos,
             dengMath::vec2<deng_vec_t> origin
@@ -89,6 +90,7 @@ namespace dengUtils {
             deng_ui16_t px_size,
             dengMath::vec3<unsigned char> color,
             dengMath::vec2<deng_vec_t> pos,
+            deng_ui32_t hier_level,
             dengMath::vec2<deng_vec_t> origin
         );
         
@@ -99,6 +101,7 @@ namespace dengUtils {
             deng_vec_t vec_size,
             dengMath::vec3<unsigned char> color,
             dengMath::vec2<deng_vec_t> pos,
+            deng_ui32_t hier_level,
             dengMath::vec2<deng_vec_t> origin
         );
 
@@ -119,17 +122,35 @@ namespace dengUtils {
             deng_vec_t max_width
         );
 
-        /* Rasterise label for ui elements */
-        BitmapStr renderLabel (
-            dengMath::vec2<deng_vec_t> parent_cont_size,
+
+        /* Rasterise absolutely positioned label for ui elements */
+        BitmapStr renderAbsLabel (
             deng_px_t px_padding,
             dengMath::vec2<deng_vec_t> parent_elem_top_left,
+            dengMath::vec2<deng_vec_t> top_left_margin,
             dengMath::vec2<deng_vec_t> size,
             dengMath::vec2<deng_vec_t> origin,
             dengMath::vec3<unsigned char> color,
+            deng_ui32_t hier_level,
             const char *font_file,
             const char *label
         );
+
+
+        /* Rasterise relatively positioned label for ui elements */
+        BitmapStr renderRelLabel (
+            dengMath::vec2<deng_vec_t> parent_cont_size,
+            deng_px_t px_padding,
+            dengMath::vec2<deng_vec_t> parent_elem_top_left,
+            dengMath::vec2<deng_vec_t> top_left_pos,
+            dengMath::vec2<deng_vec_t> size,
+            dengMath::vec2<deng_vec_t> origin,
+            dengMath::vec3<unsigned char> color,
+            deng_ui32_t hier_level,
+            const char *font_file,
+            const char *label
+        );
+
 
         /* Clean rasterised string */
         void cleanBitmapString(BitmapStr &str);

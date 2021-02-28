@@ -8,8 +8,8 @@ namespace deng {
         VkBuffer staging_buffer;
         VkDeviceMemory staging_buffer_memory;
 
-        VkBuffer *p_main_buffer                 = NULL;
-        VkDeviceMemory *p_main_buffer_memory    = NULL;
+        VkBuffer main_buffer;
+        VkDeviceMemory main_buffer_memory;
         
         std::vector<deng_ObjColorData> colors;
 
@@ -31,45 +31,52 @@ namespace deng {
     
     /* Contains different getter functions for hardware specs */
     struct HardwareSpecs {
-        static bool getExtensionSupport (
+        static deng_bool_t getExtensionSupport (
             const VkPhysicalDevice &gpu, 
-            const char *p_extension_name
+            char *ext_name
         );
 
         static deng_ui32_t getMemoryType (
-            VkPhysicalDevice *p_gpu, 
-            const deng_ui32_t &type_filter, 
-            const VkMemoryPropertyFlags &properties
+            const VkPhysicalDevice &gpu, 
+            deng_ui32_t type_filter, 
+            VkMemoryPropertyFlags properties
         );
 
         static deng_ui32_t getDeviceScore (
-            VkPhysicalDevice *p_device, 
-            std::vector<const char*> &extenstions
+            const VkPhysicalDevice &device, 
+            std::vector<const char*> &exts
         );
     };
+
     
-    /* Contains different buffer handling functions */
-    struct BufferCreator {
+    /* 
+     * Contains method for memory allocation 
+     * This struct is inherited to ImageCreator and BufferCreator structs
+     */
+    struct MemoryAllocator {
+        static void allocateMemory (
+            const VkDevice &device, 
+            const VkPhysicalDevice &gpu,  
+            VkDeviceSize size, 
+            VkDeviceMemory &memory,
+            deng_ui32_t mem_type_bits, 
+            VkMemoryPropertyFlags properties
+        );
+    };
+
+
+    /* Contains methods for image VkImage creation */
+    struct ImageCreator : MemoryAllocator {
         static VkImageViewCreateInfo getImageViewInfo (
-            VkImage &image, 
+            const VkImage &image, 
             VkFormat format, 
             VkImageAspectFlags aspect_flags,
             deng_ui32_t mip_levels
         );
 
-        static void allocateMemory (
-            VkDevice device, 
-            VkPhysicalDevice gpu,  
-            VkDeviceSize size, 
-            VkDeviceMemory *p_memory,
-            deng_ui32_t mem_type_bits, 
-            VkMemoryPropertyFlags properties
-        );
-
-        /* VkImage related functions */
         static VkMemoryRequirements makeImage (
-            VkDevice device, 
-            VkPhysicalDevice gpu, 
+            const VkDevice &device, 
+            const VkPhysicalDevice &gpu, 
             VkImage &image, 
             deng_ui32_t width, 
             deng_ui32_t height, 
@@ -79,47 +86,55 @@ namespace deng {
             VkImageUsageFlags usage,
             VkSampleCountFlagBits sample_c
         );
+
         static void transitionImageLayout (
-            VkDevice device, 
-            VkImage &image, 
-            VkCommandPool commandpool, 
-            VkQueue g_queue, 
+            const VkDevice &device, 
+            const VkImage &image, 
+            const VkCommandPool &commandpool, 
+            const VkQueue &g_queue, 
             VkFormat format, 
             VkImageLayout old_layout, 
             VkImageLayout new_layout,
             deng_ui32_t mip_levels
         ); 
+
         static void copyBufferToImage (
-            VkDevice device, 
-            VkCommandPool commandpool, 
-            VkQueue g_queue, 
-            VkBuffer src_buffer, 
-            VkImage dst_image, 
+            const VkDevice &device, 
+            const VkCommandPool &commandpool, 
+            const VkQueue &g_queue, 
+            const VkBuffer &src_buffer, 
+            const VkImage &dst_image, 
             deng_ui32_t width, 
             deng_ui32_t height
         );
-        
-        /* VkBuffer related functions */
+    };
+
+    
+    /* Contains different buffer handling functions */
+    struct BufferCreator : MemoryAllocator {
         static VkMemoryRequirements makeBuffer (
-            VkDevice device, 
-            VkPhysicalDevice gpu, 
+            const VkDevice &device, 
+            const VkPhysicalDevice &gpu, 
             VkDeviceSize size, 
             VkBufferUsageFlags usage, 
-            VkBuffer *p_buffer
+            VkBuffer &buffer
         );
-        static void populateBufferMem (
-            VkDevice device, 
+        
+        /* Copy src_data to buffer memory */
+        static void cpyToBufferMem (
+            const VkDevice &device, 
             VkDeviceSize size, 
             void *src_data, 
-            VkDeviceMemory buffer_memory, 
+            const VkDeviceMemory &buf_mem, 
             VkDeviceSize offset
         );
+    
         static void copyBufferToBuffer (
-            VkDevice device, 
-            VkCommandPool commandpool, 
-            VkQueue g_queue, 
-            VkBuffer src_buffer, 
-            VkBuffer dst_buffer, 
+            const VkDevice &device, 
+            const VkCommandPool &commandpool, 
+            const VkQueue &g_queue, 
+            const VkBuffer &src_buffer, 
+            const VkBuffer &dst_buffer, 
             VkDeviceSize size, 
             VkDeviceSize offset
         );
@@ -154,8 +169,8 @@ namespace deng {
         VkQueue present_queue;
 
     public:
-        bool findGraphicsFamily(VkPhysicalDevice gpu);
-        bool findPresentSupportFamily (
+        deng_bool_t findGraphicsFamily(VkPhysicalDevice gpu);
+        deng_bool_t findPresentSupportFamily (
             VkPhysicalDevice gpu, 
             VkSurfaceKHR surface
         );
@@ -210,9 +225,9 @@ namespace deng {
         VkExtent2D m_extent;
 
     private:
-        VkShaderModule getShaderModule(std::vector<char> &shader_bins);
-        VkVertexInputBindingDescription getBindingDesc();
-        std::vector<VkVertexInputAttributeDescription> getAttributeDescs();
+        VkShaderModule __getShaderModule(std::vector<char> &shader_bins);
+        VkVertexInputBindingDescription __getBindingDesc();
+        std::vector<VkVertexInputAttributeDescription> __getAttributeDescs();
         
     public:
         PipelineCreator (
@@ -230,8 +245,8 @@ namespace deng {
             VkCullModeFlagBits cull_mode, 
             VkFrontFace front_face, 
             VkPrimitiveTopology primitive_topology, 
-            bool add_depth_stencil, 
-            bool add_color_blend, 
+            deng_bool_t add_depth_stencil, 
+            deng_bool_t add_color_blend, 
             VkSampleCountFlagBits sample_c,
             deng_ui32_t subpass_index
         );

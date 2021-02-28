@@ -5,12 +5,12 @@
 namespace deng {
 
     /* Check for Vulkan extension support by hardware */
-    bool HardwareSpecs::getExtensionSupport (
+    deng_bool_t HardwareSpecs::getExtensionSupport (
         const VkPhysicalDevice &gpu, 
-        const char *p_extenstion_name
+        char *ext_name
     ) {
         // Count total amount of supported extensions  
-        LOG("Finding support for extension " + std::string(p_extenstion_name));
+        LOG("Finding support for extension " + std::string(ext_name));
         deng_ui32_t extension_count;
         vkEnumerateDeviceExtensionProperties (
             gpu, 
@@ -33,7 +33,7 @@ namespace deng {
             const char *current_extenstion_name = extension.extensionName;
             LOG("Supported: " + std::string(current_extenstion_name));
             
-            if(std::string(current_extenstion_name) == std::string(p_extenstion_name)) {
+            if(std::string(current_extenstion_name) == std::string(ext_name)) {
                 LOG("Detected support for " + std::string(current_extenstion_name));
                 return true;
             }
@@ -45,15 +45,15 @@ namespace deng {
 
     /* Find appropriate memory type */
     deng_ui32_t HardwareSpecs::getMemoryType (
-        VkPhysicalDevice *p_gpu, 
-        const deng_ui32_t &type_filter, 
-        const VkMemoryPropertyFlags &properties
+        const VkPhysicalDevice &gpu, 
+        deng_ui32_t type_filter, 
+        VkMemoryPropertyFlags properties
     ) {
         // Get all device memory properties
         VkPhysicalDeviceMemoryProperties memory_properties;
         
         vkGetPhysicalDeviceMemoryProperties (
-            *p_gpu, 
+            gpu, 
             &memory_properties
         );
 
@@ -68,7 +68,7 @@ namespace deng {
 
     /* Get a score for GPUs based on the properties and features */
     deng_ui32_t HardwareSpecs::getDeviceScore (
-        VkPhysicalDevice *p_gpu, 
+        const VkPhysicalDevice &gpu, 
         std::vector<const char*> &required_extenstions
     ) {
         deng_ui32_t score = 0;
@@ -76,12 +76,12 @@ namespace deng {
         VkPhysicalDeviceProperties device_properties;
 
         vkGetPhysicalDeviceProperties (
-            *p_gpu, 
+            gpu, 
             &device_properties
         );
         
         vkGetPhysicalDeviceFeatures (
-            *p_gpu, 
+            gpu, 
             &device_features
         );
 
@@ -98,9 +98,9 @@ namespace deng {
         if(!device_features.samplerAnisotropy) return 0;
 
         // Check if all the extension are supported by the device  
-        for(const char* extenstion_name : required_extenstions) {
-            if(!HardwareSpecs::getExtensionSupport(*p_gpu, extenstion_name)) {
-                LOG("Required extension: " + std::string(extenstion_name) + " is not supported!");
+        for(const char* extension_name : required_extenstions) {
+            if(!HardwareSpecs::getExtensionSupport(gpu, (char*) extension_name)) {
+                LOG("Required extension: " + std::string(extension_name) + " is not supported!");
                 return 0;
             }
         }
@@ -110,7 +110,7 @@ namespace deng {
 
 
     /* Find correct graphics queue family */
-    bool QueueFamilyFinder::findGraphicsFamily(VkPhysicalDevice gpu) {
+    deng_bool_t QueueFamilyFinder::findGraphicsFamily(VkPhysicalDevice gpu) {
         deng_ui32_t index;
         // Get the total count of queue families
         deng_ui32_t family_count = 0;
@@ -141,7 +141,7 @@ namespace deng {
 
 
     /* Find correct present queue family */
-    bool QueueFamilyFinder::findPresentSupportFamily (
+    deng_bool_t QueueFamilyFinder::findPresentSupportFamily (
         VkPhysicalDevice gpu, 
         VkSurfaceKHR surface
     ) {
@@ -201,7 +201,7 @@ namespace deng {
 
 
     /* Create shader module and return it */
-    VkShaderModule PipelineCreator::getShaderModule(std::vector<char> &shader_bins) {
+    VkShaderModule PipelineCreator::__getShaderModule(std::vector<char> &shader_bins) {
         VkShaderModuleCreateInfo createinfo{};
         createinfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         createinfo.codeSize = (deng_ui32_t) shader_bins.size();
@@ -215,7 +215,7 @@ namespace deng {
     }
 
     /* Get vertex input binding description info*/ 
-    VkVertexInputBindingDescription PipelineCreator::getBindingDesc() {
+    VkVertexInputBindingDescription PipelineCreator::__getBindingDesc() {
         VkVertexInputBindingDescription input_binding_desc;
         input_binding_desc.binding = 0;
         input_binding_desc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
@@ -223,22 +223,18 @@ namespace deng {
         switch (m_p_pipeline_data->pipeline_type)
         {
         case DENG_PIPELINE_TYPE_UNMAPPED_3D:
-            LOG("Pipeline type unmapped unnorm");
             input_binding_desc.stride = sizeof(VERT_UNMAPPED_UNOR);
             break;
 
         case DENG_PIPELINE_TYPE_UNMAPPED_3D_NORM:
-            LOG("Pipeline type unmapped unnorm");
             input_binding_desc.stride = sizeof(VERT_UNMAPPED_NOR);
             break;
 
         case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D:
-            LOG("Pipeline type tex mapped unnorm");
             input_binding_desc.stride = sizeof(VERT_MAPPED_UNOR);
             break;
 
         case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D_NORM:
-            LOG("Pipeline type tex mapped norm");
             input_binding_desc.stride = sizeof(VERT_MAPPED_NOR);
             break;
 
@@ -258,7 +254,7 @@ namespace deng {
     } 
 
     /* Get vertex input attribute description info */
-    std::vector<VkVertexInputAttributeDescription> PipelineCreator::getAttributeDescs() {
+    std::vector<VkVertexInputAttributeDescription> PipelineCreator::__getAttributeDescs() {
         std::vector<VkVertexInputAttributeDescription> input_attr_desc{};
 
         switch (m_p_pipeline_data->pipeline_type)
@@ -326,7 +322,7 @@ namespace deng {
             break;
 
         case DENG_PIPELINE_TYPE_UNMAPPED_2D:
-            input_attr_desc.resize(2);
+            input_attr_desc.resize(3);
             input_attr_desc[0].binding = 0;
             input_attr_desc[0].location = 0;
             input_attr_desc[0].format = VK_FORMAT_R32G32_SFLOAT;
@@ -336,10 +332,15 @@ namespace deng {
             input_attr_desc[1].location = 1;
             input_attr_desc[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
             input_attr_desc[1].offset = offsetof(VERT_UNMAPPED_2D, color_data);
+
+            input_attr_desc[2].binding = 0;
+            input_attr_desc[2].location = 2;
+            input_attr_desc[2].format = VK_FORMAT_R32_UINT;
+            input_attr_desc[2].offset = offsetof(VERT_UNMAPPED_2D, z_hier_level);
             break;
 
         case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D:
-            input_attr_desc.resize(2);
+            input_attr_desc.resize(3);
             input_attr_desc[0].binding = 0;
             input_attr_desc[0].location = 0;
             input_attr_desc[0].format = VK_FORMAT_R32G32_SFLOAT;
@@ -349,6 +350,11 @@ namespace deng {
             input_attr_desc[1].location = 1;
             input_attr_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
             input_attr_desc[1].offset = offsetof(VERT_MAPPED_2D, tex_data);
+
+            input_attr_desc[2].binding = 0;
+            input_attr_desc[2].location = 2;
+            input_attr_desc[2].format = VK_FORMAT_R32_UINT;
+            input_attr_desc[2].offset = offsetof(VERT_MAPPED_2D, z_hier_level);
             break;
 
         default:
@@ -367,8 +373,8 @@ namespace deng {
         VkCullModeFlagBits cull_mode, 
         VkFrontFace front_face, 
         VkPrimitiveTopology primitive_topology, 
-        bool add_depth_stencil, 
-        bool add_color_blend, 
+        deng_bool_t add_depth_stencil, 
+        deng_bool_t add_color_blend, 
         VkSampleCountFlagBits sample_c,
         deng_ui32_t subpass_index
     ) {
@@ -421,8 +427,8 @@ namespace deng {
             MEM_ERR("Failed to read " + std::to_string(file_size) + " members");
 
         /* Call shader module handler */
-        m_shader_modules[0] = getShaderModule(vert_shader_binary_vector);
-        m_shader_modules[1] = getShaderModule(frag_shader_binary_vector);
+        m_shader_modules[0] = __getShaderModule(vert_shader_binary_vector);
+        m_shader_modules[1] = __getShaderModule(frag_shader_binary_vector);
 
         /* Create vertex shader stage createinfo */
         VkPipelineShaderStageCreateInfo vertex_shader_stage_createinfo{};
@@ -441,11 +447,10 @@ namespace deng {
         m_shader_stage_createinfos = {vertex_shader_stage_createinfo, frag_shader_stage_createinfo};
 
         /* Get descriptions */
-        m_input_binding_desc = getBindingDesc();
-        m_input_attr_descs = getAttributeDescs();
+        m_input_binding_desc = __getBindingDesc();
+        m_input_attr_descs = __getAttributeDescs();
 
-        /* Set up vertex input createinfo object */
-        m_vert_input_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        /* Set up vertex input createinfo object */ m_vert_input_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         m_vert_input_create_info.vertexBindingDescriptionCount = 1;
         m_vert_input_create_info.vertexAttributeDescriptionCount = (deng_ui32_t) (m_input_attr_descs.size());
         m_vert_input_create_info.pVertexBindingDescriptions = &m_input_binding_desc;
@@ -618,11 +623,11 @@ namespace deng {
     /****************************************/
 
     /* Generic memory allocation method */
-    void BufferCreator::allocateMemory (
-        VkDevice device, 
-        VkPhysicalDevice gpu, 
+    void MemoryAllocator::allocateMemory (
+        const VkDevice &device, 
+        const VkPhysicalDevice &gpu, 
         VkDeviceSize size,
-        VkDeviceMemory *p_memory,  
+        VkDeviceMemory &memory,  
         deng_ui32_t mem_type_bits, 
         VkMemoryPropertyFlags properties
     ) {
@@ -631,19 +636,19 @@ namespace deng {
         allocinfo.allocationSize = size;
         
         allocinfo.memoryTypeIndex = HardwareSpecs::getMemoryType (
-            &gpu, 
+            gpu, 
             mem_type_bits, 
             properties
         );
 
-        if(vkAllocateMemory(device, &allocinfo, nullptr, p_memory) != VK_SUCCESS)
+        if(vkAllocateMemory(device, &allocinfo, nullptr, &memory) != VK_SUCCESS)
             VK_BUFFER_ERR("failed to allocate buffer memory!");
     }
 
     /* VkImage related functions */
-    VkMemoryRequirements BufferCreator::makeImage (
-        VkDevice device, 
-        VkPhysicalDevice gpu, 
+    VkMemoryRequirements ImageCreator::makeImage (
+        const VkDevice &device, 
+        const VkPhysicalDevice &gpu, 
         VkImage &image, 
         deng_ui32_t width, 
         deng_ui32_t height, 
@@ -686,8 +691,8 @@ namespace deng {
 
 
     /* Returns image filled view createinfo struct */
-    VkImageViewCreateInfo BufferCreator::getImageViewInfo (
-        VkImage &image, 
+    VkImageViewCreateInfo ImageCreator::getImageViewInfo (
+        const VkImage &image, 
         VkFormat format, 
         VkImageAspectFlags aspect_flags,
         deng_ui32_t mip_levels
@@ -708,11 +713,11 @@ namespace deng {
     
 
     /* Transition image layout into new layout */
-    void BufferCreator::transitionImageLayout (
-        VkDevice device, 
-        VkImage &image, 
-        VkCommandPool commandpool, 
-        VkQueue g_queue, 
+    void ImageCreator::transitionImageLayout (
+        const VkDevice &device, 
+        const VkImage &image, 
+        const VkCommandPool &commandpool, 
+        const VkQueue &g_queue, 
         VkFormat format, 
         VkImageLayout old_layout, 
         VkImageLayout new_layout,
@@ -787,12 +792,12 @@ namespace deng {
 
 
     /* Copy buffer to image */
-    void BufferCreator::copyBufferToImage (
-        VkDevice device, 
-        VkCommandPool commandpool, 
-        VkQueue g_queue, 
-        VkBuffer src_buffer, 
-        VkImage dst_image, 
+    void ImageCreator::copyBufferToImage (
+        const VkDevice &device, 
+        const VkCommandPool &commandpool, 
+        const VkQueue &g_queue, 
+        const VkBuffer &src_buffer, 
+        const VkImage &dst_image, 
         deng_ui32_t width, 
         deng_ui32_t height
     ) {
@@ -836,14 +841,14 @@ namespace deng {
     }
     
 
-    /* VkBuffer related functions */
+    /* VkBuffer related methods */
     /* Create new buffer object */
     VkMemoryRequirements BufferCreator::makeBuffer (
-        VkDevice device, 
-        VkPhysicalDevice gpu, 
+        const VkDevice &device, 
+        const VkPhysicalDevice &gpu, 
         VkDeviceSize size, 
         VkBufferUsageFlags usage, 
-        VkBuffer *p_buffer
+        VkBuffer &buffer
     ) {
         // Set up buffer createinfo struct 
         VkBufferCreateInfo buffer_createInfo{};
@@ -853,14 +858,14 @@ namespace deng {
         buffer_createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         // Call Vulkan buffer creation handler 
-        if(vkCreateBuffer(device, &buffer_createInfo, nullptr, p_buffer) != VK_SUCCESS)
+        if(vkCreateBuffer(device, &buffer_createInfo, nullptr, &buffer) != VK_SUCCESS)
             VK_BUFFER_ERR("Failed to create a buffer!");
 
         // Get memory requirements for the buffer
         VkMemoryRequirements memory_requirement;
         vkGetBufferMemoryRequirements (
             device, 
-            *p_buffer, 
+            buffer, 
             &memory_requirement
         );
 
@@ -868,42 +873,43 @@ namespace deng {
     }
     
 
-    /* Populate allocated buffer memory */
-    void BufferCreator::populateBufferMem (
-        VkDevice device, 
+    /* Copy src_data to buffer memory */
+    void BufferCreator::cpyToBufferMem (
+        const VkDevice &device, 
         VkDeviceSize size, 
         void *src_data, 
-        VkDeviceMemory buffer_memory, 
+        const VkDeviceMemory &buf_mem, 
         VkDeviceSize offset
     ) {
-        void *data;
+        void *buf;
         vkMapMemory (
             device, 
-            buffer_memory, 
+            buf_mem, 
             offset, 
             size, 
             0, 
-            &data
+            &buf
         );
             memcpy (
-                data, 
+                buf, 
                 src_data, 
                 size
             );
+
         vkUnmapMemory (
             device, 
-            buffer_memory
+            buf_mem
         );
     }
-    
+
 
     /* Copy buffer to buffer */
     void BufferCreator::copyBufferToBuffer (
-        VkDevice device, 
-        VkCommandPool commandpool, 
-        VkQueue g_queue, 
-        VkBuffer src_buffer, 
-        VkBuffer dst_buffer, 
+        const VkDevice &device, 
+        const VkCommandPool &commandpool, 
+        const VkQueue &g_queue, 
+        const VkBuffer &src_buffer, 
+        const VkBuffer &dst_buffer, 
         VkDeviceSize size, 
         VkDeviceSize offset
     ) {

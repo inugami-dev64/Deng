@@ -70,12 +70,14 @@ typedef struct VERT_UNMAPPED_NOR {
 typedef struct VERT_MAPPED_2D {
     deng_ObjVertData2D vert_data;
     deng_ObjTextureData tex_data;
+    deng_ui32_t z_hier_level;
 } VERT_MAPPED_2D;
 
 
 typedef struct VERT_UNMAPPED_2D {
     deng_ObjVertData2D vert_data;
     deng_ObjColorData color_data;
+    deng_ui32_t z_hier_level;
 } VERT_UNMAPPED_2D;
 
 /* Vertices and indices offsets combined */

@@ -12,10 +12,20 @@ extern "C" {
 
     // Get the file extension from file name
     char *cm_GetFileExtName(const char *file_name);
+
+    /************* String functions ****************/
     // Trim string from beginning and end
     char *cm_TrimString(const char *str, size_t beg_index, size_t end_pos);
     // Make all the chars into upper case letters
     char *cm_MakeUpperCase(const char *str); 
+    // Make all chars into lower case
+    char *cm_MakeLowerCase(const char *str);
+    // Replace all whitespaces with underscores
+    char *cm_StrReplaceCh (
+        const char *str,
+        char find_ch,
+        char rep_ch
+    );
 
     // Memory allocation check
     void cm_CheckMemoryAlloc(void *ptr);

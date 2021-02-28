@@ -18,7 +18,7 @@ namespace dengMath {
         /***** Operator overloads *****/
         /******************************/
 
-        vec4<T> operator+(vec4<T> vec) {
+        vec4<T> operator+(const vec4<T> &vec) {
             return (vec4<T>) {
                 first + vec.first,
                 second + vec.second,
@@ -65,12 +65,12 @@ namespace dengMath {
         }
 
 
-        deng_bool_t operator==(vec4<T> vector) { 
+        deng_bool_t operator==(const vec4<T> &vec) { 
             return (deng_bool_t) {
-                first == vector.first && 
-                second == vector.second && 
-                third == vector.third && 
-                fourth == vector.fourth
+                first == vec.first && 
+                second == vec.second && 
+                third == vec.third && 
+                fourth == vec.fourth
             }; 
         }
 
@@ -102,7 +102,7 @@ namespace dengMath {
         /***** Operator overloads *****/
         /******************************/
 
-        vec3<T> operator+(vec3<T> vec) {
+        vec3<T> operator+(const vec3<T> &vec) {
             return (vec3<T>) {
                 first + vec.first,
                 second + vec.second,
@@ -110,7 +110,7 @@ namespace dengMath {
             };
         }
 
-        vec3<T> operator-(vec3<T> vec) {
+        vec3<T> operator-(const vec3<T> &vec) {
             return (vec3<T>) {
                 first - vec.first,
                 second - vec.second,
@@ -144,11 +144,11 @@ namespace dengMath {
             third -= vec.third;
         }
 
-        deng_bool_t operator==(vec3<T> vector) { 
+        deng_bool_t operator==(const vec3<T> &vec) { 
             return (deng_bool_t) {
-                first == vector.first && 
-                second == vector.second && 
-                third == vector.third
+                first == vec.first && 
+                second == vec.second && 
+                third == vec.third
             }; 
         }
 
@@ -185,7 +185,7 @@ namespace dengMath {
             };
         }
 
-        vec2<T> operator-(vec2<T> vec) {
+        vec2<T> operator-(const vec2<T> &vec) {
             return (vec2<T>) {
                 first - vec.first,
                 second - vec.second
@@ -215,10 +215,10 @@ namespace dengMath {
         }
 
 
-        deng_bool_t operator==(vec2<T> vector) { 
+        deng_bool_t operator==(const vec2<T> &vec) { 
             return (deng_bool_t) {
-                first == vector.first && 
-                second == vector.second
+                first == vec.first && 
+                second == vec.second
             }; 
         }
 
@@ -247,7 +247,7 @@ namespace dengMath {
 
         /* Return the determinant of given matrix */
         template<typename DT>
-        static DT det(mat2<DT> mat) { 
+        static DT det(const mat2<DT> &mat) { 
             return mat.row1.first * mat.row2.second - mat.row1.second * mat.row2.first; 
         }
         /******************************/
@@ -255,7 +255,7 @@ namespace dengMath {
         /******************************/
 
         /* Perform matrix multiplication on 2x2 matrix */ 
-        mat2<T> operator*(mat2<T> mat) {
+        mat2<T> operator*(const mat2<T> &mat) {
             mat2<T> out_mat;
             out_mat.row1 = {
                 (
@@ -278,7 +278,7 @@ namespace dengMath {
         }
 
         /* Peform multiplication with column vector */
-        vec2<T> operator*(vec2<T> vec) {
+        vec2<T> operator*(const vec2<T> &vec) {
             return (vec2<T>) {
                 (row1.first * vec.first + row1.second * vec.second),
                 (row2.first * vec.first + row2.second * vec.second)
@@ -286,7 +286,7 @@ namespace dengMath {
         }
 
         /* Perform matrix addition */
-        mat2<T> operator+(mat2<T> mat) {
+        mat2<T> operator+(const mat2<T> &mat) {
             return (mat2<T>) {
                 {row1.first + mat.row1.first, row1.second + mat.row1.second},
                 {row2.first + mat.row2.first, row1.second + mat.row2.second}
@@ -296,7 +296,7 @@ namespace dengMath {
         /* Find the inverse of a matrix */
         mat2<T> inv() {
             mat2<deng_vec_t> out_mat;
-            deng_vec_t inv_det = 1 / (row1.first * row2.second - row1.second * row2.first); 
+            deng_vec_t inv_det = 1 / mat2<T>::det(*this);
             out_mat.row1.first = row2.second * inv_det;
             out_mat.row1.second = -row2.first * inv_det;
             out_mat.row2.first = -row1.second * inv_det;
@@ -319,7 +319,7 @@ namespace dengMath {
         T *data() { return &row1.first; }
         
         template<typename DT>
-        static DT det(mat3<DT> mat) {
+        static DT det(const mat3<DT> &mat) {
             return (DT) (
                 (mat.row1.first * mat.row2.second * mat.row3.third) +
                 (mat.row1.second * mat.row2.third * mat.row3.first) + 
@@ -404,7 +404,7 @@ namespace dengMath {
         }
 
         /* Perform multiplication with column vector */
-        vec3<T> operator*(vec3<T> vec) {
+        vec3<T> operator*(const vec3<T> &vec) {
             return {
                 {row1.first * vec.first + row1.second * vec.second + row1.third * vec.third},
                 {row2.first * vec.first + row2.second * vec.second + row2.third * vec.third},
@@ -412,8 +412,16 @@ namespace dengMath {
             };
         }
 
+        vec3<T> operator*(const vec2<T> &vec) {
+            return {
+                {row1.first * vec.first + row1.second * vec.second + row1.third},
+                {row2.first * vec.first + row2.second * vec.second + row2.third},
+                {row3.first * vec.first + row3.second * vec.second + row3.third}
+            };
+        }
+
         /* Perform matrix addition */
-        mat3<T> operator+(mat3<T> mat) {
+        mat3<T> operator+(const mat3<T> &mat) {
             return (mat3<T>) {
                 {row1.first + mat.row1.first, row1.second + mat.row1.second, row1.third + mat.row1.third},
                 {row2.first + mat.row2.first, row2.second + mat.row2.second, row2.third + mat.row2.third},
@@ -461,7 +469,7 @@ namespace dengMath {
 
         T *data() { return &row1.first; }
         template<typename DT>
-        static DT det(mat4<DT> mat) {
+        static DT det(const mat4<DT> &mat) {
             return (DT) {
                 mat.row1.first * mat3<DT>::det((mat3<T>) {
                     {mat.row2.second, mat.row2.third, mat.row2.fourth},
@@ -602,34 +610,36 @@ namespace dengMath {
             return out_mat;
         }
 
-        /* Multiply with 3D column vector                                          *
-         * This operation assumes that homogenous coordinates are going to be used */
-        vec4<T> operator*(const vec3<T> vector) {
+        /* 
+         * Multiply with 3D column vector                                          
+         * This operation assumes that homogenous coordinates are going to be used 
+         */
+        vec4<T> operator*(const vec3<T> vec) {
             vec4<T> out_vec;
             out_vec.first = {
-                (row1.first * vector.first) + 
-                (row1.second * vector.second) + 
-                (row1.third * vector.third) + 
+                (row1.first * vec.first) + 
+                (row1.second * vec.second) + 
+                (row1.third * vec.third) + 
                 row1.fourth
             };
 
             out_vec.second = {
-                (row2.first * vector.first) + 
-                (row2.second * vector.second) + 
-                (row2.third * vector.third) + 
+                (row2.first * vec.first) + 
+                (row2.second * vec.second) + 
+                (row2.third * vec.third) + 
                 row2.fourth
             };
             out_vec.third = {
-                (row3.first * vector.first) + 
-                (row3.second * vector.second) + 
-                (row3.third * vector.third) + 
+                (row3.first * vec.first) + 
+                (row3.second * vec.second) + 
+                (row3.third * vec.third) + 
                 row3.fourth
             };
 
             out_vec.fourth = {
-                (row4.first * vector.first) + 
-                (row4.second * vector.second) + 
-                (row4.third * vector.third) + 
+                (row4.first * vec.first) + 
+                (row4.second * vec.second) + 
+                (row4.third * vec.third) + 
                 row4.fourth
             };
 
@@ -637,7 +647,7 @@ namespace dengMath {
         }
         
         /* Multiply with column vector */
-        vec4<T> operator*(vec4<T> vec) {
+        vec4<T> operator*(const vec4<T> &vec) {
             vec4<T> out_vec;
             out_vec.first = {
                 vec.first * row1.first + 
@@ -681,7 +691,7 @@ namespace dengMath {
         }
 
         /* Matrix addition */
-        mat4<T> operator+(mat4<T> mat) {
+        mat4<T> operator+(const mat4<T> &mat) {
             return (mat4<T>) {
                 {row1.first + mat.row1.first, row1.second + mat.row1.second, row1.third + mat.row1.third, row1.fourth + mat.row1.fourth},
                 {row2.first + mat.row2.first, row2.second + mat.row2.second, row2.third + mat.row2.third, row2.fourth + mat.row2.fourth},
@@ -970,11 +980,31 @@ namespace dengMath {
         );
     };
 
-    // Calculate new asset vertices according to model matrix
-    void applyModelMatrix (
-        deng_Asset &asset, 
-        mat4<deng_vec_t> matrix
-    );
+
+    struct Transformer {
+        // Calculate new asset vertices according to model matrix
+        static void apply3DModelMatrix (
+            deng_Asset &asset, 
+            mat4<deng_vec_t> &mat
+        );
+
+        static void apply3DModelMatrix (
+            vec2<deng_ui32_t> asset_bounds,
+            std::vector<deng_Asset> *p_assets,
+            mat4<deng_vec_t> &mat
+        );
+
+        static void apply2DModelMatrix (
+            deng_Asset &asset,
+            mat3<deng_vec_t> &mat
+        );
+
+        static void apply2DModelMatrix (
+            vec2<deng_ui32_t> asset_bounds,
+            std::vector<deng_Asset> *p_assets,
+            mat3<deng_vec_t> &mat
+        );
+    };
 }
 
 #endif
