@@ -1,6 +1,6 @@
-#include <stdlib.h>
-#define DAS_EXT_HANDLER
-#include "../../headers/das/das_core.h"
+#define __DAM_USAGE
+#define __DAS_HANDLER_C
+#include <das/das_handler.h>
  
 /* Add .das file extension to the file name */
 char *dasGetDASFileName(char *file_name) {
@@ -324,9 +324,6 @@ void dasReadVERTHDR (
     res = fread(&vert_count, sizeof(deng_ui32_t), 1, file);
     p_vertices->size = vert_count;
 
-    char file_str[256];
-    cm_LogWrite("vert_read.log", "#Entry point", true);
-
     switch(new_asset_mode)
     {
     case DENG_ASSET_MODE_3D_UNMAPPED:
@@ -428,7 +425,6 @@ void dasReadVERTHDR (
         {
         case DENG_ASSET_MODE_3D_UNMAPPED:
         case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
-            printf("test\n");
             fprintf (
                 stderr,
                 "Cannot read normalised vertices from non normalised asset file\n"
@@ -515,22 +511,6 @@ void dasReadVERTHDR (
             );
 
             for(size_t i = 0; i < p_vertices->size; i++) {
-                printf("Hello test\n");
-                sprintf (
-                    file_str,
-                    "%f,%f,%f | %f,%f | %f,%f,%f",
-                    tmp_vert[i].vert_data.vert_x,
-                    tmp_vert[i].vert_data.vert_y,
-                    tmp_vert[i].vert_data.vert_z,
-                    tmp_vert[i].tex_data.tex_x,
-                    tmp_vert[i].tex_data.tex_y,
-                    tmp_vert[i].norm_data.nor_x,
-                    tmp_vert[i].norm_data.nor_y,
-                    tmp_vert[i].norm_data.nor_z
-                );
-                cm_LogWrite("vert_read.log", file_str, false);
-                memset(file_str, 0, 256);
-
                 p_vertices->p_tex_mapped_unnormalized_vert[i].vert_data = tmp_vert[i].vert_data;
                 p_vertices->p_tex_mapped_unnormalized_vert[i].tex_data = tmp_vert[i].tex_data;
             }

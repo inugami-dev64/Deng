@@ -1,5 +1,7 @@
-#include "../../headers/common/common.h"
-#include "../../headers/common/hashmap.h"
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <common/hashmap.h>
 
 // numbers in pi
 static unsigned int pi[32] = {
@@ -49,5 +51,5 @@ int main() {
 
     printf("\n");
     free(hm.map_data);
-    return 0;
+    return EXIT_SUCCESS;
 }

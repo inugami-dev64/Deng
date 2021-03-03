@@ -1,7 +1,5 @@
-#include "../../headers/common/common.h"
-
-#define false 0
-#define true 1
+#define __COMMON_C
+#include <common/common.h>
 
 /* Clear all the contents in char buffer */
 void cm_ClearBuffer(char *str, deng_i32_t len) {

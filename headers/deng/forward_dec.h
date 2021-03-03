@@ -14,16 +14,18 @@ namespace deng {
     class mat4;
 
     // deng/renderer.h
-    struct VulkanInstanceInfo;
-    struct VulkanSwapChainInfo;
-    struct VulkanDescriptorInfo;
-    struct VulkanResourceInfo;
-    class InstanceCreator;
-    class SwapChainCreator;
-    class DescriptorCreator;
-    class ResourceAllocator;
-    class DrawCaller;
-    class Renderer;
+    namespace vulkan {
+        struct VulkanInstanceInfo;
+        struct VulkanSwapChainInfo;
+        struct VulkanDescriptorInfo;
+        struct VulkanResourceInfo;
+        class InstanceCreator;
+        class SwapChainCreator;
+        class DescriptorCreator;
+        class ResourceAllocator;
+        class DrawCaller;
+        class Renderer;
+    }
 
     // deng/window.h
     class WindowWrap;
@@ -40,10 +42,10 @@ namespace deng {
     struct HardwareSpecs;
     struct BufferCreator;
     struct CommandBufferRecorder;
-    class QueueFamilyFinder;
+    class QueueManager;
     struct PipelineData;
     struct PipelineCreateinfoSpecifiers;
-    struct VulkanDeviceInfo;
+    struct __VulkanDeviceInfo;
     class PipelineCreator;
     class SwapChainDetails;
 }

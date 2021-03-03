@@ -1,6 +1,15 @@
 #ifndef COLLISION_H
 #define COLLISION_H
 
+#ifdef __COLLISION_CPP
+    #include <vector>
+    #include <stdlib.h>
+
+    #include <common/base_types.h>
+    #include <das/assets.h>
+    #include <deng/deng_math.h>
+#endif
+
 namespace dengUtils {
     /*
      * Collision2D

@@ -1,5 +1,5 @@
-#define __DENGUI_USAGE 1
-#include "../../headers/deng/api_core.h"
+#define __DENGUI_WINDOW_CPP
+#include <dengui/dengui_window.h>
 
 namespace dengui {
     /* Create new window instance */
@@ -42,6 +42,23 @@ namespace dengui {
             p_wi->id,
             0,
             realloc_res,
+            true
+        );
+    }
+
+
+    /* Respawn existing window */
+    void respawnWindow (
+        Window *p_win, 
+        Events *p_ev
+    ) {
+        std::vector<std::string> hidden = {DENGUI_MAXIMISE_TRIANGLE_ID};
+        p_ev->pushWindowElements (
+            p_win->getWindowElements(),
+            &hidden,
+            p_win->getId(),
+            0,
+            true,
             true
         );
     }
@@ -194,9 +211,12 @@ namespace dengui {
         m_win_elems[m_win_elems.size() - 1].parent_id = p_wi->id;
         m_win_elems[m_win_elems.size() - 1].child_id = DENGUI_TITLEBAR_ID;
         m_win_elems[m_win_elems.size() - 1].is_interactive = false;
-        if(p_wi->wt == WINDOW_TYPE_FLOATING)
+        if(p_wi->wt == WINDOW_TYPE_FLOATING) {
+            LOG("Initialised draggable window");
             m_win_elems[m_win_elems.size() - 1].is_drag_point = true;
+        }
         else m_win_elems[m_win_elems.size() - 1].is_drag_point = false;
+        m_win_elems[m_win_elems.size() - 1].col_vert_bounds = {0, 4};
         m_win_elems[m_win_elems.size() - 1].color_mode = ELEMENT_COLOR_MODE_UNMAPPED;
         m_win_elems[m_win_elems.size() - 1].onLMBClickFunc = NULL;
         m_win_elems[m_win_elems.size() - 1].onMMBClickFunc = NULL;
@@ -374,25 +394,6 @@ namespace dengui {
         tmp_size.second = DENGUI_TITLEBAR_HEIGHT;
         
         m_win_elems.resize(m_win_elems.size() + 1);
-        // Add closing button as a text box
-        //addRelText (
-            //tmp_pos,
-            //DENGUI_TITLEBAR_HEIGHT - DENGUI_TITLEBAR_ELEM_MARGIN,
-            //deng_win_bounds,
-            //REC_ORIGIN_VERTEX_TOP_RIGHT,
-            //str,
-            //{
-                //(unsigned char) (color.first * 255), 
-                //(unsigned char) (color.second * 255), 
-                //(unsigned char) (color.third * 255)
-            //},
-            //form_vert,
-            //m_win_elems[m_win_elems.size() - 1].mapped_vert,
-            //m_win_elems[m_win_elems.size() - 1].indices,
-            //m_win_elems[m_win_elems.size() - 1].texture,
-            //m_win_elems[m_win_elems.size() - 1].tex_box
-        //);
-        
         dengUtils::BitmapStr str = m_p_sr->renderAbsLabel (
             DENGUI_DEFAULT_LABEL_PADDING, 
             tmp_pos, 

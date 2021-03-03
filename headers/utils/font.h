@@ -1,5 +1,24 @@
 #ifndef FONT_H
 #define FONT_H
+
+#ifdef __FONT_CPP
+    #include <vector>
+    #include <array>
+    #include <stdlib.h>    
+    #include <dirent.h>
+    #include <vulkan/vulkan.h>
+
+    #include <common/base_types.h>
+    #include <common/common.h>
+    #include <common/err_def.h>
+    #include <das/assets.h>
+    
+    #include <deng/deng_math.h>
+    #include <deng/surface_window.h>
+    #include <deng/window.h>
+    #include <utils/shapes.h>
+#endif
+
 #include <ft2build.h>
 #include <freetype/ftbitmap.h>
 
@@ -48,25 +67,25 @@ namespace dengUtils {
         std::vector<std::string> m_fonts;
 
     protected:
-        deng_bool_t verifyFont (
+        deng_bool_t __verifyFont (
             BitmapStr &str, 
             std::string &out_path
         );
 
-        deng_px_t findTextSizePx(BitmapStr &str);
-        deng_vec_t findTextSizeVec(BitmapStr &str);
-        std::vector<char> indexGlyphs(BitmapStr &str);
-        void findFontFiles(std::string custom_path);
+        deng_px_t __findTextSizePx(BitmapStr &str);
+        deng_vec_t __findTextSizeVec(BitmapStr &str);
+        std::vector<char> __indexGlyphs(BitmapStr &str);
+        void __findFontFiles(std::string custom_path);
         
         // Generic text box creationg function
-        void mkGlyphs (
+        void __mkGlyphs (
             BitmapStr &str, 
             deng_ui16_t px_size,
             dengMath::vec2<deng_vec_t> pos, 
             dengMath::vec3<unsigned char> color
         );
 
-        void mkTextbox (
+        void __mkTextbox (
             BitmapStr &str, 
             deng_px_t text_width,
             deng_ui32_t hier_level,

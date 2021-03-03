@@ -1,11 +1,24 @@
 #ifndef DAS_HANDLER_H
+#define DAS_HANDLER_H
+
+#ifdef __cplusplus
+    extern "C" {
+#endif
 
 #define INFO_HEADER_NAME "INFO_HDR"
 #define VERTICES_HEADER_NAME "VERT_HDR"
 #define INDICES_HEADER_NAME "INDX_HDR"
 
 /* das assembler functions */
-#ifdef DAS_EXT_HANDLER
+#ifdef __DAS_HANDLER_C
+    #include <stdlib.h> // size_t, malloc(), free()
+    #include <string.h> // strlen()
+    #include <stdio.h> // FILE, printf()
+    #include <time.h> // time()
+    #include <common/base_types.h>
+    #include <das/assets.h>
+    #include <das/data_loader.h>
+
     // Generic file extension name adder
     char *dasGetDASFileName(char *file_name); 
     void dasAssembleINFOHDR (
@@ -33,7 +46,7 @@ void dasAssemble (
 );
 
 /* das reader functions */
-#ifdef DAS_EXT_HANDLER
+#ifdef __DAM_USAGE
     #define CORRUPTION_DAS_ERR(x) fprintf(stderr, "Corrupted DENG asset file '%s'\n", x), \
                                   exit(EXIT_FAILURE)
     void dasReadINFOHDR (
@@ -75,4 +88,8 @@ void dasDestroyTextures (
     deng_Texture *textures, 
     deng_i32_t tex_c
 );
+
+#ifdef __cplusplus
+    }
+#endif
 #endif

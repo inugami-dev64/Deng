@@ -2,14 +2,9 @@
 #define ERR_DEF_H
 
 // Console loggers
-#if __GENERIC_DEBUG
-    #define LOG(x) std::cout << "LOG: " << x << std::endl
-    #define WARNME(x) std::cout << "WARNING: " << x << std::endl
-#else
-    #define LOG(x)
-    #define WARNME(x)
-    #define ERRME(x)
-#endif
+#include <iostream>
+#define LOG(x) std::cout << "LOG: " << x << std::endl
+#define WARNME(x) std::cout << "WARNING: " << x << std::endl
 
 
 // Runtime errors

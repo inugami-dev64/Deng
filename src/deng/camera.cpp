@@ -1,5 +1,5 @@
-#include "../../headers/deng/api_core.h"
-#include <string>
+#define __CAMERA_CPP
+#include <deng/camera.h>
 
 // Shared data
 extern dengui::MouseInputInfo ext_mii;
@@ -21,26 +21,6 @@ namespace deng {
             &ext_mii.mouse_coords.second, 
             0
         );
-
-        ext_mii.active_btn_c = p_ww->getWindow()->active_keys.btn_count;
-        if(ext_mii.active_btn_c && m_prev_active_btn_c != ext_mii.active_btn_c) {
-            deng_MouseButton *tmp = (deng_MouseButton*) realloc (
-                ext_mii.active_btn,
-                sizeof(deng_MouseButton) * ext_mii.active_btn_c
-            );
-
-            // Check for memory allocation error
-            cm_CheckMemoryAlloc(tmp);
-            
-            ext_mii.active_btn = tmp;
-            memcpy (
-                ext_mii.active_btn,
-                p_ww->getWindow()->active_keys.p_btn,
-                sizeof(deng_MouseButton) * ext_mii.active_btn_c
-            );
-
-            m_prev_active_btn_c = ext_mii.active_btn_c;
-        }
 
         m_mouse_pos.first = 
         (ext_mii.mouse_coords.first * 2) / 
@@ -162,14 +142,34 @@ namespace deng {
     void FPPCameraEv::findMovementType(WindowWrap *p_ww) {
         if
         (
-            deng_IsKeyActive(p_ww->getWindow(), DENG_KEY_W) && 
-            !deng_IsKeyActive(p_ww->getWindow(), DENG_KEY_S)
+            deng_FindKeyStatus (
+                DENG_KEY_W, 
+                DENG_MOUSE_BTN_UNKNOWN, 
+                DENG_INPUT_TYPE_KB, 
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            ) && 
+            !deng_FindKeyStatus (
+                DENG_KEY_S, 
+                DENG_MOUSE_BTN_UNKNOWN,
+                DENG_INPUT_TYPE_KB,
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            )
         ) m_movements.third = DENG_MOVEMENT_FORWARD;
         
         else if
         (
-            !deng_IsKeyActive(p_ww->getWindow(), DENG_KEY_W) && 
-            deng_IsKeyActive(p_ww->getWindow(), DENG_KEY_S)
+            !deng_FindKeyStatus (
+                DENG_KEY_W, 
+                DENG_MOUSE_BTN_UNKNOWN, 
+                DENG_INPUT_TYPE_KB, 
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            ) && 
+            deng_FindKeyStatus (
+                DENG_KEY_S, 
+                DENG_MOUSE_BTN_UNKNOWN,
+                DENG_INPUT_TYPE_KB,
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            )
         ) m_movements.third = DENG_MOVEMENT_BACKWARD;
 
         else 
@@ -178,28 +178,68 @@ namespace deng {
 
         if
         (
-            deng_IsKeyActive(p_ww->getWindow(), DENG_KEY_A) && 
-            !deng_IsKeyActive(p_ww->getWindow(), DENG_KEY_D)
+            deng_FindKeyStatus (
+                DENG_KEY_A,
+                DENG_MOUSE_BTN_UNKNOWN,
+                DENG_INPUT_TYPE_KB,
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            ) && 
+            !deng_FindKeyStatus (
+                DENG_KEY_D,
+                DENG_MOUSE_BTN_UNKNOWN,
+                DENG_INPUT_TYPE_KB,
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            )
         ) m_movements.first = DENG_MOVEMENT_LEFTWARD;
 
         else if
         (
-            !deng_IsKeyActive(p_ww->getWindow(), DENG_KEY_A) && 
-            deng_IsKeyActive(p_ww->getWindow(), DENG_KEY_D)
+            !deng_FindKeyStatus (
+                DENG_KEY_A,
+                DENG_MOUSE_BTN_UNKNOWN,
+                DENG_INPUT_TYPE_KB,
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            ) && 
+            deng_FindKeyStatus (
+                DENG_KEY_D,
+                DENG_MOUSE_BTN_UNKNOWN,
+                DENG_INPUT_TYPE_KB,
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            )
         ) m_movements.first = DENG_MOVEMENT_RIGHTWARD;
-
+        
         else m_movements.first = DENG_MOVEMENT_NONE;
 
         if
         (
-            deng_IsKeyActive(p_ww->getWindow(), DENG_KEY_SPACE) && 
-            !deng_IsKeyActive(p_ww->getWindow(), DENG_KEY_LEFT_CTRL)
+            deng_FindKeyStatus (
+                DENG_KEY_SPACE,
+                DENG_MOUSE_BTN_UNKNOWN,
+                DENG_INPUT_TYPE_KB,
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            ) && 
+            !deng_FindKeyStatus (
+                DENG_KEY_LEFT_CTRL,
+                DENG_MOUSE_BTN_UNKNOWN,
+                DENG_INPUT_TYPE_KB,
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            )
         ) m_movements.second = DENG_MOVEMENT_UPWARD;
 
         else if 
         (
-            !deng_IsKeyActive(p_ww->getWindow(), DENG_KEY_SPACE) && 
-            deng_IsKeyActive(p_ww->getWindow(), DENG_KEY_LEFT_CTRL)
+            !deng_FindKeyStatus (
+                DENG_KEY_SPACE,
+                DENG_MOUSE_BTN_UNKNOWN,
+                DENG_INPUT_TYPE_KB,
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            ) && 
+            deng_FindKeyStatus (
+                DENG_KEY_LEFT_CTRL,
+                DENG_MOUSE_BTN_UNKNOWN,
+                DENG_INPUT_TYPE_KB,
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            )
         ) m_movements.second = DENG_MOVEMENT_DOWNWARD;
 
         else m_movements.second = DENG_MOVEMENT_NONE;
@@ -212,9 +252,9 @@ namespace deng {
         dengMath::ViewMatrix *p_vm
     ) {
         EventBase::updateMouseEvData(p_ww);
-        ext_mii.mouse_input = p_ww->getInputMode();
+        ext_mii.is_mouse_input = p_ww->isMovement();
         
-        if(ext_mii.mouse_input == DENG_INPUT_MOVEMENT) {
+        if(ext_mii.is_mouse_input) {
             findMovementType(p_ww);
             dengMath::vec2<deng_vec_t> rot;
             EventBase::getMouseRotation(p_ww, &rot);
@@ -224,7 +264,12 @@ namespace deng {
             if
             (
                 m_input_mode_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && 
-                deng_IsKeyActive(p_ww->getWindow(), DENG_KEY_ESCAPE)
+                deng_FindKeyStatus (
+                    DENG_KEY_ESCAPE,
+                    DENG_MOUSE_BTN_UNKNOWN,
+                    DENG_INPUT_TYPE_KB,
+                    DENG_INPUT_EVENT_TYPE_ACTIVE
+                )
             ) {
 
                 #if CAMERA_MOUSE_DEBUG
@@ -238,13 +283,13 @@ namespace deng {
 
                 m_frozen_mouse_pos.first = p_ww->getWindow()->virtual_mouse_position.x;
                 m_frozen_mouse_pos.second = p_ww->getWindow()->virtual_mouse_position.y;
-                p_ww->setInputMode(DENG_INPUT_NONMOVEMENT);
+                p_ww->setMovement(false);
                 m_input_mode_timer.setNewTimePoint();
                 if(m_callback) m_callback(&m_frozen_mouse_pos);
             }
         }
 
-        else if(ext_mii.mouse_input == DENG_INPUT_NONMOVEMENT) {
+        else {
             m_movements.first = DENG_MOVEMENT_NONE;
             m_movements.second = DENG_MOVEMENT_NONE;
             m_movements.third = DENG_MOVEMENT_NONE;
@@ -252,12 +297,14 @@ namespace deng {
             if
             (
                 m_input_mode_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && 
-                deng_IsKeyActive (
-                    p_ww->getWindow(), 
-                    DENG_KEY_ESCAPE
+                deng_FindKeyStatus (
+                    DENG_KEY_ESCAPE,
+                    DENG_MOUSE_BTN_UNKNOWN,
+                    DENG_INPUT_TYPE_KB,
+                    DENG_INPUT_EVENT_TYPE_ACTIVE
                 )
             ) {
-                p_ww->setInputMode(DENG_INPUT_MOVEMENT);
+                p_ww->setMovement(true);
                 p_ww->getWindow()->virtual_mouse_position.x = m_frozen_mouse_pos.first;
                 p_ww->getWindow()->virtual_mouse_position.y = m_frozen_mouse_pos.second;
                 m_input_mode_timer.setNewTimePoint();
@@ -364,7 +411,7 @@ namespace deng {
 
         m_p_ww->getWindow()->virtual_mouse_position.cursor = DENG_CURSOR_HIDDEN;
         m_p_ww->getWindow()->virtual_mouse_position.is_lib_cur = false;
-        m_p_ww->setInputMode(DENG_INPUT_MOVEMENT);
+        m_p_ww->setMovement(false);
 
         p_projection_matrix = new dengMath::ProjectionMatrix (
             FOV, 
@@ -479,29 +526,44 @@ namespace deng {
 
     
     void EditorCameraEv::findEditorEvent(WindowWrap *p_ww) {
-        size_t index;
         EventBase::updateMouseEvData(p_ww);
         ext_mii.mut.lock();
 
-        m_editor_cam_ev = DENG_EDITOR_CAMERA_NONE;
-        
-        // Search from mouse events 
-        for(index = 0; index < (size_t) ext_mii.active_btn_c; index++) {
-            if(ext_mii.active_btn[index] == DENG_MOUSE_BTN_2) {
-                m_editor_cam_ev = DENG_EDITOR_CAMERA_MOUSE_ROTATE;
-                break;
-            }
+        // Check if rotation mode should be enabled
+        if (
+            deng_FindKeyStatus (
+                DENG_KEY_UNKNOWN, 
+                DENG_MOUSE_BTN_2, 
+                DENG_INPUT_TYPE_MOUSE, 
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            )
+        ) m_editor_cam_ev = DENG_EDITOR_CAMERA_MOUSE_ROTATE;
 
-            else if(ext_mii.active_btn[index] == DENG_MOUSE_SCROLL_DOWN) {
-                m_editor_cam_ev = DENG_EDITOR_CAMERA_Z_MOV_OUT;
-                break;
-            }
-
-            else if(ext_mii.active_btn[index] == DENG_MOUSE_SCROLL_UP) {
-                m_editor_cam_ev = DENG_EDITOR_CAMERA_Z_MOV_IN;
-                break;
-            }
+        else if (
+            deng_FindKeyStatus (
+                DENG_KEY_UNKNOWN,
+                DENG_MOUSE_SCROLL_DOWN,
+                DENG_INPUT_TYPE_MOUSE,
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            )
+        ) {
+            m_editor_cam_ev = DENG_EDITOR_CAMERA_Z_MOV_OUT;
+            LOG("Zooming out");
         }
+
+        else if (
+            deng_FindKeyStatus (
+                DENG_KEY_UNKNOWN,
+                DENG_MOUSE_SCROLL_UP,
+                DENG_INPUT_TYPE_MOUSE,
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            )        
+        ) {
+            m_editor_cam_ev = DENG_EDITOR_CAMERA_Z_MOV_IN;
+            LOG("Zooming in");
+        }
+
+        else m_editor_cam_ev = DENG_EDITOR_CAMERA_NONE;
         
         ext_mii.mut.unlock();
     }
@@ -579,7 +641,7 @@ namespace deng {
             if(m_is_rot_cur) {
                 m_last_mouse_pos.first = p_ww->getWindow()->virtual_mouse_position.x;
                 m_last_mouse_pos.second = p_ww->getWindow()->virtual_mouse_position.y;
-                p_ww->setInputMode(DENG_INPUT_NONMOVEMENT);
+                p_ww->setMovement(false);
                 m_is_rot_cur = false;
             }
 
@@ -596,7 +658,7 @@ namespace deng {
             if(m_is_rot_cur) {
                 m_last_mouse_pos.first = p_ww->getWindow()->virtual_mouse_position.x;
                 m_last_mouse_pos.second = p_ww->getWindow()->virtual_mouse_position.y;
-                p_ww->setInputMode(DENG_INPUT_NONMOVEMENT);
+                p_ww->setMovement(false);
                 m_is_rot_cur = false;
             }
 
@@ -614,7 +676,7 @@ namespace deng {
             if(!m_is_rot_cur) {
                 p_ww->getWindow()->virtual_mouse_position.is_lib_cur = true;
                 p_ww->getWindow()->virtual_mouse_position.cursor = DENG_CURSOR_ROTATE;
-                p_ww->setInputMode(DENG_INPUT_MOVEMENT);
+                p_ww->setMovement(true);
                 p_ww->getWindow()->virtual_mouse_position.x = m_last_mouse_pos.first;
                 p_ww->getWindow()->virtual_mouse_position.y = m_last_mouse_pos.second;
                 m_is_rot_cur = true;
@@ -634,7 +696,7 @@ namespace deng {
             if(m_is_rot_cur) {
                 m_last_mouse_pos.first = p_ww->getWindow()->virtual_mouse_position.x;
                 m_last_mouse_pos.second = p_ww->getWindow()->virtual_mouse_position.y;
-                p_ww->setInputMode(DENG_INPUT_NONMOVEMENT);
+                p_ww->setMovement(false);
                 m_is_rot_cur = false;
             }
             break;
@@ -659,7 +721,7 @@ namespace deng {
 
         m_p_ww->getWindow()->virtual_mouse_position.cursor = DENG_CURSOR_ROTATE;
         m_p_ww->getWindow()->virtual_mouse_position.is_lib_cur = true;
-        m_p_ww->setInputMode(DENG_INPUT_NONMOVEMENT);
+        m_p_ww->setMovement(false);
 
         p_projection_matrix = new dengMath::ProjectionMatrix (
             FOV,

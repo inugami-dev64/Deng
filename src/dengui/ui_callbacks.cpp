@@ -1,9 +1,10 @@
-#include "../../headers/deng/api_core.h"
+#define __UI_CALLBACKS_CPP
+#include <dengui/ui_callbacks.h>
 
 namespace dengui {
     static dengUtils::StringRasterizer *__p_sr;
     static dengMath::vec2<deng_ui32_t> __deng_win_area;
-    std::vector<Window*> __callback_windows; 
+    Window *__help_win = NULL; 
 
 
     /* Setup all global variables needed for callbacks */
@@ -13,6 +14,14 @@ namespace dengui {
     ) {
         __p_sr = p_sr;
         __deng_win_area = deng_win_area;
+    }
+
+    void cleanCallbacks (
+        Window *p_win,
+        Events *p_ev
+    ) {
+        if(__help_win)
+            delete __help_win;
     }
 
 
@@ -38,29 +47,30 @@ namespace dengui {
         DDMElement *p_elem, 
         Events *p_ev
     ) {
-        WindowInfo wi;
-        wi.border = BORDER_LIGHT;
-        wi.fl_b = DENGUI_WINDOW_FLAG_NO_COLLAPSE;
-        wi.id = "help_form";
-        wi.label = "Help";
-        wi.pc = DENGUI_DEFAULT_PRIMARY_COLOR;
-        wi.sc = DENGUI_DEFAULT_SECONDARY_COLOR;
-        wi.tc = DENGUI_DEFAULT_TERTIARY_COLOR;
-        wi.pos = {0.0f, 0.0f};
-        wi.size = {0.5f, 0.5f};
-        
-        Window *win;
-        beginWindow (
-            &win,
-            &wi,
-            __deng_win_area,
-            __p_sr,
-            p_ev,
-            true
-        );
-        
-        __callback_windows.push_back(win);
-        LOG("Window make end");
+        if(__help_win)
+            respawnWindow(__help_win, p_ev);
+        else {
+            WindowInfo wi;
+            wi.border = BORDER_LIGHT;
+            wi.fl_b = DENGUI_WINDOW_FLAG_NO_COLLAPSE;
+            wi.id = "help_form";
+            wi.label = "Help";
+            wi.pc = DENGUI_DEFAULT_PRIMARY_COLOR;
+            wi.sc = DENGUI_DEFAULT_SECONDARY_COLOR;
+            wi.tc = DENGUI_DEFAULT_TERTIARY_COLOR;
+            wi.wt = WINDOW_TYPE_FLOATING;
+            wi.pos = {-0.25f, -0.25f};
+            wi.size = {0.5f, 0.5f};
+            
+            beginWindow (
+                &__help_win,
+                &wi,
+                __deng_win_area,
+                __p_sr,
+                p_ev,
+                true
+            );
+        }
     }
 
     

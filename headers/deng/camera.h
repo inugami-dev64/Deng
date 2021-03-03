@@ -1,6 +1,33 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#ifdef __CAMERA_CPP
+    #include <iostream>
+    #include <vector>
+    #include <mutex>
+    #include <string.h>
+    #include <math.h>
+    #include <vulkan/vulkan.h>
+    #include <common/base_types.h>
+    #include <common/err_def.h>
+    #include <common/common.h>
+    #include <das/assets.h>
+
+    #include <deng/forward_dec.h>
+    #include <deng/surface_window.h>
+    #include <deng/deng_math.h>
+    #include <deng/window.h>
+
+    #include <deng/vulkan/vulkan_qm.h>
+    #include <deng/vulkan/vulkan_resources.h>
+    #include <deng/vulkan/vulkan_rend_infos.h>
+    #include <utils/font.h>
+    #include <utils/collision.h>
+    #include <utils/timer.h>
+    
+    #include <dengui/dengui_infos.h>
+#endif
+
 namespace deng {
 
     /* Base value structs */

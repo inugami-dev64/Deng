@@ -4,12 +4,18 @@
 #define DAS_EXT_HANDLER
 #define DAS_GENERIC_HELPERS
 
-#ifdef __linux__
-    #include <dirent.h>
-#endif
+#ifdef __DAM_C
+    #include <stdlib.h> // free(), calloc()...
+    #include <stdio.h> // FILE, printf(), sprintf()...
+    #include <string.h> // memset()
+    #include <dirent.h> // DIR
 
-#ifdef _WIN32
-    #include "../win32_dirent_dep/dirent.h"
+    #include <common/base_types.h>
+    #include <common/common.h>
+
+    #include <das/assets.h>
+    #include <das/data_loader.h>
+    #include <das/das_handler.h>
 #endif
 #define DAM_VERSION "0.0.1"
 

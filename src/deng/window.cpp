@@ -1,15 +1,17 @@
-#include "../../headers/deng/api_core.h"
+#define __WINDOW_CPP
+#include <deng/window.h>
 
 namespace deng {
     WindowWrap::WindowWrap (
-        const int &x, 
-        const int &y, 
+        int x, 
+        int y, 
         const char *title
     ) {
         m_size = {static_cast<deng_ui32_t>(x), static_cast<deng_ui32_t>(y)};
         m_title = (char*) title;
-        m_pixel_size = {2.0 / static_cast<double>(m_size.first), 2.0 / static_cast<double>(m_size.second)};
-        LOG("Pixel size: " + std::to_string(m_pixel_size.first) + "/" + std::to_string(m_pixel_size.second));
+        m_pixel_size = { 
+            2.0 / static_cast<deng_px_t>(m_size.first), 
+            2.0 / static_cast<deng_px_t>(m_size.second)};
         m_p_game_window = deng_InitVKSurfaceWindow (
             x, 
             y, 
@@ -20,6 +22,31 @@ namespace deng {
 
     WindowWrap::~WindowWrap() {
         deng_DestroyWindow(m_p_game_window);
+    }
+
+
+    /*
+     * Either disable or enable virtual mouse mode
+     */
+    void WindowWrap::setMovement(deng_bool_t is_mov) {    
+        if(is_mov) {
+            deng_SetMouseCursorMode (
+                m_p_game_window, 
+                DENG_MOUSE_MODE_VIRTUAL
+            );
+        } 
+        else { 
+            deng_SetMouseCursorMode (
+                m_p_game_window, 
+                DENG_MOUSE_MODE_CURSOR_VISIBLE
+            );
+        }
+        m_is_movement = is_mov;
+    }
+
+
+    dengMath::vec2<deng_px_t> WindowWrap::getPixelSize() {
+        return m_pixel_size;
     }
 
     deng_SurfaceWindow *WindowWrap::getWindow() {
@@ -34,35 +61,7 @@ namespace deng {
         return m_size;
     }
 
-    deng_InputMode WindowWrap::getInputMode() {
-        return m_input_mode;
-    }
-
-    void WindowWrap::setInputMode(const deng_InputMode &new_input_mode) {    
-        switch (new_input_mode)
-        {
-        case DENG_INPUT_MOVEMENT:
-            deng_SetMouseCursorMode (
-                m_p_game_window, 
-                DENG_MOUSE_MODE_VIRTUAL
-            );
-            break;
-
-        case DENG_INPUT_NONMOVEMENT:
-            deng_SetMouseCursorMode (
-                m_p_game_window, 
-                DENG_MOUSE_MODE_CURSOR_VISIBLE
-            );
-            break;
-        
-        default:
-            break;
-        }
-
-        m_input_mode = new_input_mode;
-    }
-
-    dengMath::vec2<double> WindowWrap::getPixelSize() {
-        return m_pixel_size;
+    deng_bool_t WindowWrap::isMovement() {
+        return m_is_movement;
     }
 }

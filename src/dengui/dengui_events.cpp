@@ -1,141 +1,32 @@
-#include "../../headers/deng/api_core.h" 
-#include <string>
+#define __DENGUI_EVENTS_CPP
+#include <dengui/dengui_events.h>
 
 extern dengui::MouseInputInfo ext_mii;
 namespace dengui {
     
-    /***************************************/
-    /********* FRAME UPDATER CLASS *********/
-    /***************************************/
-    __FrameUpdater::__FrameUpdater(EventInfo *p_info) 
-    { m_p_info = p_info; }
-
-
-    /* External asset mutex lockers and unlockers */
-    void __FrameUpdater::lockAssets() {
-        m_p_info->p_res_mut->lock();
-    }
-
-
-    void __FrameUpdater::unlockAssets() {
-        m_p_info->p_res_mut->unlock();
-    }
-
-    
-    /* External frame mutex lockers and unlockers */
-    void __FrameUpdater::lockFrame() {
-        m_p_info->p_frame_mut->lock();
-        vkDeviceWaitIdle(m_p_info->p_ic->getDev());
-        vkQueueWaitIdle(m_p_info->p_ic->getQFF().graphics_queue);
-        vkQueueWaitIdle(m_p_info->p_ic->getQFF().present_queue);
-    }
-
-    void __FrameUpdater::unlockFrame() {
-        m_p_info->p_frame_mut->unlock();
-    }
-
-
-    /* Reallocate vertex buffer */
-    void __FrameUpdater::reallocBuffer() {
-        vkDestroyBuffer (
-            m_p_info->p_ic->getDev(),
-            m_p_info->p_ra->getBD()->main_buffer,
-            NULL
-        );
-
-        vkFreeMemory (
-            m_p_info->p_ic->getDev(),
-            m_p_info->p_ra->getBD()->main_buffer_memory,
-            NULL
-        );
-
-        m_p_info->p_ra->mkBuffers (
-            m_p_info->p_ic->getDev(),
-            m_p_info->p_ic->getGpu(),
-            m_p_info->p_dc->getComPool(),
-            m_p_info->p_ic->getQFF().graphics_queue
-        );
-    }
-
-    
-    /* Update vertices for every asset between bounds */
-    void __FrameUpdater::updateVerts(dengMath::vec2<deng_ui32_t> update_bounds) {
-        m_p_info->p_ra->remapAssetVerts (
-            m_p_info->p_ic->getDev(),
-            m_p_info->p_ic->getGpu(),
-            m_p_info->p_dc->getComPool(),
-            m_p_info->p_ic->getQFF().graphics_queue,
-            update_bounds
-        );
-    }
-
-
-    /* Update descriptor sets with texture sampling */
-    void __FrameUpdater::updateTexDS (
-        deng_bool_t realloc_ds, 
-        dengMath::vec2<deng_ui32_t> *p_tex_bounds
-    ) {
-        m_p_info->p_desc_c->updateTexDescriptors (
-            m_p_info->p_ic->getDev(),
-            m_p_info->sc_img_size,
-            realloc_ds,
-            p_tex_bounds,
-            m_p_info->p_ra->getBD()
-        );
-    }
-
-
-    /* Update newly pushed texture objects */
-    void __FrameUpdater::updateTextures(dengMath::vec2<deng_ui32_t> tex_bounds) {
-        m_p_info->p_ra->mkTextureImages (
-            m_p_info->p_ic->getDev(),
-            m_p_info->p_ic->getGpu(),
-            m_p_info->p_dc->getComPool(),
-            m_p_info->p_ic->getLFSupport(),
-            tex_bounds,
-            m_p_info->p_ic->getQFF().graphics_queue,
-            m_p_info->sc_img_size
-        );
-
-        updateTexDS (
-            true, 
-            &tex_bounds
-        );
-    }
-
-
-    /* Update command buffers */
-    void __FrameUpdater::updateCmdBuffers() {
-        m_p_info->p_dc->recordMainCmdBuffers (
-            m_p_info->renderpass,
-            m_p_info->ext,
-            m_p_info->background,
-            *m_p_info->p_ra->getBD()
-        );
-    }
-
-
     /*************************************/
     /******* ELEMENT HANDLER CLASS *******/
     /*************************************/
     __EH::__EH (
         std::vector<deng_Asset> *p_assets, 
-        std::vector<deng::TextureImageData> *p_tex,
-        __FrameUpdater *p_frame_upd,
+        std::vector<deng::vulkan::TextureImage> *p_tex,
+        vulkan::__FrameUpdater *p_vk_frame_upd,
         Events *p_ev,
-        deng::InstanceCreator *p_ic,
-        deng::DescriptorCreator *p_desc_c,
+        deng_bool_t *p_fl_flag,
+        deng::vulkan::InstanceCreator *p_ic,
+        deng::vulkan::DescriptorCreator *p_desc_c,
         std::mutex *p_res_mut
     ) {
-        m_p_frame_upd = p_frame_upd;
+        m_fi.p_float_flag = p_fl_flag;
+        m_p_vk_frame_upd = p_vk_frame_upd;
         m_p_assets = p_assets;
         m_p_tex = p_tex;
         m_p_res_mut = p_res_mut;
         m_p_ic = p_ic;
         m_p_desc_c = p_desc_c;
-        m_cur_ddm_transform.row1 = {1.0f, 0.0f, 0.0f};
-        m_cur_ddm_transform.row2 = {0.0f, 1.0f, 0.0f};
-        m_cur_ddm_transform.row3 = {0.0f, 0.0f, 1.0f};
+        m_mouse_transform.row1 = {1.0f, 0.0f, 0.0f};
+        m_mouse_transform.row2 = {0.0f, 1.0f, 0.0f};
+        m_mouse_transform.row3 = {0.0f, 0.0f, 1.0f};
     }
 
 
@@ -269,6 +160,23 @@ namespace dengui {
     }
 
 
+
+    /*
+     * Initialise floating mode for window assets
+     */
+    void __EH::__initFloating (
+        dengMath::vec2<deng_ui32_t> asset_bounds,
+        dengMath::vec2<deng_vec_t> mouse_pos
+    ) {
+        m_mouse_transform.row1.third = mouse_pos.first;
+        m_mouse_transform.row2.third = mouse_pos.second;
+        m_fi.asset_bounds = asset_bounds;
+        m_fi.fl_delta_transform.row1 = {1.0f, 0.0f, 0.0f};
+        m_fi.fl_delta_transform.row2 = {0.0f, 1.0f, 0.0f};
+        m_fi.fl_delta_transform.row3 = {0.0f, 0.0f, 1.0f};
+    }
+
+
     /*
      * Check if drop down menu should be spawn
      */
@@ -277,16 +185,16 @@ namespace dengui {
         deng_bool_t spawn_menu = false;
         ext_mii.mut.lock();
 
-        m_cur_ddm_transform.row1.third = mouse_pos.first;
-        m_cur_ddm_transform.row2.third = mouse_pos.second;
+        m_mouse_transform.row1.third = mouse_pos.first;
+        m_mouse_transform.row2.third = mouse_pos.second;
 
         // Search for appropriate button stroke 
-        for(i = 0; i < (size_t) ext_mii.active_btn_c; i++) {
-            if(ext_mii.active_btn[i] == DENGUI_DEFAULT_DROP_DOWN_MENU_TRIGGER) {
-                spawn_menu = true;
-                break;
-            }
-        }
+        spawn_menu = deng_FindKeyStatus (
+            DENG_KEY_UNKNOWN, 
+            DENGUI_DEFAULT_DROP_DOWN_MENU_TRIGGER, 
+            DENG_INPUT_TYPE_MOUSE, 
+            DENG_INPUT_EVENT_TYPE_ACTIVE
+        );
 
         // Check if any drag down menus should be displayed
         if(spawn_menu) {
@@ -300,26 +208,20 @@ namespace dengui {
                     )
                 ) {
                     // Drop down menu bounds check
-                    if(m_cur_ddm_transform.row1.third > (1.0f - m_cur_ddm_infos[i].ddm_size.first))
-                        m_cur_ddm_transform.row1.third = 1.0f - m_cur_ddm_infos[i].ddm_size.first;
-                    if(m_cur_ddm_transform.row2.third > 1.0f - (m_cur_ddm_infos[i].ddm_size.second))
-                        m_cur_ddm_transform.row2.third = 1.0f - m_cur_ddm_infos[i].ddm_size.second;
+                    if(m_mouse_transform.row1.third > (1.0f - m_cur_ddm_infos[i].ddm_size.first))
+                        m_mouse_transform.row1.third = 1.0f - m_cur_ddm_infos[i].ddm_size.first;
+                    if(m_mouse_transform.row2.third > 1.0f - (m_cur_ddm_infos[i].ddm_size.second))
+                        m_mouse_transform.row2.third = 1.0f - m_cur_ddm_infos[i].ddm_size.second;
 
-                    LOG (
-                        "Spawn bounds: " + 
-                        std::to_string(m_cur_ddm_infos[i].asset_bounds.first) +
-                        ", " +
-                        std::to_string(m_cur_ddm_infos[i].asset_bounds.second)
-                    );
                     dengMath::Transformer::apply2DModelMatrix (
                         m_cur_ddm_infos[i].asset_bounds,
                         m_p_assets,
-                        m_cur_ddm_transform
+                        m_mouse_transform
                     );
                     
-                    m_p_frame_upd->lockFrame();
-                    m_p_frame_upd->updateVerts(m_cur_ddm_infos[i].asset_bounds);
-                    m_p_frame_upd->unlockFrame();
+                    m_p_vk_frame_upd->lockFrame();
+                    m_p_vk_frame_upd->updateVerts(m_cur_ddm_infos[i].asset_bounds);
+                    m_p_vk_frame_upd->unlockFrame();
                     toggleVisibility (
                         m_cur_ddm_infos[i].asset_bounds,
                         &m_cur_ddm_infos[i].is_visible
@@ -335,7 +237,8 @@ namespace dengui {
 
 
     /* 
-     * Check for any callback events on drop down menus
+     * Check if any callback events on drop down menus should be triggered 
+     * and if needed close drop down menu
      */
     deng_bool_t __EH::__EH_UpdateDDMEv (
         dengMath::vec2<deng_vec_t> mouse_pos, 
@@ -343,108 +246,98 @@ namespace dengui {
         deng_bool_t *p_ddm_flag
     ) {
         size_t i, j;
-        deng_i32_t key_index;
         std::array<deng_ObjVertData2D, 4> verts;
 
         ext_mii.mut.lock();
 
         // Check each drop menu instance for closing if needed 
         DDMCallback callback = NULL;
-        if(ext_mii.active_btn_c ) {
-            for(i = 0; i < m_cur_ddm_infos.size(); i++) {
-                callback = NULL;
-                if(!m_cur_ddm_infos[i].is_visible)
-                    continue;
+        deng_bool_t is_btn = false;
+        for(i = 0; i < m_cur_ddm_infos.size(); i++) {
+            if(!m_cur_ddm_infos[i].is_visible)
+                continue;
 
-                // Check for collision with each element 
-                for(j = m_cur_ddm_infos[i].asset_bounds.first; j < m_cur_ddm_infos[i].asset_bounds.second; j++) {
-                    if (
-                        findPtCollision (
-                            mouse_pos, 
-                            &m_p_assets->at(j),
-                            {0, 4}
-                        )
-                    ) {
-                        for(key_index = 0; key_index < ext_mii.active_btn_c; key_index++) {
-                            size_t elem_i = j - m_cur_ddm_infos[i].asset_bounds.first;
+            // Check for collision with each element 
+            for(j = m_cur_ddm_infos[i].asset_bounds.first; j < m_cur_ddm_infos[i].asset_bounds.second; j++) {
+                is_btn = false;
+                if (
+                    findPtCollision (
+                        mouse_pos, 
+                        &m_p_assets->at(j),
+                        {0, 4}
+                    )
+                ) {
+                    size_t elem_i = j - m_cur_ddm_infos[i].asset_bounds.first;
+                    callback = NULL;
+                    if(deng_FindKeyStatus(DENG_KEY_UNKNOWN, DENG_MOUSE_BTN_1, DENG_INPUT_TYPE_MOUSE, DENG_INPUT_EVENT_TYPE_ACTIVE)) {
+                        callback = m_cur_ddm_infos[i].elems[elem_i].onLMBClickFunc;
+                        is_btn = true;
+                    }
 
-                            callback = NULL;
-                            switch(ext_mii.active_btn[key_index])
-                            {
-                            case DENG_MOUSE_BTN_1:
-                                if(m_cur_ddm_infos[i].elems[elem_i].onLMBClickFunc)
-                                    callback = m_cur_ddm_infos[i].elems[elem_i].onLMBClickFunc;
-                                break;
+                    else if(deng_FindKeyStatus(DENG_KEY_UNKNOWN, DENG_MOUSE_BTN_2, DENG_INPUT_TYPE_MOUSE, DENG_INPUT_EVENT_TYPE_ACTIVE)) {
+                        callback = m_cur_ddm_infos[i].elems[elem_i].onMMBClickFunc;
+                        is_btn = true;
+                    }
 
-                            case DENG_MOUSE_BTN_2:
-                                if(m_cur_ddm_infos[i].elems[elem_i].onMMBClickFunc)
-                                    callback = m_cur_ddm_infos[i].elems[elem_i].onMMBClickFunc;
-                                break;
+                    else if(deng_FindKeyStatus(DENG_KEY_UNKNOWN, DENG_MOUSE_BTN_3, DENG_INPUT_TYPE_MOUSE, DENG_INPUT_EVENT_TYPE_ACTIVE)) {
+                        callback = m_cur_ddm_infos[i].elems[elem_i].onRMBClickFunc;
+                        is_btn = true;
+                    }
 
-                            case DENG_MOUSE_BTN_3:
-                                if(m_cur_ddm_infos[i].elems[elem_i].onRMBClickFunc)
-                                    callback = m_cur_ddm_infos[i].elems[elem_i].onRMBClickFunc;
-                                break;
+                    if(callback) {
+                        m_p_res_mut->unlock();
+                        callback (
+                            &m_cur_ddm_infos[i].elems[elem_i],
+                            p_ev
+                        );
+                        *p_ddm_flag = false;
+                        m_p_res_mut->lock();
+                        dengMath::mat3<deng_vec_t> inv_mat = m_mouse_transform.inv();
+                        dengMath::Transformer::apply2DModelMatrix (
+                            m_cur_ddm_infos[i].asset_bounds,
+                            m_p_assets,
+                            inv_mat
+                        );
 
-                            default:
-                                break;
-                            }
-
-                            if(callback) {
-                                m_p_res_mut->unlock();
-                                callback (
-                                    &m_cur_ddm_infos[i].elems[elem_i],
-                                    p_ev
-                                );
-                                *p_ddm_flag = false;
-                                m_p_res_mut->lock();
-                                dengMath::mat3<deng_vec_t> inv_mat = m_cur_ddm_transform.inv();
-                                dengMath::Transformer::apply2DModelMatrix (
-                                    m_cur_ddm_infos[i].asset_bounds,
-                                    m_p_assets,
-                                    inv_mat
-                                );
-
-                                toggleVisibility (
-                                    m_cur_ddm_infos[i].asset_bounds, 
-                                    &m_cur_ddm_infos[i].is_visible
-                                );
-                                return true;
-                            }
-                        }
+                        toggleVisibility (
+                            m_cur_ddm_infos[i].asset_bounds, 
+                            &m_cur_ddm_infos[i].is_visible
+                        );
+                        return true;
                     }
                 }
 
-                if(m_cur_ddm_infos[i].asset_bounds.second - m_cur_ddm_infos[i].asset_bounds.first > 1) {
-                    verts[0] = (*m_p_assets)[m_cur_ddm_infos[i].asset_bounds.first].vertices.p_unmapped_vert_data_2d[0].vert_data;
-                    verts[1] = (*m_p_assets)[m_cur_ddm_infos[i].asset_bounds.first].vertices.p_unmapped_vert_data_2d[1].vert_data;
-                    verts[2] = (*m_p_assets)[m_cur_ddm_infos[i].asset_bounds.second - 2].vertices.p_unmapped_vert_data_2d[2].vert_data;
-                    verts[3] = (*m_p_assets)[m_cur_ddm_infos[i].asset_bounds.second - 2].vertices.p_unmapped_vert_data_2d[3].vert_data;
+                if(is_btn) {
+                    if(m_cur_ddm_infos[i].asset_bounds.second - m_cur_ddm_infos[i].asset_bounds.first > 1) {
+                        verts[0] = (*m_p_assets)[m_cur_ddm_infos[i].asset_bounds.first].vertices.p_unmapped_vert_data_2d[0].vert_data;
+                        verts[1] = (*m_p_assets)[m_cur_ddm_infos[i].asset_bounds.first].vertices.p_unmapped_vert_data_2d[1].vert_data;
+                        verts[2] = (*m_p_assets)[m_cur_ddm_infos[i].asset_bounds.second - 2].vertices.p_unmapped_vert_data_2d[2].vert_data;
+                        verts[3] = (*m_p_assets)[m_cur_ddm_infos[i].asset_bounds.second - 2].vertices.p_unmapped_vert_data_2d[3].vert_data;
+                    }
+                    else {
+                        verts[0] = (*m_p_assets)[m_cur_ddm_infos[i].asset_bounds.first].vertices.p_unmapped_vert_data_2d[0].vert_data;
+                        verts[1] = (*m_p_assets)[m_cur_ddm_infos[i].asset_bounds.first].vertices.p_unmapped_vert_data_2d[1].vert_data;
+                        verts[2] = (*m_p_assets)[m_cur_ddm_infos[i].asset_bounds.first].vertices.p_unmapped_vert_data_2d[2].vert_data;
+                        verts[3] = (*m_p_assets)[m_cur_ddm_infos[i].asset_bounds.first].vertices.p_unmapped_vert_data_2d[3].vert_data;
+                    }
+
+                    // Check for collision
+                    if(!findPtCollision(mouse_pos, verts.data(), verts.size())) {
+                        dengMath::mat3<deng_vec_t> inv_mat = m_mouse_transform.inv();
+                        dengMath::Transformer::apply2DModelMatrix (
+                            m_cur_ddm_infos[i].asset_bounds,
+                            m_p_assets,
+                            inv_mat
+                        );
+
+                        toggleVisibility (
+                            m_cur_ddm_infos[i].asset_bounds, 
+                            &m_cur_ddm_infos[i].is_visible
+                        );
+
+                        *p_ddm_flag = false;
+                    } 
                 }
-                else {
-                    verts[0] = (*m_p_assets)[m_cur_ddm_infos[i].asset_bounds.first].vertices.p_unmapped_vert_data_2d[0].vert_data;
-                    verts[1] = (*m_p_assets)[m_cur_ddm_infos[i].asset_bounds.first].vertices.p_unmapped_vert_data_2d[1].vert_data;
-                    verts[2] = (*m_p_assets)[m_cur_ddm_infos[i].asset_bounds.first].vertices.p_unmapped_vert_data_2d[2].vert_data;
-                    verts[3] = (*m_p_assets)[m_cur_ddm_infos[i].asset_bounds.first].vertices.p_unmapped_vert_data_2d[3].vert_data;
-                }
-
-                // Check for collision
-                if(!findPtCollision(mouse_pos, verts.data(), verts.size())) {
-                    LOG("Closing");
-                    dengMath::mat3<deng_vec_t> inv_mat = m_cur_ddm_transform.inv();
-                    dengMath::Transformer::apply2DModelMatrix (
-                        m_cur_ddm_infos[i].asset_bounds,
-                        m_p_assets,
-                        inv_mat
-                    );
-
-                    toggleVisibility (
-                        m_cur_ddm_infos[i].asset_bounds, 
-                        &m_cur_ddm_infos[i].is_visible
-                    );
-
-                    *p_ddm_flag = false;
-                } 
             }
         }
 
@@ -461,19 +354,18 @@ namespace dengui {
         Events *p_ev,
         deng_MouseButton &feedback
     ) {
-        size_t win_i, i, j;
+        size_t win_i, i;
         // Check if collision with any window element has happened and if click callback should be triggered
         for(win_i = 0; win_i < m_win_data.size(); win_i++) {
             ext_mii.mut.lock();
             for(i = 0; i < m_win_data[win_i].win_elems.size(); i++) {
-                if(!m_win_data[win_i].win_elems[i].is_interactive)
+                if(!m_win_data[win_i].win_elems[i].is_interactive && !m_win_data[win_i].win_elems[i].is_drag_point)
                     continue;
 
                 // Generic element collision detection
                 if
                 (
                     m_p_assets->at(m_win_data[win_i].asset_bounds.first + i).is_shown &&
-                    m_win_data[win_i].win_elems[i].is_interactive && 
                     findPtCollision (
                         mouse_pos, 
                         &(*m_p_assets)[m_win_data[win_i].asset_bounds.first + i], 
@@ -490,46 +382,43 @@ namespace dengui {
 
                     // Search for active button clicks
                     WindowCallback callback;
-                    for(j = 0; j < (size_t) ext_mii.active_btn_c; j++) {
-                        callback = NULL;
-                        feedback = ext_mii.active_btn[j];
-                        switch (ext_mii.active_btn[j])
-                        {
-                        case DENG_MOUSE_BTN_1:
-                            callback = m_win_data[win_i].win_elems[i].onLMBClickFunc;
-                            break;
+                    callback = NULL;
+                    if(deng_FindKeyStatus(DENG_KEY_UNKNOWN, DENG_MOUSE_BTN_1, DENG_INPUT_TYPE_MOUSE, DENG_INPUT_EVENT_TYPE_ACTIVE)) 
+                        callback = m_win_data[win_i].win_elems[i].onLMBClickFunc;
 
-                        case DENG_MOUSE_BTN_2:
-                            callback = m_win_data[win_i].win_elems[i].onMMBClickFunc;
-                            break;
+                    else if(deng_FindKeyStatus(DENG_KEY_UNKNOWN, DENG_MOUSE_BTN_2, DENG_INPUT_TYPE_MOUSE, DENG_INPUT_EVENT_TYPE_ACTIVE))
+                        callback = m_win_data[win_i].win_elems[i].onMMBClickFunc;
 
-                        case DENG_MOUSE_BTN_3:
-                            callback = m_win_data[win_i].win_elems[i].onRMBClickFunc;
-                            break;
+                    else if(deng_FindKeyStatus(DENG_KEY_UNKNOWN, DENG_MOUSE_BTN_3, DENG_INPUT_TYPE_MOUSE, DENG_INPUT_EVENT_TYPE_ACTIVE))
+                        callback = m_win_data[win_i].win_elems[i].onRMBClickFunc;
 
-                        case DENG_MOUSE_SCROLL_DOWN:
-                            callback = m_win_data[win_i].win_elems[i].onScrDownFunc;
-                            break;
+                    else if(deng_FindKeyStatus(DENG_KEY_UNKNOWN, DENG_MOUSE_SCROLL_DOWN, DENG_INPUT_TYPE_MOUSE, DENG_INPUT_EVENT_TYPE_ACTIVE))
+                        callback = m_win_data[win_i].win_elems[i].onScrDownFunc;
 
-                        case DENG_MOUSE_SCROLL_UP:
-                            callback = m_win_data[win_i].win_elems[i].onScrUpFunc;
-                            break;
-                        
-                        default:
-                            break;
-                        }
+                    else if(deng_FindKeyStatus(DENG_KEY_UNKNOWN, DENG_MOUSE_SCROLL_UP, DENG_INPUT_TYPE_MOUSE, DENG_INPUT_EVENT_TYPE_ACTIVE))
+                        callback = m_win_data[win_i].win_elems[i].onScrUpFunc;
 
-                        if(callback) {
-                            m_p_res_mut->unlock();
-                            callback (
-                                &m_win_data[win_i].win_elems[i],
-                                p_ev
-                            );
+                    if(callback) {
+                        m_p_res_mut->unlock();
+                        callback (
+                            &m_win_data[win_i].win_elems[i],
+                            p_ev
+                        );
 
-                            ext_mii.mut.unlock();
-                            m_p_res_mut->lock();
-                            return true;
-                        }
+                        ext_mii.mut.unlock();
+                        m_p_res_mut->lock();
+                        return true;
+                    }
+
+                    else if (
+                        m_win_data[win_i].win_elems[i].is_drag_point && 
+                        deng_FindKeyStatus(DENG_KEY_UNKNOWN, DENGUI_DEFAULT_DRAG_BTN, DENG_INPUT_TYPE_MOUSE, DENG_INPUT_EVENT_TYPE_ACTIVE)
+                    ) {
+                        __initFloating (
+                            m_win_data[win_i].asset_bounds, 
+                            mouse_pos
+                        );
+                        *m_fi.p_float_flag = true;
                     }
                 }
             }
@@ -537,6 +426,46 @@ namespace dengui {
         }
 
         return false;
+    }
+
+
+    /*
+     * Update window location transform
+     * This method is meant to be used to update window location when dragging it
+     */
+    void __EH::__EH_UpdateFloating(dengMath::vec2<deng_vec_t> mouse_pos) {
+        ext_mii.mut.lock();
+        // Check if dragging button is still active
+        deng_bool_t is_btn = deng_FindKeyStatus (
+            DENG_KEY_UNKNOWN,
+            DENGUI_DEFAULT_DRAG_BTN,
+            DENG_INPUT_TYPE_MOUSE,
+            DENG_INPUT_EVENT_TYPE_ACTIVE
+        );
+
+        if(!is_btn) {
+            ext_mii.mut.unlock();
+            *m_fi.p_float_flag = false;
+            return;
+        }
+
+        // Update transformation matrix
+        m_fi.fl_delta_transform.row1.third = mouse_pos.first - m_mouse_transform.row1.third;
+        m_fi.fl_delta_transform.row2.third = mouse_pos.second - m_mouse_transform.row2.third;
+        m_mouse_transform.row1.third = mouse_pos.first;
+        m_mouse_transform.row2.third = mouse_pos.second;
+
+        dengMath::Transformer::apply2DModelMatrix( 
+            m_fi.asset_bounds,
+            m_p_assets,
+            m_fi.fl_delta_transform
+        );
+
+        m_p_vk_frame_upd->lockFrame();
+        m_p_vk_frame_upd->updateVerts(m_fi.asset_bounds);
+        m_p_vk_frame_upd->unlockFrame();
+
+        ext_mii.mut.unlock();
     }
 
 
@@ -633,8 +562,8 @@ namespace dengui {
             switch (m_win_data[win_i].win_elems[j].color_mode)
             {
             case ELEMENT_COLOR_MODE_TEXTURE_MAPPED: {
-                // Add new TextureImageData instance to its vector
-                deng::TextureImageData tmp_img;
+                // Add new vulkan::TextureImage instance to its vector
+                deng::vulkan::TextureImage tmp_img;
                 tmp_img.texture.pixel_data.width = m_win_data[win_i].win_elems[j].tex_box.first;
                 tmp_img.texture.pixel_data.height = m_win_data[win_i].win_elems[j].tex_box.second;
                 tmp_img.texture.pixel_data.size = m_win_data[win_i].win_elems[j].texture.size();
@@ -685,11 +614,11 @@ namespace dengui {
 
         // Check if buffers need to be reallocated 
         if(update_buffers) {
-            m_p_frame_upd->lockFrame();
-            m_p_frame_upd->reallocBuffer();
-            m_p_frame_upd->updateTextures(m_win_data[win_i].tex_bounds);
-            m_p_frame_upd->updateCmdBuffers();
-            m_p_frame_upd->unlockFrame();
+            m_p_vk_frame_upd->lockFrame();
+            m_p_vk_frame_upd->reallocBuffer();
+            m_p_vk_frame_upd->updateTextures(m_win_data[win_i].tex_bounds);
+            m_p_vk_frame_upd->updateCmdBuffers();
+            m_p_vk_frame_upd->unlockFrame();
         }
         m_p_res_mut->unlock();
     }
@@ -769,7 +698,7 @@ namespace dengui {
             }
 
             else if(m_cur_ddm_infos[ddm_index].elems[j].color_mode == ELEMENT_COLOR_MODE_TEXTURE_MAPPED) {
-                deng::TextureImageData tmp_img;
+                deng::vulkan::TextureImage tmp_img;
                 tmp_img.texture.id = m_p_assets->at(i).id;
                 tmp_img.texture.description = NULL;
                 tmp_img.texture.pixel_data.width = m_cur_ddm_infos[ddm_index].elems[j].tex_box.first;
@@ -845,9 +774,9 @@ namespace dengui {
         *p_vis_flag = !(*p_vis_flag);
         invertVisibilityByBounds(bounds);
 
-        m_p_frame_upd->lockFrame();
-        m_p_frame_upd->updateCmdBuffers();
-        m_p_frame_upd->unlockFrame();
+        m_p_vk_frame_upd->lockFrame();
+        m_p_vk_frame_upd->updateCmdBuffers();
+        m_p_vk_frame_upd->unlockFrame();
     }
 
 
@@ -866,6 +795,7 @@ namespace dengui {
 
     /* Remove removed elements from asset vector */
     void __EH::windowAssetRmSync(const std::string &win_id) {
+        *m_fi.p_float_flag = false;
         size_t i;
 
         // Find appropriate window data
@@ -967,9 +897,10 @@ namespace dengui {
     Events::Events(EventInfo &ev_info) :
     __EH (
         ev_info.p_assets,
-        ev_info.p_textures,
+        ev_info.p_vk_textures,
         &frame_upd,
         this,
+        &m_float_mode,
         ev_info.p_ic,
         ev_info.p_desc_c,
         ev_info.p_res_mut
@@ -979,36 +910,26 @@ namespace dengui {
         input_thread.detach();
     }
 
-    Events::~Events() {
-        delete m_info.p_dc;
-        delete m_info.p_ra;
-    }
-
 
     /* Wait until no btn input is found */
     void Events::__waitForNoInput(deng_MouseButton btn) {
         deng_bool_t is_btn = true;
-        deng_i32_t index;
 
         m_info.p_res_mut->unlock();
         ext_mii.mut.unlock();
         
         while(is_btn) {
-            LOG("Waiting...");
             std::this_thread::sleep_for(std::chrono::milliseconds(DENGUI_EV_INPUT_SLEEP_INTERVAL));
-            LOG("Wait done");
             
             // Check if btn is found
             is_btn = false;
-            LOG("Lock test");
             ext_mii.mut.lock();
-            LOG("Lock test1");
-            for(index = 0; index < ext_mii.active_btn_c; index++) {
-                if(ext_mii.active_btn[index] == btn) {
-                    is_btn = true;
-                    break;
-                }
-            }
+            is_btn = deng_FindKeyStatus (
+                DENG_KEY_UNKNOWN, 
+                btn, 
+                DENG_INPUT_TYPE_MOUSE, 
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            );
             ext_mii.mut.unlock();
         }
 
@@ -1021,7 +942,8 @@ namespace dengui {
         dengMath::vec2<deng_vec_t> vec_mouse;
         deng_MouseButton wait_btn = DENG_MOUSE_BTN_UNKNOWN;
 
-        while(deng_IsRunning(m_p_win)) {
+        m_info.p_run_mut->lock();
+        while(deng_IsRunning()) {
             m_info.p_res_mut->lock();
             vec_mouse.first = dengMath::Conversion::pixelSizeToVector2DSize (
                 (deng_px_t) ext_mii.mouse_coords.first,
@@ -1036,12 +958,12 @@ namespace dengui {
             ) - 1.0f;
                 
             // Check if release is needed
-            if(m_wait_release) {
+            if(m_wait_release && !m_float_mode) {
                 __waitForNoInput(wait_btn);
                 m_wait_release = false;
             }
 
-            else if(!m_is_ddm) {
+            else if(!m_is_ddm && !m_float_mode) {
                 // Check if drop down menu needs to be spawn
                 m_is_ddm = __EH_CheckDDMSpawn(vec_mouse);
                 m_wait_release = m_is_ddm;
@@ -1052,7 +974,7 @@ namespace dengui {
                 }    
             }
 
-            else if(m_is_ddm && __EH_GetDDMInfos()->size()) {
+            else if(m_is_ddm && __EH_GetDDMInfos()->size() && !m_float_mode) {
                 // Check if drop down menu must be despawn
                 m_wait_release = __EH_UpdateDDMEv(vec_mouse, this, &m_is_ddm);
                 if(m_wait_release) {
@@ -1062,12 +984,19 @@ namespace dengui {
                 }
             }
 
-            if(__EH_UpdateWindows(vec_mouse, this, wait_btn))
-                m_wait_release = true;
+            if(!m_float_mode) {
+                if(__EH_UpdateWindows(vec_mouse, this, wait_btn))
+                    m_wait_release = true;
+            }
+
+            else __EH_UpdateFloating(vec_mouse);
             
             m_info.p_res_mut->unlock();
             std::this_thread::sleep_for(std::chrono::milliseconds(DENGUI_ITERATION_SLEEP_INTERVAL));
         }
+
+        LOG("Exiting input thread");
+        m_info.p_run_mut->unlock();
     }
 
 

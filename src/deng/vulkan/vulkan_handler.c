@@ -1,44 +1,49 @@
-#include "../../headers/deng/deng_surface_core.h"
+#define __VULKAN_HANDLER_C
+#include <deng/vulkan/vulkan_handler.h>
 
-const char **deng_GetRequiredVKSurfaceExt(deng_SurfaceWindow *p_window, deng_ui32_t *p_count, bool_t add_layer_ext) {
-    char **pp_extensions;
+void deng_GetRequiredVKSurfaceExt (
+    deng_SurfaceWindow *p_win,
+    char ***p_exts,
+    deng_ui32_t *p_ext_c, 
+    deng_bool_t add_layer_ext
+) {
     if(add_layer_ext) {
-        *p_count = 3;
-        pp_extensions = (char**) malloc((*p_count) * sizeof(char*));
-        pp_extensions[2] = (char*) malloc((strlen(DENG_VK_DEBUG_UTILS_EXT_NAME) + 1) * sizeof(char));
-        strcpy(pp_extensions[2], DENG_VK_DEBUG_UTILS_EXT_NAME);
+        *p_ext_c = 3;
+        *p_exts = (char**) malloc((*p_ext_c) * sizeof(char*));
+        (*p_exts)[2] = calloc(32, sizeof(char));
+        strcpy((*p_exts)[2], DENG_VK_DEBUG_UTILS_EXT_NAME);
     }
 
     else {
-        *p_count = 2;
-        pp_extensions = (char**) malloc((*p_count) * sizeof(char*));
+        *p_ext_c = 2;
+        (*p_exts) = (char**) malloc((*p_ext_c) * sizeof(char*));
     }
 
-    pp_extensions[0] = (char*) malloc((strlen(DENG_VK_WSI_EXT_NAME) + 1) * sizeof(char));
-    strcpy(pp_extensions[0], DENG_VK_WSI_EXT_NAME);
+    **p_exts = (char*) calloc(32, sizeof(char));
+    strcpy(**p_exts, DENG_VK_WSI_EXT_NAME);
 
-    switch (p_window->mode)
+    switch (p_win->mode)
     {
     case X11_WINDOW:
-        pp_extensions[1] = (char*) malloc((strlen(DENG_VK_XLIB_SURFACE_EXT_NAME) + 1) * sizeof(char));
-        strcpy(pp_extensions[1], DENG_VK_XLIB_SURFACE_EXT_NAME);
+        *(*p_exts + 1) = (char*) calloc(32, sizeof(char));
+        strcpy(*(*p_exts + 1), DENG_VK_XLIB_SURFACE_EXT_NAME);
         break;
 
     case WIN32_WINDOW:
-        pp_extensions[1] = (char*) malloc((strlen(DENG_VK_WIN32_SURFACE_EXT_NAME) + 1) * sizeof(char));
-        strcpy(pp_extensions[1], DENG_VK_WIN32_SURFACE_EXT_NAME);
+        *(*p_exts + 1) = (char*) calloc(32, sizeof(char));
+        strcpy(*(*p_exts + 1), DENG_VK_WIN32_SURFACE_EXT_NAME);
         break;
     
     default:
         break;
     }   
-
-    const char **pp_const_ext = (const char**) pp_extensions;
-
-    return pp_const_ext;
 }
 
-VkResult deng_InitVKSurface(deng_SurfaceWindow *p_window, VkInstance *p_instance, VkSurfaceKHR *p_surface) {
+VkResult deng_InitVKSurface (
+    deng_SurfaceWindow *p_window, 
+    VkInstance *p_instance, 
+    VkSurfaceKHR *p_surface
+) {
     #ifdef __linux__
         VkXlibSurfaceCreateInfoKHR surface_info;
         surface_info.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;

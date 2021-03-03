@@ -1,11 +1,12 @@
-#include "../../headers/deng/api_core.h"
+#define __FONT_CPP
+#include <utils/font.h>
 
 
 namespace dengUtils {
 
     const char *font_formats[] = {"otf", "ttf"};
     /* Search for certain font and return true if found */
-    deng_bool_t StringRasterizer::verifyFont (
+    deng_bool_t StringRasterizer::__verifyFont (
         BitmapStr &str, 
         std::string &out_path
     ) {
@@ -58,7 +59,7 @@ namespace dengUtils {
 
 
     /* Find all available fonts */
-    void StringRasterizer::findFontFiles(std::string path) {
+    void StringRasterizer::__findFontFiles(std::string path) {
         // Check if '/' needs to be added to the end of the path
         if(path != "" && path[path.size() - 1] != '/') 
             path += '/';
@@ -90,7 +91,7 @@ namespace dengUtils {
 
             case DT_DIR:
                 if(std::string(contents->d_name) != "." && std::string(contents->d_name) != "..")
-                    findFontFiles(path + contents->d_name);
+                    __findFontFiles(path + contents->d_name);
                 break;
 
             default:
@@ -102,7 +103,7 @@ namespace dengUtils {
 
 
     // Find unique glyphs and index them according to the text
-    std::vector<char> StringRasterizer::indexGlyphs(BitmapStr &str) {
+    std::vector<char> StringRasterizer::__indexGlyphs(BitmapStr &str) {
         std::vector<char> unique_chars;
         str.rend_text = (BitmapChar*) calloc (
             strlen(str.text) + 1,
@@ -144,8 +145,8 @@ namespace dengUtils {
     ) {
         FT_Error res;
         m_p_win = p_window_wrap;
-        findFontFiles(DEFAULT_FONT_PATH);
-        findFontFiles(custom_font_path);
+        __findFontFiles(DEFAULT_FONT_PATH);
+        __findFontFiles(custom_font_path);
 
         res = FT_Init_FreeType(&m_library_instance);
         if(res) FONT_ERR("Failed to initialise freetype library instance!");
@@ -155,7 +156,7 @@ namespace dengUtils {
 
 
     /* Find the total width of the textbox in vertices unit */
-    deng_vec_t StringRasterizer::findTextSizeVec(BitmapStr &str) {
+    deng_vec_t StringRasterizer::__findTextSizeVec(BitmapStr &str) {
         deng_ui64_t l_index;
         deng_px_t total_size = 0;
         for(l_index = 0; l_index < strlen(str.text); l_index++)
@@ -170,7 +171,7 @@ namespace dengUtils {
 
 
     /* Find the total width of the textbox in pixel units */
-    deng_px_t StringRasterizer::findTextSizePx(BitmapStr &str) {
+    deng_px_t StringRasterizer::__findTextSizePx(BitmapStr &str) {
         deng_ui64_t l_index;
         deng_px_t total_size = 0;
         for(l_index = 0; l_index < strlen(str.text); l_index++) 
@@ -181,7 +182,7 @@ namespace dengUtils {
 
 
     /* Create new drawable string */
-    void StringRasterizer::mkGlyphs (
+    void StringRasterizer::__mkGlyphs (
         BitmapStr &str, 
         deng_ui16_t px_size, 
         dengMath::vec2<deng_vec_t> pos, 
@@ -213,7 +214,7 @@ namespace dengUtils {
         if(res) return;
 
         // Index chars and get unique vector characters
-        std::vector<char> unique_ch = indexGlyphs(str);
+        std::vector<char> unique_ch = __indexGlyphs(str);
         str.unique_glyphs.resize(unique_ch.size());
         
         for(index = 0; index < unique_ch.size(); index++) {
@@ -255,21 +256,21 @@ namespace dengUtils {
         std::string path_str;
         str.font_file = font_name;
         // Check if font file exists
-        if(!verifyFont(str, path_str))
+        if(!__verifyFont(str, path_str))
             FONT_ERR("Failed to find font file!");
 
         str.font_file = path_str.c_str();
 
-        mkGlyphs (
+        __mkGlyphs (
             str,
             px_size,
             pos,
             color
         );
 
-        deng_px_t width = findTextSizePx(str);
+        deng_px_t width = __findTextSizePx(str);
 
-        mkTextbox (
+        __mkTextbox (
             str,
             width,
             hier_level,
@@ -293,7 +294,7 @@ namespace dengUtils {
         std::string path_str;
         str.font_file = font_name;
         // Check if font file exists
-        if(!verifyFont(str, path_str))
+        if(!__verifyFont(str, path_str))
             FONT_ERR("Failed to find font file!");
         
         str.font_file = path_str.c_str();
@@ -303,16 +304,16 @@ namespace dengUtils {
             DENG_COORD_AXIS_Y
         );
 
-        mkGlyphs (
+        __mkGlyphs (
             str,
             (deng_ui16_t) px_size,
             pos,
             color
         );
 
-        deng_px_t width = findTextSizePx(str);
+        deng_px_t width = __findTextSizePx(str);
 
-        mkTextbox (
+        __mkTextbox (
             str,
             width,
             hier_level,
@@ -324,7 +325,7 @@ namespace dengUtils {
 
 
     /* Create textbox from glyphs */
-    void StringRasterizer::mkTextbox (
+    void StringRasterizer::__mkTextbox (
         BitmapStr &str,
         deng_px_t px_width,
         deng_ui32_t hier_level,
@@ -463,7 +464,7 @@ namespace dengUtils {
         ras_str.font_file = font_name;
 
         std::string font_path;
-        if(!verifyFont(ras_str, font_path)) 
+        if(!__verifyFont(ras_str, font_path)) 
             return NULL;
 
         ras_str.font_file = font_path.c_str();
@@ -474,7 +475,7 @@ namespace dengUtils {
         );
 
         // Find all unique glyphs
-        mkGlyphs (
+        __mkGlyphs (
             ras_str,
             px_height,
             {0.0f, 0.0f},

@@ -1,4 +1,6 @@
-#include "../../headers/deng/api_core.h"
+#define DENG_ENABLE_STD_INCL
+#define __GENERIC_DEBUG 1
+#include <deng/deng.h>
 #define SANDBOX_BACKGROUND {0.1411765f, 0.0431372f, 0.2313725f, 1.0f}
 
 int main() {
@@ -42,7 +44,11 @@ int main() {
     viking_mat.setRotation(PI / 2, 0.0f, 0.0f);
     viking_mat.setScale(1.0f, 1.0f, 1.0f);
 
-    dasReadAsset(&assets[0], "../../assets/viking_norm.das", DENG_ASSET_MODE_DONT_CARE);
+    dasReadAsset (
+        &assets[0], 
+        "../../assets/viking_norm.das", 
+        DENG_ASSET_MODE_DONT_CARE
+    );
     assets[0].tex_id = (char*) "viking";
     assets[0].id = (char*) "viking_room";
     assets[0].is_shown = true;

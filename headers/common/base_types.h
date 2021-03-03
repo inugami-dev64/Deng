@@ -60,16 +60,16 @@ typedef deng_ui16_t deng_RendererHintBits;
 
 
 /* Coordinate axis specifier */
-enum deng_CoordinateAxisType {
+typedef enum deng_CoordinateAxisType {
     DENG_COORD_AXIS_UNDEFINED = -1,
     DENG_COORD_AXIS_X = 0,
     DENG_COORD_AXIS_Y = 1,
     DENG_COORD_AXIS_Z = 2
-};
+} deng_CoordinateAxisType;
 
 
 /* Movement mode specifier */
-enum deng_MovementEvent {
+typedef enum deng_MovementEvent {
     DENG_MOVEMENT_NONE = -1,
     DENG_MOVEMENT_FORWARD = 0,
     DENG_MOVEMENT_BACKWARD = 1,
@@ -77,58 +77,68 @@ enum deng_MovementEvent {
     DENG_MOVEMENT_LEFTWARD = 3,
     DENG_MOVEMENT_UPWARD = 4,
     DENG_MOVEMENT_DOWNWARD = 5
-};
+} deng_MovementEvent;
 
 
 /* Pipeline type specifier */
-enum deng_PipelineType {
+typedef enum deng_PipelineType {
     DENG_PIPELINE_TYPE_UNMAPPED_3D = 0,
     DENG_PIPELINE_TYPE_UNMAPPED_3D_NORM = 1,
     DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D = 2,
     DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D_NORM = 3,
     DENG_PIPELINE_TYPE_UNMAPPED_2D = 4,
     DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D = 5
-};
-
-
-/* User input specifiers */
-enum deng_InputMode {
-    DENG_INPUT_NONMOVEMENT = 0,
-    DENG_INPUT_MOVEMENT = 1
-};
+} deng_PipelineType;
 
 
 /* Triangle angle specifier */
-enum deng_TriangleAngleType {
+typedef enum deng_TriangleAngleType {
     DENG_TRIANGLE_ANGLE_ALPHA = 0,
     DENG_TRIANGLE_ANGLE_BETA = 1,
     DENG_TRIANGLE_ANGLE_GAMMA = 2
-};
+} deng_TriangleAngleType;
 
 
 /* Renderer usage mode */
-enum deng_RendererUsageMode {
+typedef enum deng_RendererUsageMode {
     DENG_RENDERER_USAGE_ASSET_EDITOR = 0,
     DENG_RENDERER_USAGE_MAP_EDITOR = 1,
     DENG_RENDERER_USAGE_GAME_MODE = 2,
-};
+} deng_RendererUsageMode;
 
 
 /* Camera type specifier */
-enum deng_CameraType {
+typedef enum deng_CameraType {
     DENG_CAMERA_FPP     = 0,
     DENG_CAMERA_EDITOR  = 1
-};
+} deng_CameraType;
 
 
 /* Editor camera event specifier */
-enum deng_EditorCameraEvent {
+typedef enum deng_EditorCameraEvent {
     DENG_EDITOR_CAMERA_NONE         = -1,
     DENG_EDITOR_CAMERA_Z_MOV_IN     = 0,
     DENG_EDITOR_CAMERA_Z_MOV_OUT    = 1,
     DENG_EDITOR_CAMERA_MOUSE_ROTATE = 2
-};
+} deng_EditorCameraEvent;
 
+
+/* 
+ * Specify input device type for action lookup
+ */
+typedef enum deng_InputType {
+    DENG_INPUT_TYPE_MOUSE   = 0,
+    DENG_INPUT_TYPE_KB      = 1
+} deng_InputType;
+
+
+/*
+ * Specify input event type for lookup
+ */
+typedef enum deng_InputEventType {
+    DENG_INPUT_EVENT_TYPE_ACTIVE    = 0,
+    DENG_INPUT_EVENT_TYPE_RELEASED  = 1
+} deng_InputEventType;
 
 
 #define DENG_KEY_PRESS_INTERVAL         200 // ms

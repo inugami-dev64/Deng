@@ -1,5 +1,5 @@
-#include "../../headers/deng/api_core.h"
-#include <string>
+#define __SHAPES_CPP
+#include <utils/shapes.h>
 
 namespace dengUtils {
 

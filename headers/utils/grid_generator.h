@@ -1,5 +1,14 @@
-#ifndef GRID_GENERATOR_H
-#define GRID_GENERATOR_H
+#ifndef __GRID_GENERATOR_H
+#define __GRID_GENERATOR_H
+
+#ifdef __GRID_GENERATOR_CPP
+    #include <stdlib.h>
+    #include <vector>
+
+    #include <common/base_types.h>
+    #include <das/assets.h>
+    #include <deng/deng_math.h>
+#endif
 
 #define DENG_DEFAULT_GRID_COLOR {0.8f, 0.8f, 0.8f, 1.0f}
 #define DENG_GRID_THICKNESS 0.005f

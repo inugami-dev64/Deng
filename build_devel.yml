@@ -17,6 +17,7 @@ premake:
     - O3
     - g
   include_path:
+    - "./headers"
     linux:
       - "/usr/include/freetype2"
       - "/usr/include/freetype2/include"
@@ -59,13 +60,17 @@ tasks:
     src: 
       # deng main sources
       - deng/camera.cpp
-      - deng/renderer.cpp
-      - deng/window.cpp
-      - deng/rend_helpers.cpp
       - deng/deng_math.cpp
       - deng/key_translation.c
-      - deng/key_vector.c
-      - deng/vulkan_handler.c
+      - deng/key_ev.c
+      - deng/renderer.cpp
+      - deng/window.cpp
+      - deng/vulkan/vulkan_handler.c
+      - deng/vulkan/vulkan_pipelines.cpp
+      - deng/vulkan/vulkan_qm.cpp
+      - deng/vulkan/vulkan_renderer.cpp
+      - deng/vulkan/vulkan_resources.cpp
+      - deng/vulkan/vulkan_sd.cpp
       linux: deng/x11_surface.c
       windows: deng/win32_surface.c
 
@@ -77,6 +82,7 @@ tasks:
       - utils/grid_generator.cpp
 
       # dengui sources
+      - dengui/vulkan/vulkan_update.cpp
       - dengui/dengui_child.cpp
       - dengui/dengui_events.cpp
       - dengui/dengui_window.cpp

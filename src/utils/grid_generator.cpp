@@ -1,4 +1,5 @@
-#include "../../headers/deng/api_core.h"
+#define __GRID_GENERATOR_CPP
+#include <utils/grid_generator.h>
 
 namespace dengUtils {
     GridGenerator::GridGenerator (

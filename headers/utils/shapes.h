@@ -1,5 +1,18 @@
-#ifndef SHAPE_REC_H
-#define SHAPE_REC_H
+#ifndef __SHAPES_H
+#define __SHAPES_H
+
+#ifdef __SHAPES_CPP
+    #include <vector>
+    #include <array>
+    #include <math.h>   
+    #include <string.h>
+
+    #include <common/base_types.h>
+    #include <common/err_def.h>
+    #include <das/assets.h>
+    #include <deng/deng_math.h>
+#endif
+
 // Vertices per 0.1
 #define DENG_CIRCLE_VERT_COUNT_MULTIPLIER   24
 #define DENG_CIRCLE_MIN_VERT_COUNT          12

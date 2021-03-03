@@ -1,6 +1,5 @@
-#define DAS_EXT_LOADERS
-#define DAS_GENERIC_HELPERS
-#include "../../headers/das/das_core.h"
+#define __DATA_LOADER_C
+#include <das/data_loader.h>
 
 static FILE *file;
 
@@ -592,19 +591,6 @@ void dasLoadOBJmodelVertices (
             (deng_vec_t) atof(z_buffer)
         };
         
-        // LOGGING
-        /*
-         *sprintf (
-         *    file_str,
-         *    "v %f,%f,%f",
-         *    (*pp_vert_data)[(*p_vert_size) - 1].vert_x,
-         *    (*pp_vert_data)[(*p_vert_size) - 1].vert_y,
-         *    (*pp_vert_data)[(*p_vert_size) - 1].vert_z
-         *);
-         *cm_LogWrite("vert.log", file_str, false);
-         *memset(file_str, 0, 128);
-         */
-
         memset(x_buffer, 0, buf_size);
         memset(y_buffer, 0, buf_size);
         memset(z_buffer, 0, buf_size);

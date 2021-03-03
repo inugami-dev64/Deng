@@ -20,10 +20,11 @@
 //#endif
 
 // Window description flags
-typedef unsigned char denguiWindowFlagBits; 
 
-#include "dengui_events.h"
-#include "dengui_child.h"
-#include "dengui_window.h"
-
+#include <dengui/dengui_win_def.h>
+#include <dengui/dengui_infos.h>
+#include <dengui/vulkan/vulkan_update.h>
+#include <dengui/dengui_child.h>
+#include <dengui/dengui_events.h>
+#include <dengui/dengui_window.h>
 #endif

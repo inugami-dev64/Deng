@@ -1,105 +1,42 @@
 #ifndef DENGUI_EVENTS_H
 #define DENGUI_EVENTS_H
 
-#define DENGUI_ITERATION_SLEEP_INTERVAL         100  
+#define DENGUI_ITERATION_SLEEP_INTERVAL         10
 #define DENGUI_EV_INPUT_SLEEP_INTERVAL          75 // milliseconds
 #define DENGUI_DEFAULT_DROP_DOWN_MENU_TRIGGER   DENG_MOUSE_BTN_3
+#define DENGUI_DEFAULT_DRAG_BTN                 DENG_MOUSE_BTN_1
+
+
+#ifdef __DENGUI_EVENTS_CPP
+    #include <iostream>
+    #include <stdlib.h>
+    #include <vector>
+    #include <array>
+    #include <thread>
+    #include <mutex>
+    #include <vulkan/vulkan.h>
+
+    #include <common/base_types.h>
+    #include <common/err_def.h>
+    #include <das/assets.h>
+    
+    #include <deng/forward_dec.h>
+    #include <deng/deng_math.h>
+    #include <deng/surface_window.h>
+    #include <deng/window.h>
+    #include <deng/vulkan/vulkan_qm.h>
+    #include <deng/vulkan/vulkan_sd.h>
+    #include <deng/vulkan/vulkan_resources.h>
+    #include <deng/vulkan/vulkan_rend_infos.h>
+    #include <deng/vulkan/vulkan_renderer.h>
+
+    #include <utils/collision.h>
+    #include <dengui/dengui_infos.h>
+    #include <dengui/vulkan/vulkan_update.h>
+#endif
+
 
 namespace dengui {
-    /* Enum for specifing element color mode */
-    enum ElementColorMode {
-        ELEMENT_COLOR_MODE_UNMAPPED         = 0,
-        ELEMENT_COLOR_MODE_TEXTURE_MAPPED   = 1
-    };
-
-
-    /* Generic struct for all information related to mouse input *
-     * Read-only for events thread                               */
-    struct MouseInputInfo {
-        std::mutex mut;
-        dengMath::vec2<deng_vec_t> mouse_coords;
-        deng_InputMode mouse_input;
-        deng_MouseButton *active_btn;
-        deng_i32_t active_btn_c;
-    };
-    
-
-    /* Event creation info */
-    struct EventInfo {
-        dengMath::vec2<deng_ui32_t> deng_window_area;
-        std::vector<deng_Asset> *p_assets;
-        std::vector<deng::TextureImageData> *p_textures;
-        std::mutex *p_res_mut;
-        std::mutex *p_frame_mut;
-        size_t sc_img_size;
-    
-        deng::InstanceCreator *p_ic;
-        deng::ResourceAllocator *p_ra;
-        deng::DrawCaller *p_dc;
-        deng::DescriptorCreator *p_desc_c;
-        VkExtent2D ext;
-        VkRenderPass renderpass;
-        dengMath::vec4<deng_vec_t> background;
-    };
-
-
-    /* Cursor drop down menu element information */
-    struct CursorDDMInfo {
-        std::string ddm_id;
-        std::vector<DDMElement> elems;
-        deng_bool_t is_visible;
-        deng_ObjVertData2D *active_verts;
-        deng_ui32_t active_vert_c;
-        dengMath::vec2<deng_vec_t> ddm_size;
-        dengMath::vec2<deng_ui32_t> asset_bounds;
-        dengMath::vec2<deng_ui32_t> tex_bounds;
-    };
-
-
-    /* Store all information about dengui window */
-    struct WindowData {
-        std::string window_id;
-        std::vector<WindowElement> win_elems;
-        deng_bool_t is_visible;
-        dengMath::vec2<deng_ui32_t> asset_bounds = {0, 0};
-        dengMath::vec2<deng_ui32_t> tex_bounds = {0, 0};
-    };
-
-    
-    /* 
-     * This class is used for updating command and vertex buffers as well as
-     * texture descriptors on the second thread 
-     */
-    class __FrameUpdater {
-    private:
-        EventInfo *m_p_info;
-    
-    public:
-        __FrameUpdater(EventInfo *p_info);
-
-        /* Asset mutex lockers */
-        void lockAssets();
-        void unlockAssets();
-
-        /* Frame mutex lockers */
-        void lockFrame();
-        void unlockFrame();
-
-        /* 
-         * External update caller methods 
-         * Frame locking is required for any of these method calls to work correctly!   
-         */
-        void reallocBuffer();
-        void updateVerts(dengMath::vec2<deng_ui32_t> remap_bounds);
-        void updateTexDS (
-            deng_bool_t realloc_ds, 
-            dengMath::vec2<deng_ui32_t> *p_tex_bounds
-        );
-        void updateTextures(dengMath::vec2<deng_ui32_t> tex_bounds);
-        void updateCmdBuffers();
-    };
-
-
     /* 
      * Element Handler 
      * This class is used to push and update window or ddm elements
@@ -108,13 +45,16 @@ namespace dengui {
     private:
         std::vector<WindowData> m_win_data;
         std::vector<CursorDDMInfo> m_cur_ddm_infos;
-        dengMath::mat3<deng_vec_t> m_cur_ddm_transform;
+        
+        FloatInfo m_fi;
+        dengMath::mat3<deng_vec_t> m_mouse_transform;
+
         std::mutex *m_p_res_mut;
         std::vector<deng_Asset> *m_p_assets;
-        std::vector<deng::TextureImageData> *m_p_tex;
-        deng::InstanceCreator *m_p_ic;
-        deng::DescriptorCreator *m_p_desc_c;
-        __FrameUpdater *m_p_frame_upd;
+        std::vector<deng::vulkan::TextureImage> *m_p_tex;
+        deng::vulkan::InstanceCreator *m_p_ic;
+        deng::vulkan::DescriptorCreator *m_p_desc_c;
+        vulkan::__FrameUpdater *m_p_vk_frame_upd;
 
     private:
         /*
@@ -135,6 +75,14 @@ namespace dengui {
          */
         size_t __findCursorDDMIndex(const std::string &window_id);
 
+        /*
+         * Initialise floating mode for window assets
+         */
+        void __initFloating (
+            dengMath::vec2<deng_ui32_t> asset_bounds,
+            dengMath::vec2<deng_vec_t> mouse_pos
+        );
+
 
     protected:
         deng_bool_t __EH_CheckDDMSpawn(dengMath::vec2<deng_vec_t> mouse_pos);
@@ -149,6 +97,10 @@ namespace dengui {
             Events *p_ev, 
             deng_MouseButton &feedback
         );
+
+        void __EH_UpdateFloating (
+            dengMath::vec2<deng_vec_t> mouse_pos
+        );
         
         WindowData *__EH_FindWindow(const std::string &win_id);
         std::vector<CursorDDMInfo> *__EH_GetDDMInfos();
@@ -157,11 +109,12 @@ namespace dengui {
     public:
         __EH (
             std::vector<deng_Asset> *p_assets, 
-            std::vector<deng::TextureImageData> *p_tex,
-            __FrameUpdater *p_frame_upd,
+            std::vector<deng::vulkan::TextureImage> *p_tex,
+            vulkan::__FrameUpdater *p_frame_upd,
             Events *p_ev,
-            deng::InstanceCreator *p_ic,
-            deng::DescriptorCreator *p_desc_c,
+            deng_bool_t *p_float_flag,
+            deng::vulkan::InstanceCreator *p_ic,
+            deng::vulkan::DescriptorCreator *p_desc_c,
             std::mutex *p_res_mut
         );
 
@@ -196,13 +149,14 @@ namespace dengui {
         void invertVisibilityByBounds(dengMath::vec2<deng_ui32_t> bounds);
     };
 
-
+    
     /* Main GUI event handling class (runs on separate thread) */
     class Events : public __EH {
     private:
         deng_SurfaceWindow *m_p_win;
         deng_bool_t m_is_ddm = false;
         deng_bool_t m_wait_release = false;
+        deng_bool_t m_float_mode = false;
 
         dengMath::vec2<deng_vec_t> m_cur_pos;
         EventInfo m_info;
@@ -212,11 +166,10 @@ namespace dengui {
         void __waitForNoInput(deng_MouseButton btn);
 
     public:
-        __FrameUpdater frame_upd;
+        vulkan::__FrameUpdater frame_upd;
 
     public:
         Events(EventInfo &ev_info);
-        ~Events();
 
     // Setters getters
     public:

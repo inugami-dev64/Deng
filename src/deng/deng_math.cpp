@@ -1,15 +1,5 @@
-#include <map>
-#include <iostream>
-#include <unordered_map>
-#include <vector>
-#include <string>
-#include <math.h>
-
-#define __DENG_API_CORE
-#include "../../headers/common/base_types.h"
-#include "../../headers/das/assets.h"
-#include "../../headers/deng/err_def.h"
-#include "../../headers/deng/deng_math.h"
+#define __DENG_MATH_CPP
+#include <deng/deng_math.h>
 
 namespace dengMath {
 

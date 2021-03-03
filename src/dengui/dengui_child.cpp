@@ -1,5 +1,5 @@
-#include "../../headers/deng/api_core.h"
-#include <string>
+#define __DENGUI_CHILD_CPP
+#include <dengui/dengui_child.h>
 
 namespace dengui {
 
@@ -176,18 +176,6 @@ namespace dengui {
             m_vert
         );
 
-        printf (
-            "VERTS_1: {%f, %f}, {%f, %f}, {%f, %f}, {%f, %f}\n",
-            m_vert[0].vert_data.vert_x,
-            m_vert[0].vert_data.vert_y,
-            m_vert[1].vert_data.vert_x,
-            m_vert[1].vert_data.vert_y,
-            m_vert[2].vert_data.vert_x,
-            m_vert[2].vert_data.vert_y,
-            m_vert[3].vert_data.vert_x,
-            m_vert[3].vert_data.vert_y
-        );
-
         m_indices.insert (
             m_indices.end(),
             {0, 1, 2, 2, 3, 0}
@@ -211,20 +199,10 @@ namespace dengui {
         );
 
         m_cont_vert_bounds = {0, (deng_ui32_t) m_vert.size()};
-        printf (
-            "VERT_BOUNDS: %d, %d\n", 
-            m_cont_vert_bounds.first,
-            m_cont_vert_bounds.second
-        );
         m_cont_ind_bounds = {0, (deng_ui32_t) m_indices.size()};
-        printf (
-            "IND_BOUNDS: %d, %d\n", 
-            m_cont_ind_bounds.first,
-            m_cont_ind_bounds.second
-        );
 
         // Check if titlebar is specified
-        if(m_info.add_titlebar)
+        if(m_info.titlebar_height)
             mkTitlebar();
     }
 
@@ -237,7 +215,7 @@ namespace dengui {
 
         deng_vec_t rel_height = dengMath::Conversion::findRelSize (
             m_vert[3].vert_data.vert_y - m_vert[0].vert_data.vert_y, 
-            m_info.titlebar_info.titlebar_height
+            m_info.titlebar_height
         );
         
         dengUtils::RectangleGenerator::generateUnmappedRelRec (
@@ -247,10 +225,10 @@ namespace dengui {
             {-1.0f, 1.0f},
             m_vert.data(),
             {
-                m_info.titlebar_info.background_color.col_r,
-                m_info.titlebar_info.background_color.col_g,
-                m_info.titlebar_info.background_color.col_b,
-                m_info.titlebar_info.background_color.col_a
+                m_info.titlebar_color.col_r,
+                m_info.titlebar_color.col_g,
+                m_info.titlebar_color.col_b,
+                m_info.titlebar_color.col_a
             },
             DENGUI_CHILD_CONTAINER_LEVEL,
             m_vert
@@ -280,44 +258,28 @@ namespace dengui {
         m_titlebar_vert_bounds = {vert_offset, (deng_ui32_t) m_vert.size()};
         m_titlebar_ind_bounds = {ind_offset, (deng_ui32_t) m_indices.size()};
 
-        LOG (
-            "TITLEBAR_VERT_BOUNDS: " + 
-            std::to_string(m_titlebar_vert_bounds.first) +
-            ", " +
-            std::to_string(m_titlebar_vert_bounds.second)
+        // Generate title label 
+        m_label = m_p_sr->renderRelLabel (
+            {
+                m_parent_info.vert[1].vert_data.vert_x - m_parent_info.vert[0].vert_data.vert_x,
+                m_parent_info.vert[3].vert_data.vert_y - m_parent_info.vert[0].vert_data.vert_y
+            },
+            DENGUI_DEFAULT_LABEL_PADDING,
+            {
+                m_vert[m_titlebar_vert_bounds.first].vert_data.vert_x,
+                m_vert[m_titlebar_vert_bounds.first].vert_data.vert_y
+            },
+            {
+                m_info.size.first,
+                m_info.titlebar_height
+            },
+            {1.0f, 1.0f},
+            m_info.origin,
+            m_info.color,
+            DENGUI_CHILD_CONTAINER_LEVEL,
+            DENGUI_DEFAULT_FONT_FILE,
+            m_info.label
         );
-
-        LOG (
-            "TITLEBAR_IND_BOUNDS: " + 
-            std::to_string(m_titlebar_ind_bounds.first) +
-            ", " +
-            std::to_string(m_titlebar_ind_bounds.second)
-        );
-
-        // Generate title label if needed
-        if(m_info.titlebar_info.add_label) {
-            m_label = m_p_sr->renderRelLabel (
-                {
-                    m_parent_info.vert[1].vert_data.vert_x - m_parent_info.vert[0].vert_data.vert_x,
-                    m_parent_info.vert[3].vert_data.vert_y - m_parent_info.vert[0].vert_data.vert_y
-                },
-                DENGUI_DEFAULT_LABEL_PADDING,
-                {
-                    m_vert[m_titlebar_vert_bounds.first].vert_data.vert_x,
-                    m_vert[m_titlebar_vert_bounds.first].vert_data.vert_y
-                },
-                {
-                    m_info.size.first,
-                    m_info.titlebar_info.titlebar_height
-                },
-                {1.0f, 1.0f},
-                m_info.origin,
-                m_info.titlebar_info.color,
-                DENGUI_CHILD_CONTAINER_LEVEL,
-                DENGUI_DEFAULT_FONT_FILE,
-                m_info.titlebar_info.label
-            );
-        }
     }
 
 
@@ -468,7 +430,7 @@ namespace dengui {
         }
         
         // Add titlebar elements
-        if(m_info.add_titlebar) {
+        if(m_info.titlebar_height) {
             vert_vec = std::vector<VERT_UNMAPPED_2D> (
                 m_vert.cbegin() + m_titlebar_vert_bounds.first,
                 m_vert.cbegin() + m_titlebar_vert_bounds.second
@@ -493,32 +455,30 @@ namespace dengui {
             out_vec[out_vec.size() - 1].onScrUpFunc = NULL;
             out_vec[out_vec.size() - 1].onScrDownFunc = NULL;
 
-            if(m_info.titlebar_info.add_label) {
-                out_vec.resize(1 + out_vec.size());
-                out_vec[out_vec.size() - 1].child_id = m_info.titlebar_info.label;
-                out_vec[out_vec.size() - 1].color_mode = ELEMENT_COLOR_MODE_TEXTURE_MAPPED;
-                out_vec[out_vec.size() - 1].parent_id = std::string(m_parent_info.id) + "#" + std::string(m_info.id) + "#titlebar";
-                out_vec[out_vec.size() - 1].is_interactive = false;
-                out_vec[out_vec.size() - 1].mapped_vert.insert (
-                    out_vec[out_vec.size() - 1].mapped_vert.end(),
-                    m_label.vert_pos.begin(),
-                    m_label.vert_pos.end()
-                );
+            out_vec.resize(1 + out_vec.size());
+            out_vec[out_vec.size() - 1].child_id = m_info.label;
+            out_vec[out_vec.size() - 1].color_mode = ELEMENT_COLOR_MODE_TEXTURE_MAPPED;
+            out_vec[out_vec.size() - 1].parent_id = std::string(m_parent_info.id) + "#" + std::string(m_info.id) + "#titlebar";
+            out_vec[out_vec.size() - 1].is_interactive = false;
+            out_vec[out_vec.size() - 1].mapped_vert.insert (
+                out_vec[out_vec.size() - 1].mapped_vert.end(),
+                m_label.vert_pos.begin(),
+                m_label.vert_pos.end()
+            );
 
-                out_vec[out_vec.size() - 1].texture = m_label.tex_data;
-                out_vec[out_vec.size() - 1].indices.insert (
-                    out_vec[out_vec.size() - 1].indices.end(),   
-                    m_label.vert_indices.begin(),
-                    m_label.vert_indices.end()
-                );
-                out_vec[out_vec.size() - 1].tex_box = m_label.box_size;
-                out_vec[out_vec.size() - 1].col_vert_bounds = {0, 0};
-                out_vec[out_vec.size() - 1].onLMBClickFunc = NULL;
-                out_vec[out_vec.size() - 1].onMMBClickFunc = NULL;
-                out_vec[out_vec.size() - 1].onRMBClickFunc = NULL;
-                out_vec[out_vec.size() - 1].onScrUpFunc = NULL;
-                out_vec[out_vec.size() - 1].onScrDownFunc = NULL;
-            }
+            out_vec[out_vec.size() - 1].texture = m_label.tex_data;
+            out_vec[out_vec.size() - 1].indices.insert (
+                out_vec[out_vec.size() - 1].indices.end(),   
+                m_label.vert_indices.begin(),
+                m_label.vert_indices.end()
+            );
+            out_vec[out_vec.size() - 1].tex_box = m_label.box_size;
+            out_vec[out_vec.size() - 1].col_vert_bounds = {0, 0};
+            out_vec[out_vec.size() - 1].onLMBClickFunc = NULL;
+            out_vec[out_vec.size() - 1].onMMBClickFunc = NULL;
+            out_vec[out_vec.size() - 1].onRMBClickFunc = NULL;
+            out_vec[out_vec.size() - 1].onScrUpFunc = NULL;
+            out_vec[out_vec.size() - 1].onScrDownFunc = NULL;
 
             for(deng_ui32_t l_index = 0; l_index < m_titlebar_child_elems.size(); l_index++) {
                 switch(m_cont_child_elems[l_index].second) 

@@ -1,4 +1,5 @@
-#include "../../headers/deng/api_core.h"
+#define __COLLISION_CPP
+#include <utils/collision.h>
 
 namespace dengUtils {
     /*********************************************/

@@ -1,10 +1,6 @@
-#define DAS_EXT_HANDLER
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdio.h>
-#include "../../headers/common/base_types.h"
-#include "../../headers/das/das_core.h"
-#include "../../headers/das/dam.h"
+#define __DAM_C
+#define __DAM_USAGE
+#include <das/dam.h>
 
 
 /* Count years recursively */

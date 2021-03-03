@@ -1,6 +1,14 @@
 #ifndef HASHMAP_H
 #define HASHMAP_H
 
+#ifdef __HASHMAP_C
+    #include <stdlib.h> // size_t 
+    #include <string.h> // memcmp()
+    #include <stdio.h> // perror(), printf()
+    #include <common/base_types.h>
+    #include <common/common.h>
+#endif
+
 typedef struct ChainData {
     void *key;
     size_t key_len;

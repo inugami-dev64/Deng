@@ -1,89 +1,34 @@
 #ifndef DENGUI_CHILD_H
 #define DENGUI_CHILD_H
 
-#define DENGUI_DROP_DOWN_LIST_TRIANGLE_SIZE     0.1 // vec
-#define DENGUI_DROP_DOWN_LIST_TRIANGLE          { \
-                                                    (dengMath::vec2<deng_vec_t>) {-1.0f, -1.0f}, \
-                                                    (dengMath::vec2<deng_vec_t>) {1.0f, 0.0f}, \
-                                                    (dengMath::vec2<deng_vec_t>) {-1.0f, 1.0f} \
-                                                }
+
+#ifdef __DENGUI_CHILD_CPP
+    #include <stdlib.h>
+    #include <vector>
+    #include <array>
+    #include <mutex>
+    #include <vulkan/vulkan.h>
+
+    #include <common/base_types.h>
+    #include <common/common.h>
+    #include <common/err_def.h>
+    #include <das/assets.h>
+
+    #include <deng/forward_dec.h>
+    #include <deng/deng_math.h>
+    #include <deng/surface_window.h>
+    #include <deng/window.h>
+    #include <deng/vulkan/vulkan_resources.h>
+    #include <utils/font.h>
+    #include <utils/timer.h>
+    #include <utils/shapes.h>
+    
+    #include <dengui/dengui_win_def.h>
+    #include <dengui/dengui_infos.h>
+#endif
 
 
-// Hierarchy Level specifiers 
-#define DENGUI_CHILD_PUSH_BUTTON_LEVEL          2
-#define DENGUI_CHILD_CONTAINER_LEVEL            1
-#define DENGUI_DROP_DOWN_LIST_LEVEL             4
 namespace dengui {
-
-    /* Specify size information about parent window */
-    struct ParentInfo {
-        char *id;
-        VERT_UNMAPPED_2D *vert;
-    };
-
-    /* Specify window border thickness (px) */
-    enum WindowBorder {
-        BORDER_NONE      = 0,
-        BORDER_LIGHT     = 2,
-        BORDER_MEDIUM    = 4,
-        BORDER_HEAVY     = 7    
-    };
-
-    /* Child element specifier */
-    enum ChildElementType {
-        CHILD_ELEMENT_TYPE_PUSH_BUTTON              = 0, // done
-        CHILD_ELEMENT_TYPE_DROP_DOWN_MENU           = 1, 
-        CHILD_ELEMENT_TYPE_CURSOR_DROP_DOWN_MENU    = 2, // undone
-        CHILD_ELEMENT_TYPE_SUB_FORM                 = 3,
-        CHILD_ELEMENT_TYPE_TEXT_FIELD               = 4,
-        CHILD_ELEMENT_TYPE_LABEL                    = 5,
-        CHILD_ELEMENT_TYPE_CONTAINER                = 6 // done
-    };
-
-
-    /* Child window overlapping mode */
-    enum ContainerOverlapMode {
-        CONTAINER_OVERLAP_HIDE      = 0,
-        CONTAINER_OVERLAP_SCROLL    = 1,
-        CONTAINER_OVERLAP_NONE      = 2
-    };
-
-
-    /* Base child element info struct */
-    struct ChildBaseInfo { 
-        dengMath::vec2<deng_vec_t> origin;
-        dengMath::vec2<deng_vec_t> position;
-        dengMath::vec2<deng_vec_t> size;
-        char *id;
-    };
-
-
-
-    /*
-     ********* CONTAINER STRUCTURES ***********
-     * Hierarchy level: 1
-     * Callback no
-     * Callback key: none
-     * Cursor hove style: no
-     * Parent usage: yes
-     */
-    struct ChildContainerTitlebarData {
-        deng_vec_t titlebar_height;
-        deng_ObjColorData background_color;
-        char *label;
-        dengMath::vec3<unsigned char> color;
-        deng_bool_t add_label;
-    };
-
-
-    struct ChildContainerInfo : public ChildBaseInfo {
-        deng_ObjColorData background_color;
-        deng_bool_t add_titlebar;
-        ChildContainerTitlebarData titlebar_info;
-        WindowBorder border;
-        deng_ObjColorData border_color;
-    };
-
 
     class ChildContainer {
     private:

@@ -1,6 +1,5 @@
-#define __DENG_USE_GUI
-#define __DENG_API_CORE
-#include "../../headers/deng/api_core.h"
+#define __MAP_EDITOR_UI_CPP
+#include <dengui/map_editor_ui.h>
 
 namespace dengui {
     MapEditor::MapEditor (
@@ -98,12 +97,10 @@ namespace dengui {
         // Generate container for push button
         ParentInfo pi = m_p_main_win->getParentInfo();
         ChildContainerInfo c_info;
-        c_info.add_titlebar = true;
-        c_info.titlebar_info.titlebar_height = 0.05f;
-        c_info.titlebar_info.add_label = true;
-        c_info.titlebar_info.label = (char*) "Hello world!";
-        c_info.titlebar_info.background_color = {0.0f, 1.0f, 1.0f, 1.0f};
-        c_info.titlebar_info.color = {0x00, 0x00, 0x00};
+        c_info.titlebar_height = 0.05f;
+        c_info.label = (char*) "Hello world!";
+        c_info.titlebar_color = {0.0f, 1.0f, 1.0f, 1.0f};
+        c_info.color = {0x00, 0x00, 0x00};
 
         c_info.background_color = {0.33f, 1.0f, 0.0f, 0.33f},
         c_info.border = BORDER_LIGHT;

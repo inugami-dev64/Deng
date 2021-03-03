@@ -1,11 +1,12 @@
-#include "../../headers/deng/deng_surface_core.h"
+#define __KEY_TRANSLATION_C
+#include <deng/key_definitions.h>
 
 #ifdef __linux__
 /************** Xorg ************/
 deng_Key translateX11Key(KeySym keysym) {
     switch (keysym)
     {   
-        // Generic keys
+        // X11 keys 
         case XK_space:              return DENG_KEY_SPACE;
         case XK_apostrophe:         return DENG_KEY_APOSTROPHE;
         case XK_comma:              return DENG_KEY_COMMA;

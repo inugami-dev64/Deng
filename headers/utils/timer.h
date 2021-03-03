@@ -1,16 +1,21 @@
-#ifndef TIMER_H
-#define TIMER_H
+#ifndef __TIMER_H
+#define __TIMER_H
+
+#ifdef __TIMER_CPP
+    #include <chrono>   
+    #include <common/base_types.h>
+#endif
 
 namespace dengUtils {
     
     class Timer {
     private:
-        long getTime();
-        long time_point;
+        deng_ui32_t getTime();
+        deng_ui32_t time_point;
         
     public:
         void setNewTimePoint();
-        bool isTimePassed(const int &ms);
+        deng_bool_t isTimePassed(const deng_ui32_t &ms);
         void delay();
         Timer();
     };

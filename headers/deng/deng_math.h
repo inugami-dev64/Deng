@@ -1,11 +1,20 @@
 #ifndef DENG_MATH_H
 #define DENG_MATH_H
-#include <string>
 #define PI 3.1415926f
 
 #define DENG_CAMERA_RIGHT_SIDE      (dengMath::vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, 0.0f}
 #define DENG_CAMERA_UP_SIDE         (dengMath::vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, 0.0f}
 #define DENG_CAMERA_FORWARD_SIDE    (dengMath::vec4<deng_vec_t>) {0.0f, 0.0f, -1.0f, 0.0f}
+
+#ifdef __DENG_MATH_CPP
+    #include <stdlib.h>
+    #include <math.h>
+    #include <string>
+    #include <vector>
+    #include <common/base_types.h>
+    #include <common/err_def.h>
+    #include <das/assets.h>
+#endif
 
 namespace dengMath {
     

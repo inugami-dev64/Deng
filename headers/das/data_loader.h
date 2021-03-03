@@ -1,5 +1,14 @@
-#ifndef LOADER_H
-#define LOADER_H
+#ifndef __DATA_LOADER_H
+#define __DATA_LOADER_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define CORRUPTION_OBJ_ERR(x) fprintf(stderr, "Corrupted Wavefront OBJ file '%s'\n", x), \
+                              exit(EXIT_FAILURE)
+#define DEFAULT_ASSET_COLOR (deng_ObjColorData) {0.7f, 0.7f, 0.7f, 1.0f}
+
 
 typedef enum ImageFormat {
     IMAGE_FORMAT_BMP = 0,
@@ -9,14 +18,17 @@ typedef enum ImageFormat {
     IMAGE_FORMAT_UNKNOWN = 4
 } ImageFormat;
 
-/* Image loading */
-void dasLoadTexture (
-    deng_Texture *p_asset, 
-    const char *file_name
-);
 
-#define DEFAULT_ASSET_COLOR (deng_ObjColorData) {0.7f, 0.7f, 0.7f, 1.0f}
-#ifdef DAS_EXT_LOADERS
+#ifdef __DATA_LOADER_C
+    #include <stdlib.h> // size_t, malloc(), calloc()
+    #include <stdio.h> // FILE, ftell(), fread()..
+    #include <string.h> // memset()
+    #include <common/base_types.h>
+    #include <common/common.h>
+    #include <common/hashmap.h>
+    #include <das/hdr_data.h>
+    #include <das/assets.h>
+
     ImageFormat dasDetectImageFormat(const char *file_name);
     void dasLoadBMPimage (
         deng_Texture *p_asset, 
@@ -27,19 +39,7 @@ void dasLoadTexture (
         deng_Texture *p_asset, 
         const char *file_name
     );
-#endif
 
-/* Vertices data loading */
-/* Vertices type values define the following: */
-    /* 0 - UNMAPPED */
-    /* 1 - TEXTURE MAPPED */
-void dasLoadModel (
-    deng_Asset *p_asset, 
-    char *file_name
-);
-#ifdef DAS_EXT_LOADERS
-    #define CORRUPTION_OBJ_ERR(x) fprintf(stderr, "Corrupted Wavefront OBJ file '%s'\n", x), \
-                                  exit(EXIT_FAILURE)
     typedef struct IndexSet {
         deng_ui32_t vert;
         deng_ui32_t tex;
@@ -78,10 +78,33 @@ void dasLoadModel (
     );
 #endif
 
+
+/* Image loading */
+void dasLoadTexture (
+    deng_Texture *p_asset, 
+    const char *file_name
+);
+
+
+/* Vertices data loading */
+/* Vertices type values define the following: */
+    /* 0 - UNMAPPED */
+    /* 1 - TEXTURE MAPPED */
+void dasLoadModel (
+    deng_Asset *p_asset, 
+    char *file_name
+);
+
 #ifdef DAS_GENERIC_HELPERS
     char *dasGetFileExt(const char *file_name);
     void dasCheckForMemAllocErr(void *mem_addr);
     void dasCleanCharBuffer(char *buffer, size_t size);
+#endif
+
+
+
+#ifdef __cplusplus
+    }
 #endif
 
 #endif

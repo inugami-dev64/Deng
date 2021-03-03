@@ -1,7 +1,30 @@
-#ifndef GUI_BINDINGS_H
-#define GUI_BINDINGS_H
+#ifndef __MAP_EDITOR_UI_H
+#define __MAP_EDITOR_UI_H
 
-#ifdef __DENG_USE_GUI
+#ifdef __MAP_EDITOR_UI_CPP
+    #include <stdlib.h>
+    #include <vector>
+    #include <string>
+    #include <mutex>
+    #include <vulkan/vulkan.h>
+
+    #include <common/base_types.h>
+    #include <common/err_def.h>
+    #include <das/assets.h>
+
+    #include <deng/forward_dec.h>
+    #include <deng/deng_math.h>
+    #include <deng/surface_window.h>
+    #include <deng/vulkan/vulkan_qm.h>
+    #include <deng/vulkan/vulkan_resources.h>
+    #include <deng/vulkan/vulkan_rend_infos.h>
+
+    #include <utils/font.h>
+    #include <utils/shapes.h>
+    #include <utils/collision.h>
+    #include <dengui/dengui.h>
+    #include <dengui/ui_callbacks.h>
+
     // Main editor window
     #define DENG_MAP_UI_MAIN_WINDOW_FLAGS       DENGUI_WINDOW_FLAG_NO_MOVE | \
                                                 DENGUI_WINDOW_FLAG_NO_RESIZE 
