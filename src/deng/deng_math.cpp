@@ -626,22 +626,24 @@ namespace dengMath {
         mat3<deng_vec_t> &mat
     ) {
         size_t index;
-        dengMath::vec2<deng_vec_t> *p_tmp_in;
+        dengMath::vec2<deng_vec_t> tmp_in;
         dengMath::vec3<deng_vec_t> tmp_out;
 
         for(index = 0; index < asset.vertices.size; index++) {
             switch (asset.asset_mode)
             {
             case DENG_ASSET_MODE_2D_TEXTURE_MAPPED:
-                p_tmp_in = (dengMath::vec2<deng_vec_t>*) &asset.vertices.p_tex_mapped_vert_data_2d[index].vert_data;
-                tmp_out = mat * (*p_tmp_in);
+                tmp_in.first = asset.vertices.p_tex_mapped_vert_data_2d[index].vert_data.vert_x;
+                tmp_in.second = asset.vertices.p_tex_mapped_vert_data_2d[index].vert_data.vert_y;
+                tmp_out = mat * tmp_in;
                 asset.vertices.p_tex_mapped_vert_data_2d[index].vert_data.vert_x = tmp_out.first;
                 asset.vertices.p_tex_mapped_vert_data_2d[index].vert_data.vert_y = tmp_out.second;
                 break;
 
             case DENG_ASSET_MODE_2D_UNMAPPED:
-                p_tmp_in = (dengMath::vec2<deng_vec_t>*) &asset.vertices.p_unmapped_vert_data_2d[index].vert_data;
-                tmp_out = mat * (*p_tmp_in);
+                tmp_in.first = asset.vertices.p_unmapped_vert_data_2d[index].vert_data.vert_x;
+                tmp_in.second = asset.vertices.p_unmapped_vert_data_2d[index].vert_data.vert_y;
+                tmp_out = mat * tmp_in;
                 asset.vertices.p_unmapped_vert_data_2d[index].vert_data.vert_x = tmp_out.first;
                 asset.vertices.p_unmapped_vert_data_2d[index].vert_data.vert_y = tmp_out.second;
                 break;
