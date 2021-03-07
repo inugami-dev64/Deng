@@ -16,7 +16,10 @@ extern "C" {
 
     #include <common/base_types.h>
     #include <vulkan/vulkan.h>
-    #include <X11/XKBlib.h> // KeySym
+    #ifdef __linux__
+        #include <X11/XKBlib.h> // KeySym
+    #endif
+    #include <windows.h>
     #include <deng/key_definitions.h>
     #include <deng/surface_window.h>
     #ifdef __linux__

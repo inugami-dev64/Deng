@@ -10,12 +10,12 @@ namespace dengUtils {
     
     class Timer {
     private:
-        deng_ui32_t getTime();
-        deng_ui32_t time_point;
+        deng_ui64_t getTime();
+        deng_ui64_t m_time_point;
         
     public:
         void setNewTimePoint();
-        deng_bool_t isTimePassed(const deng_ui32_t &ms);
+        deng_bool_t isTimePassed(const deng_ui64_t &ms);
         void delay();
         Timer();
     };

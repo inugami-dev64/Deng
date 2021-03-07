@@ -183,7 +183,6 @@ namespace dengui {
     deng_bool_t __EH::__EH_CheckDDMSpawn(dengMath::vec2<deng_vec_t> mouse_pos) {
         size_t i;
         deng_bool_t spawn_menu = false;
-        ext_mii.mut.lock();
 
         m_mouse_transform.row1.third = mouse_pos.first;
         m_mouse_transform.row2.third = mouse_pos.second;
@@ -231,7 +230,6 @@ namespace dengui {
             }
         }
         
-        ext_mii.mut.unlock();
         return spawn_menu;
     }
 
@@ -247,8 +245,6 @@ namespace dengui {
     ) {
         size_t i, j;
         std::array<deng_ObjVertData2D, 4> verts;
-
-        ext_mii.mut.lock();
 
         // Check each drop menu instance for closing if needed 
         DDMCallback callback = NULL;
@@ -341,7 +337,6 @@ namespace dengui {
             }
         }
 
-        ext_mii.mut.unlock();
         return false;
     }
 
@@ -357,7 +352,6 @@ namespace dengui {
         size_t win_i, i;
         // Check if collision with any window element has happened and if click callback should be triggered
         for(win_i = 0; win_i < m_win_data.size(); win_i++) {
-            ext_mii.mut.lock();
             for(i = 0; i < m_win_data[win_i].win_elems.size(); i++) {
                 if(!m_win_data[win_i].win_elems[i].is_interactive && !m_win_data[win_i].win_elems[i].is_drag_point)
                     continue;
@@ -405,7 +399,6 @@ namespace dengui {
                             p_ev
                         );
 
-                        ext_mii.mut.unlock();
                         m_p_res_mut->lock();
                         return true;
                     }
@@ -422,7 +415,6 @@ namespace dengui {
                     }
                 }
             }
-            ext_mii.mut.unlock();
         }
 
         return false;
@@ -434,7 +426,6 @@ namespace dengui {
      * This method is meant to be used to update window location when dragging it
      */
     void __EH::__EH_UpdateFloating(dengMath::vec2<deng_vec_t> mouse_pos) {
-        ext_mii.mut.lock();
         // Check if dragging button is still active
         deng_bool_t is_btn = deng_FindKeyStatus (
             DENG_KEY_UNKNOWN,
@@ -444,7 +435,6 @@ namespace dengui {
         );
 
         if(!is_btn) {
-            ext_mii.mut.unlock();
             *m_fi.p_float_flag = false;
             return;
         }
@@ -464,8 +454,6 @@ namespace dengui {
         m_p_vk_frame_upd->lockFrame();
         m_p_vk_frame_upd->updateVerts(m_fi.asset_bounds);
         m_p_vk_frame_upd->unlockFrame();
-
-        ext_mii.mut.unlock();
     }
 
 
@@ -610,7 +598,7 @@ namespace dengui {
             tmp_assets.end()
         );
         LOG("Asset_c after: " + std::to_string(m_p_assets->size()));
-        m_win_data[win_i].asset_bounds.second += tmp_assets.size();
+        m_win_data[win_i].asset_bounds.second += (deng_ui32_t) tmp_assets.size();
 
         // Check if buffers need to be reallocated 
         if(update_buffers) {
@@ -915,8 +903,8 @@ namespace dengui {
     void Events::__waitForNoInput(deng_MouseButton btn) {
         deng_bool_t is_btn = true;
 
-        m_info.p_res_mut->unlock();
         ext_mii.mut.unlock();
+        m_info.p_res_mut->unlock();
         
         while(is_btn) {
             std::this_thread::sleep_for(std::chrono::milliseconds(DENGUI_EV_INPUT_SLEEP_INTERVAL));
@@ -933,6 +921,7 @@ namespace dengui {
             ext_mii.mut.unlock();
         }
 
+        ext_mii.mut.lock();
         m_info.p_res_mut->lock();
     }
 
@@ -945,6 +934,7 @@ namespace dengui {
         m_info.p_run_mut->lock();
         while(deng_IsRunning()) {
             m_info.p_res_mut->lock();
+            ext_mii.mut.lock();
             vec_mouse.first = dengMath::Conversion::pixelSizeToVector2DSize (
                 (deng_px_t) ext_mii.mouse_coords.first,
                 m_info.deng_window_area,
@@ -956,41 +946,47 @@ namespace dengui {
                 m_info.deng_window_area,
                 DENG_COORD_AXIS_Y
             ) - 1.0f;
-                
-            // Check if release is needed
-            if(m_wait_release && !m_float_mode) {
-                __waitForNoInput(wait_btn);
-                m_wait_release = false;
-            }
 
-            else if(!m_is_ddm && !m_float_mode) {
-                // Check if drop down menu needs to be spawn
-                m_is_ddm = __EH_CheckDDMSpawn(vec_mouse);
-                m_wait_release = m_is_ddm;
-                if(m_is_ddm) {
-                    wait_btn = DENGUI_DEFAULT_DROP_DOWN_MENU_TRIGGER;
-                    m_info.p_res_mut->unlock();
-                    continue;
-                }    
-            }
-
-            else if(m_is_ddm && __EH_GetDDMInfos()->size() && !m_float_mode) {
-                // Check if drop down menu must be despawn
-                m_wait_release = __EH_UpdateDDMEv(vec_mouse, this, &m_is_ddm);
-                if(m_wait_release) {
-                    wait_btn = DENGUI_DEFAULT_DROP_DOWN_MENU_TRIGGER;
-                    m_info.p_res_mut->unlock();
-                    continue;
+            // Poll events if mouse input is available for it
+            if (ext_mii.is_mouse_input) {
+                // Check if release is needed
+                if (m_wait_release && !m_float_mode) {
+                    __waitForNoInput(wait_btn);
+                    m_wait_release = false;
                 }
-            }
 
-            if(!m_float_mode) {
-                if(__EH_UpdateWindows(vec_mouse, this, wait_btn))
-                    m_wait_release = true;
-            }
+                else if (!m_is_ddm && !m_float_mode) {
+                    // Check if drop down menu needs to be spawn
+                    m_is_ddm = __EH_CheckDDMSpawn(vec_mouse);
+                    m_wait_release = m_is_ddm;
+                    if (m_is_ddm) {
+                        wait_btn = DENGUI_DEFAULT_DROP_DOWN_MENU_TRIGGER;
+                        ext_mii.mut.unlock();
+                        m_info.p_res_mut->unlock();
+                        continue;
+                    }
+                }
 
-            else __EH_UpdateFloating(vec_mouse);
+                else if (m_is_ddm && __EH_GetDDMInfos()->size() && !m_float_mode) {
+                    // Check if drop down menu must be despawn
+                    m_wait_release = __EH_UpdateDDMEv(vec_mouse, this, &m_is_ddm);
+                    if (m_wait_release) {
+                        wait_btn = DENGUI_DEFAULT_DROP_DOWN_MENU_TRIGGER;
+                        ext_mii.mut.unlock();
+                        m_info.p_res_mut->unlock();
+                        continue;
+                    }
+                }
+
+                if (!m_float_mode) {
+                    if (__EH_UpdateWindows(vec_mouse, this, wait_btn))
+                        m_wait_release = true;
+                }
+
+                else __EH_UpdateFloating(vec_mouse);
+            }
             
+            ext_mii.mut.unlock();
             m_info.p_res_mut->unlock();
             std::this_thread::sleep_for(std::chrono::milliseconds(DENGUI_ITERATION_SLEEP_INTERVAL));
         }
@@ -1000,8 +996,10 @@ namespace dengui {
     }
 
 
-    /* Get all window elements from event class                 *
-     * These methods are made to be used from the main thread   */
+    /* 
+     * Get all window elements from event class                 
+     * These methods are made to be used from the main thread   
+     */
     dengMath::vec2<deng_ui32_t> Events::getWindowAssetBounds(const std::string &win_id) {
         WindowData *p_win = __EH_FindWindow(win_id);
         if(p_win)

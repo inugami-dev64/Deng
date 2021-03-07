@@ -4,12 +4,12 @@
 namespace dengMath {
 
     /* Generic conversion methods */
-    deng_vec_t Conversion::degToRad(const deng_vec_t &deg) {
-        return static_cast<deng_vec_t>(deg/180 * PI);
+    deng_f64_t Conversion::degToRad(const deng_f64_t &deg) {
+        return static_cast<deng_f64_t>(deg/180 * PI);
     }
 
-    deng_vec_t Conversion::radToDeg(const deng_vec_t &rad) {
-        return static_cast<deng_vec_t>(rad/(2 * PI) * 360);
+    deng_f64_t Conversion::radToDeg(const deng_f64_t &rad) {
+        return static_cast<deng_f64_t>(rad/(2 * PI) * 360);
     }
 
     deng_px_t Conversion::vector2DSizeToPixelSize (
@@ -20,17 +20,17 @@ namespace dengMath {
         switch (axis_type)
         {
         case DENG_COORD_AXIS_X:
-            return (
-                static_cast<deng_px_t>(vec_size) * 
-                static_cast<deng_px_t>(window_size.first) / 
+            return (deng_px_t) (
+                vec_size * 
+                static_cast<deng_vec_t>(window_size.first) / 
                 2.0
             );
             break;
         
         case DENG_COORD_AXIS_Y: 
-            return (
-                static_cast<double>(vec_size) * 
-                static_cast<double>(window_size.second) / 
+            return (deng_px_t) (
+                vec_size * 
+                static_cast<deng_vec_t>(window_size.second) / 
                 2.0
             );
             break;
@@ -39,7 +39,7 @@ namespace dengMath {
             break;
         }
 
-        return 0.0;
+        return 0;
     }
 
     deng_vec_t Conversion::pixelSizeToVector2DSize (
@@ -91,11 +91,13 @@ namespace dengMath {
         dengMath::vec2<deng_vec_t> size;
         size.first = vert[1].vert_data.vert_x - vert[0].vert_data.vert_x;
         size.second = vert[3].vert_data.vert_y - vert[0].vert_data.vert_y;
-       
-        return (vec2<deng_vec_t>) {
-            vert[0].vert_data.vert_x + (child_pos.first + 1.0f) / 2 * size.first,
+
+        vec2<deng_vec_t> abs_coords = {
+            vert[0].vert_data.vert_x + (child_pos.first + 1.0f / 2 * size.first),
             vert[0].vert_data.vert_y + (child_pos.second + 1.0f) / 2 * size.second
         };
+       
+        return abs_coords;
     }
 
 
@@ -122,11 +124,12 @@ namespace dengMath {
         size.first = vert[1].vert_data.vert_x - vert[0].vert_data.vert_x;
         size.second = vert[3].vert_data.vert_y - vert[0].vert_data.vert_y;
 
-        return (vec2<deng_vec_t>) {
+        vec2<deng_vec_t> rel_pos = {
             2 * (abs_pos.first + vert[0].vert_data.vert_x) / size.first - 1.0f,
             2 * (abs_pos.second + vert[0].vert_data.vert_y) / size.second - 1.0f
-        };
+        }; 
 
+        return rel_pos; 
     }
 
 
@@ -200,6 +203,7 @@ namespace dengMath {
         m_up_side = {0.0f, -1.0f, 0.0f, 0.0f};
         m_forward_side = {0.0f, 0.0f, -1.0f, 0.0f};
         
+        // Set the default camera positions for each camera type
         switch(type) {
         case DENG_CAMERA_FPP:
             m_camera_position = {
@@ -275,17 +279,20 @@ namespace dengMath {
     }
 
     void ViewMatrix::setTransformationMatrix(deng_bool_t is_abs_cam_sys) {
+        vec4<deng_vec_t> base_up; 
+        DENG_CAMERA_UP_SIDE(base_up);
+
         if(!is_abs_cam_sys) {
             m_transformation_mat.row1 = m_rot_x_mat * m_right_side;
             m_transformation_mat.row3 = m_rot_x_mat * m_forward_side;
             m_transformation_mat.row4 = m_rot_x_mat * m_camera_position;
 
             m_transformation_mat.row1 = m_rot_x_mat * m_right_side;
-            m_up_side = m_rot_x_mat * m_rot_y_mat * m_transformation_mat * DENG_CAMERA_UP_SIDE;
+            m_up_side = m_rot_x_mat * m_rot_y_mat * m_transformation_mat * base_up;
         }
         else {
             m_transformation_mat.row1 = m_rot_x_mat * m_rot_y_mat * m_right_side;
-            m_transformation_mat.row2 = DENG_CAMERA_UP_SIDE;
+            m_transformation_mat.row2 = base_up;
             m_transformation_mat.row3 = m_rot_x_mat * m_rot_y_mat * m_forward_side;
             m_transformation_mat.row4 = m_rot_x_mat * m_rot_y_mat * m_camera_position;
         }
@@ -347,24 +354,25 @@ namespace dengMath {
         m_y_rot = y_rot;
 
         mat4<deng_vec_t> transform_mat;
-        transform_mat.row1 = (vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, point.first + m_camera_position.first};
-        transform_mat.row2 = (vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, point.second + m_camera_position.second};
-        transform_mat.row3 = (vec4<deng_vec_t>) {0.0f, 0.0f, 1.0f, point.third + m_camera_position.third};
-        transform_mat.row4 = (vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f};
+        transform_mat.row1 = {1.0f, 0.0f, 0.0f, point.first + m_camera_position.first};
+        transform_mat.row2 = {0.0f, 1.0f, 0.0f, point.second + m_camera_position.second};
+        transform_mat.row3 = {0.0f, 0.0f, 1.0f, point.third + m_camera_position.third};
+        transform_mat.row4 = {0.0f, 0.0f, 0.0f, 1.0f};
 
-        m_rot_x_mat = transform_mat * (mat4<deng_vec_t>) {
-            {1.0f, 0.0f, 0.0f, 0.0f},
-            {0.0f, (deng_vec_t) cos(m_x_rot), (deng_vec_t) -sin(m_x_rot), 0.0f},
-            {0.0f, (deng_vec_t) sin(m_x_rot), (deng_vec_t) cos(m_x_rot), 0.0f}, 
-            {0.0f, 0.0f, 0.0f, 1.0f}
-        } * transform_mat.inv();
+        mat4<deng_vec_t> tmp_rot_mat;
+        tmp_rot_mat.row1 = {1.0f, 0.0f, 0.0f, 0.0f};
+        tmp_rot_mat.row2 = {0.0f, (deng_vec_t) cos(m_x_rot), (deng_vec_t) -sin(m_x_rot), 0.0f};
+        tmp_rot_mat.row3 = {0.0f, (deng_vec_t) sin(m_x_rot), (deng_vec_t) cos(m_x_rot), 0.0f};
+        tmp_rot_mat.row4 = {0.0f, 0.0f, 0.0f, 1.0f};
 
-        m_rot_y_mat = transform_mat * (mat4<deng_vec_t>) {
-            {(deng_vec_t) cos(m_y_rot), 0.0f, (deng_vec_t) sin(m_y_rot), 0.0f},
-            {0.0f, 1.0f, 0.0f, 0.0f},
-            {(deng_vec_t) -sin(m_y_rot), 0.0f, (deng_vec_t) cos(m_y_rot), 0.0f},
-            {0.0f, 0.0f, 0.0f, 1.0f}
-        } * transform_mat.inv();
+        m_rot_x_mat = transform_mat * tmp_rot_mat * transform_mat.inv();
+
+        tmp_rot_mat.row1 = {(deng_vec_t) cos(m_y_rot), 0.0f, (deng_vec_t) sin(m_y_rot), 0.0f},
+        tmp_rot_mat.row2 = {0.0f, 1.0f, 0.0f, 0.0f},
+        tmp_rot_mat.row3 = {(deng_vec_t) -sin(m_y_rot), 0.0f, (deng_vec_t) cos(m_y_rot), 0.0f},
+        tmp_rot_mat.row4 = {0.0f, 0.0f, 0.0f, 1.0f};
+
+        m_rot_y_mat = transform_mat * tmp_rot_mat * transform_mat.inv();
     }
 
 

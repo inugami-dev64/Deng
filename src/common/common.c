@@ -1,6 +1,8 @@
 #define __COMMON_C
 #include <common/common.h>
 
+static FILE* s_file;
+
 /* Clear all the contents in char buffer */
 void cm_ClearBuffer(char *str, deng_i32_t len) {
     deng_i32_t index;
@@ -146,19 +148,37 @@ void cm_SortAlphabetically(char **buffer, size_t buffer_count) {
 }
 
 
-/* Write into log file */
-void cm_LogWrite(const char *file_name, const char *content, int rewrite) {
-    FILE *file;
+/*
+ * Open new file for logging (write only)
+ */
+void cm_OpenLogger(char* file_name) {
+    s_file = fopen(file_name, "wb");
+    if (!s_file)
+        fprintf(stderr, "Failed to open file '%s'\n", file_name);
 
-    if(rewrite) file = fopen(file_name, "w");
-    else file = fopen(file_name, "a");
-    
-    if(!file) {
-        printf("ERRME: Failed to open log file for writing!\n");
-        return;
-    }
+    const char* msg = __DENG_LOG_INIT_MSG;
+    fwrite (
+        msg, 
+        sizeof(char), 
+        strlen(msg), 
+        s_file
+    );
+}
 
-    fwrite(content, sizeof(const char), strlen(content), file);
-    fwrite("\n", sizeof(char), 1, file);
-    fclose(file);
+
+/*
+ * Close logger FILE instance 
+ */
+void cm_CloseLogger() {
+    fclose(s_file);
+    s_file = NULL;
+}
+
+
+/* 
+ * Write content into log file 
+ */
+void cm_LogWrite(const char *content) {
+    fwrite(content, sizeof(const char), strlen(content), s_file);
+    fwrite("\n", sizeof(char), 1, s_file);
 }

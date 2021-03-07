@@ -1,5 +1,5 @@
-#ifndef WINDOWS_H
-#define WINDOWS_H
+#ifndef __WINDOW_H
+#define __WINDOW_H
 
 #ifdef __WINDOW_CPP
     #include <stdlib.h>
@@ -21,18 +21,21 @@ namespace deng {
         deng_SurfaceWindow *m_p_game_window;
         char *m_title;
         dengMath::vec2<deng_ui32_t> m_size;
-        deng_bool_t m_is_movement;
-        dengMath::vec2<deng_px_t> m_pixel_size;
+        deng_bool_t m_is_vc;
+        dengMath::vec2<deng_vec_t> m_pixel_size;
 
     public:
         WindowWrap(int x, int y, const char *title);
         ~WindowWrap();
         deng_SurfaceWindow *getWindow();
         const char *getTitle();
-        deng_bool_t isMovement();
         dengMath::vec2<deng_ui32_t> getSize();
-        dengMath::vec2<deng_px_t> getPixelSize();
-        void setMovement(deng_bool_t is_mov);
+        dengMath::vec2<deng_vec_t> getPixelSize();
+        void setVCMode (
+            deng_bool_t is_vcp,
+			deng_bool_t change_cursor
+        );
+        deng_bool_t isVCP();
     };
 }
 

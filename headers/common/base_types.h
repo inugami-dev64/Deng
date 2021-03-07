@@ -21,7 +21,7 @@ typedef double deng_f64_t;
 typedef uint8_t deng_bool_t;
 
 /* Size types */
-typedef double deng_px_t;
+typedef int64_t deng_px_t;
 typedef float deng_vec_t;
 #define true 1
 #define false 0
@@ -45,18 +45,27 @@ typedef deng_ui16_t deng_RendererHintBits;
 #define DENG_RENDERER_HINT_API_VULKAN                       0x0001u
 #define DENG_RENDERER_HINT_API_OPENGL                       0x0002u
 #define DENG_RENDERER_HINT_ENABLE_VSYNC                     0x0004u
-#define DENG_RENDERER_HINT_SHOW_FPS_COUNTER                 0x0008u
-#define DENG_RENDERER_HINT_ENABLE_VALIDATION_LAYERS         0x0010u
-#define DENG_RENDERER_HINT_MSAA_MAX_HARDWARE_SUPPORTED      0x0020u
-#define DENG_RENDERER_HINT_MSAA_64                          0x0040u
-#define DENG_RENDERER_HINT_MSAA_32                          0x0080u
-#define DENG_RENDERER_HINT_MSAA_16                          0x0100u
-#define DENG_RENDERER_HINT_MSAA_8                           0x0200u
-#define DENG_RENDERER_HINT_MSAA_4                           0x0400u
-#define DENG_RENDERER_HINT_MSAA_2                           0x0800u
-#define DENG_RENDERER_HINT_MSAA_1                           0x1000u
-#define DENG_RENDERER_HINT_MIPMAP_ENABLE                    0x2000u
-#define DENG_RENDERER_HINT_CUSTOM_LOOP                      0x4000u
+#define DENG_RENDERER_HINT_SHOW_CMD_FPS_COUNTER             0x0008u
+#define DENG_RENDERER_HINT_SHOW_GUI_FPS_COUNTER             0x0010u
+#define DENG_RENDERER_HINT_ENABLE_VALIDATION_LAYERS         0x0020u
+#define DENG_RENDERER_HINT_MSAA_MAX_HARDWARE_SUPPORTED      0x0040u
+#define DENG_RENDERER_HINT_MSAA_64                          0x0080u
+#define DENG_RENDERER_HINT_MSAA_32                          0x0100u
+#define DENG_RENDERER_HINT_MSAA_16                          0x0200u
+#define DENG_RENDERER_HINT_MSAA_8                           0x0400u
+#define DENG_RENDERER_HINT_MSAA_4                           0x0800u
+#define DENG_RENDERER_HINT_MSAA_2                           0x1000u
+#define DENG_RENDERER_HINT_MSAA_1                           0x2000u
+#define DENG_RENDERER_HINT_MIPMAP_ENABLE                    0x4000u
+#define DENG_RENDERER_HINT_CUSTOM_LOOP                      0x8000u
+
+/* Maximum sizes for integers from different widths */
+#define DENG_MAX_UI64           0xFFFFFFFFFFFFFFFF
+#define DENG_MAX_I64            9223372036854775807LL
+#define DENG_MAX_UI32           0xFFFFFFFF
+#define DENG_MAX_I32            2147483647
+#define DENG_MAX_FLOAT          0x1.fffffep+127f
+#define DENG_MIN_FLOAT          0x1.fffffep-127f
 
 
 /* Coordinate axis specifier */
@@ -141,7 +150,18 @@ typedef enum deng_InputEventType {
 } deng_InputEventType;
 
 
-#define DENG_KEY_PRESS_INTERVAL         200 // ms
+/*
+ * Specify what should happen if virtual cursor achives 
+ * its maximum or minimum position 
+ */
+typedef enum deng_VCPOverflowAction {
+    DENG_VCP_OVERFLOW_ACTION_TO_OPPOSITE_POSITION   = 0,
+    DENG_VCP_OVERFLOW_ACTION_BLOCK_POSITION         = 1,
+    DENG_VCP_OVERFLOW_ACTION_NONE                   = 2
+} deng_VCPOverflowAction;
+
+
+#define DENG_KEY_PRESS_INTERVAL         500 // ms
 #define DENG_MOVEMENT_INTERVAL          17 // ms
 
 #define DENG_CAMERA_BASE_SPEED_X        0.015

@@ -136,7 +136,7 @@ namespace deng {
         else m_enable_vsync = false;
 
         // Check if FPS counter should be enabled
-        if(hints & DENG_RENDERER_HINT_SHOW_FPS_COUNTER)
+        if(hints & DENG_RENDERER_HINT_SHOW_CMD_FPS_COUNTER)
             m_count_fps = true;
         else m_count_fps = false;
 
@@ -233,7 +233,7 @@ namespace deng {
 
         // Default shared data initialisation
         ext_mii.mouse_coords = {0, 0};
-        ext_mii.is_mouse_input= m_p_ww->isMovement();
+        ext_mii.is_mouse_input= m_p_ww->isVCP();
 
         m_p_scc = new vulkan::SwapChainCreator (
             m_p_ic->getDev(),
@@ -243,6 +243,8 @@ namespace deng {
             m_p_ic->getQFF(),
             m_msaa_sample_count
         );
+
+        m_max_frame_c = m_p_scc->getSCImg().size();
 
         m_p_ra = new vulkan::ResourceAllocator (
             m_p_ic->getDev(), 
@@ -363,7 +365,7 @@ namespace deng {
         );
         
         m_p_dc->setMiscData (
-            m_p_desc_c->getPipelines(), 
+            m_p_desc_c->getPipelines(),  
             m_p_ra->getFB(), 
             m_p_desc_c->getUnmappedDS() 
         );
@@ -394,7 +396,7 @@ namespace deng {
         while(deng_IsRunning()) {
             if(m_count_fps) end = std::chrono::steady_clock::now();
             if(std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() >= 1000) {
-                LOG("FPS " + std::to_string(fps));
+                LOG("FPS " + std::to_string/(fps));
                 begin = std::chrono::steady_clock::now();
                 fps = 0;
             }
@@ -423,8 +425,16 @@ namespace deng {
             m_frame_mut.unlock();
             std::this_thread::sleep_for(std::chrono::microseconds(50));
         }
-        
+
+        LOG("Idle test");
         vkDeviceWaitIdle(m_p_ic->getDev());
+
+        /*
+         * Destroy WIN32 window if running on windows
+         */
+        #ifdef _WIN32
+            deng_DestroyWindow(m_p_ww->getWindow());
+        #endif
         __cleanup();
     }
 
@@ -477,7 +487,7 @@ namespace deng {
         VkSubmitInfo submitinfo{};
         submitinfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-        VkPipelineStageFlags wait_stages[] ={VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+        VkPipelineStageFlags wait_stages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
         submitinfo.waitSemaphoreCount = 1;
         submitinfo.pWaitSemaphores = wait_semaphores;
         submitinfo.pWaitDstStageMask = wait_stages;
@@ -517,13 +527,12 @@ namespace deng {
             &present_info
         );
 
-        m_p_dc->current_frame = (m_p_dc->current_frame + 1) % DENG_MAX_FRAMES_IN_FLIGHT;
+        m_p_dc->current_frame = (m_p_dc->current_frame + 1) % m_max_frame_c;
     }
 
 
     /* Cleanup the renderer before destruction */
     void Renderer::__cleanup() {
-        m_asset_mut.unlock();
         m_frame_mut.lock();
         size_t index;
         // Clean depth image resources
@@ -668,7 +677,7 @@ namespace deng {
 
 
         // Clean semaphores and fences
-        for(index = 0; index < DENG_MAX_FRAMES_IN_FLIGHT; index++) {
+        for(index = 0; index < m_max_frame_c; index++) {
             vkDestroySemaphore (
                 m_p_ic->getDev(), 
                 m_p_dc->image_available_semaphore_set[index], 

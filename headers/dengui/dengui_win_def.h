@@ -3,11 +3,11 @@
 
 // Triangle size and position
 #define DENGUI_DROP_DOWN_LIST_TRIANGLE_SIZE     0.1 // vec
-#define DENGUI_DROP_DOWN_LIST_TRIANGLE          { \
-                                                    (dengMath::vec2<deng_vec_t>) {-1.0f, -1.0f}, \
-                                                    (dengMath::vec2<deng_vec_t>) {1.0f, 0.0f}, \
-                                                    (dengMath::vec2<deng_vec_t>) {-1.0f, 1.0f} \
-                                                }
+#define DENGUI_DROP_DOWN_LIST_TRIANGLE          { {\
+                                                    {-1.0f, -1.0f}, \
+                                                    {1.0f, 0.0f}, \
+                                                    {-1.0f, 1.0f} \
+                                                } }
 
 
 // Hierarchy Level specifiers 

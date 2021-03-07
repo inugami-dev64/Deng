@@ -14,8 +14,9 @@
     #include <stdlib.h> // size_t, malloc(), free()
     #include <string.h> // strlen()
     #include <stdio.h> // FILE, printf()
-    #include <time.h> // time()
+    #include <time.h> // time
     #include <common/base_types.h>
+    #include <common/common.h>
     #include <das/assets.h>
     #include <das/data_loader.h>
 

@@ -4,6 +4,7 @@
 #ifdef __MAP_EDITOR_UI_CPP
     #include <stdlib.h>
     #include <vector>
+    #include <array>
     #include <string>
     #include <mutex>
     #include <vulkan/vulkan.h>

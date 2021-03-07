@@ -11,6 +11,7 @@ extern "C" {
     #include <string.h> // strlen(), 
     #include <stdio.h> // FILE
     #include <common/base_types.h>
+    #define __DENG_LOG_INIT_MSG "#ENTRY POINT\n";
 #endif
 
 
@@ -43,7 +44,9 @@ void cm_ClearBuffer(char *str, deng_i32_t len);
 // Sort all the strings in alphabetical order
 void cm_SortAlphabetically(char **buffer, size_t buffer_count);
 // Log writer
-void cm_LogWrite(const char *file_name, const char *content, int rewrite);
+void cm_OpenLogger(char* file_name);
+void cm_LogWrite(const char *content);
+void cm_CloseLogger();
 
 
 #ifdef __cplusplus

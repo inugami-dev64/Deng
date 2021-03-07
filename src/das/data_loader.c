@@ -83,6 +83,121 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
 }
 
 
+/*
+ * Read raw bitmap data from file
+ * This function expects the file to be uncompressed and color depth either 24 bits or 32 bits
+ */
+void dasReadBitmap (
+    FILE* file,
+    deng_ui8_t bit_c,
+    deng_bool_t vert_re,
+    deng_Texture *p_tex
+) {
+    deng_ui8_t *tmp_pix;
+    size_t offset = 0, offseta;
+    deng_i32_t i, k;
+    size_t j;
+
+    switch (bit_c)
+    {
+    case 24:
+        offset = 3 * p_tex->pixel_data.width * sizeof(deng_ui8_t);
+        offseta = 4 * p_tex->pixel_data.width * sizeof(deng_ui8_t);
+
+        tmp_pix = (deng_ui8_t*)calloc(
+            p_tex->pixel_data.height * offset,
+            sizeof(deng_ui8_t)
+        );
+
+        fread(
+            tmp_pix,
+            offset,
+            p_tex->pixel_data.height,
+            file
+        );
+        
+        // Check if pixel reaarangement should be done (bottom - left to top - left)
+        printf("Texture size: %d, %d\n", p_tex->pixel_data.width, p_tex->pixel_data.height);
+        if (vert_re) {
+            for (i = (deng_i32_t) p_tex->pixel_data.height - 1, k = 0; i >= 0; i--, k++) {
+                for (j = 0; j < p_tex->pixel_data.width; j++) {
+                    *(p_tex->pixel_data.p_pixel_data + k * offseta + j * 4) = *(tmp_pix + i * offset + j * 3);
+                    *(p_tex->pixel_data.p_pixel_data + k * offseta + j * 4 + 1) = *(tmp_pix + i * offset + j * 3 + 1);
+                    *(p_tex->pixel_data.p_pixel_data + k * offseta + j * 4 + 2) = *(tmp_pix + i * offset + j * 3 + 2);
+                    *(p_tex->pixel_data.p_pixel_data + k * offseta + j * 4 + 3) = 0xff;
+                }
+            }
+        }
+
+        else {
+            for (i = 0; i < (deng_i32_t)p_tex->pixel_data.height; i++) {
+                for (j = 0; j < p_tex->pixel_data.width; j++) {
+                    *(p_tex->pixel_data.p_pixel_data + i * offseta + j * 4) = *(tmp_pix + i * offset + j * 3);
+                    *(p_tex->pixel_data.p_pixel_data + i * offseta + j * 4 + 1) = *(tmp_pix + i * offset + j * 3 + 1);
+                    *(p_tex->pixel_data.p_pixel_data + i * offseta + j * 4 + 2) = *(tmp_pix + i * offset + j * 3 + 2);
+                    *(p_tex->pixel_data.p_pixel_data + i * offseta + j * 4 + 3) = 0xff;
+                }
+            }
+        }
+
+        free(tmp_pix);
+        break;
+
+    case 32:
+        offset = 4 * p_tex->pixel_data.width * sizeof(deng_ui8_t);
+           
+        if (!vert_re) {
+            fread (
+                p_tex->pixel_data.p_pixel_data, 
+                sizeof(deng_ui8_t), 
+                p_tex->pixel_data.size, 
+                file
+            );
+        }
+
+        else {
+            tmp_pix = (deng_ui8_t*)calloc(
+                p_tex->pixel_data.height,
+                offset
+            );
+
+            fread(
+                tmp_pix,
+                offset,
+                p_tex->pixel_data.height,
+                file
+            );
+
+            for (i = p_tex->pixel_data.height; i >= 0; i--)
+                memcpy(p_tex->pixel_data.p_pixel_data, tmp_pix + i * offset, offset);
+        }
+
+        break;
+
+    default:
+        printf("Invalid bit count\n");
+        break;
+    }
+
+    // LOG PIXELS 
+    /*cm_OpenLogger("frag.log");
+    cm_LogWrite("frag.log", "#ENTRY POINT");
+    char buf[2048];
+    for (j = 0; j < p_tex->pixel_data.size - 4; j += 4) {
+        sprintf(
+            buf,
+            "PIX: %d, %d, %d, %d",
+            p_tex->pixel_data.p_pixel_data[j],
+            p_tex->pixel_data.p_pixel_data[j + 1],
+            p_tex->pixel_data.p_pixel_data[j + 2],
+            p_tex->pixel_data.p_pixel_data[j + 3]
+        );
+        cm_LogWrite(buf);
+    }
+    cm_CloseLogger();*/
+}
+
+
 /* BMP image */
  void dasLoadBMPimage(deng_Texture *p_texture, const char *file_name) {
     size_t res;
@@ -94,7 +209,6 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
         &info_header, 
         &color_header
     );
-    p_texture->pixel_data.p_pixel_data = (deng_ui8_t*) malloc(sizeof(deng_ui8_t));
     file = fopen(file_name, "rb");
 
     if(!file) {
@@ -163,21 +277,38 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
     p_texture->pixel_data.height = (deng_ui16_t) info_header.height;
 
     p_texture->pixel_data.size = info_header.height * info_header.width * 4;
-    p_texture->pixel_data.p_pixel_data = (deng_ui8_t*) realloc((void*) p_texture->pixel_data.p_pixel_data, p_texture->pixel_data.size);
-    cm_CheckMemoryAlloc((void*) p_texture->pixel_data.p_pixel_data);
+    p_texture->pixel_data.p_pixel_data = (deng_ui8_t*) calloc ( 
+        p_texture->pixel_data.size,
+        sizeof(deng_ui8_t)
+    );
 
     /* No padding */
     if(info_header.bit_count == 32) {
         size_t w_index, data_index;
         int h_index;
-        deng_ui8_t tmp_arr[info_header.height][4 * info_header.width];
+        deng_ui8_t *tmp_arr; 
+        
+        // Allocate memory for tmp_arr[y][x]
+        size_t height_offset = info_header.width * 4;
+        tmp_arr = (deng_ui8_t*) calloc (
+            info_header.height,
+            sizeof(deng_ui8_t) * height_offset
+        );
         
         for(h_index = 0; h_index < (int) info_header.height; h_index++) 
-            res = fread(tmp_arr[(size_t) h_index], 4 * info_header.width * sizeof(deng_ui8_t), 1, file);
+            res = fread (
+                tmp_arr[(size_t) h_index], 
+                4 * info_header.width * sizeof(deng_ui8_t), 
+                1, 
+                file
+           );
 
+        // Realign pixels to top - bottom format
         for(h_index = (int) info_header.height - 1, data_index = 0; h_index >= 0; h_index--)
             for(w_index = 0; w_index < 4 * info_header.width; w_index++, data_index++)
-                p_texture->pixel_data.p_pixel_data[data_index] = tmp_arr[(size_t) h_index][w_index];
+                p_texture->pixel_data.p_pixel_data[data_index] = (tmp_arr + h_index * height_offset + w_index);
+        
+        free(tmp_arr);
     }
     /* With padding */
     else {
@@ -185,7 +316,14 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
         int h_index;
 
         long padding_count_per_row = 4 - ((long) info_header.width * (long) info_header.bit_count) / 8 % 4;
-        deng_ui8_t tmp_arr[info_header.height][3 * info_header.width];
+        deng_ui8_t *tmp_arr;
+        
+        // Allocate memory for tmp_arr[y][x]
+        size_t height_offset = info_header.width * 3;
+        tmp_arr = (deng_ui8_t*)calloc(
+            info_header.height,
+            sizeof(deng_ui8_t) * height_offset
+        );
         
         for(h_index = 0; h_index < (int) info_header.height; h_index++) {
             res = fread(tmp_arr[(size_t) h_index], 3 * info_header.width * sizeof(deng_ui8_t), 1, file);
@@ -194,9 +332,9 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
 
         for(h_index = (int) info_header.height - 1, data_index = 0; h_index >= 0; h_index--) {
             for(w_index = 0; w_index < info_header.width * 3; w_index += 3, data_index += 4) {
-                p_texture->pixel_data.p_pixel_data[data_index] = tmp_arr[(size_t) h_index][w_index];
-                p_texture->pixel_data.p_pixel_data[data_index + 1] = tmp_arr[(size_t) h_index][w_index + 1];
-                p_texture->pixel_data.p_pixel_data[data_index + 2] = tmp_arr[(size_t) h_index][w_index + 2];
+                p_texture->pixel_data.p_pixel_data[data_index] = *(tmp_arr + h_index * height_offset + w_index);
+                p_texture->pixel_data.p_pixel_data[data_index + 1] = *(tmp_arr + h_index * height_offset + w_index + 1);
+                p_texture->pixel_data.p_pixel_data[data_index + 2] = *(tmp_arr + h_index * height_offset + w_index + 2);
                 p_texture->pixel_data.p_pixel_data[data_index + 3] = 0xFF;
             }
         }
@@ -211,7 +349,9 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
 }
 
 
-/* TGA image */
+/* 
+ * Load TGA image into deng_Texture
+ */
  void dasLoadTGAimage(deng_Texture *p_asset, const char *file_name) {
     size_t res;
     TGATypeHeader type_header;
@@ -262,84 +402,25 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
     res = fread((void*) &color_header, sizeof(color_header), 1, file);
     res = fread((void*) &info_header, sizeof(info_header), 1, file);
     
+    p_asset->pixel_data.width = info_header.width;
+    p_asset->pixel_data.height = info_header.height;
     p_asset->pixel_data.size = (size_t) (info_header.height * info_header.width * 4);
-    p_asset->pixel_data.p_pixel_data = (deng_ui8_t*) realloc(p_asset->pixel_data.p_pixel_data, p_asset->pixel_data.size);
-    cm_CheckMemoryAlloc(p_asset->pixel_data.p_pixel_data);
+    printf("Texture size: %ld\n", p_asset->pixel_data.size);
+    p_asset->pixel_data.p_pixel_data = (deng_ui8_t*) calloc(p_asset->pixel_data.size, sizeof(deng_ui8_t));
     
-    switch (info_header.bit_count)
-    {
-    case 32: {
-        /* Check if pixel row rearrangement has to be done */
-        if(info_header.y_origin != info_header.height) {
-            size_t data_index, w_index;
-            int h_index;
-            deng_ui8_t tmp_arr[info_header.height][info_header.width * 4];
-
-            for(h_index = 0; h_index < (int) info_header.height; h_index++)
-                res = fread(tmp_arr[(size_t) h_index], 4 * info_header.width * sizeof(deng_ui8_t), 1, file);
-
-            for(h_index = (int) info_header.height - 1, data_index = 0; h_index >= 0; h_index--) {
-                for(w_index = 0; w_index < info_header.width * 4; w_index++, data_index++)
-                    p_asset->pixel_data.p_pixel_data[data_index] = tmp_arr[(int) h_index][w_index];
-            }
-        }
-
-        else 
-            res = fread (
-                p_asset->pixel_data.p_pixel_data, 
-                p_asset->pixel_data.size * sizeof(deng_ui8_t), 
-                1, 
-                file
-            );
-        break;
-    }
-
-    case 24: {
-        if(info_header.y_origin != info_header.height) {
-            size_t data_index, w_index; 
-            int h_index;
-            deng_ui8_t tmp_arr[info_header.height][info_header.width * 3];
-
-            for(h_index = 0; h_index < info_header.height; h_index++)
-                res = fread (
-                    tmp_arr[h_index], 
-                    3 * info_header.width * sizeof(deng_ui8_t), 
-                    1, 
-                    file
-                );
-
-            for(h_index = (int) info_header.height - 1, data_index = 0; h_index >= 0; h_index--) {
-                for(w_index = 0; w_index < (int) info_header.width * 3; w_index += 3, data_index += 4) {
-                    p_asset->pixel_data.p_pixel_data[data_index] = tmp_arr[(size_t) h_index][(size_t) w_index];
-                    p_asset->pixel_data.p_pixel_data[data_index + 1] = tmp_arr[(size_t) h_index][(size_t) w_index + 1];
-                    p_asset->pixel_data.p_pixel_data[data_index + 2] = tmp_arr[(size_t) h_index][(size_t) w_index + 2];
-                    p_asset->pixel_data.p_pixel_data[data_index + 3] = 0xFF;
-                }
-            }
-        }
-
-        else {
-            size_t tmp_index, data_index;
-            deng_ui8_t tmp_arr[info_header.height * info_header.width * 3];
-            res = fread (
-                tmp_arr, 
-                3 * info_header.width * info_header.height * sizeof(deng_ui8_t), 
-                1, 
-                file
-            );
-
-            for(tmp_index = 0, data_index = 0; data_index < p_asset->pixel_data.size; data_index += 4, tmp_index += 3) {
-                p_asset->pixel_data.p_pixel_data[data_index] = tmp_arr[tmp_index];
-                p_asset->pixel_data.p_pixel_data[data_index + 1] = tmp_arr[tmp_index + 1];
-                p_asset->pixel_data.p_pixel_data[data_index + 2] = tmp_arr[tmp_index + 2];
-                p_asset->pixel_data.p_pixel_data[data_index + 3] = 0xFF;
-            }
-        }
-    }
-    
-    default:
-        break;
-    }
+    if (info_header.y_origin != p_asset->pixel_data.height)
+        dasReadBitmap(
+            file,
+            info_header.bit_count,
+            true,
+            p_asset
+        );
+    else dasReadBitmap(
+        file,
+        info_header.bit_count,
+        false,
+        p_asset
+    );
 
     p_asset->pixel_data.width = info_header.width;
     p_asset->pixel_data.height = info_header.height;
@@ -352,8 +433,10 @@ void dasLoadTexture(deng_Texture *p_texture, const char *file_name) {
     }
 }
 
+/**************************************/
+/***** Wavefront 3D model loading *****/
+/**************************************/
 
-/* 3D model loading */
 // Callback function for loading 3d model data
 void dasLoadModel (
     deng_Asset *p_asset, 
@@ -477,15 +560,14 @@ void dasLoadOBJmodelVertices (
     size_t res = 0;
     printf("Loading vertices...\n");
     unsigned char prev_tmp = 0x00, tmp = 0x00, next_tmp = 0x00;
-    
-    const size_t buf_size = 24;
-    char x_buffer[buf_size]; 
-    char y_buffer[buf_size];
-    char z_buffer[buf_size];
 
-    memset(x_buffer, 0, buf_size);
-    memset(y_buffer, 0, buf_size);
-    memset(z_buffer, 0, buf_size);
+    char x_buffer[32] = { 0 };
+    char y_buffer[32] = { 0 };
+    char z_buffer[32] = { 0 };
+
+    memset(x_buffer, 0, 32);
+    memset(y_buffer, 0, 32);
+    memset(z_buffer, 0, 32);
 
     
     *pp_vert_data = (deng_ObjVertData*) calloc (
@@ -591,9 +673,9 @@ void dasLoadOBJmodelVertices (
             (deng_vec_t) atof(z_buffer)
         };
         
-        memset(x_buffer, 0, buf_size);
-        memset(y_buffer, 0, buf_size);
-        memset(z_buffer, 0, buf_size);
+        memset(x_buffer, 0, 32);
+        memset(y_buffer, 0, 32);
+        memset(z_buffer, 0, 32);
     }
     
     // Find the beginning of texture mapping coordinate declarations
@@ -673,8 +755,8 @@ void dasLoadOBJmodelVertices (
          *memset(file_str, 0, 128);
          */
 
-        memset(x_buffer, 0, buf_size);
-        memset(y_buffer, 0, buf_size);
+        memset(x_buffer, 0, 32);
+        memset(y_buffer, 0, 32);
     }
 
     fseek(file, -4L, SEEK_CUR);
@@ -774,9 +856,9 @@ void dasLoadOBJmodelVertices (
          *memset(file_str, 0, 128);
          */
 
-        memset(x_buffer, 0, buf_size);
-        memset(y_buffer, 0, buf_size);
-        memset(z_buffer, 0, buf_size);
+        memset(x_buffer, 0, 32);
+        memset(y_buffer, 0, 32);
+        memset(z_buffer, 0, 32);
     }
 }
 

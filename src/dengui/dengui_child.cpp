@@ -574,7 +574,7 @@ namespace dengui {
             rec_pos.second = 1.0f + DENGUI_DEFAULT_LABEL_PADDING;
 
             dengMath::vec2<deng_vec_t> rec_size;
-            rec_size.first = DENGUI_DROP_DOWN_LIST_TRIANGLE_SIZE;
+            rec_size.first = (DENGUI_DROP_DOWN_LIST_TRIANGLE_SIZE);
             rec_size.second = 2.0f - 2 * DENGUI_DEFAULT_LABEL_PADDING;
 
             dengUtils::TriangleGenerator::generateRelTriangle (

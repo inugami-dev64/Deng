@@ -1,56 +1,46 @@
-#include "../../headers/deng/deng_surface_core.h"
+#define __DENG_SURFACE_C
+#include <deng/surface_window.h>
 
-static deng_Key recent_press_key;
-static deng_Key recent_release_key;
+volatile sig_atomic_t __is_running = true;
 
-static deng_MouseButton recent_press_btn;
-static deng_MouseButton recent_release_btn;
+// Specify maximum and minimum virtual cursor positions
+static deng_px_t __min_vc_x = -DENG_MAX_I64;
+static deng_px_t __max_vc_x = DENG_MAX_I64;
+static deng_px_t __min_vc_y = -DENG_MAX_I64;
+static deng_px_t __max_vc_y = DENG_MAX_I64;
 
-static deng_SurfaceWindow *p_recent_window;
+// VCP overflow action specifiers
+static deng_VCPOverflowAction __x_overflow_act = DENG_VCP_OVERFLOW_ACTION_BLOCK_POSITION;
+static deng_VCPOverflowAction __y_overflow_act = DENG_VCP_OVERFLOW_ACTION_BLOCK_POSITION;
 
-static bool_t is_exit = false;
-static bool_t is_window_deleted = false;
-static size_t key_index;
+// VCP cursor movement speed
+static deng_f64_t __x_sens = 1.0f;
+static deng_f64_t __y_sens = 1.0f;
+static HCURSOR __old_cursor = NULL;
+static deng_MouseMode __mouse_mode = DENG_MOUSE_MODE_CURSOR_VISIBLE;
 
 deng_SurfaceWindow *deng_InitVKSurfaceWindow (
-    int width, 
-    int height, 
+    deng_i32_t width,
+    deng_i32_t height, 
     char *title, 
     deng_SurfaceWindowMode window_mode
 ) {
-    deng_SurfaceWindow *p_window = (deng_SurfaceWindow*) malloc(sizeof(deng_SurfaceWindow));
+    static deng_SurfaceWindow win;
 
-    p_window->width = width;
-    p_window->height = height;
-    p_window->window_title = title;
-    p_window->virtual_mouse_position.is_enabled = 0;
-    p_window->virtual_mouse_position.movement_x = 0;
-    p_window->virtual_mouse_position.movement_y = 0;
-    p_window->virtual_mouse_position.orig_x = width / 2;
-    p_window->virtual_mouse_position.orig_y = height / 2;
+    win.width = width;
+    win.height = height;
+    win.window_title = title;
+    win.vc_data.is_enabled = false;
+    win.vc_data.orig_x = width / 2;
+    win.vc_data.orig_y = height / 2;
 
-    deng_InitKeyData(p_window);
+    win.win32_handler.win.hInstance = GetModuleHandle(NULL);
+    win.win32_handler.win.lpszClassName = DENG_WIN32_CLASS_NAME;
+    win.win32_handler.win.hCursor = NULL;
+    win.win32_handler.win.hbrBackground = (HBRUSH) COLOR_WINDOW;
+    win.win32_handler.win.lpfnWndProc = win32_message_handler;
     
-    p_window->win32_handler.p_window = (WNDCLASS*) calloc(1, sizeof(WNDCLASS));
-    p_window->win32_handler.p_hwnd = (HWND*) calloc(1, sizeof(HWND));
-    p_window->win32_handler.p_message = (MSG*) calloc(1, sizeof(MSG));
-
-    p_window->win32_handler.p_window->hInstance = GetModuleHandle(NULL);
-    p_window->win32_handler.p_window->lpszClassName = DENG_WIN32_CLASS_NAME;
-    p_window->win32_handler.p_window->hCursor = LoadCursor(NULL, IDC_ARROW);
-    p_window->win32_handler.p_window->hbrBackground = (HBRUSH) COLOR_WINDOW;
-    p_window->win32_handler.p_window->lpfnWndProc = win32_message_handler;
-    
-    p_window->active_keys.key_count = 0;
-    p_window->active_keys.p_keys = (deng_Key*) malloc(sizeof(deng_Key));
-    p_window->active_keys.btn_count = 0;
-    p_window->active_keys.p_btn = (deng_MouseButton*) malloc(sizeof(deng_MouseButton));
-
-    p_window->released_keys.key_count = 0;
-    p_window->released_keys.p_keys = (deng_Key*) malloc(sizeof(deng_Key));
-    p_window->released_keys.p_btn = (deng_MouseButton*) malloc(sizeof(deng_MouseButton));
-
-    RegisterClass(p_window->win32_handler.p_window);
+    RegisterClass(&win.win32_handler.win);
     LPCTSTR win_class = DENG_WIN32_CLASS_NAME;
     DWORD window_style;
 
@@ -61,8 +51,8 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
         break;
 
     case DENG_WINDOW_MODE_FULL_SCREEN:
-        p_window->width = GetSystemMetrics(SM_CXSCREEN);
-        p_window->height = GetSystemMetrics(SM_CYSCREEN);
+        win.width = GetSystemMetrics(SM_CXSCREEN);
+        win.height = GetSystemMetrics(SM_CYSCREEN);
         window_style = WS_POPUP | WS_VISIBLE;
         break;
 
@@ -71,215 +61,355 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
         break;
     }
     
-    *p_window->win32_handler.p_hwnd = CreateWindowEx(0, win_class, title, window_style, CW_USEDEFAULT, CW_USEDEFAULT, p_window->width, p_window->height, NULL, NULL, p_window->win32_handler.p_window->hInstance, NULL);
+    win.win32_handler.hwnd = CreateWindowEx (
+        0, 
+        win_class, 
+        title, 
+        window_style, 
+        CW_USEDEFAULT, 
+        CW_USEDEFAULT, 
+        win.width, 
+        win.height, 
+        NULL, 
+        NULL, 
+        win.win32_handler.win.hInstance, 
+        NULL
+    );
 
-    if(*p_window->win32_handler.p_hwnd == NULL) {
+    if(!win.win32_handler.hwnd) {
         printf("%s\n", "Failed to initialize win32 window!");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
-    p_window->win32_handler.rids[0].usUsagePage = 0x01;
-    p_window->win32_handler.rids[0].usUsage = 0x02;
-    p_window->win32_handler.rids[0].dwFlags = 0;
-    p_window->win32_handler.rids[0].hwndTarget = *p_window->win32_handler.p_hwnd;
+    win.win32_handler.rids[0].usUsagePage = 0x01;
+    win.win32_handler.rids[0].usUsage = 0x02;
+    win.win32_handler.rids[0].dwFlags = 0;
+    win.win32_handler.rids[0].hwndTarget = win.win32_handler.hwnd;
 
-    p_window->win32_handler.rids[1].usUsagePage = 0x01;
-    p_window->win32_handler.rids[1].usUsage = 0x06;
-    p_window->win32_handler.rids[1].dwFlags = 0;
-    p_window->win32_handler.rids[1].hwndTarget = *p_window->win32_handler.p_hwnd;
+    win.win32_handler.rids[1].usUsagePage = 0x01;
+    win.win32_handler.rids[1].usUsage = 0x06;
+    win.win32_handler.rids[1].dwFlags = 0;
+    win.win32_handler.rids[1].hwndTarget = win.win32_handler.hwnd;
 
-    if(!RegisterRawInputDevices(p_window->win32_handler.rids, 2, sizeof(p_window->win32_handler.rids[0]))) {
+    if(!RegisterRawInputDevices(win.win32_handler.rids, 2, sizeof(win.win32_handler.rids[0]))) {
         printf("%ld\n", GetLastError());
         fflush(stdout);
         perror("Failed to register rid devices!");
     }
 
-    p_window->win32_handler.mouse_x_pos = 0.0f;
-    p_window->win32_handler.mouse_y_pos = 0.0f;
+    win.mx = 0;
+    win.my = 0;
 
-    p_window->mode = WIN32_WINDOW;
+    RECT size_rect;
+    GetClientRect(win.win32_handler.hwnd, &size_rect);
+    win.width = size_rect.right - size_rect.left;
+    win.height = size_rect.bottom - size_rect.top;
+    win.mode = WIN32_WINDOW;
 
-    return p_window;
+    win.vc_data.orig_x = (deng_i64_t)(win.width / 2);
+    win.vc_data.orig_y = (deng_i64_t)(win.height / 2);
+
+    return &win;
 }
 
-LRESULT CALLBACK win32_message_handler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+
+/*
+ * WIN32 messenger callback
+ */
+LRESULT CALLBACK win32_message_handler (
+   HWND hwnd, 
+   UINT msg, 
+   WPARAM wparam, 
+   LPARAM lparam
+) {
+    deng_Key key;
+    deng_MouseButton btn;
+
+
     switch(msg) {  
         case WM_CLOSE:
-            deng_DestroyWindow(p_recent_window);
-            break;
-
         case WM_DESTROY:
+            printf("Closing window\n");
+            __is_running = false;
             return 0;
 
         case WM_SYSKEYDOWN: 
         case WM_KEYDOWN:
-            recent_press_key = translateWIN32Key((deng_ui16_t) wparam);
-
-            if((key_index = deng_FindKeyIndex(p_recent_window, recent_press_key, DENG_MOUSE_BTN_UNKNOWN, KB_KEY, ACTIVE_KEYS)) == p_recent_window->active_keys.key_count)
-                deng_RegisterKeyEvent(p_recent_window, &recent_press_key, NULL, KB_KEY, ACTIVE_KEYS);
+            key = translateWIN32Key((deng_ui16_t) wparam);
+            deng_RegisterKeyEvent (
+                key,
+                DENG_MOUSE_BTN_UNKNOWN,
+                DENG_INPUT_TYPE_KB,
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            );
             break;
 
-        case WM_SYSKEYUP: case WM_KEYUP: case WM_IME_KEYUP: 
-            recent_release_key = translateWIN32Key((deng_ui16_t) wparam);
+        case WM_SYSKEYUP: 
+        case WM_KEYUP: 
+        case WM_IME_KEYUP: 
+            key = translateWIN32Key((deng_ui16_t) wparam);
+            deng_RegisterKeyEvent (
+                key,
+                DENG_MOUSE_BTN_UNKNOWN,
+                DENG_INPUT_TYPE_KB,
+                DENG_INPUT_EVENT_TYPE_RELEASED
+            );
+            break;
 
-            for(int index = 0; index < p_recent_window->active_keys.key_count; index++) {
-                if(p_recent_window->active_keys.p_keys[index] == recent_release_key) {
-                    deng_RegisterKeyEvent(p_recent_window, &recent_release_key, NULL, KB_KEY, RELEASE_KEYS);
-                    deng_ClearKeyEvent(p_recent_window, index, KB_KEY, ACTIVE_KEYS);
-                }
+        case WM_LBUTTONDOWN: 
+        case WM_MBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+            btn = translateWIN32Btn(msg, wparam);
+            deng_RegisterKeyEvent (
+                DENG_KEY_UNKNOWN,
+                btn,
+                DENG_INPUT_TYPE_MOUSE,
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            );
+            break;
+
+        case WM_LBUTTONUP: 
+        case WM_MBUTTONUP: 
+        case WM_RBUTTONUP: 
+            btn = translateWIN32Btn(msg, wparam);
+            deng_RegisterKeyEvent (
+                DENG_KEY_UNKNOWN,
+                btn,
+                DENG_INPUT_TYPE_MOUSE,
+                DENG_INPUT_EVENT_TYPE_RELEASED
+            );
+            break;
+        
+        case WM_MOUSEWHEEL: {
+            LONG delta = GET_WHEEL_DELTA_WPARAM(wparam);
+            if (delta > 0) {
+                deng_RegisterKeyEvent(
+                    DENG_KEY_UNKNOWN,
+                    DENG_MOUSE_SCROLL_UP,
+                    DENG_INPUT_TYPE_MOUSE,
+                    DENG_INPUT_EVENT_TYPE_ACTIVE
+                );
+            }
+
+            else {
+                deng_RegisterKeyEvent(
+                    DENG_KEY_UNKNOWN,
+                    DENG_MOUSE_SCROLL_DOWN,
+                    DENG_INPUT_TYPE_MOUSE,
+                    DENG_INPUT_EVENT_TYPE_ACTIVE
+                );
             }
             break;
-
-        case WM_LBUTTONDOWN: case WM_MBUTTONDOWN: case WM_RBUTTONDOWN:
-            recent_press_btn = translateWIN32Btn(msg);
-
-            if((key_index = deng_FindKeyIndex(p_recent_window, DENG_KEY_UNKNOWN, recent_press_btn, MOUSE_BUTTON, ACTIVE_KEYS)) == p_recent_window->active_keys.btn_count)
-                deng_RegisterKeyEvent(p_recent_window, NULL, &recent_press_btn, MOUSE_BUTTON, ACTIVE_KEYS);
-            break;
-
-        case WM_LBUTTONUP: case WM_MBUTTONUP: case WM_RBUTTONUP: 
-            recent_release_btn = translateWIN32Btn(msg);
-
-            for(int index = 0; index < p_recent_window->active_keys.btn_count; index++) {
-                if(p_recent_window->active_keys.p_btn[index] == recent_release_btn) {
-                    deng_RegisterKeyEvent(p_recent_window, NULL, &recent_release_btn, MOUSE_BUTTON, RELEASE_KEYS);
-                    deng_ClearKeyEvent(p_recent_window, index, MOUSE_BUTTON, ACTIVE_KEYS);
-                }
-            }
-            break;
+        }
     }
 
     return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
-void deng_UpdateWindow(deng_SurfaceWindow *p_window) {
-    deng_CleanKeyEvents (
-        p_window, 
-        KB_KEY | MOUSE_BUTTON, 
-        RELEASE_KEYS
+
+/*
+ * Update WIN32 window
+ * This function gets new window message, translates and dispatches it
+ */
+void deng_UpdateWindow(deng_SurfaceWindow *p_win) {
+    // Set active scroll events to false
+    deng_RegisterKeyEvent(
+        DENG_KEY_UNKNOWN,
+        DENG_MOUSE_SCROLL_UP,
+        DENG_INPUT_TYPE_MOUSE,
+        DENG_INPUT_EVENT_TYPE_RELEASED
     );
+    deng_RegisterKeyEvent(
+        DENG_KEY_UNKNOWN,
+        DENG_MOUSE_SCROLL_DOWN,
+        DENG_INPUT_TYPE_MOUSE,
+        DENG_INPUT_EVENT_TYPE_RELEASED
+    );
+    deng_UnreleaseKeys();
     ShowWindow (
-        *p_window->win32_handler.p_hwnd, 
+        p_win->win32_handler.hwnd, 
         SW_NORMAL
     );
 
-    while(PeekMessageW(p_window->win32_handler.p_message, NULL, 0, 0, PM_REMOVE)) {
-        TranslateMessage(p_window->win32_handler.p_message);
-        DispatchMessage(p_window->win32_handler.p_message);
-    }
-    
-    if(p_recent_window != p_window) p_recent_window = p_window;  
+    if (__mouse_mode == DENG_MOUSE_MODE_INVISIBLE)
+        SetCursor(0);
 
-    if(is_exit) {
-        is_window_deleted = true;
-        deng_DestroyWindow(p_window);
+    if (!__is_running) return;
+    while(PeekMessageW(&p_win->win32_handler.message, NULL, 0, 0, PM_REMOVE)) {
+        TranslateMessage(&p_win->win32_handler.message);
+        DispatchMessage(&p_win->win32_handler.message);
     }
-
-    usleep(DENG_REFRESH_INTERVAL);
 }
 
+
+/*
+ * Set mouse coordinates to certain position
+ * This function is used to force set mouse cursor position
+ */
 void deng_SetMouseCoords (
-    deng_SurfaceWindow *p_window, 
-    int x, 
-    int y
+    deng_SurfaceWindow *p_win, 
+    deng_i32_t x, 
+    deng_i32_t y
 ) {
-    SetCursorPos(x, y);
-    if(!p_window->virtual_mouse_position.is_enabled) {
-        p_window->win32_handler.mouse_x_pos = (LONG) x;
-        p_window->win32_handler.mouse_y_pos = (LONG) y;
+    POINT pnt;
+    pnt.x = x;
+    pnt.y = y;
+    ClientToScreen(p_win->win32_handler.hwnd, &pnt);
+    SetCursorPos((int) pnt.x, (int) pnt.y);
+    if(!p_win->vc_data.is_enabled) {
+        p_win->mx = (LONG) x;
+        p_win->my = (LONG) y;
     }
 }
+
 
 void deng_SetMouseCursorMode (
-    deng_SurfaceWindow *p_window, 
+    deng_SurfaceWindow *p_win, 
     deng_MouseMode mouse_mode
 ) {
+    __mouse_mode = mouse_mode;
     switch(mouse_mode) 
     {
-    case DENG_MOUSE_MODE_VIRTUAL:
-        ShowCursor(false);
-        p_window->virtual_mouse_position.is_enabled = false;
+    case DENG_MOUSE_MODE_INVISIBLE:
+        __old_cursor = SetCursor(0);
+        deng_GetMousePos(p_win, true);
+        p_win->win32_handler.win.hCursor = NULL;
 
-        float x, y;
-        deng_GetMousePos(p_window, &x, &y, true);
-        p_window->virtual_mouse_position.x = x;
-        p_window->virtual_mouse_position.y = y;
-
-        p_window->virtual_mouse_position.is_enabled = true;
+        p_win->vc_data.is_enabled = true;
         break;
 
     case DENG_MOUSE_MODE_CURSOR_VISIBLE:
-        ShowCursor(true);
-        p_window->virtual_mouse_position.is_enabled = false;
+        SetCursor(__old_cursor);
+        p_win->vc_data.is_enabled = false;
         break;
     }
 }
 
+
+
 void deng_GetMousePos (
-    deng_SurfaceWindow *p_window, 
-    float *p_x, 
-    float *p_y, 
-    bool_t init_virtual_cursor
+    deng_SurfaceWindow *p_win, 
+    deng_bool_t init_vc
 ) {
     POINT point;
-    RECT rect;
-
+    
+    // Check if GetCursorPos and ScreenToClient calls are successful and update original positions
     if
     (
         GetCursorPos(&point) && 
-        GetWindowRect(*p_window->win32_handler.p_hwnd, &rect)
+        ScreenToClient(p_win->win32_handler.hwnd, &point)
     ) {
-        p_window->virtual_mouse_position.orig_x = (float) (rect.left + (LONG) (p_window->width / 2));
-        p_window->virtual_mouse_position.orig_y = (float) (rect.top + (LONG) (p_window->height / 2));
-    }
-    
-    if(p_window->virtual_mouse_position.is_enabled && !init_virtual_cursor) {
-        p_window->virtual_mouse_position.movement_x = ((float) point.x) - p_window->virtual_mouse_position.orig_x;
-        p_window->virtual_mouse_position.movement_y = ((float) point.y) - p_window->virtual_mouse_position.orig_y;
-
-        if
-        (
-            (point.x - rect.left) != p_window->virtual_mouse_position.orig_x || 
-            (point.y - rect.top) != p_window->virtual_mouse_position.orig_y
-        ) {
-            deng_SetMouseCoords (
-                p_window, 
-                p_window->virtual_mouse_position.orig_x, 
-                p_window->virtual_mouse_position.orig_y
-            );
-        }
-
-        p_window->virtual_mouse_position.x += p_window->virtual_mouse_position.movement_x;
-        p_window->virtual_mouse_position.y += p_window->virtual_mouse_position.movement_y;
-
-        *p_x = p_window->virtual_mouse_position.x;
-        *p_y = p_window->virtual_mouse_position.y;
+        p_win->mx = point.x;
+        p_win->my = point.y;
     }
 
     else {
-        *p_x = (float) p_window->win32_handler.mouse_x_pos;
-        *p_y = (float) p_window->win32_handler.mouse_y_pos;
-        if(init_virtual_cursor) {
+        fprintf(stderr, "Failed to read WIN32 cursor\n");
+        exit(EXIT_FAILURE);
+    }
+    
+    // Check if virtual mouse positioning is enabled
+    if(p_win->vc_data.is_enabled && !init_vc) {
+        deng_f64_t movement_x = (deng_f64_t) (point.x - p_win->vc_data.orig_x);
+        deng_f64_t movement_y = (deng_f64_t) (point.y - p_win->vc_data.orig_y);
+
+        movement_x *= __x_sens;
+        movement_y *= __y_sens;
+
+        // Check if cursor should be set to the origin position
+        if
+        (
+            point.x  != (LONG) p_win->vc_data.orig_x || 
+            point.y  != (LONG) p_win->vc_data.orig_y
+        ) {
             deng_SetMouseCoords (
-                p_window, 
-                p_window->virtual_mouse_position.orig_x, 
-                p_window->virtual_mouse_position.orig_y
+                p_win, 
+                p_win->vc_data.orig_x, 
+                p_win->vc_data.orig_y
             );
         }
+
+        // Check if overflow is detected on x position
+        if (p_win->vc_data.x + movement_x >= (deng_f64_t) __max_vc_x) {
+            if (__x_overflow_act == DENG_VCP_OVERFLOW_ACTION_TO_OPPOSITE_POSITION)
+                p_win->vc_data.x = __min_vc_x;
+        }
+
+        else if (p_win->vc_data.x + movement_x < (deng_f64_t) __min_vc_x) {
+            if (__x_overflow_act == DENG_VCP_OVERFLOW_ACTION_TO_OPPOSITE_POSITION)
+                p_win->vc_data.x =  __max_vc_x;
+        }
+
+        else p_win->vc_data.x += movement_x;
+
+        // Check if overflow is detected on y position
+        if (p_win->vc_data.y + movement_y >= (deng_f64_t) __max_vc_y) {
+            if (__y_overflow_act == DENG_VCP_OVERFLOW_ACTION_TO_OPPOSITE_POSITION)
+                p_win->vc_data.y = __min_vc_y;
+        }
+
+        else if (p_win->vc_data.y + movement_y < (deng_f64_t) __min_vc_y) {
+            if (__y_overflow_act == DENG_VCP_OVERFLOW_ACTION_TO_OPPOSITE_POSITION)
+                p_win->vc_data.y = __max_vc_y;
+        }
+
+        else p_win->vc_data.y += movement_y;
     }
 
-}
+    // Check if virtual mouse position initialisation is neccesary
+    else if(init_vc) {
+        p_win->mx = p_win->vc_data.orig_x;
+        p_win->my = p_win->vc_data.orig_y;
 
-void deng_DestroyWindow(deng_SurfaceWindow *p_window) {
-    deng_FreeKeyData(p_window);
-    if(!is_window_deleted) {
-        free(p_window->win32_handler.p_window);
-        free(p_window->win32_handler.p_hwnd);
-        free(p_window->win32_handler.p_message);
+        deng_SetMouseCoords (
+            p_win, 
+            p_win->mx, 
+            p_win->my
+        );
     }
-    exit(EXIT_SUCCESS);
 }
 
-bool_t deng_IsRunning(deng_SurfaceWindow *p_window) {
-    return GetMessage(p_window->win32_handler.p_message, NULL, 0, 0);
+
+/*** VCP variable setters ***/
+void deng_LimitVirtualPos(
+    deng_px_t max_x,
+    deng_px_t min_x,
+    deng_px_t max_y,
+    deng_px_t min_y
+) {
+    __min_vc_x = min_x;
+    __max_vc_x = max_x;
+    __min_vc_y = min_y;
+    __max_vc_y = max_y;
+}
+
+
+void deng_SetOverflowAction(
+    deng_VCPOverflowAction x_overflow_act,
+    deng_VCPOverflowAction y_overflow_act
+) {
+    __x_overflow_act = x_overflow_act;
+    __y_overflow_act = y_overflow_act;
+}
+
+
+void deng_SetVCSens(
+    deng_f64_t x_sens,
+    deng_f64_t y_sens
+) {
+    __x_sens = x_sens;
+    __y_sens = y_sens;
+}
+
+
+deng_bool_t deng_IsRunning() {
+    return __is_running;
+}
+
+
+/*
+ * Wrapper to call DestroyWindow() function provided by WIN32 
+ */
+void deng_DestroyWindow(deng_SurfaceWindow *p_win) {
+    DestroyWindow(p_win->win32_handler.hwnd);
 }

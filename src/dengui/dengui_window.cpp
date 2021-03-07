@@ -11,6 +11,7 @@ namespace dengui {
         Events *p_ev,
         deng_bool_t realloc_res
     ) {
+        // Change all id whitespaces to underscores
         for(size_t i = 0; i < p_wi->id.size(); i++) {
             if(p_wi->id[i] == 0x20)
                 p_wi->id[i] = '_';
@@ -444,7 +445,9 @@ namespace dengui {
     ) { m_child_elements.push_back({child, element_type}); }
 
 
-    /* Rasterise and create the title string vertices */
+    /* 
+     * Rasterise and create the title string vertices 
+     */
     void Window::mkTitle (
         WindowInfo *p_wi,
         dengMath::vec2<deng_ui32_t> deng_win_bounds,

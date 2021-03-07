@@ -1,10 +1,6 @@
 #ifndef __DENG_H
 #define __DENG_H
 
-namespace std {}
-#ifdef DENG_ENABLE_STD_INCL
-#endif
-
 #ifdef DENG_ENABLE_STD_INCL
     #include <vector>
     #include <array>

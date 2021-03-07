@@ -6,6 +6,8 @@
     #include <vector>
     #include <mutex>
     #include <thread>
+    #include <array>
+    #include <string>
     #include <chrono>
     #include <vulkan/vulkan.h>
     
@@ -50,6 +52,7 @@ namespace deng {
         std::mutex m_asset_mut;        
         // This mutex is always locked when gui input polling is happening
         std::mutex m_gui_mut;
+        size_t m_max_frame_c;
         
         // Render usage specifications
         deng_RendererUsageMode m_usage_mode;

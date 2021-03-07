@@ -7,308 +7,310 @@ extern dengui::MouseInputInfo ext_mii;
 namespace deng {
     
     /**********************************/
-    /**********************************/
     /*********** Event base ***********/
     /**********************************/
-    /**********************************/
+    EventBase::EventBase (
+		const dengMath::vec2<deng_f64_t> &mouse_sens,
+		const dengMath::vec2<deng_VCPOverflowAction> &vcp_act,
+		const dengMath::vec2<dengMath::vec2<deng_f64_t>> &vc_bounds,
+		const dengMath::vec2<deng_f64_t> &max_rot
+    ) {
+        m_mouse_sens = mouse_sens;
+        m_vcp_overflow = vcp_act;
+        m_vc_bounds = vc_bounds;
+        m_max_rot = max_rot;
 
-    /* Camera mouse update method */
+        deng_LimitVirtualPos (
+            vc_bounds.first.second, 
+            vc_bounds.first.first, 
+            vc_bounds.second.second,
+            vc_bounds.second.first
+        );
+
+        deng_SetOverflowAction(
+            vcp_act.first,
+            vcp_act.second
+        );
+
+        deng_SetVCSens (
+            mouse_sens.first, 
+            mouse_sens.second
+        );
+    }
+
+    /* 
+     * Camera mouse update method 
+     * This method updates mouse cursor position in WindowWrap instance as well as
+     * externally available MouseInputInfo
+     */
     void EventBase::updateMouseEvData(WindowWrap *p_ww) {
         std::lock_guard<std::mutex> lck(ext_mii.mut);
         deng_GetMousePos (
             p_ww->getWindow(), 
-            &ext_mii.mouse_coords.first, 
-            &ext_mii.mouse_coords.second, 
             0
         );
 
-        m_mouse_pos.first = 
-        (ext_mii.mouse_coords.first * 2) / 
-        (m_mouse_sens.first * p_ww->getSize().first);
-
-        m_mouse_pos.second = 
-        (ext_mii.mouse_coords.second * 2) / 
-        (m_mouse_sens.second * p_ww->getSize().second);
+        ext_mii.is_mouse_input = !p_ww->isVCP();
+        if (p_ww->getWindow()->vc_data.is_enabled) {
+            ext_mii.mouse_coords.first = 0;
+            ext_mii.mouse_coords.second = 0;
+            m_mouse_pos.first = p_ww->getWindow()->vc_data.x;
+            m_mouse_pos.second = p_ww->getWindow()->vc_data.y;
+        }
+        else {
+            ext_mii.mouse_coords.first = p_ww->getWindow()->mx;
+            ext_mii.mouse_coords.second = p_ww->getWindow()->my;
+        }
     }
 
 
-    /* Calculate virtual mouse position from camera rotation value */
+    /* 
+     * Calculate virtual mouse position from camera rotation value 
+     * This updating is needed in order to avoid camera rotation glitches
+     * when rotating editor camera
+     */
     void EventBase::getMousePositionFromRot (
         WindowWrap *p_ww,
-        dengMath::vec2<deng_vec_t> rot
+        dengMath::vec2<deng_f64_t> rot
     ) {
-        p_ww->getWindow()->virtual_mouse_position.x = {
-            (rot.second / PI) * 
-            m_mouse_sens.first *
-            p_ww->getSize().first / 2
-        };
+        p_ww->getWindow()->vc_data.x = (rot.first * m_vc_bounds.first.second / m_max_rot.first);
+        p_ww->getWindow()->vc_data.y = (rot.second * m_vc_bounds.second.second / m_max_rot.second);
 
-        p_ww->getWindow()->virtual_mouse_position.y = {
-            (rot.first / PI) *
-            m_mouse_sens.second *
-            p_ww->getSize().second
-        };
-
-        m_mouse_pos.first = p_ww->getWindow()->virtual_mouse_position.x;
-        m_mouse_pos.second = p_ww->getWindow()->virtual_mouse_position.y;
+        m_mouse_pos.first = p_ww->getWindow()->vc_data.x;
+        m_mouse_pos.second = p_ww->getWindow()->vc_data.y;
     }
 
     
-    /* Set the camera rotation according to mouse movements */
-    void EventBase::getMouseRotation (
-        WindowWrap *p_ww,
-        dengMath::vec2<deng_vec_t> *p_out_rot
-    ) {
-        p_out_rot->first = 0;
-        p_out_rot->second = 0;
-
-        if(m_mouse_pos.first < 2.0f && m_mouse_pos.first > -2.0f)
-            p_out_rot->second = PI * m_mouse_pos.first;
-
-        else if(m_mouse_pos.first >= 2.0f) {
-            p_ww->getWindow()->virtual_mouse_position.x = 
-            (
-                (m_mouse_pos.first - 2.0f) *
-                m_mouse_sens.first *
-                p_ww->getSize().first
-            ) / 2;
-        }
-
-        else if(m_mouse_pos.first <= -2.0f) {
-            p_ww->getWindow()->virtual_mouse_position.x =
-            (
-                (m_mouse_pos.first + 2.0f) *
-                m_mouse_sens.first *
-                p_ww->getSize().first
-            ) / 2;
-        }
-
-        if(m_mouse_pos.second < 1.0f && m_mouse_pos.second > -1.0f)
-            p_out_rot->first = PI * m_mouse_pos.second / 2;
-
-        else if(m_mouse_pos.second <= -1.0f) {
-            p_ww->getWindow()->virtual_mouse_position.y =
-            (
-                -m_mouse_sens.second *
-                p_ww->getSize().second
-            ) / 2;
-
-            m_mouse_pos.second = 0.999f;
-            p_out_rot->first = -PI / 2 + 0.001f;
-        }
-
-        else if(m_mouse_pos.second >= 1.0f) {
-            p_ww->getWindow()->virtual_mouse_position.y = 
-            (
-                m_mouse_sens.second *
-                p_ww->getSize().second
-            ) / 2;
-
-            m_mouse_pos.second = 0.999f;
-            p_out_rot->first = PI / 2 - 0.001f;
-        }
+    /* 
+     * Set the camera rotation according to mouse position
+     */
+    dengMath::vec2<deng_f64_t> EventBase::getMouseRotation() {
+        dengMath::vec2<deng_f64_t> out_rot;
+        out_rot.first = m_mouse_pos.second / m_vc_bounds.second.second * m_max_rot.first;
+        out_rot.second = m_mouse_pos.first / m_vc_bounds.first.second * m_max_rot.second; 
+        
+        return out_rot;
     }
 
 
     /*********************************************/
-    /*********************************************/
     /****** First person perspective camera ******/
-    /*********************************************/
     /*********************************************/
     
     /* FPP camera Events */
     FPPCameraEv::FPPCameraEv (
         WindowWrap *p_ww,
-        dengMath::vec2<deng_vec_t> mouse_mov_speed_mul,
-        dengMath::vec3<deng_vec_t> camera_mov_speed_mul,
-        FPPCamNonMovementCallback callback
+        const dengMath::vec2<deng_f64_t> &mouse_sens,
+        const dengMath::vec3<deng_vec_t> &camera_mov_sens,
+		dengMath::ViewMatrix *p_vm,
+		FPPInputChangeCallback mov_disable_callback,
+		FPPInputChangeCallback mov_enable_callback
+    ) : EventBase (
+            mouse_sens, 
+            {
+                DENG_VCP_OVERFLOW_ACTION_TO_OPPOSITE_POSITION, 
+                DENG_VCP_OVERFLOW_ACTION_BLOCK_POSITION
+            },
+            { -360, 360, -90, 90},
+            { PI / 2, PI * 2 }
     ) {
-        m_callback = callback;
-        m_prev_active_btn_c = 0;
-        m_mouse_sens.first = 1 / mouse_mov_speed_mul.first;
-        m_mouse_sens.second = 1 / mouse_mov_speed_mul.second;
+        m_input_enable_callback = mov_enable_callback;
+        m_input_disable_callback = mov_disable_callback;
 
-        m_move_speed.first = 
-        DENG_CAMERA_BASE_SPEED_X * camera_mov_speed_mul.first;
-        m_move_speed.second =
-        DENG_CAMERA_BASE_SPEED_Y * camera_mov_speed_mul.second;
-        m_move_speed.third =
-        DENG_CAMERA_BASE_SPEED_Z * camera_mov_speed_mul.third;
+        deng_SetMouseCursorMode(p_ww->getWindow(), DENG_MOUSE_MODE_INVISIBLE);
+        m_move_speed.first = (deng_vec_t) (DENG_CAMERA_BASE_SPEED_X * camera_mov_sens.first);
+        m_move_speed.second = (deng_vec_t) (DENG_CAMERA_BASE_SPEED_Y * camera_mov_sens.second);
+        m_move_speed.third = (deng_vec_t) (DENG_CAMERA_BASE_SPEED_Z * camera_mov_sens.third);
         m_move_speed.fourth = 0.0f;
     }
 
 
-    /* Find the current movement direction */
-    void FPPCameraEv::findMovementType(WindowWrap *p_ww) {
+    /* 
+     * Find the current movement type and direction 
+     */
+    void FPPCameraEv::findMovements(WindowWrap *p_ww) {
         if
-        (
-            deng_FindKeyStatus (
-                DENG_KEY_W, 
-                DENG_MOUSE_BTN_UNKNOWN, 
-                DENG_INPUT_TYPE_KB, 
-                DENG_INPUT_EVENT_TYPE_ACTIVE
-            ) && 
-            !deng_FindKeyStatus (
-                DENG_KEY_S, 
-                DENG_MOUSE_BTN_UNKNOWN,
-                DENG_INPUT_TYPE_KB,
-                DENG_INPUT_EVENT_TYPE_ACTIVE
-            )
-        ) m_movements.third = DENG_MOVEMENT_FORWARD;
+		(
+			deng_FindKeyStatus(
+				DENG_KEY_W,
+				DENG_MOUSE_BTN_UNKNOWN,
+				DENG_INPUT_TYPE_KB,
+				DENG_INPUT_EVENT_TYPE_ACTIVE
+			) &&
+			!deng_FindKeyStatus(
+				DENG_KEY_S,
+				DENG_MOUSE_BTN_UNKNOWN,
+				DENG_INPUT_TYPE_KB,
+				DENG_INPUT_EVENT_TYPE_ACTIVE
+			)
+		) {
+            m_movements.third = DENG_MOVEMENT_FORWARD;
+            LOG("Moving forward");
+        }
         
         else if
-        (
-            !deng_FindKeyStatus (
-                DENG_KEY_W, 
-                DENG_MOUSE_BTN_UNKNOWN, 
-                DENG_INPUT_TYPE_KB, 
-                DENG_INPUT_EVENT_TYPE_ACTIVE
-            ) && 
-            deng_FindKeyStatus (
-                DENG_KEY_S, 
-                DENG_MOUSE_BTN_UNKNOWN,
-                DENG_INPUT_TYPE_KB,
-                DENG_INPUT_EVENT_TYPE_ACTIVE
-            )
-        ) m_movements.third = DENG_MOVEMENT_BACKWARD;
+		(
+			!deng_FindKeyStatus(
+				DENG_KEY_W,
+				DENG_MOUSE_BTN_UNKNOWN,
+				DENG_INPUT_TYPE_KB,
+				DENG_INPUT_EVENT_TYPE_ACTIVE
+			) &&
+			deng_FindKeyStatus(
+				DENG_KEY_S,
+				DENG_MOUSE_BTN_UNKNOWN,
+				DENG_INPUT_TYPE_KB,
+				DENG_INPUT_EVENT_TYPE_ACTIVE
+			)
+		) {
+            m_movements.third = DENG_MOVEMENT_BACKWARD;
+        }
 
-        else 
+        else
             m_movements.third = DENG_MOVEMENT_NONE;
 
-
         if
-        (
-            deng_FindKeyStatus (
-                DENG_KEY_A,
-                DENG_MOUSE_BTN_UNKNOWN,
-                DENG_INPUT_TYPE_KB,
-                DENG_INPUT_EVENT_TYPE_ACTIVE
-            ) && 
-            !deng_FindKeyStatus (
-                DENG_KEY_D,
-                DENG_MOUSE_BTN_UNKNOWN,
-                DENG_INPUT_TYPE_KB,
-                DENG_INPUT_EVENT_TYPE_ACTIVE
-            )
-        ) m_movements.first = DENG_MOVEMENT_LEFTWARD;
+		(
+			deng_FindKeyStatus(
+				DENG_KEY_A,
+				DENG_MOUSE_BTN_UNKNOWN,
+				DENG_INPUT_TYPE_KB,
+				DENG_INPUT_EVENT_TYPE_ACTIVE
+			) &&
+			!deng_FindKeyStatus(
+				DENG_KEY_D,
+				DENG_MOUSE_BTN_UNKNOWN,
+				DENG_INPUT_TYPE_KB,
+				DENG_INPUT_EVENT_TYPE_ACTIVE
+			)
+		) {
+            m_movements.first = DENG_MOVEMENT_LEFTWARD;
+            LOG("Moving leftward");
+        }
 
         else if
-        (
-            !deng_FindKeyStatus (
-                DENG_KEY_A,
-                DENG_MOUSE_BTN_UNKNOWN,
-                DENG_INPUT_TYPE_KB,
-                DENG_INPUT_EVENT_TYPE_ACTIVE
-            ) && 
-            deng_FindKeyStatus (
-                DENG_KEY_D,
-                DENG_MOUSE_BTN_UNKNOWN,
-                DENG_INPUT_TYPE_KB,
-                DENG_INPUT_EVENT_TYPE_ACTIVE
-            )
-        ) m_movements.first = DENG_MOVEMENT_RIGHTWARD;
+		(
+			!deng_FindKeyStatus(
+				DENG_KEY_A,
+				DENG_MOUSE_BTN_UNKNOWN,
+				DENG_INPUT_TYPE_KB,
+				DENG_INPUT_EVENT_TYPE_ACTIVE
+			) &&
+			deng_FindKeyStatus(
+				DENG_KEY_D,
+				DENG_MOUSE_BTN_UNKNOWN,
+				DENG_INPUT_TYPE_KB,
+				DENG_INPUT_EVENT_TYPE_ACTIVE
+			)
+		) {
+            m_movements.first = DENG_MOVEMENT_RIGHTWARD;
+        }
         
         else m_movements.first = DENG_MOVEMENT_NONE;
 
         if
-        (
-            deng_FindKeyStatus (
-                DENG_KEY_SPACE,
-                DENG_MOUSE_BTN_UNKNOWN,
-                DENG_INPUT_TYPE_KB,
-                DENG_INPUT_EVENT_TYPE_ACTIVE
-            ) && 
-            !deng_FindKeyStatus (
-                DENG_KEY_LEFT_CTRL,
-                DENG_MOUSE_BTN_UNKNOWN,
-                DENG_INPUT_TYPE_KB,
-                DENG_INPUT_EVENT_TYPE_ACTIVE
-            )
-        ) m_movements.second = DENG_MOVEMENT_UPWARD;
+		(
+			deng_FindKeyStatus(
+				DENG_KEY_SPACE,
+				DENG_MOUSE_BTN_UNKNOWN,
+				DENG_INPUT_TYPE_KB,
+				DENG_INPUT_EVENT_TYPE_ACTIVE
+			) &&
+			!deng_FindKeyStatus(
+				DENG_KEY_LEFT_CTRL,
+				DENG_MOUSE_BTN_UNKNOWN,
+				DENG_INPUT_TYPE_KB,
+				DENG_INPUT_EVENT_TYPE_ACTIVE
+			)
+		) {
+            m_movements.second = DENG_MOVEMENT_UPWARD;
+            LOG("Moving upward");
+        }
 
-        else if 
-        (
-            !deng_FindKeyStatus (
-                DENG_KEY_SPACE,
-                DENG_MOUSE_BTN_UNKNOWN,
-                DENG_INPUT_TYPE_KB,
-                DENG_INPUT_EVENT_TYPE_ACTIVE
-            ) && 
-            deng_FindKeyStatus (
-                DENG_KEY_LEFT_CTRL,
-                DENG_MOUSE_BTN_UNKNOWN,
-                DENG_INPUT_TYPE_KB,
-                DENG_INPUT_EVENT_TYPE_ACTIVE
-            )
-        ) m_movements.second = DENG_MOVEMENT_DOWNWARD;
+        else if
+		(
+			!deng_FindKeyStatus(
+				DENG_KEY_SPACE,
+				DENG_MOUSE_BTN_UNKNOWN,
+				DENG_INPUT_TYPE_KB,
+				DENG_INPUT_EVENT_TYPE_ACTIVE
+			) &&
+			deng_FindKeyStatus(
+				DENG_KEY_LEFT_CTRL,
+				DENG_MOUSE_BTN_UNKNOWN,
+				DENG_INPUT_TYPE_KB,
+				DENG_INPUT_EVENT_TYPE_ACTIVE
+			)
+		) {
+            m_movements.second = DENG_MOVEMENT_DOWNWARD;
+        }
 
         else m_movements.second = DENG_MOVEMENT_NONE;
     }
 
     
-    /* Check if input FPP camera mouse input mode has changed */
+    /* 
+     * Check if input FPP camera mouse input mode has changed 
+     * This method is not thread safe and can cause race conditions, make sure that ext_mii.mut is locked!
+     */
     void FPPCameraEv::checkForInputModeChange (
         WindowWrap *p_ww,
         dengMath::ViewMatrix *p_vm
     ) {
         EventBase::updateMouseEvData(p_ww);
-        ext_mii.is_mouse_input = p_ww->isMovement();
-        
-        if(ext_mii.is_mouse_input) {
-            findMovementType(p_ww);
-            dengMath::vec2<deng_vec_t> rot;
-            EventBase::getMouseRotation(p_ww, &rot);
-            p_vm->setCameraRotation(rot.first, rot.second);
-            p_vm->setTransformationMatrix(false);
-
-            if
-            (
-                m_input_mode_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && 
-                deng_FindKeyStatus (
-                    DENG_KEY_ESCAPE,
-                    DENG_MOUSE_BTN_UNKNOWN,
-                    DENG_INPUT_TYPE_KB,
-                    DENG_INPUT_EVENT_TYPE_ACTIVE
-                )
-            ) {
-
-                #if CAMERA_MOUSE_DEBUG
-                    LOG (
-                        "frozen_mouse_position x:" + 
-                        std::to_string(m_frozen_mouse_position.first) + 
-                        "/" + 
-                        std::to_string(m_frozen_mouse_position.second)
+        // Check if input mode should be changed ([ESC] key)
+        if (
+            m_input_mode_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) &&
+            deng_FindKeyStatus(
+                DENG_KEY_ESCAPE,
+                DENG_MOUSE_BTN_UNKNOWN,
+                DENG_INPUT_TYPE_KB,
+                DENG_INPUT_EVENT_TYPE_ACTIVE
+            )
+        ) {
+            // Disable virtual cursor mode
+            if (p_ww->isVCP()) {
+                p_ww->setVCMode(false, true);
+                if(m_input_disable_callback) 
+                    m_input_disable_callback (
+                        {
+                            p_ww->getWindow()->vc_data.x,
+                            p_ww->getWindow()->vc_data.y
+                        }
                     );
-                #endif
-
-                m_frozen_mouse_pos.first = p_ww->getWindow()->virtual_mouse_position.x;
-                m_frozen_mouse_pos.second = p_ww->getWindow()->virtual_mouse_position.y;
-                p_ww->setMovement(false);
-                m_input_mode_timer.setNewTimePoint();
-                if(m_callback) m_callback(&m_frozen_mouse_pos);
             }
+
+            // Enable virtual cursor mode
+            else {
+                p_ww->setVCMode(true, true);
+                if (m_input_enable_callback)
+                    m_input_enable_callback(
+                        {
+                            p_ww->getWindow()->vc_data.x,
+                            p_ww->getWindow()->vc_data.y
+                        }
+					);
+            }
+			m_input_mode_timer.setNewTimePoint();
+        }
+        ext_mii.is_mouse_input = !p_ww->isVCP();
+
+        // Check if virtual mouse cursor mode is enabled and 
+        // if true then update camera rotation and key events
+        if(p_ww->isVCP()) {
+            findMovements(p_ww);
+            dengMath::vec2<deng_f64_t> rot = EventBase::getMouseRotation();
+            p_vm->setCameraRotation (
+                (deng_vec_t) rot.first, 
+                (deng_vec_t) rot.second
+            );
+            p_vm->setTransformationMatrix(false);
         }
 
         else {
             m_movements.first = DENG_MOVEMENT_NONE;
             m_movements.second = DENG_MOVEMENT_NONE;
             m_movements.third = DENG_MOVEMENT_NONE;
-
-            if
-            (
-                m_input_mode_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) && 
-                deng_FindKeyStatus (
-                    DENG_KEY_ESCAPE,
-                    DENG_MOUSE_BTN_UNKNOWN,
-                    DENG_INPUT_TYPE_KB,
-                    DENG_INPUT_EVENT_TYPE_ACTIVE
-                )
-            ) {
-                p_ww->setMovement(true);
-                p_ww->getWindow()->virtual_mouse_position.x = m_frozen_mouse_pos.first;
-                p_ww->getWindow()->virtual_mouse_position.y = m_frozen_mouse_pos.second;
-                m_input_mode_timer.setNewTimePoint();
-            }
         }
     }
 
@@ -319,19 +321,21 @@ namespace deng {
         FPPCamera *p_cam
     ) {
         checkForInputModeChange(p_ww, &p_cam->view_matrix);
-        if(m_mov_timer.isTimePassed(DENG_MOVEMENT_INTERVAL)) {
+        if (m_mov_timer.isTimePassed(DENG_MOVEMENT_INTERVAL)) {
             switch (m_movements.first)
             {
             case DENG_MOVEMENT_LEFTWARD:
                 p_cam->moveRU();
+                LOG("Moving left");
                 break;
 
             case DENG_MOVEMENT_RIGHTWARD:
                 p_cam->moveU();
+                LOG("Moving right");
                 break;
 
             case DENG_MOVEMENT_NONE: break;
-            
+
             default:
                 break;
             }
@@ -340,14 +344,16 @@ namespace deng {
             {
             case DENG_MOVEMENT_UPWARD:
                 p_cam->moveV();
+                LOG("Moving up");
                 break;
 
             case DENG_MOVEMENT_DOWNWARD:
                 p_cam->moveRV();
+                LOG("Moving down");
                 break;
 
             case DENG_MOVEMENT_NONE: break;
-            
+
             default:
                 break;
             }
@@ -356,18 +362,17 @@ namespace deng {
             {
             case DENG_MOVEMENT_FORWARD:
                 p_cam->moveW();
+                LOG("Moving forward");
                 break;
 
             case DENG_MOVEMENT_BACKWARD:
                 p_cam->moveRW();
+                LOG("Moving backward");
                 break;
 
-            case DENG_MOVEMENT_NONE: break;
-            
             default:
                 break;
             }
-
             m_mov_timer.setNewTimePoint();
         }
     }
@@ -398,20 +403,30 @@ namespace deng {
 
     /* FPP Camera class */
     FPPCamera::FPPCamera (
-        const dengMath::vec3<deng_vec_t> &camera_mov_speed_mul, 
-		const dengMath::vec2<deng_vec_t> &mouse_mov_speed_mul, 
+        const dengMath::vec3<deng_vec_t> &camera_mov_sens, 
+		const dengMath::vec2<deng_f64_t> &mouse_sens, 
 		const deng_vec_t &FOV, 
 		const deng_vec_t &near_plane, 
 		const deng_vec_t &far_plane, 
-        FPPCamNonMovementCallback callback,
+        FPPInputChangeCallback mov_disable_callback,
+        FPPInputChangeCallback mov_enable_callback,
 		WindowWrap *p_ww
-	) : FPPCameraEv(p_ww, mouse_mov_speed_mul, camera_mov_speed_mul, callback),
+	) : FPPCameraEv (
+            p_ww, 
+            mouse_sens, 
+            camera_mov_sens, 
+            &view_matrix,
+            mov_disable_callback,
+            mov_enable_callback
+        ),
         view_matrix(DENG_CAMERA_FPP) {
         m_p_ww = p_ww;
 
-        m_p_ww->getWindow()->virtual_mouse_position.cursor = DENG_CURSOR_HIDDEN;
-        m_p_ww->getWindow()->virtual_mouse_position.is_lib_cur = false;
-        m_p_ww->setMovement(false);
+        #ifdef __linux
+            m_p_ww->getWindow()->vc_data.cursor = DENG_CURSOR_HIDDEN;
+            m_p_ww->getWindow()->vc_data.is_lib_cur = false;
+        #endif
+        m_p_ww->setVCMode(true, true);
 
         p_projection_matrix = new dengMath::ProjectionMatrix (
             FOV, 
@@ -484,14 +499,20 @@ namespace deng {
     /********************************/
 
     EditorCameraEv::EditorCameraEv (
-        dengMath::vec2<deng_vec_t> mouse_mov_speed_mul,
+        dengMath::vec2<deng_f64_t> mouse_sens,
         deng_vec_t zoom_step,
         dengMath::vec3<deng_vec_t> origin,
         WindowWrap *p_ww,
         dengMath::ViewMatrix *p_vm
-    ) { 
-        m_mouse_sens.first = 1 / mouse_mov_speed_mul.first;
-        m_mouse_sens.second = 1 / mouse_mov_speed_mul.second;
+    ) : EventBase (
+            mouse_sens,
+            {
+                DENG_VCP_OVERFLOW_ACTION_TO_OPPOSITE_POSITION,
+                DENG_VCP_OVERFLOW_ACTION_BLOCK_POSITION
+            },
+            {-360, 360, -90, 90},
+            {PI / 2, PI * 2}
+        ) { 
 
         // Set default camera position and rotation values
         p_vm->addToPosition (
@@ -517,10 +538,6 @@ namespace deng {
             }
         );
 
-        m_last_mouse_pos.first = p_ww->getWindow()->virtual_mouse_position.x;
-        m_last_mouse_pos.second = p_ww->getWindow()->virtual_mouse_position.y;
-        m_last_rot.first = DENG_EDITOR_CAMERA_DEFAULT_X_ROT;
-        m_last_rot.second = DENG_EDITOR_CAMERA_DEFAULT_Y_ROT;
         m_zoom_step = zoom_step;
     } 
 
@@ -531,13 +548,14 @@ namespace deng {
 
         // Check if rotation mode should be enabled
         if (
-            deng_FindKeyStatus (
-                DENG_KEY_UNKNOWN, 
-                DENG_MOUSE_BTN_2, 
-                DENG_INPUT_TYPE_MOUSE, 
+            deng_FindKeyStatus(
+                DENG_KEY_UNKNOWN,
+                DENG_MOUSE_BTN_2,
+                DENG_INPUT_TYPE_MOUSE,
                 DENG_INPUT_EVENT_TYPE_ACTIVE
             )
         ) m_editor_cam_ev = DENG_EDITOR_CAMERA_MOUSE_ROTATE;
+        
 
         else if (
             deng_FindKeyStatus (
@@ -548,7 +566,6 @@ namespace deng {
             )
         ) {
             m_editor_cam_ev = DENG_EDITOR_CAMERA_Z_MOV_OUT;
-            LOG("Zooming out");
         }
 
         else if (
@@ -560,7 +577,6 @@ namespace deng {
             )        
         ) {
             m_editor_cam_ev = DENG_EDITOR_CAMERA_Z_MOV_IN;
-            LOG("Zooming in");
         }
 
         else m_editor_cam_ev = DENG_EDITOR_CAMERA_NONE;
@@ -616,16 +632,6 @@ namespace deng {
     }
 
 
-    /* Calculate view matrix rotation from mouse coordinates */
-    void EditorCameraEv::getRotFromMousePos (
-        dengMath::vec2<deng_vec_t> mouse_pos,
-        dengMath::vec2<deng_vec_t> *p_out_rot
-    ) {
-        p_out_rot->first = PI * m_mouse_pos.second / 2;
-        p_out_rot->second = PI * m_mouse_pos.first;
-    }
-
-
     /* Update editor camera event polling */
     void EditorCameraEv::updateEv (
         WindowWrap *p_ww,
@@ -639,9 +645,7 @@ namespace deng {
         {
         case DENG_EDITOR_CAMERA_Z_MOV_IN: {
             if(m_is_rot_cur) {
-                m_last_mouse_pos.first = p_ww->getWindow()->virtual_mouse_position.x;
-                m_last_mouse_pos.second = p_ww->getWindow()->virtual_mouse_position.y;
-                p_ww->setMovement(false);
+                p_ww->setVCMode(false, false);
                 m_is_rot_cur = false;
             }
 
@@ -656,9 +660,7 @@ namespace deng {
 
         case DENG_EDITOR_CAMERA_Z_MOV_OUT: {
             if(m_is_rot_cur) {
-                m_last_mouse_pos.first = p_ww->getWindow()->virtual_mouse_position.x;
-                m_last_mouse_pos.second = p_ww->getWindow()->virtual_mouse_position.y;
-                p_ww->setMovement(false);
+                p_ww->setVCMode(false, false);
                 m_is_rot_cur = false;
             }
 
@@ -674,15 +676,15 @@ namespace deng {
 
         case DENG_EDITOR_CAMERA_MOUSE_ROTATE: {
             if(!m_is_rot_cur) {
-                p_ww->getWindow()->virtual_mouse_position.is_lib_cur = true;
-                p_ww->getWindow()->virtual_mouse_position.cursor = DENG_CURSOR_ROTATE;
-                p_ww->setMovement(true);
-                p_ww->getWindow()->virtual_mouse_position.x = m_last_mouse_pos.first;
-                p_ww->getWindow()->virtual_mouse_position.y = m_last_mouse_pos.second;
+                #ifdef __linux__
+                    p_ww->getWindow()->vc_data.is_lib_cur = true;
+                    p_ww->getWindow()->vc_data.cursor = DENG_CURSOR_ROTATE;
+                #endif
+                p_ww->setVCMode(true, false);
                 m_is_rot_cur = true;
             }
 
-            EventBase::getMouseRotation(p_ww, &m_last_rot);
+            m_last_rot = EventBase::getMouseRotation();
 
             p_vm->setPointRotation (
                 origin,
@@ -694,9 +696,7 @@ namespace deng {
                                               
         default:
             if(m_is_rot_cur) {
-                m_last_mouse_pos.first = p_ww->getWindow()->virtual_mouse_position.x;
-                m_last_mouse_pos.second = p_ww->getWindow()->virtual_mouse_position.y;
-                p_ww->setMovement(false);
+                p_ww->setVCMode(false, false);
                 m_is_rot_cur = false;
             }
             break;
@@ -709,19 +709,27 @@ namespace deng {
     EditorCamera::EditorCamera (
         const deng_vec_t &zoom_step,
         const dengMath::vec3<deng_vec_t> &origin,
-        const dengMath::vec2<deng_vec_t> &mouse_mov_speed_mul,
+        const dengMath::vec2<deng_f64_t> &mouse_sens,
         const deng_vec_t &FOV,
         const deng_vec_t &near_plane,
         const deng_vec_t &far_plane,
         WindowWrap *p_ww
-    ) : EditorCameraEv(mouse_mov_speed_mul, zoom_step, origin, p_ww, &view_matrix), 
+    ) : EditorCameraEv (
+            mouse_sens, 
+            zoom_step, 
+            origin, 
+            p_ww, 
+            &view_matrix
+        ), 
         view_matrix(DENG_CAMERA_EDITOR) {
         m_origin = origin;
         m_p_ww = p_ww;
 
-        m_p_ww->getWindow()->virtual_mouse_position.cursor = DENG_CURSOR_ROTATE;
-        m_p_ww->getWindow()->virtual_mouse_position.is_lib_cur = true;
-        m_p_ww->setMovement(false);
+        #ifdef __linux__
+            m_p_ww->getWindow()->vc_data.cursor = DENG_CURSOR_ROTATE;
+            m_p_ww->getWindow()->vc_data.is_lib_cur = true;
+        #endif
+        m_p_ww->setVCMode(false, false);
 
         p_projection_matrix = new dengMath::ProjectionMatrix (
             FOV,

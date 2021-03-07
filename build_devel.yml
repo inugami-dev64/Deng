@@ -24,7 +24,10 @@ premake:
     windows:
       - "modules/freetype2/include"
       - "modules/freetype2/include/freetype"
-      - "C:/VulkanSDK/[VERSION]"
+      - "C:/VulkanSDK/1.2.170.0/Include"
+
+  library_path:
+    windows: ""
   src_dir: src/
   build_dir: build/
   project_name: deng

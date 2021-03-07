@@ -4,8 +4,14 @@
 #ifdef __FONT_CPP
     #include <vector>
     #include <array>
-    #include <stdlib.h>    
-    #include <dirent.h>
+    #include <string>
+    #include <stdlib.h>
+    #ifdef __linux__
+        #include <dirent.h>
+    #endif
+    #ifdef _WIN32
+        #include <windows.h>
+    #endif
     #include <vulkan/vulkan.h>
 
     #include <common/base_types.h>
@@ -27,7 +33,7 @@
 #endif
 
 #ifdef _WIN32
-    #define DEFAULT_FONT_PATH "C:/Windows/Fonts"
+    #define DEFAULT_FONT_PATH "C:\\Users\\karl\\Downloads"
 #endif
 
 namespace dengUtils {
@@ -80,7 +86,7 @@ namespace dengUtils {
         // Generic text box creationg function
         void __mkGlyphs (
             BitmapStr &str, 
-            deng_ui16_t px_size,
+            deng_px_t px_size,
             dengMath::vec2<deng_vec_t> pos, 
             dengMath::vec3<unsigned char> color
         );
@@ -106,7 +112,7 @@ namespace dengUtils {
         void newPxStr ( 
             BitmapStr &str,
             const char *font_name,
-            deng_ui16_t px_size,
+            deng_px_t px_size,
             dengMath::vec3<unsigned char> color,
             dengMath::vec2<deng_vec_t> pos,
             deng_ui32_t hier_level,

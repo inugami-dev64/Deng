@@ -4,6 +4,8 @@
 #ifdef __REND_HELPERS_CPP
     #include <vector>
     #include <array>
+    #include <string>
+    #include <stdexcept>
     #include <vulkan/vulkan.h>
 
     #include <deng/forward_dec.h>

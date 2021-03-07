@@ -172,9 +172,11 @@ void dasReadAsset (
 ) {
     FILE *file;
     file = fopen(file_name, "rb");
+
+    printf("file: %p\n", file);
     
     /* Check if asset exists and if needed exit */
-    if(!file) {
+    if(file == NULL) {
         printf("ERROR: Asset file '%s' does not exist!\n", file_name);
         exit(-1);
     }
@@ -203,6 +205,63 @@ void dasReadAsset (
         (char*) file_name, 
         file
     );
+
+    // LOG vertices data to a file
+    /*cm_LogWrite("vert.log", "#ENTRY POINT", true);
+    char buffer[2048] = { 0 };
+    for (size_t i = 0; i < p_asset->vertices.size; i++) {
+        memset(buffer, 0, 2048);
+        switch (p_asset->asset_mode)
+        {
+        case DENG_ASSET_MODE_3D_TEXTURE_MAPPED:
+            sprintf(
+                buffer,
+                "TEX_UNOR: %f, %f, %f",
+                p_asset->vertices.p_tex_mapped_unnormalized_vert[i].vert_data.vert_x,
+                p_asset->vertices.p_tex_mapped_unnormalized_vert[i].vert_data.vert_y,
+                p_asset->vertices.p_tex_mapped_unnormalized_vert[i].vert_data.vert_z
+            );
+            break;
+
+        case DENG_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
+            sprintf(
+                buffer,
+                "TEX_NOR VERT: %f, %f, %f; NORM: %f, %f, %f",
+                p_asset->vertices.p_tex_mapped_normalized_vert[i].vert_data.vert_x,
+                p_asset->vertices.p_tex_mapped_normalized_vert[i].vert_data.vert_y,
+                p_asset->vertices.p_tex_mapped_normalized_vert[i].vert_data.vert_z,
+                p_asset->vertices.p_tex_mapped_normalized_vert[i].norm_data.nor_x,
+                p_asset->vertices.p_tex_mapped_normalized_vert[i].norm_data.nor_y,
+                p_asset->vertices.p_tex_mapped_normalized_vert[i].norm_data.nor_z
+            );
+            break;
+        
+        case DENG_ASSET_MODE_3D_UNMAPPED:
+            sprintf(
+                buffer,
+                "UNMAPPED_UNOR: %f, %f, %f",
+                p_asset->vertices.p_unmapped_unnormalized_vert[i].vert_data.vert_x,
+                p_asset->vertices.p_unmapped_unnormalized_vert[i].vert_data.vert_y,
+                p_asset->vertices.p_unmapped_unnormalized_vert[i].vert_data.vert_z
+            );
+            break;
+
+        case DENG_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+            sprintf(
+                buffer,
+                "UNMAPPED_NORM: %f, %f, %f",
+                p_asset->vertices.p_unmapped_normalized_vert[i].vert_data.vert_x,
+                p_asset->vertices.p_unmapped_normalized_vert[i].vert_data.vert_y,
+                p_asset->vertices.p_unmapped_normalized_vert[i].vert_data.vert_z
+            );
+            break;
+
+        default: 
+            break;
+        }
+
+        cm_LogWrite("vert.log", buffer, false);
+    }*/
 
     fclose(file);
 }

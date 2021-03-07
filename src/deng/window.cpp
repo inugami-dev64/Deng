@@ -7,17 +7,25 @@ namespace deng {
         int y, 
         const char *title
     ) {
-        m_size = {static_cast<deng_ui32_t>(x), static_cast<deng_ui32_t>(y)};
         m_title = (char*) title;
+        deng_vec_t x_size = (deng_vec_t)m_size.first;
+        deng_vec_t y_size = (deng_vec_t)m_size.second;
         m_pixel_size = { 
-            2.0 / static_cast<deng_px_t>(m_size.first), 
-            2.0 / static_cast<deng_px_t>(m_size.second)};
-        m_p_game_window = deng_InitVKSurfaceWindow (
-            x, 
-            y, 
-            m_title, 
+            2.0f / x_size,
+            2.0f / y_size
+        };
+
+        m_p_game_window = deng_InitVKSurfaceWindow(
+            x,
+            y,
+            m_title,
             DENG_WINDOW_MODE_FIXED
         );
+
+        m_size = { 
+            (deng_ui32_t) m_p_game_window->width, 
+            (deng_ui32_t) m_p_game_window->height 
+        };
     }
 
     WindowWrap::~WindowWrap() {
@@ -28,24 +36,34 @@ namespace deng {
     /*
      * Either disable or enable virtual mouse mode
      */
-    void WindowWrap::setMovement(deng_bool_t is_mov) {    
-        if(is_mov) {
-            deng_SetMouseCursorMode (
-                m_p_game_window, 
-                DENG_MOUSE_MODE_VIRTUAL
-            );
+    void WindowWrap::setVCMode (
+        deng_bool_t is_vcp,
+        deng_bool_t change_cursor
+    ) {    
+        if(is_vcp) {
+            if (change_cursor) {
+                deng_SetMouseCursorMode(
+                    m_p_game_window,
+                    DENG_MOUSE_MODE_INVISIBLE
+                );
+            }
+            else
+                m_p_game_window->vc_data.is_enabled = true;
         } 
         else { 
-            deng_SetMouseCursorMode (
-                m_p_game_window, 
-                DENG_MOUSE_MODE_CURSOR_VISIBLE
-            );
+            if (change_cursor) {
+                deng_SetMouseCursorMode(
+                    m_p_game_window,
+                    DENG_MOUSE_MODE_CURSOR_VISIBLE
+                );
+            }
+            else m_p_game_window->vc_data.is_enabled = false;
         }
-        m_is_movement = is_mov;
+        m_is_vc = is_vcp;
     }
 
 
-    dengMath::vec2<deng_px_t> WindowWrap::getPixelSize() {
+    dengMath::vec2<deng_vec_t> WindowWrap::getPixelSize() {
         return m_pixel_size;
     }
 
@@ -61,7 +79,7 @@ namespace deng {
         return m_size;
     }
 
-    deng_bool_t WindowWrap::isMovement() {
-        return m_is_movement;
+    deng_bool_t WindowWrap::isVCP() {
+        return m_is_vc;
     }
 }

@@ -6,7 +6,9 @@
     #include <vector>
     #include <mutex>
     #include <string.h>
+    #include <string>
     #include <math.h>
+    #include <array>
     #include <vulkan/vulkan.h>
     #include <common/base_types.h>
     #include <common/err_def.h>
@@ -30,7 +32,9 @@
 
 namespace deng {
 
-    /* Base value structs */
+    /*
+     * Parent struct for every camera class
+     */
     struct CameraBase {
         WindowWrap *m_p_ww = NULL;
         deng_vec_t m_draw_distance;
@@ -38,27 +42,38 @@ namespace deng {
     };
 
     
-    struct EventBase {
+    /*
+     * Base parent class for camera event classes
+     * This class contains methods mainly for handling mouse position and its usage
+     */
+    class EventBase {
     public:
-        deng_i32_t m_prev_active_btn_c;
-        dengMath::vec2<deng_vec_t> m_mouse_pos;
-        dengMath::vec2<deng_vec_t> m_mouse_sens;
-    
+        dengMath::vec2<deng_f64_t> m_mouse_pos;
+        dengMath::vec2<deng_f64_t> m_mouse_sens;
+        dengMath::vec2<deng_VCPOverflowAction> m_vcp_overflow;
+        dengMath::vec2<dengMath::vec2<deng_f64_t>> m_vc_bounds;
+        dengMath::vec2<deng_f64_t> m_max_rot;
+
     public:
-        void updateMouseEvData(WindowWrap *p_ww);
-        void getMouseRotation (
-            WindowWrap *p_ww,
-            dengMath::vec2<deng_vec_t> *p_out_rot
+        EventBase (
+            const dengMath::vec2<deng_f64_t> &mouse_sens,
+            const dengMath::vec2<deng_VCPOverflowAction> &vcp_act,
+            const dengMath::vec2<dengMath::vec2<deng_f64_t>> &vc_bounds,
+            const dengMath::vec2<deng_f64_t> &max_rot
         );
+
+        void updateMouseEvData(WindowWrap *p_ww);
+        dengMath::vec2<deng_f64_t> getMouseRotation();
         void getMousePositionFromRot (
             WindowWrap *p_ww,
-            dengMath::vec2<deng_vec_t> rot
+            dengMath::vec2<deng_f64_t> rot
         );
     };
 
 
-    // Non mov callback function pointer callback type declaration
-    typedef void(*FPPCamNonMovementCallback) (dengMath::vec2<deng_vec_t> *p_vmp);
+    // First person camera mouse input mode change callback function type
+    // Parameters: current virtual position
+    typedef void(*FPPInputChangeCallback) (const dengMath::vec2<deng_f64_t> &vcp);
 
     /* Perspective first person camera event classe */
     class FPPCameraEv : private EventBase {
@@ -67,11 +82,11 @@ namespace deng {
         dengUtils::Timer m_input_mode_timer;
         dengMath::vec4<deng_vec_t> m_move_speed;
         dengMath::vec3<deng_MovementEvent> m_movements;
-        dengMath::vec2<deng_vec_t> m_frozen_mouse_pos = {0.0f, 0.0f};
-        FPPCamNonMovementCallback m_callback;
+        FPPInputChangeCallback m_input_disable_callback;
+        FPPInputChangeCallback m_input_enable_callback;
 
     private:
-        void findMovementType(WindowWrap *p_ww);
+        void findMovements(WindowWrap *p_ww);
         void checkForInputModeChange (
             WindowWrap *p_ww,
             dengMath::ViewMatrix *p_vm
@@ -87,9 +102,11 @@ namespace deng {
     public:
         FPPCameraEv (
             WindowWrap *p_ww,
-            dengMath::vec2<deng_vec_t> mouse_mov_speed_mul,
-            dengMath::vec3<deng_vec_t> camera_mov_speed_mul,
-            FPPCamNonMovementCallback callback
+            const dengMath::vec2<deng_f64_t> &mouse_sens,
+            const dengMath::vec3<deng_vec_t> &camera_mov_speed,
+            dengMath::ViewMatrix *p_vm,
+			FPPInputChangeCallback mov_disable_callback,
+			FPPInputChangeCallback mov_enable_callback
         );
 
         void updateEv (
@@ -114,12 +131,13 @@ namespace deng {
     public:
         FPPCamera (
             const dengMath::vec3<deng_vec_t> &camera_mov_speed_mul, 
-            const dengMath::vec2<deng_vec_t> &mouse_mov_speed_mul, 
+            const dengMath::vec2<deng_f64_t> &mouse_sens, 
             const deng_vec_t &FOV, 
             const deng_vec_t &near_plane, 
             const deng_vec_t &far_plane, 
-            FPPCamNonMovementCallback callback,
-            WindowWrap *p_window
+			FPPInputChangeCallback mov_disable_callback,
+			FPPInputChangeCallback mov_enable_callback,
+            WindowWrap *p_ww
         );
         ~FPPCamera();
 
@@ -136,17 +154,19 @@ namespace deng {
     };
 
 
+    /*
+     * Event handler class for editor camera
+     */
     class EditorCameraEv : private EventBase {
     private:
         deng_EditorCameraEvent m_editor_cam_ev;
-        dengMath::vec2<deng_vec_t> m_last_mouse_pos;
-        dengMath::vec2<deng_vec_t> m_last_rot;
+        dengMath::vec2<deng_f64_t> m_last_rot = {0, 0};
         deng_vec_t m_zoom_step;
         deng_bool_t m_is_rot_cur = false;
 
     public:
         EditorCameraEv (
-            dengMath::vec2<deng_vec_t> mouse_mov_speed_mul,
+            dengMath::vec2<deng_f64_t> mouse_sens,
             deng_vec_t zoom_step,
             dengMath::vec3<deng_vec_t> origin,
             WindowWrap *p_ww,
@@ -164,12 +184,6 @@ namespace deng {
             dengMath::ViewMatrix *p_vm
         );
         
-        // Mouse position must be normalized
-        void getRotFromMousePos (
-            dengMath::vec2<deng_vec_t> mouse_pos,
-            dengMath::vec2<deng_vec_t> *p_out_rot
-        );
-
         void updateEv (
             WindowWrap *p_ww,
             dengMath::vec3<deng_vec_t> origin,
@@ -190,7 +204,7 @@ namespace deng {
         EditorCamera (
             const deng_vec_t &zoom_step,
             const dengMath::vec3<deng_vec_t> &origin,
-            const dengMath::vec2<deng_vec_t> &mouse_mov_speed_mul,
+            const dengMath::vec2<deng_f64_t> &mouse_sens,
             const deng_vec_t &FOV,
             const deng_vec_t &near_plane,
             const deng_vec_t &far_plane,

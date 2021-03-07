@@ -10,6 +10,7 @@ extern "C" {
 #define DEFAULT_ASSET_COLOR (deng_ObjColorData) {0.7f, 0.7f, 0.7f, 1.0f}
 
 
+
 typedef enum ImageFormat {
     IMAGE_FORMAT_BMP = 0,
     IMAGE_FORMAT_TGA = 1,
@@ -30,6 +31,17 @@ typedef enum ImageFormat {
     #include <das/assets.h>
 
     ImageFormat dasDetectImageFormat(const char *file_name);
+    /*
+     * Read raw bitmap data from file
+     * This function expects the file to be uncompressed and
+     */
+    void dasReadBitmap (
+        FILE *file,
+        deng_ui8_t bit_c,
+        deng_bool_t vert_re,
+        deng_Texture* p_tex
+    );
+
     void dasLoadBMPimage (
         deng_Texture *p_asset, 
         const char *file_name

@@ -12,8 +12,17 @@ extern "C" {
     // DEBUGGING PURPOSES
     #include <common/base_types.h>
     #include <common/common.h>
-    #include <vulkan/vulkan.h>
-    #include <X11/XKBlib.h>
+    #ifdef __DENG_API_CORE
+        #include <vulkan/vulkan.h>
+    #endif
+    #ifdef __linux__
+        #include <X11/XKBlib.h>
+    #endif
+
+    #ifdef _WIN32
+        #include <Windows.h>
+    #endif
+
     #include <deng/key_definitions.h>
     #include <deng/surface_window.h>
 

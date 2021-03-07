@@ -18,7 +18,7 @@ namespace dengUtils {
         // Check if specified font name matches any fonts from fonts vector
         for(l_index = 0; l_index < m_fonts.size(); l_index++) {
             // Find file extension
-            for(ext_index = m_fonts[l_index].size() - 1; ext_index >= 0; ext_index--) {
+            for(ext_index = (deng_i32_t) m_fonts[l_index].size() - 1; ext_index >= 0; ext_index--) {
                 if(m_fonts[l_index][ext_index] == '.') 
                     break;
             }
@@ -59,46 +59,73 @@ namespace dengUtils {
 
 
     /* Find all available fonts */
-    void StringRasterizer::__findFontFiles(std::string path) {
+    void StringRasterizer::__findFontFiles(std::string root_path) {
+        char* file_ext;
+
         // Check if '/' needs to be added to the end of the path
-        if(path != "" && path[path.size() - 1] != '/') 
-            path += '/';
-        else if(path == "") return;
+        if (root_path != "" && root_path[root_path.size() - 1] != '/')
+            root_path += '/';
+        else if (root_path == "") return;
 
-        // Open directory
-        DIR *dir;
-        dir = opendir(path.c_str());
-        if(!dir) WARNME("Invalid font path: " + path);
-        char *file_ext;
-        
-        // Read directory contents 
-        struct dirent *contents;
-        std::string tmp;
+        #ifdef _WIN32
+            char path[2048] = { 0 };
+            sprintf(path, "%s*.*", root_path.c_str());
+            WIN32_FIND_DATA file;
+            HANDLE hdl = NULL;
 
-        while((contents = readdir(dir))) {
-            switch (contents->d_type)
-            {
-            case DT_REG:
-                file_ext = cm_GetFileExtName(contents->d_name);
-                if
-                (
-                    (file_ext && !strcmp(file_ext, "ttf")) || 
+            if ((hdl = FindFirstFile(path, &file)) == INVALID_HANDLE_VALUE)
+                RUN_ERR("Invalid font path: " + root_path);
+            
+            // Skip ../ directory
+            FindNextFile(hdl, &file);
+            while (FindNextFile(hdl, &file)) {
+                file_ext = cm_GetFileExtName(file.cFileName);
+                sprintf(path, "%s%s", root_path.c_str(), file.cFileName);
+                if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                    __findFontFiles(path);
+                else if (
+                    (file_ext && !strcmp(file_ext, "ttf")) ||
                     (file_ext && !strcmp(file_ext, "otf"))
-                ) m_fonts.push_back(path + contents->d_name);
-                
-                if(file_ext) free(file_ext);
-                break;
-
-            case DT_DIR:
-                if(std::string(contents->d_name) != "." && std::string(contents->d_name) != "..")
-                    __findFontFiles(path + contents->d_name);
-                break;
-
-            default:
-                break;
+                ) m_fonts.push_back(path);
             }
-        }
-        closedir(dir);
+
+            FindClose(hdl);
+        #endif  
+        #ifdef __linux__
+            // Open directory   
+            DIR *dir;
+            dir = opendir(path.c_str());
+            if(!dir) RUN_ERR("Invalid font path: " + path);
+        
+            // Read directory contents 
+            struct dirent *contents;
+            std::string tmp;
+
+            while((contents = readdir(dir))) {
+                switch (contents->d_type)
+                {
+                case DT_REG:
+                    file_ext = cm_GetFileExtName(contents->d_name);
+                    if
+                    (
+                        (file_ext && !strcmp(file_ext, "ttf")) || 
+                        (file_ext && !strcmp(file_ext, "otf"))
+                    ) m_fonts.push_back(path + contents->d_name);
+                
+                    if(file_ext) free(file_ext);
+                    break;
+
+                case DT_DIR:
+                    if(std::string(contents->d_name) != "." && std::string(contents->d_name) != "..")
+                        __findFontFiles(path + contents->d_name);
+                    break;
+
+                default:
+                    break;
+                }
+            }
+            closedir(dir);
+        #endif
     }
 
 
@@ -159,7 +186,7 @@ namespace dengUtils {
     deng_vec_t StringRasterizer::__findTextSizeVec(BitmapStr &str) {
         deng_ui64_t l_index;
         deng_px_t total_size = 0;
-        for(l_index = 0; l_index < strlen(str.text); l_index++)
+        for(l_index = 0; l_index < strlen(str.text); l_index++) 
             total_size += str.unique_glyphs[str.rend_text[l_index].glyph_id].advance.first;
 
         return dengMath::Conversion::pixelSizeToVector2DSize (
@@ -175,7 +202,7 @@ namespace dengUtils {
         deng_ui64_t l_index;
         deng_px_t total_size = 0;
         for(l_index = 0; l_index < strlen(str.text); l_index++) 
-            total_size += str.unique_glyphs[str.rend_text[l_index].glyph_id].advance.first;
+            total_size += (deng_px_t) str.unique_glyphs[str.rend_text[l_index].glyph_id].advance.first;
 
         return total_size;
     }
@@ -184,7 +211,7 @@ namespace dengUtils {
     /* Create new drawable string */
     void StringRasterizer::__mkGlyphs (
         BitmapStr &str, 
-        deng_ui16_t px_size, 
+        deng_px_t px_size, 
         dengMath::vec2<deng_vec_t> pos, 
         dengMath::vec3<unsigned char> color
     ) {
@@ -247,7 +274,7 @@ namespace dengUtils {
     void StringRasterizer::newPxStr (
         BitmapStr &str,
         const char *font_name,
-        deng_ui16_t px_size,
+        deng_px_t px_size,
         dengMath::vec3<unsigned char> color,
         dengMath::vec2<deng_vec_t> pos,
         deng_ui32_t hier_level,
@@ -269,7 +296,7 @@ namespace dengUtils {
         );
 
         deng_px_t width = __findTextSizePx(str);
-
+           
         __mkTextbox (
             str,
             width,
@@ -298,15 +325,15 @@ namespace dengUtils {
             FONT_ERR("Failed to find font file!");
         
         str.font_file = path_str.c_str();
-        deng_vec_t px_size = (deng_vec_t) dengMath::Conversion::vector2DSizeToPixelSize (
-            (deng_px_t) vec_size,
+        deng_ui16_t px_size = (deng_vec_t) dengMath::Conversion::vector2DSizeToPixelSize (
+            vec_size,
             m_p_win->getSize(),
             DENG_COORD_AXIS_Y
         );
 
         __mkGlyphs (
             str,
-            (deng_ui16_t) px_size,
+            px_size,
             pos,
             color
         );
@@ -461,6 +488,7 @@ namespace dengUtils {
     ) {
         BitmapStr ras_str;
         ras_str.text = str;
+        printf("Text: %s\n", ras_str.text);
         ras_str.font_file = font_name;
 
         std::string font_path;
@@ -492,7 +520,6 @@ namespace dengUtils {
         deng_i32_t l_index;        
         deng_bool_t is_max = false;
         deng_px_t cur_px_width = 0.0;
-        
         for(l_index = 0; l_index < (deng_i32_t) strlen(ras_str.text); l_index++) {
             // Check if the current size is bigger than maximum size
             if(cur_px_width >= max_px_width) { 
@@ -578,6 +605,13 @@ namespace dengUtils {
             DENG_COORD_AXIS_Y
         );
 
+        LOG (
+            "LABEL VEC_PADDING: " + 
+            std::to_string(vec_padding.first) + 
+            "; " +
+            std::to_string(vec_padding.second)
+        );
+
         deng_vec_t text_height = getMaxHeight (
             label,
             font_file,
@@ -594,6 +628,7 @@ namespace dengUtils {
             label_height = text_height;
 
         out_label.text = label;
+        printf("Label height: %f\n", label_height);
         newVecStr (
             out_label, 
             font_file, 

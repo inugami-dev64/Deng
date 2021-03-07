@@ -2,15 +2,14 @@
 #include <utils/timer.h>
 
 namespace dengUtils {
-    deng_ui32_t Timer::getTime() {
-        std::chrono::system_clock::time_point tp = std::chrono::system_clock::now();
-        std::chrono::system_clock::duration dtn = tp.time_since_epoch();
-        return dtn.count() / 1000000;
+    deng_ui64_t Timer::getTime() {
+        return (deng_ui64_t)std::chrono::duration_cast<std::chrono::milliseconds> 
+            (std::chrono::system_clock::now().time_since_epoch()).count();
     }
 
     //These functions set new time point from epoch
     void Timer::setNewTimePoint() {
-        this->time_point = this->getTime();
+        m_time_point = getTime();
     }
 
     Timer::Timer() {
@@ -18,8 +17,8 @@ namespace dengUtils {
     }
 
     // Function that returns true if certain amount of time has passed 
-    deng_bool_t Timer::isTimePassed(const deng_ui32_t &ms) {
-        if(getTime() - time_point >= ms) return true;
+    deng_bool_t Timer::isTimePassed(const deng_ui64_t &ms) {
+        if(getTime() - m_time_point >= ms) return true;
         else return false; 
     }
 }

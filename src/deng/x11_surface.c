@@ -146,12 +146,6 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
         &atom_kill, 
         1
     );
-
-
-    // SIGTERM termination handler
-    // memset(&signal_action, 0, sizeof(struct sigaction));
-    // signal_action.sa_handler = __Terminate;
-    // sigaction(SIGKILL, &signal_action, NULL);
     
     return p_win;
 }
@@ -253,10 +247,12 @@ void deng_SetMouseCoords (
     );
 }
 
+
+/*
+ * Get mouse position data from X11
+ */
 void deng_GetMousePos (
     deng_SurfaceWindow *p_win, 
-    deng_vec_t *p_x, 
-    deng_vec_t *p_y, 
     deng_bool_t init_virtual_cursor
 ) {
     // dummy variables for x11
@@ -297,13 +293,13 @@ void deng_GetMousePos (
     }
 
     else {
-        *p_x = (deng_vec_t) x;
-        *p_y = (deng_vec_t) y;
+        p_win->mx = (deng_vec_t) x;
+        p_win->my = (deng_vec_t) y;
         if(init_virtual_cursor)
             deng_SetMouseCoords (
                 p_win, 
-                p_win->virtual_mouse_position.orig_x, 
-                p_win->virtual_mouse_position.orig_y
+                p_win->virtual_mouse_pos.orig_x,
+                p_win->virtual_mouse_pos.orig_y
             );
     }
 }

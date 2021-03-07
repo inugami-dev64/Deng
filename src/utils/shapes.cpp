@@ -21,19 +21,20 @@ namespace dengUtils {
             DENG_COORD_AXIS_UNDEFINED
         );
 
-        LOG("VERT_BORDER_LEN: " + std::to_string(2 * (vert.size() - vert_offset)));
         std::vector<VERT_UNMAPPED_2D> border_verts(2 * (vert.size() - vert_offset));
         std::vector<deng_ui32_t> border_indices(6 * (vert.size() - vert_offset));
 
-        deng_i32_t c_index, p_index, n_index, push_index;
+        deng_i64_t c_index, p_index, n_index, push_index;
         dengMath::vec2<deng_vec_t> a_vec, b_vec, norm_vec;
         
         // Find all vertices
-        for(c_index = vert_offset, push_index = 0; c_index < (deng_i32_t) vert.size(); c_index++, push_index += 2) {
+        for(c_index = vert_offset, push_index = 0; c_index < (deng_i64_t) vert.size(); c_index++, push_index += 2) {
             p_index = c_index - 1;
             n_index = c_index + 1;
-            if(p_index < (deng_i32_t) vert_offset) p_index = (deng_i32_t) vert.size() - 1;
-            if(n_index == (deng_i32_t) vert.size()) n_index = (deng_i32_t) vert_offset;
+            if(p_index < (deng_i64_t) vert_offset) 
+                p_index = (deng_i64_t) vert.size() - 1;
+            if(n_index == (deng_i64_t) vert.size()) 
+                n_index = (deng_i64_t) vert_offset;
 
             // Find all constructed triangle side vectors
             a_vec.first = vert[c_index].vert_data.vert_x - vert[p_index].vert_data.vert_x;
@@ -44,19 +45,19 @@ namespace dengUtils {
 
             deng_vec_t border_sine, border_cosine;
             // Make b vector magnitude the same as a vector
-            deng_vec_t mag_a = (deng_vec_t) sqrt (
-                (deng_px_t) (a_vec.first * a_vec.first) +
-                (deng_px_t) (a_vec.second * a_vec.second)
+            deng_vec_t mag_a = (deng_vec_t) sqrtf (
+                (a_vec.first * a_vec.first) +
+                (a_vec.second * a_vec.second)
             );
 
-            deng_vec_t sin_b = b_vec.second / (deng_vec_t) sqrt (
-                (deng_px_t) (b_vec.first * b_vec.first) +
-                (deng_px_t) (b_vec.second * b_vec.second)
+            deng_vec_t sin_b = b_vec.second / sqrtf (
+                (b_vec.first * b_vec.first) +
+                (b_vec.second * b_vec.second)
             );
 
-            deng_vec_t cos_b = b_vec.first / (deng_vec_t) sqrt (
-                (deng_px_t) (b_vec.first * b_vec.first) +
-                (deng_px_t) (b_vec.second * b_vec.second)
+            deng_vec_t cos_b = b_vec.first / sqrt (
+                (b_vec.first * b_vec.first) +
+                (b_vec.second * b_vec.second)
             );
 
             b_vec.first = mag_a * cos_b;
@@ -64,12 +65,12 @@ namespace dengUtils {
 
             norm_vec = a_vec + b_vec;
 
-            border_sine = norm_vec.second / (deng_vec_t) sqrt (
-                (deng_px_t) (norm_vec.first * norm_vec.first) +
-                (deng_px_t) (norm_vec.second * norm_vec.second)
+            border_sine = norm_vec.second / sqrtf (
+                (norm_vec.first * norm_vec.first) +
+                (norm_vec.second * norm_vec.second)
             );
 
-            border_cosine = -norm_vec.first / sqrt (
+            border_cosine = -norm_vec.first / sqrtf (
                 norm_vec.first * norm_vec.first +
                 norm_vec.second * norm_vec.second
             );
@@ -88,16 +89,18 @@ namespace dengUtils {
         for(c_index = 0, push_index = 0; c_index < (deng_vec_t) border_verts.size(); c_index += 2, push_index += 6) {
             p_index = c_index - 1;
             n_index = c_index + 2;
-            if(p_index < 0) p_index = (deng_i32_t) border_verts.size() - 1;
-            if(n_index >= (deng_i32_t) border_verts.size()) n_index = 0;
+            if(p_index < 0) 
+                p_index = (deng_i64_t) border_verts.size() - 1;
+            if(n_index >= (deng_i64_t) border_verts.size()) 
+                n_index = 0;
 
-            border_indices[push_index] = (deng_ui32_t) (c_index + 1) + (deng_ui32_t) vert.size() - vert_offset;
-            border_indices[push_index + 1] = (deng_ui32_t) n_index + (deng_ui32_t) vert.size() - vert_offset;
-            border_indices[push_index + 2] = (deng_ui32_t) c_index + (deng_ui32_t) vert.size() - vert_offset;
+            border_indices[push_index] = (deng_ui32_t) (c_index + 1) + (deng_ui32_t) (vert.size() - vert_offset);
+            border_indices[push_index + 1] = (deng_ui32_t) n_index + (deng_ui32_t) (vert.size() - vert_offset);
+            border_indices[push_index + 2] = (deng_ui32_t) c_index + (deng_ui32_t) (vert.size() - vert_offset);
 
-            border_indices[push_index + 3] = (deng_ui32_t) (c_index + 1) + (deng_ui32_t) vert.size() - vert_offset;
-            border_indices[push_index + 4] = (deng_ui32_t) p_index + (deng_ui32_t) vert.size() - vert_offset;
-            border_indices[push_index + 5] = (deng_ui32_t) c_index + (deng_ui32_t) vert.size() - vert_offset;
+            border_indices[push_index + 3] = (deng_ui32_t) (c_index + 1) + (deng_ui32_t) (vert.size() - vert_offset);
+            border_indices[push_index + 4] = (deng_ui32_t) p_index + (deng_ui32_t) (vert.size() - vert_offset);
+            border_indices[push_index + 5] = (deng_ui32_t) c_index + (deng_ui32_t) (vert.size() - vert_offset);
         }
 
         if(new_vert) vert.clear();

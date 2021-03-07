@@ -2,7 +2,10 @@
 #include <deng/key_definitions.h>
 
 #ifdef __linux__
-/************** Xorg ************/
+
+/*
+ * DENG only supports xorg as a windows surface in linux
+ */
 deng_Key translateX11Key(KeySym keysym) {
     switch (keysym)
     {   
@@ -265,6 +268,7 @@ deng_Key translateWIN32Key(deng_ui16_t key_code) {
         default:                    return DENG_KEY_UNKNOWN;
     }
 }
+
 
 deng_MouseButton translateWIN32Btn(UINT msg) {
     switch(msg) {

@@ -3,6 +3,7 @@
 
 namespace deng {
     namespace vulkan {
+        static size_t s_max_frame_c = 0;
         /******************************************/
         /******************************************/
         /************ InstanceCreator *************/
@@ -522,6 +523,7 @@ namespace deng {
                     nullptr
                 );
                 m_swapchain_images.resize(image_count);
+                s_max_frame_c = image_count;
                 vkGetSwapchainImagesKHR (
                     m_device, 
                     m_swapchain, 
@@ -1020,7 +1022,7 @@ namespace deng {
         ) {
             std::array<VkDescriptorPoolSize, 2> desc_pool_sizes;
             VkDescriptorPoolCreateInfo desc_pool_createinfo{};
-            m_tex_cap += 2 * m_p_textures->size();
+            m_tex_cap += (deng_ui32_t) (2 * m_p_textures->size());
 
             desc_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             desc_pool_sizes[0].descriptorCount = m_tex_cap * sc_img_c;
@@ -1648,7 +1650,7 @@ namespace deng {
                 if(is_lf) {
                     mip_levels = (deng_i32_t) floor (
                         log2 (
-                            std::max (
+                            max (
                                 (*m_p_textures)[index].texture.pixel_data.width, 
                                 (*m_p_textures)[index].texture.pixel_data.height
                             )
@@ -1822,14 +1824,19 @@ namespace deng {
             // Count total amount of bytes needed to allocate for assets 
             for(l_index = 0; l_index < m_p_assets->size(); l_index++) {
                 (*m_p_assets)[l_index].vertices.memory_offset = total_size;
-                //LOG (
-                    //"ASSET, OFFSET: " + 
-                    //std::string((*m_p_assets)[l_index].id) + 
-                    //", " + 
-                    //std::to_string((*m_p_assets)[l_index].is_shown) +
-                    //"; " +
-                    //std::to_string((*m_p_assets)[l_index].vertices.memory_offset)
-                //);
+                LOG (
+                    "ASSET, OFFSET, VERT_C, INDICES_C: " + 
+                    std::string((*m_p_assets)[l_index].id) + 
+                    ", " + 
+                    std::to_string((*m_p_assets)[l_index].is_shown) +
+                    "; " +
+                    std::to_string((*m_p_assets)[l_index].vertices.memory_offset) +
+                    "; " +
+                    std::to_string((*m_p_assets)[l_index].vertices.size) +
+                    "; " +
+                    std::to_string((*m_p_assets)[l_index].indices.size)
+                );
+
 
                 switch ((*m_p_assets)[l_index].asset_mode)
                 {
@@ -2315,9 +2322,9 @@ namespace deng {
         /* Create semaphores and fences for synchronising frames */
         void DrawCaller::__mkSynchronisation(VkDevice &device) {
             // Resize semaphores 
-            image_available_semaphore_set.resize(DENG_MAX_FRAMES_IN_FLIGHT);
-            render_finished_semaphore_set.resize(DENG_MAX_FRAMES_IN_FLIGHT);
-            flight_fences.resize(DENG_MAX_FRAMES_IN_FLIGHT);
+            image_available_semaphore_set.resize(s_max_frame_c);
+            render_finished_semaphore_set.resize(s_max_frame_c);
+            flight_fences.resize(s_max_frame_c);
             VkSemaphoreCreateInfo semaphore_info{};
             semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
@@ -2325,7 +2332,7 @@ namespace deng {
             fence_createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
             fence_createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-            for(deng_i32_t i = 0; i < DENG_MAX_FRAMES_IN_FLIGHT; i++) {
+            for(deng_i32_t i = 0; i < s_max_frame_c; i++) {
                 if
                 (
                     vkCreateSemaphore (
@@ -2441,7 +2448,7 @@ namespace deng {
 
                 // Set up clear values
                 std::array<VkClearValue, 2> clear_values;
-                clear_values[0].color = (VkClearColorValue) {
+                clear_values[0].color = {
                     background.first, 
                     background.second, 
                     background.third, 

@@ -6,8 +6,10 @@
     #include <stdexcept>
     #include <map>
     #include <vector>
-    #include <array>
     #include <math.h>
+    #include <string>
+    #include <array>
+    #include <algorithm>
     #include <vulkan/vulkan.h>
 
     #include <common/base_types.h>
@@ -37,22 +39,34 @@
     #define UM2D_I          4
     #define TM2D_I          5
 
-    /* Shader binary file names */
-    #define UNMAPPED_VERT_SHADER_2D             "shaders/bin/2d_unmapped.spv"
-    #define TEXTURE_MAPPED_VERT_SHADER_2D       "shaders/bin/2d_tex_mapped.spv"
-    #define UNMAPPED_VERT_SHADER_3D             "shaders/bin/3d_unmapped.spv"
-    #define UNMAPPED_NORM_VERT_SHADER_3D        "shaders/bin/3d_unmapped_nor.spv"
-    #define TEXTURE_MAPPED_VERT_SHADER_3D       "shaders/bin/3d_tex_mapped.spv"
-    #define TEXTURE_MAPPPED_NORM_VERT_SHADER_3D "shaders/bin/3d_tex_mapped_nor.spv"
-    #define TEXTURE_MAPPED_FRAG_SHADER          "shaders/bin/tex_mapped_frag.spv"
-    #define UNMAPPED_FRAG_SHADER                "shaders/bin/unmapped_frag.spv"
+    #ifdef __linux__
+        #define UNMAPPED_VERT_SHADER_2D             "./shaders/bin/2d_unmapped.spv"
+        #define TEXTURE_MAPPED_VERT_SHADER_2D       "./shaders/bin/2d_tex_mapped.spv"
+        #define UNMAPPED_VERT_SHADER_3D             "./shaders/bin/3d_unmapped.spv"
+        #define UNMAPPED_NORM_VERT_SHADER_3D        "./shaders/bin/3d_unmapped_nor.spv"
+        #define TEXTURE_MAPPED_VERT_SHADER_3D       "./shaders/bin/3d_tex_mapped.spv"
+        #define TEXTURE_MAPPPED_NORM_VERT_SHADER_3D "./shaders/bin/3d_tex_mapped_nor.spv"
+        #define TEXTURE_MAPPED_FRAG_SHADER          "./shaders/bin/tex_mapped_frag.spv"
+        #define UNMAPPED_FRAG_SHADER                "./shaders/bin/unmapped_frag.spv"
+    #endif
 
+    /* I'm sorry about that */
+    #ifdef _WIN32
+        /* Shader binary file names */
+        #define UNMAPPED_VERT_SHADER_2D             ".\\shaders\\bin\\2d_unmapped.spv"
+        #define TEXTURE_MAPPED_VERT_SHADER_2D       ".\\shaders\\bin\\2d_tex_mapped.spv"
+        #define UNMAPPED_VERT_SHADER_3D             ".\\shaders\\bin\\3d_unmapped.spv"
+        #define UNMAPPED_NORM_VERT_SHADER_3D        ".\\shaders\\bin\\3d_unmapped_nor.spv"
+        #define TEXTURE_MAPPED_VERT_SHADER_3D       ".\\shaders\\bin\\3d_tex_mapped.spv"
+        #define TEXTURE_MAPPPED_NORM_VERT_SHADER_3D ".\\shaders\\bin\\3d_tex_mapped_nor.spv"
+        #define TEXTURE_MAPPED_FRAG_SHADER          ".\\shaders\\bin\\tex_mapped_frag.spv"
+        #define UNMAPPED_FRAG_SHADER                ".\\shaders\\bin\\unmapped_frag.spv"
+    #endif
     /* Generic default settings definitions */
 #endif
 
 #define DENG_DEFAULT_NEAR_PLANE 0.1f
 #define DENG_DEFAULT_FAR_PLANE 25.0f
-#define DENG_MAX_FRAMES_IN_FLIGHT 3
 
 namespace deng {
     namespace vulkan {

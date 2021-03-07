@@ -157,7 +157,7 @@ namespace dengui {
      */
     struct MouseInputInfo {
         std::mutex mut;
-        dengMath::vec2<deng_vec_t> mouse_coords;
+        dengMath::vec2<deng_px_t> mouse_coords;
         deng_bool_t is_mouse_input;
     };
     

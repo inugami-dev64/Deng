@@ -9,12 +9,20 @@ extern "C" {
 #endif
 
 #ifdef __KEY_TRANSLATION_C
-    #include <X11/XKBlib.h>
-    #include <X11/keysym.h>
+    #ifdef __linux__
+        #include <X11/XKBlib.h>
+        #include <X11/keysym.h>
+    #endif
+
+    #ifdef _WIN32 
+        #include <common/base_types.h>
+        #include <windows.h>
+    #endif
 #endif
 
 typedef enum deng_MouseMode {
-    DENG_MOUSE_MODE_VIRTUAL         = 0,
+    DENG_MOUSE_MODE_UNKNOWN         = -1,
+    DENG_MOUSE_MODE_INVISIBLE       = 0,
     DENG_MOUSE_MODE_CURSOR_VISIBLE  = 1
 } deng_MouseMode;
 

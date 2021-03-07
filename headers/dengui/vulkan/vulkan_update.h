@@ -4,6 +4,7 @@
 #ifdef __VULKAN_UPDATE_CPP
     #include <mutex>
     #include <vector>
+    #include <array>
     #include <vulkan/vulkan.h>
 
     #include <deng/forward_dec.h>

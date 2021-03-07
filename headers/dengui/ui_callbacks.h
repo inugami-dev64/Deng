@@ -5,6 +5,7 @@
     #include <vector>
     #include <array>
     #include <mutex>
+    #include <array>
     #include <stdlib.h>
     #include <vulkan/vulkan.h>
 
