@@ -1,6 +1,7 @@
 .vscode/
 .cache/
 .stfolder/
+website/
 Makefile
 init.sh
 init.bat
