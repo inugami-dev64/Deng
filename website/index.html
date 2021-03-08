@@ -1,0 +1,99 @@
+<html>
+    <head>
+        <title>DENG</title>
+        <link rel="stylesheet" href="./main.css">
+        <script type="text/javascript" src="./main.js"></script>
+    </head>
+
+    <body>
+        <div class="main">
+            <!-- Nav bar properties -->
+            <nav class="desktop">
+                <img src="./logo/logo_full.png" alt="DENG" class="logo">
+                <div class="links">
+                    <table>
+                        <tr><td><a href="./">Home</a></td></tr>
+                        <tr><td><a href="./downloads.html">Downloads</a></td></tr>
+                        <tr><td><a href="https://github.com/inugami-dev64/deng">GIT</a></td></tr>
+                        <tr><td><a href="./news.html">News</a></td></tr>
+                        <tr><td><a href="./bugs.html">Bugs</a></td></tr>
+                        <tr><td><a href="./about.html">About</a></td></tr>
+                    </table>
+                </div>
+            </nav>
+            
+            <nav class="mobile">
+                <div class="hm_icon" id="hm_icon" onclick="toggleMenu()"></div>
+                <div class="links" id="links">
+                    <button onclick="toggleMenu()">X</button>
+                    <table>
+                        <tr><td><a href="./">Home</a></td></tr>
+                        <tr><td><a href="./downloads.html">Downloads</a></td></tr>
+                        <tr><td><a href="https://github.com/inugami-dev64/deng">GIT</a></td></tr>
+                        <tr><td><a href="./news.html">News</a></td></tr>
+                        <tr><td><a href="./bugs.html">Bugs</a></td></tr>
+                        <tr><td><a href="./about.html">About</a></td></tr>
+                    </table>
+                </div>
+            </nav>
+            
+            <div class="content_container">
+                <!-- Opening paragraph -->
+                <div class="paragraph">
+                    <h1>DENG(the Dimentional ENGine)</h1>
+                    <p>
+                        DENG is a lightweight, free and open source game engine designed for developing 2D and 3D games. It uses mainly Vulkan for 
+                        rendering as well as OpenGL in the future. Right now DENG is in early stage development, which means that no editors are available,
+                        however a custom GUI system will soon be implemented, which means that the next goal of the development is to implement map editor.
+                    </p>
+                </div>
+                
+                <!-- List of features currenly available and ones soon to be implemented -->
+                <div class="info_box_container">
+                    <div class="left_info_box">
+                        <h2>Currently supported features</h2>
+                        <ul>
+                            <li>Antialiasing (MSAA)</li>
+                            <li>3D model loading</li>
+                            <li>Font rendering</li>
+                            <li>Texture mapping</li>
+                            <li>2D sprite generation</li>
+                            <li>Basic UI event system</li>
+                            <li>Perspective first person camera system</li>
+                            <li>Editor camera system</li>
+                        </ul>
+                    </div>
+
+                    <div class="right_info_box">
+                        <h2>Features yet to be implemented</h2>
+                        <ul>
+                            <li>Fully featured GUI for DENG</li>
+                            <li>Map editor</li>
+                            <li>Asset animator</li>
+                            <li>Scene editor</li>
+                            <li>Lighting</li>
+                            <li>Shadows</li>
+                            <li>Editor camera system</li>
+                            <li>Modular OpenGL support</li>
+                            <li>Wavefront OBJ parser</li>
+                            <li>PNG and JPEG texture image loading</li>
+                            <li>Support for animations in DENG asset file format</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Paragraph about DENG goals -->
+                <div class="paragraph">
+                    <h1>Goals and philosophy</h1>
+                    <p>
+                        The main goal of the DENG project is to create a free and open-source unbloated platform for game development,
+                        while still giving the similar functionality as alternative game engines. Our philosophy is about giving the game
+                        developer full control of everything under the hood, while keeping everything relatively simple. This means that 
+                        the game developer should be able to customise the way renderer works, optimise important mathematical calculations, 
+                        compile the project into an editor mode when needed etc.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
