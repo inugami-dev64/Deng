@@ -9,7 +9,7 @@
         <div class="main">
             <!-- Nav bar properties -->
             <nav class="desktop">
-                <img src="../logo/logo_full.png" alt="DENG" class="logo">
+                <img src="./logo/logo_full.png" alt="DENG" class="logo">
                 <div class="links">
                     <table>
                         <tr><td><a href="./index.html">Home</a></td></tr>
@@ -41,7 +41,24 @@
                 <div class="paragraph">
                     <h1>News</h1>
                     <p>
-                        
+                        All news related to DENG will be posted here
+                    </p>
+                </div>
+
+                <div class="news_paragraph">
+                    <h2>Fixed windows support on DENG</h2>
+                    <p>
+                        Windows support was fixed in DENG. Now it is possible to use
+                        CMake in order to create Visual Studio solutions for DENG. Additional 
+                        optimisations were also made to key and mouse input event system. <br><br>
+                        Full list of fixes and changes that were done are following:
+                        <ul>
+                            <li><code>WINDOW</code> instance creation no longer allocates on heap memory</li>
+                            <li>Create CMake script for windows builds</li>
+                            <li>Fix first person camera white screen bug</li>
+                            <li>DENG no longer uses GCC non-standard C++ language features</li>
+                        </ul>
+                        <b class="date">2021/03/07</b>
                     </p>
                 </div>
             </div>

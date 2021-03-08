@@ -84,6 +84,8 @@ nav.mobile .links button:hover {
     cursor: pointer;
 }
 
+
+/* Hamburger menu styling */
 .hm_icon {
     background-image: url("res/hm_icon.png");
     width: 45px;
@@ -94,11 +96,6 @@ nav.mobile .links button:hover {
 .hm_icon:hover {
     cursor: pointer;
 }
-
-/*nav.mobile a { */
-    /*font-weight: 900;*/
-    /*text-decoration: none;*/
-/*}*/
 
 
 /* Main content container */
@@ -117,7 +114,7 @@ nav.mobile .links button:hover {
 }
 
 
-/* Universal text paragraph class */
+/* Information paragraph styles */
 .paragraph {
     margin: 0 15px 15px;
     padding: 0 3%;
@@ -125,29 +122,60 @@ nav.mobile .links button:hover {
     padding-bottom: 10px;
 }
 
-.paragraph h1 {
-    text-align: center;
+
+.news_paragraph {
+    overflow: auto;
+    margin: 0 15px 15px;
+    border: 1px solid black;
+    padding: 50px 50px 20px 50px;
+}
+
+.paragraph h1,
+.news_paragraph h1 {
+    overflow: auto;
     margin-bottom: 50px;
     font-size: 30px;
     font-weight: 900;
 }
 
-.paragraph h2 {
-    text-align: left;
+.paragraph h1 {
+    text-align: center;
+}
+
+.paragraph h2, 
+.news_paragraph h2 {
+    overflow: auto;
     margin-bottom: 30px;
     font-size: 25px;
     font-weight: 900;
 }
 
-.paragraph h3 {
-    text-align: left;
+.paragraph h3, 
+.news_paragraph h3 {
+    overflow: auto;
     margin-bottom: 20px;
     font-size: 20px;
     font-weight: 900;
 }
 
-.paragraph p, b { font-size: 19px; }
+.paragraph p, b,
+.news_paragraph p, b { 
+    font-size: 19px; 
+    text-align: justify;
+    font-weight: normal;
+}
 
+.news_paragraph b.date {
+    display: block;
+    font-weight: 900;
+    font-size: 16px;
+    text-align: right;
+    margin-top: 25px;
+    margin-right: 12px;
+}
+
+
+/* News element styling */
 
 /* Image resource horizontal container */
 .row_res {
