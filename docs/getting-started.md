@@ -3,17 +3,6 @@
 Configuring DENG for your project is the first and the most important step of developing with DENG.   
 This page helps to get started with setting up your very first DENG project.   
 
-## Table of contents
-1. [Building DENG](#building-deng)    
-    1.1 [Build using Saucer](#build-using-saucer)  
-2. [Drawing simple 2D objects](#drawing-simple-2d-objects)    
-    2.1 [Includes](#includes)  
-    2.2 [Creating WindowWrap and Renderer instances](#creating-windowwrap-and-renderer-instances)  
-    2.3 [Setting hints for renderer](#setting-hints-for-renderer)  
-    2.4 [Generating 2D shape assets](#generating-2d-shape-assets)  
-    2.5 [Submit assets and finish renderer initialisation](#submit-assets-and-finish-renderer-initialisation)  
-    2.6 [Final Code](#final-code)  
-
 
 ## Building DENG 
 DENG can be built using CMake or Saucer (experimental). 
@@ -26,6 +15,8 @@ Variable | Expected value | Description
 --- | --- | ---
 VULKAN_SDK_PATH | [PATH TO VULKAN SDK] | Specify the path to Vulkan SDK (Windows only)
 BUILD_ALL | True / False | Build all targets available (including submodules)
+BUILD_DAM | True / False | Build DENG asset manager
+BUILD_LIBDENG | True / False | Build libdeng
 BUILD_FREETYPE | True / False | Add Freetype to build target list
 BUILD_SANDBOX_APP | True / False | Add sandbox application to build target list
 
@@ -52,28 +43,59 @@ In order to use DENG we need to include `deng/deng.h` header which can found in 
 #include <deng/deng.h>
 ```
 
-### Creating WindowWrap and Renderer instances
-First steps of setting DENG are related to creating surface window. Main runtime loop is handled by `deng::Renderer::run()` method, so there is no need to worry about that.
-Firstly `deng::WindowWrap` instance needs to be created. This instance allows for
-window surface creation. Secondly we need to create a renderer instance, which in DENG is called `deng::Renderer`.  
+### Setting up renderer 
+First steps of setting up DENG renderer are creating a surface window and a camera instance. 
+In DENG there are currently two camera classes: `deng::EditorCamera` and `deng::FPPCamera`.
+`deng::EditorCamera` creates new editor camera and `deng::FPPCamera` creates new first person
+perspective camera instance.  
 
+
+In this example code we are going to use first person perspective camera 
+but the renderer accepts both camera types  
 ```
 deng::WindowWrap window(1280, 720, "My awesome game!");
-deng::Renderer rend;
+deng::FPPCamera fpp_cam (
+    {1.0f, 1.0f, 1.0f}, 
+    {0.7f, 0.7f}, 
+    dengMath::Conversion::degToRad(65.0f), 
+    DENG_DEFAULT_NEAR_PLANE, 
+    DENG_DEFAULT_FAR_PLANE, 
+    NULL, 
+    NULL,
+    &window
+);
+deng::Renderer rend(&window, &fpp_cam, DENG_CAMERA_FPP);
 ```
 
-`deng::WindowWrap` constructor takes three parameters. Firstly the window width, secondly window height and thirdly the name of the window created.
+As you can probably see the sample code is using `DENG_DEFAULT_NEAR_PLANE` and `DENG_DEFAULT_FAR_PLANE` preprocessor 
+definition values. These values expand to 0.1f and 25.0f accordingly.    
+
+More info about classes used in this example:  
+* `deng::FPPCamera` -- [link](refs/fppcamera.md)  
+* `deng::EditorCamera` -- [link](refs/editorcamera.md)   
+* `deng::Renderer` -- [link](refs/renderer.md)  
+* `deng::WindowWrap` -- [link](refs/windowwrap.md)  
 
 ### Setting hints for renderer
 Before we can proceed into generating 2D shapes we need to first give the renderer hints, which define how the renderer is going 
-to work. The full list of all possible renderer flags can be found [here](#../refs/global/deng_RendererHintBits.md). Please keep
+to work. The full list of all possible renderer flags can be found [here](refs/global/deng_rendererhintbits.md). Please keep
 in mind that using some combinations of these flags can result runtime errors (for example: using different msaa value flags at the same time).
 Check the flag reference page for more information. Flags can be submited to renderer via following method: `deng::Renderer::setHints(deng_RendererHintBits)`  
 In this example we use MSAA 2x antialiasing and Vulkan as our graphics api with console FPS counter enabled.
 
 ```
 deng::WindowWrap window(1280, 720, "My awesome game!");
-deng::Renderer rend;
+deng::FPPCamera fpp_cam (
+    {1.0f, 1.0f, 1.0f}, 
+    {0.7f, 0.7f}, 
+    dengMath::Conversion::degToRad(65.0f), 
+    DENG_DEFAULT_NEAR_PLANE, 
+    DENG_DEFAULT_FAR_PLANE, 
+    NULL, 
+    NULL,
+    &window
+);
+deng::Renderer rend(&window, &fpp_cam, DENG_CAMERA_FPP);
 
 rend.setHints (
     DENG_RENDERER_HINT_API_VULKAN |
@@ -88,12 +110,17 @@ code we generate one circle, one triangle and one rectangle. As a first step we 
 will be done. Texture mapping tutorial comes later.  
 For generating assets we are going to use following methods:   
 `dengUtils::TriangleGenerator::makeAbsTriangleAsset()` for triangle assets  
-`dengUtils::CircleGenerator::makeAbsCircleAsset()` for circle assets and
+`dengUtils::CircleGenerator::makeAbsCircleAsset()` for circle assets and  
 `dengUtils::RectangleGenerator::makeUnmappedAbsRecAsset()` for rectangle assets  
-After generating new assets we also need to explicitly specify the visibility of an asset. This can be done by changing the value of `deng_Asset::is_shown` to `true`  
+References to shape generators:  
+`dengUtils::RectangleGenerator` -- [link](refs/utils/rectanglegenerator.md)  
+`dengUtils::CircleGenerator` -- [link](refs/utils/circlegenerator.md)  
+`dengUtils::TriangleGenerator` -- [link](refs/utils/trianglegenerator.md)  
+
+After generating new assets we also need to explicitly specify the visibility of an asset. This can be done by changing the value of `das_Asset::is_shown` to `true`  
 
 ```
-std::array<deng_Asset, 3> assets;
+std::array<das_Asset, 3> assets;
 
 dengUtils::TriangleGenerator tri_gen(window.getSize());
 dengUtils::RectangleGenerator rec_gen(window.getSize());
@@ -178,11 +205,21 @@ Code should now look something like this.
 #include <deng/api_core.h>
 #define SANDBOX_BACKGROUND {0.1411765f, 0.0431372f, 0.2313725f, 1.0f}
 
-std::vector<deng_Asset> assets(3);
+std::vector<das_Asset> assets(3);
 
 int main() {
     deng::WindowWrap window(1280, 720, "My awesome game!");
-    deng::Renderer rend;
+    deng::FPPCamera fpp_cam (
+        {1.0f, 1.0f, 1.0f}, 
+        {0.7f, 0.7f}, 
+        dengMath::Conversion::degToRad(65.0f), 
+        DENG_DEFAULT_NEAR_PLANE, 
+        DENG_DEFAULT_FAR_PLANE, 
+        NULL, 
+        NULL,
+        &window
+    );
+    deng::Renderer rend(&window, &fpp_cam, DENG_CAMERA_FPP);
 
     rend.setHints (
         DENG_RENDERER_HINT_API_VULKAN | 
