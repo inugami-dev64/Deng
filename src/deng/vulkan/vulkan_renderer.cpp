@@ -63,6 +63,7 @@
 #define __VULKAN_RENDERER_CPP
 #include <deng/vulkan/vulkan_renderer.h>
 
+deng::__SharedMouseData __ext_md;
 
 namespace deng {
     namespace vulkan {
@@ -626,10 +627,9 @@ namespace deng {
                 m_p_ic->getDev(), 
                 m_p_dc->current_frame, 
                 __max_frame_c,
-                m_config.p_camera, 
+                m_config.p_cam, 
                 false,
                 {0, 0},
-                m_config.cam_type,
                 DENG_CAMERA_UNIFORM_NO_CAMERA_MODE_2D | 
                 DENG_CAMERA_UNIFORM_PERSPECTIVE_CAMERA_MODE_3D
             );

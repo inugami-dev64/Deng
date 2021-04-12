@@ -61,7 +61,7 @@
 
 
 #define __KEY_TRANSLATION_C
-#include <deng/key_definitions.h>
+#include <deng/surface/key_definitions.h>
 
 #ifdef __linux__
 

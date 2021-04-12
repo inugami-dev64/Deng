@@ -74,7 +74,6 @@
     #include <das/assets.h>
 
     #include <math/deng_math.h>
-    #include <deng/surface_window.h>
     #include <deng/window.h>
     #include <deng/vulkan/vulkan_sd.h>
     #include <deng/vulkan/vulkan_qm.h>

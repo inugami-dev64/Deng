@@ -90,6 +90,10 @@ typedef float deng_vec_t;
 #define true 1
 #define false 0
 
+
+/*
+ * Uniform flags mainly reserved for future use
+ */
 typedef deng_ui32_t deng_CameraUniformFlagBits;
 #define DENG_CAMERA_UNIFORM_ORTHOGRAPHIC_CAMERA_MODE_3D 0x01u
 #define DENG_CAMERA_UNIFORM_PERSPECTIVE_CAMERA_MODE_3D  0x02u
@@ -97,14 +101,18 @@ typedef deng_ui32_t deng_CameraUniformFlagBits;
 #define DENG_CAMERA_UNIFORM_NO_CAMERA_MODE_2D           0x08u
 #define DENG_CAMERA_UNIFORM_NO_CAMERA_MODE_3D           0x10u
 
-/* Hints for controlling window with API calls */
+/* 
+ * Hints for controlling window with API calls 
+ */
 typedef deng_ui32_t deng_WindowHintBits;
 #define DENG_WINDOW_HINT_FULL_SCREEN                    0x01u
 #define DENG_WINDOW_HINT_WINDOWED                       0x02u
 #define DENG_WINDOW_HINT_NO_MOUSE_LOCK                  0x04u
 #define DENG_WINDOW_HINT_NO_CURSOR_HIDE                 0x08u
 
-/* Hints for controlling renderer features */
+/* 
+ * Hints for controlling renderer features 
+ */
 typedef deng_ui16_t deng_RendererHintBits;
 #define DENG_RENDERER_HINT_API_VULKAN                       0x0001u
 #define DENG_RENDERER_HINT_API_OPENGL                       0x0002u
@@ -124,67 +132,83 @@ typedef deng_ui16_t deng_RendererHintBits;
 #define DENG_RENDERER_HINT_CUSTOM_LOOP                      0x8000u
 
 
-/* Coordinate axis specifier */
+/* 
+ * Coordinate axis specifier 
+ */
 typedef enum deng_CoordinateAxisType {
-    DENG_COORD_AXIS_UNDEFINED = -1,
-    DENG_COORD_AXIS_X = 0,
-    DENG_COORD_AXIS_Y = 1,
-    DENG_COORD_AXIS_Z = 2
+    DENG_COORD_AXIS_UNDEFINED   = -1,
+    DENG_COORD_AXIS_X           = 0,
+    DENG_COORD_AXIS_Y           = 1,
+    DENG_COORD_AXIS_Z           = 2,
+    DENG_COORD_AXIS_FIRST       = -1,
+    DENG_COORD_AXIS_LAST        = 2
 } deng_CoordinateAxisType;
 
 
-/* Movement mode specifier */
+/* 
+ * Movement mode specifier 
+ */
 typedef enum deng_MovementEvent {
-    DENG_MOVEMENT_NONE = -1,
-    DENG_MOVEMENT_FORWARD = 0,
-    DENG_MOVEMENT_BACKWARD = 1,
-    DENG_MOVEMENT_RIGHTWARD = 2,
-    DENG_MOVEMENT_LEFTWARD = 3,
-    DENG_MOVEMENT_UPWARD = 4,
-    DENG_MOVEMENT_DOWNWARD = 5
+    DENG_MOVEMENT_NONE          = -1,
+    DENG_MOVEMENT_FORWARD       = 0,
+    DENG_MOVEMENT_BACKWARD      = 1,
+    DENG_MOVEMENT_RIGHTWARD     = 2,
+    DENG_MOVEMENT_LEFTWARD      = 3,
+    DENG_MOVEMENT_UPWARD        = 4,
+    DENG_MOVEMENT_DOWNWARD      = 5,
+    DENG_MOVEMENT_FIRST         = -1,
+    DENG_MOVEMENT_LAST          = 5
 } deng_MovementEvent;
 
 
-/* Pipeline type specifier */
+/* 
+ * Pipeline type specifier 
+ */
 typedef enum deng_PipelineType {
-    DENG_PIPELINE_TYPE_UNMAPPED_3D = 0,
-    DENG_PIPELINE_TYPE_UNMAPPED_3D_NORM = 1,
-    DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D = 2,
-    DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D_NORM = 3,
-    DENG_PIPELINE_TYPE_UNMAPPED_2D = 4,
-    DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D = 5
+    DENG_PIPELINE_TYPE_UNMAPPED_3D              = 0,
+    DENG_PIPELINE_TYPE_UNMAPPED_3D_NORM         = 1,
+    DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D        = 2,
+    DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D_NORM   = 3,
+    DENG_PIPELINE_TYPE_UNMAPPED_2D              = 4,
+    DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D        = 5,
+    DENG_PIPELINE_TYPE_FIRST                    = 0,
+    DENG_PIPELINE_TYPE_LAST                     = 5
 } deng_PipelineType;
 
 
-/* Triangle angle specifier */
-typedef enum deng_TriangleAngleType {
-    DENG_TRIANGLE_ANGLE_ALPHA = 0,
-    DENG_TRIANGLE_ANGLE_BETA = 1,
-    DENG_TRIANGLE_ANGLE_GAMMA = 2
-} deng_TriangleAngleType;
-
-
-/* Renderer usage mode */
+/* 
+ * Renderer usage mode 
+ */
 typedef enum deng_RendererUsageMode {
-    DENG_RENDERER_USAGE_ASSET_EDITOR = 0,
-    DENG_RENDERER_USAGE_MAP_EDITOR = 1,
-    DENG_RENDERER_USAGE_GAME_MODE = 2,
+    DENG_RENDERER_USAGE_ASSET_EDITOR    = 0,
+    DENG_RENDERER_USAGE_MAP_EDITOR      = 1,
+    DENG_RENDERER_USAGE_GAME_MODE       = 2,
+    DENG_RENDERER_USAGE_FIRST           = 0,
+    DENG_RENDERER_USAGE_LAST            = 2
 } deng_RendererUsageMode;
 
 
-/* Camera type specifier */
+/* 
+ * Camera type specifier 
+ */
 typedef enum deng_CameraType {
-    DENG_CAMERA_FPP     = 0,
-    DENG_CAMERA_EDITOR  = 1
+    DENG_CAMERA_TYPE_FPP        = 0,
+    DENG_CAMERA_TYPE_EDITOR     = 1,
+    DENG_CAMERA_TYPE_FIRST      = 0,
+    DENG_CAMERA_TYPE_LAST       = 1,
 } deng_CameraType;
 
 
-/* Editor camera event specifier */
+/* 
+ * Editor camera event specifier 
+ */
 typedef enum deng_EditorCameraEvent {
-    DENG_EDITOR_CAMERA_NONE         = -1,
-    DENG_EDITOR_CAMERA_Z_MOV_IN     = 0,
-    DENG_EDITOR_CAMERA_Z_MOV_OUT    = 1,
-    DENG_EDITOR_CAMERA_MOUSE_ROTATE = 2
+    DENG_EDITOR_CAMERA_EVENT_NONE               = -1,
+    DENG_EDITOR_CAMERA_EVENT_Z_MOV_IN           = 0,
+    DENG_EDITOR_CAMERA_EVENT_Z_MOV_OUT          = 1,
+    DENG_EDITOR_CAMERA_EVENT_MOUSE_ROTATE       = 2,
+    DENG_EDITOR_CAMERA_EVENT_FIRST              = -1,
+    DENG_EDITOR_CAMERA_EVENT_LAST               = 2
 } deng_EditorCameraEvent;
 
 
@@ -193,7 +217,10 @@ typedef enum deng_EditorCameraEvent {
  */
 typedef enum deng_InputType {
     DENG_INPUT_TYPE_MOUSE   = 0,
-    DENG_INPUT_TYPE_KB      = 1
+    DENG_INPUT_TYPE_KB      = 1,
+    DENG_INPUT_TYPE_FIRST   = 0,
+    DENG_INPUT_TYPE_LAST    = 1
+
 } deng_InputType;
 
 
@@ -202,7 +229,9 @@ typedef enum deng_InputType {
  */
 typedef enum deng_InputEventType {
     DENG_INPUT_EVENT_TYPE_ACTIVE    = 0,
-    DENG_INPUT_EVENT_TYPE_RELEASED  = 1
+    DENG_INPUT_EVENT_TYPE_RELEASED  = 1,
+    DENG_INPUT_EVENT_TYPE_FIRST     = 0,
+    DENG_INPUT_EVENT_TYPE_LAST      = 1
 } deng_InputEventType;
 
 
@@ -213,8 +242,50 @@ typedef enum deng_InputEventType {
 typedef enum deng_VCPOverflowAction {
     DENG_VCP_OVERFLOW_ACTION_TO_OPPOSITE_POSITION   = 0,
     DENG_VCP_OVERFLOW_ACTION_BLOCK_POSITION         = 1,
-    DENG_VCP_OVERFLOW_ACTION_NONE                   = 2
+    DENG_VCP_OVERFLOW_ACTION_NONE                   = 2,
+    DENG_VCP_OVERFLOW_FIRST                         = DENG_VCP_OVERFLOW_ACTION_TO_OPPOSITE_POSITION,
+    DENG_VCP_OVERFLOW_LAST                          = DENG_VCP_OVERFLOW_ACTION_BLOCK_POSITION
 } deng_VCPOverflowAction;
+
+
+/*
+ * Camera action specifier enum
+ */
+typedef enum deng_CameraAction {
+    DENG_CAMERA_ACTION_MOV_U        = 0,
+    DENG_CAMERA_ACTION_MOV_NU       = 1,
+    DENG_CAMERA_ACTION_MOV_V        = 2,
+    DENG_CAMERA_ACTION_MOV_NV       = 3,
+    DENG_CAMERA_ACTION_MOV_W        = 4,
+    DENG_CAMERA_ACTION_MOV_NW       = 5,
+
+    DENG_CAMERA_ACTION_MOV_X        = 6,
+    DENG_CAMERA_ACTION_MOV_NX       = 7,
+    DENG_CAMERA_ACTION_MOV_Y        = 8,
+    DENG_CAMERA_ACTION_MOV_NY       = 9,
+    DENG_CAMERA_ACTION_MOV_Z        = 10,
+    DENG_CAMERA_ACTION_MOV_NZ       = 11,
+
+    DENG_CAMERA_ACTION_ROT_U        = 12,
+    DENG_CAMERA_ACTION_ROT_NU       = 13,
+    DENG_CAMERA_ACTION_ROT_V        = 14,
+    DENG_CAMERA_ACTION_ROT_NV       = 15,
+    DENG_CAMERA_ACTION_ROT_W        = 16,
+    DENG_CAMERA_ACTION_ROT_NW       = 17,
+
+    DENG_CAMERA_ACTION_ROT_X        = 18,
+    DENG_CAMERA_ACTION_ROT_NX       = 19,
+    DENG_CAMERA_ACTION_ROT_Y        = 20,
+    DENG_CAMERA_ACTION_ROT_NY       = 21,
+    DENG_CAMERA_ACTION_ROT_Z        = 22,
+    DENG_CAMERA_ACTION_ROT_NZ       = 23,
+
+    // Change first person camera mouse input mode
+    DENG_CAMERA_ACTION_CHANGE_MM    = 24,
+
+    DENG_CAMERA_ACTION_FIRST        = DENG_CAMERA_ACTION_MOV_U,
+    DENG_CAMERA_ACTION_LAST         = DENG_CAMERA_ACTION_CHANGE_MM,
+} deng_CameraAction;
 
 
 #define DENG_KEY_PRESS_INTERVAL         500 // ms
@@ -228,7 +299,6 @@ typedef enum deng_VCPOverflowAction {
 #define DENG_FPP_CAMERA_DEFAULT_POS_Y   0.5f
 #define DENG_FPP_CAMERA_DEFAULT_POS_Z   0.5f
 
-// World coordinates
 #define DENG_EDITOR_CAMERA_DEFAULT_POS_X    0.0f
 #define DENG_EDITOR_CAMERA_DEFAULT_POS_Y    0.0f
 #define DENG_EDITOR_CAMERA_DEFAULT_POS_Z    3.0f

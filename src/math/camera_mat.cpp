@@ -68,9 +68,21 @@ namespace dengMath {
     
     CameraMatrix::CameraMatrix(deng_CameraType cam_type) {
         // Set the default camera positions and rotations according to the camera type specified
+
+        // I will probably add this to the constructor of mat4
+        m_rot_x_mat.row1 = (vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, 0.0f}; 
+        m_rot_x_mat.row2 = (vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, 0.0f}; 
+        m_rot_x_mat.row3 = (vec4<deng_vec_t>) {0.0f, 0.0f, 1.0f, 0.0f}; 
+        m_rot_x_mat.row4 = (vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f}; 
+
+        m_rot_y_mat.row1 = (vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, 0.0f}; 
+        m_rot_y_mat.row2 = (vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, 0.0f}; 
+        m_rot_y_mat.row3 = (vec4<deng_vec_t>) {0.0f, 0.0f, 1.0f, 0.0f}; 
+        m_rot_y_mat.row4 = (vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f}; 
+
         switch(cam_type)
         {
-        case DENG_CAMERA_FPP:
+        case DENG_CAMERA_TYPE_FPP:
             m_camera_pos = (vec4<deng_vec_t>) {
                 DENG_FPP_CAMERA_DEFAULT_POS_X,
                 DENG_FPP_CAMERA_DEFAULT_POS_Y,
@@ -80,25 +92,28 @@ namespace dengMath {
 
             m_x_rot = 0.0f;
             m_y_rot = 0.0f;
+
+            camTransform(false);
             break;
 
-        case DENG_CAMERA_EDITOR:
+        case DENG_CAMERA_TYPE_EDITOR:
             m_camera_pos = (vec4<deng_vec_t>) {
                 DENG_EDITOR_CAMERA_DEFAULT_POS_X,
                 DENG_EDITOR_CAMERA_DEFAULT_POS_Y,
                 DENG_EDITOR_CAMERA_DEFAULT_POS_Z,
                 1.0f
             };
-            
-            m_x_rot = PI / 6;
-            m_y_rot = PI / 6;
+
+            m_x_rot = 0;
+            m_y_rot = 0;
+            camTransform(true);
             break;
         }
-
-        m_camera_mat.row1 = (vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, 0.0f};
-        m_camera_mat.row2 = (vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, 0.0f};
-        m_camera_mat.row3 = (vec4<deng_vec_t>) {0.0f, 0.0f, 1.0f, 0.0f};
-        m_camera_mat.row4 = (vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f};
+        
+        //m_camera_mat.row1 = (vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, 0.0f};
+        //m_camera_mat.row2 = (vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, 0.0f};
+        //m_camera_mat.row3 = (vec4<deng_vec_t>) {0.0f, 0.0f, 1.0f, 0.0f};
+        //m_camera_mat.row4 = (vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f};
     }
 
 
@@ -118,41 +133,50 @@ namespace dengMath {
      */
     void CameraMatrix::moveCamera (
         const vec3<deng_vec_t> &mov_speed, 
+        deng_bool_t is_world,
+        deng_bool_t ignore_pitch,
         const deng_CoordinateAxisType &movement_type
     ) {
-        vec4<deng_vec_t> mov = {0.0f, 0.0f, 0.0f, 1.0f};
-        
+        vec4<deng_vec_t> mov = {0.0f, 0.0f, 0.0f, 0.0f};
+
         switch(movement_type)
         {
         case DENG_COORD_AXIS_X:
             mov.first = mov_speed.first;
-            mov = m_rot_y_mat * mov;
+            if(ignore_pitch && !is_world)
+                mov = m_rot_y_mat * mov;
+            else if(!is_world) mov = m_rot_y_mat * m_rot_x_mat * mov;
             break;
 
         case DENG_COORD_AXIS_Y:
             mov.second = mov_speed.second;
-            mov = m_rot_y_mat * mov;
+            if(ignore_pitch && !is_world)
+                mov = m_rot_y_mat * mov;
+            else if(!is_world) mov = m_rot_y_mat * m_rot_x_mat * mov;
             break;
 
         case DENG_COORD_AXIS_Z:
             mov.third = mov_speed.third;
-            mov = m_rot_y_mat * mov;
+            if(ignore_pitch && !is_world)
+                mov = m_rot_y_mat * mov;
+            else if(!is_world) mov = m_rot_y_mat * m_rot_x_mat * mov;
             break;
 
         case DENG_COORD_AXIS_UNDEFINED:
             mov.first = mov_speed.first;
             mov.second = mov_speed.second;
             mov.third = mov_speed.third;
-            mov = m_rot_y_mat * mov;
+
+            if(ignore_pitch && !is_world)
+                mov = m_rot_y_mat * mov;
+            else if(!is_world) mov = m_rot_y_mat * m_rot_x_mat * mov;
             break;
         
         default:
             break;
         }
 
-        m_camera_pos.first += mov.first;
-        m_camera_pos.second += mov.second;
-        m_camera_pos.third += mov.third;
+        m_camera_pos += mov;
     }
 
 
@@ -181,19 +205,18 @@ namespace dengMath {
     /*
      * Set new rotation for the camera relative to its origin point in world coordinates
      */
-    void CameraMatrix::setPointRotation (
+    void CameraMatrix::setOriginRotation (
         dengMath::vec3<deng_vec_t> point,
         deng_vec_t x_rot,
         deng_vec_t y_rot
     ) {
-        x_rot = -x_rot;
         m_x_rot = x_rot;
         m_y_rot = y_rot;
 
         mat4<deng_vec_t> transform_mat;
-        transform_mat.row1 = (dengMath::vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, point.first + m_camera_pos.first};
-        transform_mat.row2 = (dengMath::vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, point.second + m_camera_pos.second};
-        transform_mat.row3 = (dengMath::vec4<deng_vec_t>) {0.0f, 0.0f, 1.0f, point.third + m_camera_pos.third};
+        transform_mat.row1 = (dengMath::vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, m_camera_pos.first - point.first};
+        transform_mat.row2 = (dengMath::vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, m_camera_pos.second - point.second};
+        transform_mat.row3 = (dengMath::vec4<deng_vec_t>) {0.0f, 0.0f, 1.0f, m_camera_pos.third - point.third};
         transform_mat.row4 = (dengMath::vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f};
 
         mat4<deng_vec_t> tmp_rot_mat;
@@ -217,27 +240,11 @@ namespace dengMath {
      * Create transformation matrix for camera system based
      * on previously submitted values
      */
-    void CameraMatrix::camTransform(deng_bool_t is_world_origin) {
-        if(!is_world_origin) {
-            //mat4<deng_vec_t> translation;
-            //translation.row1 = (vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, m_camera_pos.first};
-            //translation.row2 = (vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, m_camera_pos.second};
-            //translation.row3 = (vec4<deng_vec_t>) {0.0f, 0.0f, 1.0f, m_camera_pos.third};
-            //translation.row4 = (vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f};
-
+    void CameraMatrix::camTransform(deng_bool_t is_local_coord_sys) {
+        if(!is_local_coord_sys) {
             m_rs = m_rot_y_mat * m_rot_x_mat * __DENG_CAMERA_RIGHT;
             m_fs = m_rot_y_mat * m_rot_x_mat * __DENG_CAMERA_FORWARD;
             m_ts = m_rot_y_mat * m_rot_x_mat * __DENG_CAMERA_UP;
-
-            //LOG("rs: " + std::to_string(m_rs.first) + ", " + std::to_string(m_rs.second) + ", " + std::to_string(m_rs.third));
-            //LOG("ts: " + std::to_string(m_ts.first) + ", " + std::to_string(m_ts.second) + ", " + std::to_string(m_ts.third));
-            //LOG("fs: " + std::to_string(m_fs.first) + ", " + std::to_string(m_fs.second) + ", " + std::to_string(m_fs.third));
-
-            //m_u = translation * m_rs;
-            //m_v = translation * m_ts;
-            //m_w = translation * m_fs;
-
-            //LOG("rs, ts, fs: " + std::to_string(m_rs.length()) + ", " + std::to_string(m_ts.length()) + ", " + std::to_string(m_fs.length()));
 
             //mat4<deng_vec_t> basis;
             vec3<deng_vec_t> translation;
@@ -245,9 +252,17 @@ namespace dengMath {
             translation.second = -(m_ts * m_camera_pos);
             translation.third = -(m_fs * m_camera_pos);
 
-            //translation.first = -m_camera_pos.first;
-            //translation.second = -m_camera_pos.second;
-            //translation.third = -m_camera_pos.third;
+            m_camera_mat.row1 = (vec4<deng_vec_t>) {m_rs.first, m_rs.second, m_rs.third, translation.first};
+            m_camera_mat.row2 = (vec4<deng_vec_t>) {m_ts.first, m_ts.second, m_ts.third, translation.second};
+            m_camera_mat.row3 = (vec4<deng_vec_t>) {m_fs.first, m_fs.second, m_fs.third, translation.third};
+            m_camera_mat.row4 = (vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f};
+        }
+
+        else {
+            m_rs = m_rot_y_mat * m_rot_x_mat * __DENG_CAMERA_RIGHT;
+            m_ts = m_rot_y_mat * m_rot_x_mat * __DENG_CAMERA_UP;
+            m_fs = m_rot_y_mat * m_rot_x_mat * __DENG_CAMERA_FORWARD;
+            vec4<deng_vec_t> translation = m_rot_y_mat * m_rot_x_mat * m_camera_pos;
 
             m_camera_mat.row1 = (vec4<deng_vec_t>) {m_rs.first, m_rs.second, m_rs.third, translation.first};
             m_camera_mat.row2 = (vec4<deng_vec_t>) {m_ts.first, m_ts.second, m_ts.third, translation.second};
@@ -283,10 +298,10 @@ namespace dengMath {
         vec4<deng_vec_t> *p_w
     ) {
         if(p_u)
-            *p_u = m_u;
+            *p_u = m_rs;
         if(p_v)
-            *p_v = m_v;
+            *p_v = m_ts;
         if(p_w)
-            *p_w = m_w;
+            *p_w = m_fs;
     }
 }

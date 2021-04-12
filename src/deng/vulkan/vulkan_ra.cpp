@@ -78,7 +78,7 @@ namespace deng {
             VkPhysicalDevice gpu,
             VkCommandPool cmd_pool,
             VkQueue g_queue,
-            size_t ,
+            size_t sc_img_size,
             std::vector<__vk_Texture> *p_tex,
             Hashmap *p_tex_map
         ) {
@@ -791,12 +791,10 @@ namespace deng {
             // In case of creating totally new buffer instance copy default transformation values
             if(is_init) {
                 __vk_UniformTransformation ubo;
-                ubo.proj_mat.row1 = (dengMath::vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, 0.0f};
-                ubo.proj_mat.row2 = (dengMath::vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, 0.0f};
-                ubo.proj_mat.row3 = (dengMath::vec4<deng_vec_t>) {0.0f, 0.0f, 1.0f, 0.0f};
-                ubo.proj_mat.row4 = (dengMath::vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f};
-
-                ubo.view_mat = ubo.proj_mat;
+                ubo.transform.row1 = (dengMath::vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, 0.0f};
+                ubo.transform.row2 = (dengMath::vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, 0.0f};
+                ubo.transform.row3 = (dengMath::vec4<deng_vec_t>) {0.0f, 0.0f, 1.0f, 0.0f};
+                ubo.transform.row4 = (dengMath::vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f};
 
                 // These values are temporary
                 ubo.flags = DENG_CAMERA_UNIFORM_PERSPECTIVE_CAMERA_MODE_3D |
@@ -1421,31 +1419,15 @@ namespace deng {
             VkDevice device, 
             deng_ui32_t current_image, 
             deng_ui32_t img_c,
-            void *p_camera, 
+            Camera3D *p_cam,
             deng_bool_t update_tex,
             const dengMath::vec2<deng_ui32_t> &tex_bounds,
-            deng_CameraType cam_type,
             deng_CameraUniformFlagBits flag_bits
         ) {
             __vk_UniformTransformation ubo;
             ubo.flags = flag_bits;
-            
-            switch(cam_type)
-            {
-            case DENG_CAMERA_FPP:
-                ubo.view_mat = ((FPPCamera*) p_camera)->view_matrix.getTransformMat();
-                ubo.proj_mat = ((FPPCamera*) p_camera)->p_projection_matrix->getProjectionMatrix();
-                break;
-
-            case DENG_CAMERA_EDITOR:
-                ubo.view_mat = ((EditorCamera*) p_camera)->view_matrix.getTransformMat();
-                ubo.proj_mat = ((EditorCamera*) p_camera)->p_projection_matrix->getProjectionMatrix();
-                break;
-
-            default:
-                break;
-            }
-
+            ubo.transform = p_cam->getCameraMat();   
+            ubo.view = p_cam->getViewMat();
             ubo.flags = DENG_CAMERA_UNIFORM_NO_CAMERA_MODE_2D |
                         DENG_CAMERA_UNIFORM_PERSPECTIVE_CAMERA_MODE_3D;
 

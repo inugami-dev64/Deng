@@ -79,7 +79,7 @@
     #include <deng/vulkan/vulkan_qm.h>
     #include <deng/vulkan/vulkan_resources.h>
     #include <deng/vulkan/vulkan_rend_infos.h>
-    #include <deng/surface_window.h>
+    #include <deng/surface/surface_window.h>
     #include <deng/window.h>
 #endif
 

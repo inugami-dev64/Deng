@@ -28,16 +28,46 @@ premake:
 
   library_path:
     windows: ""
-  src_dir: src/
+  src_dir: ./
   build_dir: build/
   project_name: deng
 
 tasks: 
   sandboxapp:
     type: exec
-    src: main/sandbox_3d.cpp
+    src: 
+      - src/deng/surface/x11_surface.c
+      - src/deng/surface/key_translation.c
+      - src/deng/surface/key_ev.c
+      - src/deng/window.cpp
+      - src/deng/camera/cam_base.cpp
+      - src/deng/camera/ed_cam.cpp
+      - src/deng/camera/fpp_cam.cpp
+      - src/deng/camera.cpp
+      - src/deng/vulkan/vulkan_dc.cpp
+      - src/deng/vulkan/vulkan_desc_c.cpp
+      - src/deng/vulkan/vulkan_handler.c
+      - src/deng/vulkan/vulkan_ic.cpp
+      - src/deng/vulkan/vulkan_pipelines.cpp
+      - src/deng/vulkan/vulkan_qm.cpp
+      - src/deng/vulkan/vulkan_ra.cpp
+      - src/deng/vulkan/vulkan_renderer.cpp
+      - src/deng/vulkan/vulkan_resources.cpp
+      - src/deng/vulkan/vulkan_scc.cpp
+      - src/deng/vulkan/vulkan_sd.cpp
+      - src/math/camera_mat.cpp
+      - src/math/conversion.cpp
+      - src/math/projection_mat.cpp
+      - src/math/transformer.cpp
+      - src/utils/timer.cpp
+      - src/utils/shape_gen.cpp
+      - src/common/common.c
+      - src/common/hashmap.c
+      - src/common/uuid.c
+      - src/das/das_loader.c
+      - src/das/tex_loader.c
+      - tests/vulkan/vulkan_test.cpp
     deps:
-      - ldeng
       - lfreetype
       - lpthread
       linux:
@@ -48,62 +78,7 @@ tasks:
       windows:
         - lcomctl32
         - "lvulkan-1"
-
-  dam:
-    type: exec
-    src:
-      - das/dam.c
-      - das/das_handler.c
-      - das/data_loader.c
-      - common/common.c
-      - common/hashmap.c
   
-  libdeng:
-    type: dynamic_lib
-    src: 
-      # deng main sources
-      - deng/camera.cpp
-      - deng/deng_math.cpp
-      - deng/key_translation.c
-      - deng/key_ev.c
-      - deng/renderer.cpp
-      - deng/window.cpp
-      - deng/vulkan/vulkan_handler.c
-      - deng/vulkan/vulkan_pipelines.cpp
-      - deng/vulkan/vulkan_qm.cpp
-      - deng/vulkan/vulkan_renderer.cpp
-      - deng/vulkan/vulkan_resources.cpp
-      - deng/vulkan/vulkan_sd.cpp
-      linux: deng/x11_surface.c
-      windows: deng/win32_surface.c
-
-      # deng utilities sources
-      - utils/font.cpp
-      - utils/timer.cpp
-      - utils/collision.cpp
-      - utils/shapes.cpp
-      - utils/grid_generator.cpp
-
-      # dengui sources
-      - dengui/vulkan/vulkan_update.cpp
-      - dengui/dengui_child.cpp
-      - dengui/dengui_events.cpp
-      - dengui/dengui_window.cpp
-      - dengui/map_editor_ui.cpp
-      - dengui/ui_callbacks.cpp
-        
-      # common functions sources
-      - common/common.c
-      - common/hashmap.c
-
-      # das sources
-      - das/das_handler.c
-      - das/data_loader.c
-link:
-  shaders: shaders/
-  assets: assets/
-  textures: textures/
-  objects: objects/
 
 cpy:
   linux:

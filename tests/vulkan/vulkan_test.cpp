@@ -11,7 +11,6 @@
 #include <das/assets.h>
 
 #include <math/deng_math.h>
-#include <deng/surface_window.h>
 #include <deng/window.h>
 #include <utils/shape_gen.h>
 #include <utils/timer.h>
@@ -143,64 +142,69 @@ void gameloop (
 ) {
     while(deng_IsRunning()) {
         ext_md.mut.lock();
-        deng_UpdateWindow(win.getWindow());
+        win.update();
         ext_md.mut.unlock();
-
-        switch(cfg.cam_type)
-        {
-        case DENG_CAMERA_FPP:
-            ((deng::FPPCamera*) cfg.p_camera)->update();
-            break;
-        
-        case DENG_CAMERA_EDITOR:
-            ((deng::EditorCamera*) cfg.p_camera)->update();
-            break;
-
-        default:
-            break;
-        }
+        cfg.p_cam->update();
         rend.makeFrame();
         std::this_thread::sleep_for(std::chrono::microseconds(50));
     }
 
     rend.idle();
-    deng_DestroyWindow(win.getWindow());
 }
 
 
 int main() {
     deng::Window win(1200, 1000, "TEST");
 
-    deng::FPPCamera cam (
-        {0.7f, 0.7f, 0.7f}, 
-        {0.2f, 0.2f}, 
-        dengMath::Conversion::degToRad(65.0f), 
-        0.1f, 
-        -25.0f, 
-        NULL, 
-        NULL, 
+    deng::Camera3D cam (
+        DENG_CAMERA_TYPE_EDITOR,
+        dengMath::Conversion::degToRad(65.0),
+        {0.1, -25.0f},
+        {0.7f, 0.7f, 0.7f},
+        {0.3f, 0.3f},
+        false,
         &win
     );
+    
+    deng::Camera3DBindings fpp_bindings, ed_bindings;
+    ed_bindings.mov_w = deng_CreateInputMask(1, DENG_MOUSE_SCROLL_UP);
+    ed_bindings.mov_nw = deng_CreateInputMask(1, DENG_MOUSE_SCROLL_DOWN);
+    ed_bindings.ch_vcp = deng_CreateInputMask(1, DENG_MOUSE_BTN_2);
 
-    //deng::EditorCamera cam (
-        //0.1f, 
-        //{0.0f, 0.0f}, 
-        //{1.0, 1.0}, 
-        //dengMath::Conversion::degToRad(65.0f), 
-        //25.0f, 
-        //0.1f,
-        //&win
-    //);
+    fpp_bindings.mov_u = deng_CreateInputMask(1, DENG_KEY_D);
+    fpp_bindings.mov_nu = deng_CreateInputMask(1, DENG_KEY_A);
+    fpp_bindings.mov_v = deng_CreateInputMask(1, DENG_KEY_SPACE);
+    fpp_bindings.mov_nv = deng_CreateInputMask(1, DENG_KEY_LEFT_CTRL);
+    fpp_bindings.mov_w = deng_CreateInputMask(1, DENG_KEY_S);
+    fpp_bindings.mov_nw = deng_CreateInputMask(1, DENG_KEY_W);
+
+    fpp_bindings.rot_u = deng_CreateInputMask(1, DENG_MOUSE_DELTA_NY);
+    fpp_bindings.rot_nu = deng_CreateInputMask(1, DENG_MOUSE_DELTA_Y);
+    fpp_bindings.rot_v = deng_CreateInputMask(1, DENG_MOUSE_DELTA_NX);
+    fpp_bindings.rot_nv = deng_CreateInputMask(1, DENG_MOUSE_DELTA_X);
+    fpp_bindings.ch_vcp = deng_CreateInputMask(1, DENG_KEY_ESCAPE);
+
+    switch(cam.getType())
+    {
+    case DENG_CAMERA_TYPE_EDITOR:
+        cam.setBindings(ed_bindings);
+        break;
+
+    case DENG_CAMERA_TYPE_FPP:
+        cam.setBindings(fpp_bindings);
+        break;
+
+    default:
+        break;
+    }
+
 
     // Setting up configuration variables
     deng::vulkan::__vk_ConfigVars cfg;
     cfg.background = (dengMath::vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f};
-    cfg.cam_type = DENG_CAMERA_FPP;
-    cfg.p_camera = &cam;
     cfg.enable_validation_layers = true;
     cfg.enable_vsync = false;
-    cfg.far_plane = -25.0f;
-    cfg.near_plane = 0.1f;
+    cfg.p_cam = &cam;
     cfg.msaa_sample_count = VK_SAMPLE_COUNT_4_BIT;
 
     std::vector<das_Asset> assets(1);

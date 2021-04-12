@@ -82,8 +82,8 @@ extern "C" {
         #include <vulkan/vulkan.h>
         #include <vulkan/vulkan_xlib.h>
     #endif
-    #include <deng/key_definitions.h>
-    #include <deng/surface_window.h>
+    #include <deng/surface/key_definitions.h>
+    #include <deng/surface/surface_window.h>
     #ifdef __linux__
     #endif
     #ifdef _WIN32
@@ -98,6 +98,7 @@ void deng_GetRequiredVKSurfaceExt (
     deng_ui32_t *p_ext_c, 
     deng_bool_t add_layer_ext
 );
+
 
 VkResult deng_InitVKSurface (
     deng_SurfaceWindow *p_window, 

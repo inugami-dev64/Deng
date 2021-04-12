@@ -65,10 +65,9 @@
 
 namespace deng {
     namespace vulkan {
-        /************************************/
+        /*****************************************/
         /********* __vk_SwapChainDetails *********/
-        /************************************/
-
+        /*****************************************/
         __vk_SwapChainDetails::__vk_SwapChainDetails (
             VkPhysicalDevice &gpu, 
             VkSurfaceKHR &surface

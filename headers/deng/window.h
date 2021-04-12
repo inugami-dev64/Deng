@@ -71,20 +71,30 @@
     #include <common/base_types.h>
     #include <common/err_def.h>
     #include <das/assets.h>
+    #include <deng/forward_dec.h>
     #include <math/deng_math.h>
     #include <vulkan/vulkan.h>
-    #include <deng/surface_window.h>
 #endif
 
+
+#include <deng/surface/surface_window.h>
+#include <deng/vulkan/vulkan_surface.h>
+
+
 namespace deng {   
+    
+    /*
+     * Main window handling class for DENG
+     */
     class Window
     {
     private:
-        deng_SurfaceWindow *m_p_game_window;
+        deng_SurfaceWindow *m_p_surface;
         char *m_title;
         dengMath::vec2<deng_ui32_t> m_size;
-        deng_bool_t m_is_vc;
+        deng_bool_t m_is_vc = false;
         dengMath::vec2<deng_vec_t> m_pixel_size;
+        dengMath::vec2<deng_px_t> m_prev_vc_pos;
 
     public:
         Window (
@@ -92,16 +102,101 @@ namespace deng {
             deng_i32_t height, 
             const char *title
         );
+
         ~Window();
-        deng_SurfaceWindow *getWindow();
-        const char *getTitle();
-        dengMath::vec2<deng_ui32_t> getSize();
-        dengMath::vec2<deng_vec_t> getPixelSize();
-        void setVCMode (
-            deng_bool_t is_vcp,
-			deng_bool_t change_cursor
-        );
+
+
+        /*
+         * Toggle virtual cursor mode
+         */
+        void toggleVCMode();
+
+
+        /*
+         * Force set virtual cursor mode
+         */
+        void changeVCMode(deng_bool_t is_vc);
+
+        
+            /*
+             * Hide the cursor's visbility
+         */
+        void hideCursor();
+
+
+        /*
+         * Make the cursor visible
+         * NOTE: There should be a special cursor struct for DENG called deng_Cursor in the future
+         * but for now it is ignored
+         */
+        void showCursor();
+
+
+        /*
+         * Check if virtual cursor mode is enabled
+         */
         deng_bool_t isVCP();
+
+
+        /*
+         * Update window and input devices data
+         */
+        void update();
+
+
+        /*
+         * Force specified VCP position to virtual mouse cursor instance
+         */
+        void forceVCPPos(const dengMath::vec2<deng_px_t> &pos);
+
+
+        /*
+         * Create new vulkan surface instance
+         */
+        VkResult initVkSurface (
+            VkInstance &instance,
+            VkSurfaceKHR &surface
+        );
+
+
+        /*
+         * Search for all required vulkan extensions
+         */
+        char **findVulkanSurfaceExtensions (
+            deng_ui32_t *p_ext_c, 
+            deng_bool_t enable_vl
+        );
+
+
+
+        /*
+         * Get the current mouse position
+         */
+        dengMath::vec2<deng_px_t> getMPos(deng_bool_t use_vcp);
+
+
+        /*
+         * Get the mouse delta compared to previous frame mouse position
+         */
+        dengMath::vec2<deng_px_t> getMDelta();
+
+
+        /*
+         * Get the title of the window
+         */
+        const char *getTitle();
+
+        
+        /*
+         * Get the size of the window
+         */
+        dengMath::vec2<deng_ui32_t> getSize();
+
+
+        /*
+         * Get the vector size for one pixel in surface
+         */
+        dengMath::vec2<deng_vec_t> getPixelSize();
     };
 }
 

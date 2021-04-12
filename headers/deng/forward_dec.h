@@ -103,8 +103,11 @@ namespace deng {
     // deng/camera.h
     struct CameraBaseValues;
     struct EventBaseValues;
-    class FPPCameraEv;
-    class FPPCamera;
+    class __FPPCameraEv;
+    class __FPPCamera;
+    class __EditorCameraEv;
+    class __EditorCamera;
+    class Camera3D;
 
     // deng/rend_helpers.h
     struct BufferData;

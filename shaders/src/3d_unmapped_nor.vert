@@ -67,8 +67,8 @@ const uint orthographic_camera_mode3D = 0x00000001u;
 const uint perspective_camera_mode3D = 0x00000002u;
 
 layout(binding = 0) uniform UniformBufferObj {
+    mat4 transform;
     mat4 view;
-    mat4 projection;
     uint ubo_flag_bits;
 } ubo;
 
@@ -92,7 +92,7 @@ void main() {
         gl_Position = ubo.view * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
     
     else if((ubo.ubo_flag_bits & perspective_camera_mode3D) == perspective_camera_mode3D)
-        gl_Position = ubo.projection * ubo.view * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
+        gl_Position = ubo.transform * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
 
     else gl_Position = vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
 

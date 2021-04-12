@@ -177,8 +177,8 @@ namespace deng {
          * Structure for storing uniform transformation related data
          */
         struct __vk_UniformTransformation {
-            dengMath::mat4<deng_vec_t> view_mat;
-            dengMath::mat4<deng_vec_t> proj_mat;
+            dengMath::mat4<deng_vec_t> transform;
+            dengMath::mat4<deng_vec_t> view;
             deng_ui32_t flags;
         };
 

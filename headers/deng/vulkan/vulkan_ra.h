@@ -77,7 +77,6 @@
     #include <das/assets.h>
 
     #include <math/deng_math.h>
-    #include <deng/surface_window.h>
     #include <deng/window.h>
     #include <utils/timer.h>
     #include <deng/camera.h>
@@ -104,6 +103,7 @@
 
 namespace deng {
     namespace vulkan {
+
         /*
          * This class is responsible for allocating buffers to
          * texture images on more abstractedly than in __vk_BufferCreator struct
@@ -140,6 +140,7 @@ namespace deng {
                 deng_i32_t height,
                 deng_ui32_t mip_levels
             );
+
 
             /*
              * Create texture sampler for texture image
@@ -315,10 +316,9 @@ namespace deng {
                 VkDevice device, 
                 deng_ui32_t current_image, 
                 deng_ui32_t img_c,
-                void *p_camera, 
+                Camera3D *p_cam,
                 deng_bool_t update_tex,
                 const dengMath::vec2<deng_ui32_t> &tex_bounds,
-                deng_CameraType cam_type,
                 deng_CameraUniformFlagBits flag_bits
             );
 

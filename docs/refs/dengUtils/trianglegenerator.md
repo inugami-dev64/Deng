@@ -1,3 +1,8 @@
+---
+title: TriangleGenerator
+date: 2021-04-07
+---
+
 # dengUtils::TriangleGenerator
 C++ specification  
 File: shapes.h

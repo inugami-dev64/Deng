@@ -67,8 +67,8 @@ const uint orthographic_camera_mode2D = 0x00000004u;
 const uint no_camera_mode2D = 0x00000008u;
 
 layout(binding = 0) uniform UniformData {
+    mat4 transform;
     mat4 view;
-    mat4 projection;
     uint ubo_flag_bits;
 } ubo;
 
@@ -91,6 +91,7 @@ layout(location = 1) out vec2 out_tex_pos;
 layout(location = 2) out int out_is_unmapped;
 
 void main() {
+    // Pardon me
     if((ubo.ubo_flag_bits & orthographic_camera_mode2D) == orthographic_camera_mode2D)
         gl_Position = ubo.view * vec4(in_pos, float(in_hier), 1.0f);
     

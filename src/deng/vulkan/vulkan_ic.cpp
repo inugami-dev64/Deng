@@ -73,26 +73,26 @@ namespace deng {
 
         __vk_InstanceCreator::__vk_InstanceCreator (
             deng::Window *p_window_wrap, 
-            deng_bool_t enable_validation_layers
+            deng_bool_t enable_vl
         ) {
             m_required_extension_names.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
             m_p_win = p_window_wrap;
 
-            __mkInstance(enable_validation_layers);
+            __mkInstance(enable_vl);
             __mkWindowSurface();
-            if(enable_validation_layers)
+            if(enable_vl)
                 __mkDebugMessenger();
             
             __selectPhysicalDevice();
             __findSupportedProperties();
-            __mkLogicalDevice(enable_validation_layers);
+            __mkLogicalDevice(enable_vl);
         }
 
 
         /* 
          * Create new vulkan instance for renderer 
          */
-        void __vk_InstanceCreator::__mkInstance(deng_bool_t &enable_validation_layers) {
+        void __vk_InstanceCreator::__mkInstance(deng_bool_t &enable_vl) {
             // Set up Vulkan application info
             VkApplicationInfo appinfo{};
             appinfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -108,17 +108,14 @@ namespace deng {
             instance_createinfo.pApplicationInfo = &appinfo;
 
             // Get all required extensions
-            deng_ui32_t extension_count;
+            deng_ui32_t ext_c;
             
-            const char **extensions;
-            deng_GetRequiredVKSurfaceExt (
-                m_p_win->getWindow(), 
-                (char***) &extensions,
-                &extension_count, 
-                static_cast<int>(enable_validation_layers)
+            const char **extensions = (const char**) m_p_win->findVulkanSurfaceExtensions (
+                &ext_c,
+                enable_vl
             );
 
-            instance_createinfo.enabledExtensionCount = extension_count;
+            instance_createinfo.enabledExtensionCount = ext_c;
             instance_createinfo.ppEnabledExtensionNames = extensions;
             LOG (
                 "Required extensions count is: " + 
@@ -128,10 +125,10 @@ namespace deng {
             VkDebugUtilsMessengerCreateInfoEXT debug_createinfo{};
             
             // Check for validatation layer support
-            if(enable_validation_layers && !__checkValidationLayerSupport())
+            if(enable_vl && !__checkValidationLayerSupport())
                 VK_INSTANCE_ERR("validation layers usage specified, but none are available!");
 
-            else if(enable_validation_layers && __checkValidationLayerSupport()) {
+            else if(enable_vl && __checkValidationLayerSupport()) {
                 // Set up instance info to support validation layers
                 instance_createinfo.enabledLayerCount = 1;
                 instance_createinfo.ppEnabledLayerNames = &m_p_validation_layer;
@@ -144,7 +141,7 @@ namespace deng {
                 debug_createinfo.pfnUserCallback = __vk_InstanceCreator::__debugCallback;
             }
 
-            else if(!enable_validation_layers) {
+            else if(!enable_vl) {
                 // Set up instance info to not support validation layers
                 LOG("Vulkan validation layers are disabled");
                 instance_createinfo.enabledLayerCount = 0;
@@ -157,7 +154,9 @@ namespace deng {
         }
 
 
-        /* Check if Vulkan validation layers are available */
+        /* 
+         * Check if Vulkan validation layers are available 
+         */
         deng_bool_t __vk_InstanceCreator::__checkValidationLayerSupport() {
             deng_ui32_t layer_count;
             vkEnumerateInstanceLayerProperties(&layer_count, NULL);
@@ -177,7 +176,9 @@ namespace deng {
         }
 
 
-        /* Make debug messenger for Vulkan validation layer */
+        /* 
+         * Make debug messenger for Vulkan validation layer 
+         */
         void __vk_InstanceCreator::__mkDebugMessenger() {
             VkDebugUtilsMessengerCreateInfoEXT messenger_createinfo{};
             messenger_createinfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -199,7 +200,9 @@ namespace deng {
         }
 
 
-        /* Callback method for Vulkan validation layer debugging */
+        /* 
+         * Callback method for Vulkan validation layer debugging 
+         */
         VKAPI_ATTR VkBool32 VKAPI_CALL __vk_InstanceCreator::__debugCallback (
             VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, 
             VkDebugUtilsMessageTypeFlagsEXT message_type, 
@@ -211,7 +214,9 @@ namespace deng {
         }
 
         
-        /* Select appropriate graphics device */
+        /* 
+         * Select appropriate graphics device 
+         */
         void __vk_InstanceCreator::__selectPhysicalDevice() {
             deng_ui32_t device_count;
             deng_ui32_t score;
@@ -260,8 +265,10 @@ namespace deng {
         }
 
         
-        /* Create logical Vulkan device */ 
-        void __vk_InstanceCreator::__mkLogicalDevice(deng_bool_t &enable_validation_layers) {
+        /* 
+         * Create logical Vulkan device 
+         */ 
+        void __vk_InstanceCreator::__mkLogicalDevice(deng_bool_t &enable_vl) {
             if (
                 !m_qff.findGraphicsFamily(m_gpu) || 
                 !m_qff.findPresentSupportFamily(m_gpu, m_surface)
@@ -297,7 +304,7 @@ namespace deng {
             logical_device_createinfo.enabledExtensionCount = m_required_extension_names.size();
             logical_device_createinfo.ppEnabledExtensionNames = m_required_extension_names.data();
 
-            if(enable_validation_layers) {
+            if(enable_vl) {
                 logical_device_createinfo.enabledLayerCount = 1;
                 logical_device_createinfo.ppEnabledLayerNames = &m_p_validation_layer;
             }
@@ -327,7 +334,7 @@ namespace deng {
          * Create window surface with deng surface library 
          */
         void __vk_InstanceCreator::__mkWindowSurface() {
-            if(deng_InitVKSurface(m_p_win->getWindow(), &m_instance, &m_surface) != VK_SUCCESS)
+            if(m_p_win->initVkSurface(m_instance, m_surface) != VK_SUCCESS)
                 VK_INSTANCE_ERR("failed to create window surface!");
         }
 

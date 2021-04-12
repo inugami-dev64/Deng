@@ -61,10 +61,14 @@
 set(VULKAN_TEST_TARGET "vk_rnd_test")
 set (
     VULKAN_TEST_SOURCES
-    src/deng/camera.cpp
-    src/deng/key_translation.c
-    src/deng/key_ev.c
+    src/deng/surface/x11_surface.c
+    src/deng/surface/key_translation.c
+    src/deng/surface/key_ev.c
     src/deng/window.cpp
+    src/deng/camera/cam_base.cpp
+    src/deng/camera/ed_cam.cpp
+    src/deng/camera/fpp_cam.cpp
+    src/deng/camera.cpp
     src/deng/vulkan/vulkan_dc.cpp
     src/deng/vulkan/vulkan_desc_c.cpp
     src/deng/vulkan/vulkan_handler.c
@@ -87,7 +91,6 @@ set (
     src/common/uuid.c
     src/das/das_loader.c
     src/das/tex_loader.c
-    src/deng/x11_surface.c
     tests/vulkan/vulkan_test.cpp
 )
 

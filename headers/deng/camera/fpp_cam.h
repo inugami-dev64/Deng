@@ -60,96 +60,146 @@
  */ 
 
 
-#ifndef __VULKAN_DC_H
-#define __VULKAN_DC_H
+#ifndef __FPP_CAM_H
+#define __FPP_CAM_H
 
 
-#ifdef __VULKAN_DC_CPP
-    #include <vector>
-    #include <array>
-    
+#ifdef __FPP_CAM_CPP
+    #include <stdlib.h>
+    #include <mutex>
     #include <vulkan/vulkan.h>
+
     #include <common/base_types.h>
-    #include <common/hashmap.h>
     #include <common/err_def.h>
     #include <das/assets.h>
 
-    #include <math/deng_math.h>
+    #include <math/vec2.h>
+    #include <math/vec3.h>
+    #include <math/vec4.h>
+    #include <math/mat3.h>
+    #include <math/mat4.h>
+    #include <math/projection_mat.h>
+    #include <math/camera_mat.h>
     #include <deng/window.h>
-    #include <deng/vulkan/vulkan_sd.h>
-    #include <deng/vulkan/vulkan_qm.h>
-    #include <deng/vulkan/vulkan_resources.h>
-    #include <deng/vulkan/vulkan_rend_infos.h>
-    #include <deng/vulkan/vulkan_pipelines.h>
+    #include <deng/camera/cam_base.h>
+    #include <utils/timer.h>
 #endif
 
 
 namespace deng {
-    namespace vulkan {
-        /* 
-         * Class for making drawcalls and setting up proper synchronisation 
+    /*
+     * FPPCamera forward declaration
+     */
+    class __FPPCamera;
+
+
+    /* 
+     * Perspective first person camera event class
+     */
+    class __FPPCameraEv : protected __EventBase 
+    {
+    private:
+        dengUtils::Timer m_mov_timer;
+        dengUtils::Timer m_input_mode_timer;
+        dengMath::vec4<deng_vec_t> m_move_speed;
+        dengMath::vec3<deng_MovementEvent> m_movements;
+
+    private:
+        void __findMovements();
+        void __checkForInputModeChange(dengMath::CameraMatrix *p_cm);
+        void __update(__FPPCamera *p_cam);
+        deng_bool_t __keyEvHandler(deng_Key key);
+
+    public:
+        __FPPCameraEv (
+            Window *p_win,
+            const dengMath::vec2<deng_f64_t> &mouse_sens,
+            const dengMath::vec3<deng_vec_t> &camera_mov_speed
+        );
+
+
+        /*
+         * Find the correct movement speed
+         * Parameters for this method are boolean flags about the axis being opposite or not
          */
-        class __vk_DrawCaller {
-        private:
-            std::vector<__vk_Asset> *m_p_assets = NULL;
-            std::vector<__vk_Texture> *m_p_textures = NULL;
-            std::vector<VkFramebuffer> m_framebuffers;
-            std::array<__vk_PipelineData, __DENG_PIPELINE_COUNT> m_pl_data;
-            __vk_QueueManager m_qff;
+        dengMath::vec4<deng_vec_t> getMoveSpeed (
+            deng_bool_t op_x,
+            deng_bool_t op_y,
+            deng_bool_t op_z
+        );
 
-            // Commandpools and commandbuffers
-            VkCommandPool m_cmd_pool;
-            std::vector<VkCommandBuffer> m_cmd_bufs;
 
-        private:
-            void __mkSynchronisation(VkDevice &device);
+        /*
+         * Check for input mode changes and move camera if needed
+         */
+        void updateEv(__FPPCamera *p_cam, deng_bool_t ignore_pitch);
 
-        public:
-            // Needed for synchronising frames
-            size_t current_frame = 0;
-            std::vector<VkFence> flight_fences;
-            std::vector<VkSemaphore> image_available_semaphore_set;
-            std::vector<VkSemaphore> render_finished_semaphore_set;
 
-        public:
-            __vk_DrawCaller (
-                VkDevice device,
-                __vk_QueueManager qff
-            );
-            
-            void setAssetsData (
-                std::vector<__vk_Asset> *p_assets, 
-                std::vector<__vk_Texture> *p_textures
-            );
-            
-            void setMiscData (
-                std::array<__vk_PipelineData, __DENG_PIPELINE_COUNT> pl_data, 
-                std::vector<VkFramebuffer> fb
-            );
+        /*
+         * Set the first person perspective camera bindings
+         */
+        void setBindings(const Camera3DBindings &bindings);
 
-            void mkCommandPool(VkDevice device);
-
-            void allocateMainCmdBuffers (
-                VkDevice device, 
-                VkQueue g_queue, 
-                VkRenderPass renderpass, 
-                VkExtent2D ext,
-                dengMath::vec4<deng_vec_t> background,
-                __vk_BufferData *p_bd
-            );
-
-            void recordMainCmdBuffers (
-                VkRenderPass renderpass,
-                VkExtent2D ext,
-                const dengMath::vec4<deng_vec_t> &background,
-                __vk_BufferData *p_bd
-            );
         
-        public:
-            VkCommandPool getComPool();
-            const std::vector<VkCommandBuffer> &getComBufs();
-        };
-    }
+        /*
+         * Get the pointer to the window instance
+         */
+        Window *getWinPtr();
+
+        
+        /*
+         * Set the window pointer
+         */
+        void setWinPtr(Window *p_win);
+    };
+
+        
+    /* 
+     * First person perspective camera class 
+     */
+    class __FPPCamera : private __FPPCameraEv, public __CameraBase 
+    {
+    private:
+        deng_bool_t m_is_pitch_ignore;
+
+    public:
+        __FPPCamera (
+            const dengMath::vec3<deng_vec_t> &camera_mov_speed_mul, 
+            const dengMath::vec2<deng_f64_t> &mouse_sens, 
+            deng_vec_t fov, 
+            deng_vec_t near_plane, 
+            deng_vec_t far_plane, 
+            deng_bool_t ignore_pitch_mov,
+            Window *p_win
+        );
+
+
+        /* 
+         * FPPCamera wrapper method for event update 
+         */
+        void update(); 
+
+        
+        /*
+         * Set first person camera control bindings
+         */
+        void setBindings(const Camera3DBindings &bindings);
+
+        
+        /*
+         * Check if camera movement system should ignore pitch rotation, when translating
+         * movements into camera coordinate system.
+         */
+        deng_bool_t isPitchIgnore();
+
+        
+        /*
+         * Get the pointer to camera matrix instance
+         */
+        dengMath::CameraMatrix *getCamMatPtr();
+    };
+
+
 }
 
 #endif

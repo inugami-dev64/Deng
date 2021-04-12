@@ -1,3 +1,8 @@
+---
+title: FPPCamera
+date: 2021-04-07
+---
+
 # deng::FPPCamera
 
 C++ specification

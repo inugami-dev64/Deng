@@ -61,7 +61,7 @@
 
 
 #define __DENG_SURFACE_C
-#include <deng/surface_window.h>
+#include <deng/surface/surface_window.h>
 
 // Static X11 exclusive functions
 static void __deng_XInitCursors(deng_SurfaceWindow *p_win);
@@ -91,7 +91,7 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
     win.vc_data.is_enabled = 0;
     win.vc_data.orig_x = (deng_vec_t) width / 2;
     win.vc_data.orig_y = (deng_vec_t) height / 2;
-
+ 
     win.x11_handler.p_display = XOpenDisplay(NULL);
     win.x11_handler.screen = DefaultScreen(win.x11_handler.p_display);
 
@@ -246,7 +246,7 @@ static void __deng_XHandleKeyEvents(deng_SurfaceWindow *p_win) {
             )
         );
 
-        deng_RegisterKeyEvent (
+        __deng_RegisterKeyEvent (
             key, 
             DENG_MOUSE_BTN_UNKNOWN, 
             DENG_INPUT_TYPE_KB, 
@@ -265,7 +265,7 @@ static void __deng_XHandleKeyEvents(deng_SurfaceWindow *p_win) {
                 )
             );
 
-            deng_RegisterKeyEvent (
+            __deng_RegisterKeyEvent (
                 key,
                 DENG_MOUSE_BTN_UNKNOWN,
                 DENG_INPUT_TYPE_KB,
@@ -290,7 +290,7 @@ static void __deng_XHandleMouseEvents(deng_SurfaceWindow *p_win) {
     {
     case ButtonPress: {
         btn = translateX11Btn(p_win->x11_handler.event.xbutton.button);
-        deng_RegisterKeyEvent (
+        __deng_RegisterKeyEvent (
             DENG_KEY_UNKNOWN, 
             btn, 
             DENG_INPUT_TYPE_MOUSE, 
@@ -303,7 +303,7 @@ static void __deng_XHandleMouseEvents(deng_SurfaceWindow *p_win) {
     case ButtonRelease:
         btn = translateX11Btn(p_win->x11_handler.event.xbutton.button);
         
-        deng_RegisterKeyEvent (
+        __deng_RegisterKeyEvent (
             DENG_KEY_UNKNOWN,
             btn,
             DENG_INPUT_TYPE_MOUSE,
@@ -317,6 +317,9 @@ static void __deng_XHandleMouseEvents(deng_SurfaceWindow *p_win) {
 }
 
 
+/*
+ * Force mouse cursor to certain location on window
+ */
 void deng_SetMouseCoords (
     deng_SurfaceWindow *p_win, 
     deng_i32_t x, 
@@ -337,7 +340,7 @@ void deng_SetMouseCoords (
 
 
 /*
- * Get mouse position data from X11
+ * Synchronise mouse position in deng_SurfaceWindow
  */
 void deng_GetMousePos (
     deng_SurfaceWindow *p_win, 
@@ -362,9 +365,6 @@ void deng_GetMousePos (
     if(p_win->vc_data.is_enabled && !init_vc) {
         deng_f64_t movement_x = (deng_f64_t) ((deng_px_t) x - p_win->vc_data.orig_x);
         deng_f64_t movement_y = (deng_f64_t) ((deng_px_t) y - p_win->vc_data.orig_y);
-
-        movement_x *= __x_sens;
-        movement_y *= __y_sens;
 
         if
         (
@@ -410,13 +410,13 @@ void deng_GetMousePos (
     else {
         p_win->mx = (deng_px_t) x;
         p_win->my = (deng_px_t) y;
-        if(init_vc) {
-            deng_SetMouseCoords (
-                p_win, 
-                p_win->vc_data.orig_x,
-                p_win->vc_data.orig_y
-            );
-        }
+        /*if(init_vc) {*/
+            /*deng_SetMouseCoords (*/
+                /*p_win, */
+                /*p_win->vc_data.orig_x,*/
+                /*p_win->vc_data.orig_y*/
+            /*);*/
+        /*}*/
     }
 }
 
@@ -445,18 +445,9 @@ static void __deng_XSetCursor (
 }
 
 
-/* Error callback function for xlib */
-int __ErrorHandler (
-    Display *display,
-    XErrorEvent *err_ev
-) {
-    printf("Loop end\n");
-    __is_running = false;
-
-    return EXIT_FAILURE;
-}
-
-
+/*
+ * Switch mouse cursor behaviour within the DENG window 
+ */
 void deng_SetMouseCursorMode (
     deng_SurfaceWindow *p_win, 
     deng_MouseMode mouse_mode
@@ -473,8 +464,12 @@ void deng_SetMouseCursorMode (
             p_win, 
             true
         );
-        p_win->vc_data.x = p_win->vc_data.x / 2;
-        p_win->vc_data.y = p_win->vc_data.y / 2;
+
+        deng_SetMouseCoords (
+            p_win,
+            p_win->vc_data.orig_x, 
+            p_win->vc_data.orig_y
+        );
 
         p_win->vc_data.is_enabled = true;
         break;
@@ -492,7 +487,11 @@ void deng_SetMouseCursorMode (
     }
 }
 
-/* Update the window and recieve new key presses if needed */
+
+/*
+ * Update window events and key arrays
+ * This function is meant to be called with every loop iteration 
+ */
 void deng_UpdateWindow(deng_SurfaceWindow *p_win) {
     // Check for exit event
     if
@@ -508,7 +507,7 @@ void deng_UpdateWindow(deng_SurfaceWindow *p_win) {
         return;
     }
 
-    deng_UnreleaseKeys();
+    __deng_UnreleaseKeys();
     
     if
     (
@@ -532,6 +531,9 @@ void deng_UpdateWindow(deng_SurfaceWindow *p_win) {
 }
 
 
+/*
+ * Destroy window instance and free all resources that were used
+ */
 void deng_DestroyWindow(deng_SurfaceWindow *p_win) {
     XFreeGC (
         p_win->x11_handler.p_display, 
@@ -547,7 +549,8 @@ void deng_DestroyWindow(deng_SurfaceWindow *p_win) {
 
 
 /*
- * VCP mode control variable setters
+ * Limit the largest and smallest virtual cursor position that can be achieved using 
+ * virtual mouse positioning
  */
 void deng_LimitVirtualPos (
     deng_px_t max_x,        
@@ -562,6 +565,10 @@ void deng_LimitVirtualPos (
 }
 
 
+/*
+ * Set virtual mouse position overflow actions that specify what
+ * should happen if virtual mouse position limit has been reached
+ */
 void deng_SetOverflowAction (
     deng_VCPOverflowAction x_overflow_act,
     deng_VCPOverflowAction y_overflow_act
@@ -571,15 +578,9 @@ void deng_SetOverflowAction (
 }
 
 
-void deng_SetVCSens (
-    deng_f64_t x_sens,
-    deng_f64_t y_sens
-) {
-    __x_sens = x_sens;
-    __y_sens = y_sens;
-}
-
-
+/*
+ * Check if window is still running and no close events have happened
+ */
 deng_bool_t deng_IsRunning() {
     return __is_running;
 }

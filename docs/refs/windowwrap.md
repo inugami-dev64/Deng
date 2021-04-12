@@ -1,3 +1,8 @@
+---
+title: WindowWrap
+date: 2021-04-07
+---
+
 # deng::WindowWrap
 
 C++ specification

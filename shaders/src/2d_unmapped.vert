@@ -66,8 +66,8 @@
 const uint ortho_cam_mode = 0x00000004u;
 
 layout(binding = 0) uniform UniformData {
+    mat4 transform;
     mat4 view;
-    mat4 projection;
     uint ubo_flag_bits;
 } ubo;
 

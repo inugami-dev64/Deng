@@ -60,96 +60,144 @@
  */ 
 
 
-#ifndef __VULKAN_DC_H
-#define __VULKAN_DC_H
+#ifndef __ED_CAM_H
+#define __ED_CAM_H
 
 
-#ifdef __VULKAN_DC_CPP
-    #include <vector>
-    #include <array>
-    
+#ifdef __ED_CAM_CPP
+    #include <stdlib.h>
+    #include <mutex>
+    #include <cmath>
     #include <vulkan/vulkan.h>
+
     #include <common/base_types.h>
-    #include <common/hashmap.h>
     #include <common/err_def.h>
     #include <das/assets.h>
 
-    #include <math/deng_math.h>
+    #include <math/vec2.h>
+    #include <math/vec3.h>
+    #include <math/vec4.h>
+    #include <math/mat3.h>
+    #include <math/mat4.h>
+    #include <math/conversion.h>
+    #include <math/projection_mat.h>
+    #include <math/camera_mat.h>
     #include <deng/window.h>
-    #include <deng/vulkan/vulkan_sd.h>
-    #include <deng/vulkan/vulkan_qm.h>
-    #include <deng/vulkan/vulkan_resources.h>
-    #include <deng/vulkan/vulkan_rend_infos.h>
-    #include <deng/vulkan/vulkan_pipelines.h>
+    #include <deng/camera/cam_base.h>
 #endif
 
-
 namespace deng {
-    namespace vulkan {
-        /* 
-         * Class for making drawcalls and setting up proper synchronisation 
+    
+    /*
+     * Event handler class for editor camera
+     */
+    class __EditorCameraEv : protected __EventBase {
+    private:
+        deng_EditorCameraEvent m_editor_cam_ev;
+        dengMath::vec2<deng_f64_t> m_last_rot = {0, 0};
+        deng_vec_t m_zoom_step;
+        deng_bool_t m_is_rot_cur = false;
+
+    protected:
+        /*
+         * Set the default camera rotation and position values
          */
-        class __vk_DrawCaller {
-        private:
-            std::vector<__vk_Asset> *m_p_assets = NULL;
-            std::vector<__vk_Texture> *m_p_textures = NULL;
-            std::vector<VkFramebuffer> m_framebuffers;
-            std::array<__vk_PipelineData, __DENG_PIPELINE_COUNT> m_pl_data;
-            __vk_QueueManager m_qff;
+        void __initCamera (
+            dengMath::CameraMatrix *p_vm,
+            const dengMath::vec4<deng_vec_t> &origin
+        );
 
-            // Commandpools and commandbuffers
-            VkCommandPool m_cmd_pool;
-            std::vector<VkCommandBuffer> m_cmd_bufs;
+    public:
+        __EditorCameraEv (
+            const dengMath::vec2<deng_f64_t> &mouse_sens,
+            deng_vec_t zoom_step,
+            const dengMath::vec3<deng_vec_t> &origin,
+            Window *p_ww
+        );
 
-        private:
-            void __mkSynchronisation(VkDevice &device);
-
-        public:
-            // Needed for synchronising frames
-            size_t current_frame = 0;
-            std::vector<VkFence> flight_fences;
-            std::vector<VkSemaphore> image_available_semaphore_set;
-            std::vector<VkSemaphore> render_finished_semaphore_set;
-
-        public:
-            __vk_DrawCaller (
-                VkDevice device,
-                __vk_QueueManager qff
-            );
-            
-            void setAssetsData (
-                std::vector<__vk_Asset> *p_assets, 
-                std::vector<__vk_Texture> *p_textures
-            );
-            
-            void setMiscData (
-                std::array<__vk_PipelineData, __DENG_PIPELINE_COUNT> pl_data, 
-                std::vector<VkFramebuffer> fb
-            );
-
-            void mkCommandPool(VkDevice device);
-
-            void allocateMainCmdBuffers (
-                VkDevice device, 
-                VkQueue g_queue, 
-                VkRenderPass renderpass, 
-                VkExtent2D ext,
-                dengMath::vec4<deng_vec_t> background,
-                __vk_BufferData *p_bd
-            );
-
-            void recordMainCmdBuffers (
-                VkRenderPass renderpass,
-                VkExtent2D ext,
-                const dengMath::vec4<deng_vec_t> &background,
-                __vk_BufferData *p_bd
-            );
         
-        public:
-            VkCommandPool getComPool();
-            const std::vector<VkCommandBuffer> &getComBufs();
-        };
-    }
+        /*
+         * Check if any camera events have occured
+         */
+        void findEditorEvent();
+
+
+        /*
+         * Zoom in the editor camera 
+         */
+        void zoomIn(dengMath::CameraMatrix *p_vm);
+
+
+        /*
+         * Zoom out the editor camera
+         */
+        void zoomOut(dengMath::CameraMatrix *p_vm);
+        
+
+        /*
+         * Main update method for editor camera system
+         */
+        void updateEv (
+            dengMath::vec3<deng_vec_t> origin,
+            dengMath::CameraMatrix *p_vm
+        );
+
+
+        /*
+         * Set the editor camera bindings
+         */
+        void setBindings(const Camera3DBindings &bindings);
+
+        
+        /*
+         * Get the pointer to the window instance
+         */
+        Window *getWinPtr();
+
+        
+        /*
+         * Set the window pointer
+         */
+        void setWinPtr(Window *p_win);
+    };
+
+
+    /*
+     * Main class for editor camera instance creation
+     */
+    class __EditorCamera : private __EditorCameraEv, public __CameraBase {
+    private:
+        dengMath::vec3<deng_vec_t> m_origin;
+
+    public:
+        __EditorCamera (
+            deng_vec_t zoom_step,
+            const dengMath::vec3<deng_vec_t> &origin,
+            const dengMath::vec2<deng_f64_t> &mouse_sens,
+            deng_vec_t FOV,
+            deng_vec_t near_plane,
+            deng_vec_t far_plane,
+            Window *p_ww
+        );
+        
+
+        /*
+         * Move origin point in world coordinate system by delta_mov
+         */
+        void moveOrigin(const dengMath::vec3<deng_vec_t> &delta_mov); 
+
+        
+        /*
+         * Set camera control bindings for editor camera system
+         */
+        void setBindings(const Camera3DBindings &bindings);
+
+
+        /*
+         * Wrapper method for updating camera events
+         */
+        void update();
+    };
 }
 
 #endif

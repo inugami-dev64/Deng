@@ -1,4 +1,9 @@
-# deng_RendererHintBits
+---
+title: deng\_RendererHintBits
+date: 2021-04-07
+---
+
+# deng\_RendererHintBits
 
 C / C++ specification
 

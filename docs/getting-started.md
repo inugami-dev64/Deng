@@ -1,3 +1,8 @@
+---
+title: started with DENG
+date: 2021-04-07
+---
+
 # Getting started with DENG
 
 Configuring DENG for your project is the first and the most important step of developing with DENG.   

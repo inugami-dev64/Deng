@@ -65,6 +65,7 @@
 
 #ifdef __VULKAN_RENDERER_CPP
     #include <vector>
+    #include <mutex>
     #include <array>
     
     #include <vulkan/vulkan.h>
@@ -74,8 +75,9 @@
     #include <das/assets.h>
 
     #include <math/deng_math.h>
-    #include <deng/surface_window.h>
     #include <deng/window.h>
+    #include <utils/timer.h>
+    #include <deng/camera.h>
     #include <deng/vulkan/vulkan_qm.h>
     #include <deng/vulkan/vulkan_sd.h>
     #include <deng/vulkan/vulkan_resources.h>
@@ -156,15 +158,8 @@ namespace deng {
             deng_bool_t enable_validation_layers = false;
             deng_bool_t gui_count_fps = false;
             deng_bool_t cli_count_fps = false;
-            deng_vec_t near_plane;
-            deng_vec_t far_plane;
             dengMath::vec4<deng_vec_t> background = {0.0f, 0.0f, 0.0f, 1.0f};
-
-
-            // This is the currently used camera instance which can be changed
-            // in Lua scripts in the future
-            void *p_camera = NULL;
-            deng_CameraType cam_type;
+            deng::Camera3D *p_cam;
         };
 
 

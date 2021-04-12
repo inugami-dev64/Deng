@@ -103,18 +103,9 @@ namespace dengMath {
         vec4<deng_vec_t> m_ts = (vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, 0.0f};
         vec4<deng_vec_t> m_fs = (vec4<deng_vec_t>) {0.0f, 0.0f, -1.0f, 0.0f};
 
-        /*
-         * Camera coordinate system coordinates in relation to the world coordinates
-         */
-        vec4<deng_vec_t> m_u, m_w, m_v;
-
+        // Camera coordinate specific rotation matrices
         mat4<deng_vec_t> m_rot_x_mat;
         mat4<deng_vec_t> m_rot_y_mat;
-        mat4<deng_vec_t> m_rot_x_mat_ut;
-        mat4<deng_vec_t> m_rot_y_mat_ut;
-        
-        mat4<deng_vec_t> m_delta_rot_x;
-        mat4<deng_vec_t> m_delta_rot_y;
 
     public:
         CameraMatrix(deng_CameraType type);
@@ -131,6 +122,8 @@ namespace dengMath {
          */
         void moveCamera (
             const vec3<deng_vec_t> &mov_speed, 
+            deng_bool_t is_world,
+            deng_bool_t ignore_pitch,
             const deng_CoordinateAxisType &movement_type
         );
 
@@ -147,7 +140,7 @@ namespace dengMath {
         /*
          * Set new rotation for the camera relative to its origin point in world coordinates
          */
-        void setPointRotation (
+        void setOriginRotation (
             dengMath::vec3<deng_vec_t> point,
             deng_vec_t x_rot,
             deng_vec_t y_rot

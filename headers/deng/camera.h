@@ -60,243 +60,132 @@
  */ 
 
 
-#ifndef CAMERA_H
-#define CAMERA_H
+#ifndef __CAMERA_H
+#define __CAMERA_H
 
 #ifdef __CAMERA_CPP
-    #include <iostream>
-    #include <vector>
+    #define __DENG_DEFAULT_ZOOM_STEP 0.1f
+    
     #include <mutex>
-    #include <string.h>
-    #include <string>
-    #include <math.h>
-    #include <array>
-    #include <vulkan/vulkan.h>
-
+    #include <cstring>
     #include <common/base_types.h>
-    #include <common/err_def.h>
-    #include <common/common.h>
-    #include <common/hashmap.h>
+    #include <vulkan/vulkan.h>
     #include <das/assets.h>
 
-    #include <deng/forward_dec.h>
-    #include <deng/surface_window.h>
-    #include <math/deng_math.h>
+    #include <deng/surface/key_definitions.h>
+    #include <deng/surface/key_ev.h>
+    #include <math/vec2.h>
+    #include <math/vec3.h>
+    #include <math/vec4.h>
+    #include <math/mat3.h>
+    #include <math/mat4.h>
+    #include <math/projection_mat.h>
+    #include <math/camera_mat.h>
+    #include <common/err_def.h>
     #include <deng/window.h>
-
-    #include <deng/vulkan/vulkan_qm.h>
-    #include <deng/vulkan/vulkan_resources.h>
-    #include <deng/vulkan/vulkan_rend_infos.h>
-    #include <utils/font.h>
-    #include <utils/collision.h>
     #include <utils/timer.h>
 #endif
 
+
+#include <deng/camera/cam_base.h>
+#include <deng/camera/ed_cam.h>
+#include <deng/camera/tpp_cam.h>
+#include <deng/camera/fpp_cam.h>
+
+
 namespace deng {
-    /*
-     * Data struct for sharing mouse coordinates data
-     * between multiple threads
-     */
-    struct __SharedMouseData {
-        std::mutex mut;
-        dengMath::vec2<deng_px_t> mouse_coords;
-        deng_bool_t is_mouse_input;
-    };
-
 
     /*
-     * Parent struct for every camera class
+     * DENG engine camera handling class
+     * This class is universal and it can be used to create first person, editor and third person
+     * camera systems
      */
-    struct CameraBase {
-        Window *m_p_ww = NULL;
-        deng_vec_t m_draw_distance;
-        deng_vec_t m_FOV; // Radians
-    };
-
-    
-    /*
-     * Base parent class for camera event classes
-     * This class contains methods mainly for handling mouse position and its usage
-     */
-    class EventBase {
-    public:
-        dengMath::vec2<deng_f64_t> m_mouse_pos;
-        dengMath::vec2<deng_f64_t> m_mouse_sens;
-        dengMath::vec2<deng_VCPOverflowAction> m_vcp_overflow;
-        dengMath::vec2<dengMath::vec2<deng_f64_t>> m_vc_bounds;
-        dengMath::vec2<deng_f64_t> m_max_rot;
-
-    public:
-        EventBase (
-            const dengMath::vec2<deng_f64_t> &mouse_sens,
-            const dengMath::vec2<deng_VCPOverflowAction> &vcp_act,
-            const dengMath::vec2<dengMath::vec2<deng_f64_t>> &vc_bounds,
-            const dengMath::vec2<deng_f64_t> &max_rot
-        );
-
-        void updateMouseEvData(Window *p_ww);
-        dengMath::vec2<deng_f64_t> getMouseRotation();
-        void getMousePositionFromRot (
-            Window *p_ww,
-            dengMath::vec2<deng_f64_t> rot
-        );
-    };
-
-
-    // First person camera mouse input mode change callback function type
-    // Parameters: current virtual position
-    typedef void(*FPPInputChangeCallback) (const dengMath::vec2<deng_f64_t> &vcp);
-
-    /*
-     * FPPCamera forward declaration
-     */
-    class FPPCamera;
-
-    /* 
-     * Perspective first person camera event classe 
-     */
-    class FPPCameraEv : private EventBase {
+    class Camera3D {
     private:
-        dengUtils::Timer m_mov_timer;
-        dengUtils::Timer m_input_mode_timer;
-        dengMath::vec4<deng_vec_t> m_move_speed;
-        dengMath::vec3<deng_MovementEvent> m_movements;
-        FPPInputChangeCallback m_input_disable_callback;
-        FPPInputChangeCallback m_input_enable_callback;
-
-    private:
-        void findMovements(Window *p_ww);
-        void checkForInputModeChange (
-            Window *p_ww,
-            dengMath::CameraMatrix *p_vm
-        );
-
-        void update (
-            Window *p_ww, 
-            FPPCamera *p_cam
-        );
-
-        deng_bool_t keyEvHandler(deng_Key key);
+        __FPPCamera *p_fpp_cam = NULL;
+        __EditorCamera *p_ed_cam = NULL;
+        Window *m_p_win;
+        deng_CameraType m_cam_type;
 
     public:
-        FPPCameraEv (
-            Window *p_ww,
-            const dengMath::vec2<deng_f64_t> &mouse_sens,
-            const dengMath::vec3<deng_vec_t> &camera_mov_speed,
-            dengMath::CameraMatrix *p_vm,
-			FPPInputChangeCallback mov_disable_callback,
-			FPPInputChangeCallback mov_enable_callback
+        Camera3D (
+            deng_CameraType cam_type,
+            deng_vec_t fov,
+            const dengMath::vec2<deng_vec_t> &planes,
+            const dengMath::vec3<deng_vec_t> &mov_speed,
+            const dengMath::vec2<deng_f64_t> &rot_sens,
+            deng_bool_t ignore_pitch_rot,
+            Window *win
         );
 
-        void updateEv (
-            Window *p_ww, 
-            FPPCamera *p_cam
+
+        /*
+         * Set the camera key bindings
+         * NOTE: These bindings are the ones that control camera movement and rotation actions
+         */
+        void setBindings(const Camera3DBindings &bindings);
+
+
+        /*
+         * Move camera's origin in world space by delta_mov
+         * NOTE: This method only effects editor camera and third person perspective camera
+         * systems. If camera type is first person perspective then runtime exception is thrown
+         */
+        void moveOrigin(const dengMath::vec3<deng_vec_t> &delta_mov);
+
+
+        /*
+         * Move camera's position by delta_mov in camera's coordinate system
+         */
+        void moveCameraPOVC (
+            const dengMath::vec3<deng_vec_t> &delta_mov,
+            deng_bool_t ignore_pitch
         );
 
-        dengMath::vec4<deng_vec_t> getMoveSpeed (
-            deng_bool_t op_x,
-            deng_bool_t op_y,
-            deng_bool_t op_z
-        );
-    };
 
-        
-    /* First person perspective camera class */
-    class FPPCamera : private FPPCameraEv, private CameraBase {
-    public:
-        dengMath::CameraMatrix view_matrix;
-        dengMath::ProjectionMatrix *p_projection_matrix;
-
-    public:
-        FPPCamera (
-            const dengMath::vec3<deng_vec_t> &camera_mov_speed_mul, 
-            const dengMath::vec2<deng_f64_t> &mouse_sens, 
-            deng_vec_t FOV, 
-            deng_vec_t near_plane, 
-            deng_vec_t far_plane, 
-			FPPInputChangeCallback mov_disable_callback,
-			FPPInputChangeCallback mov_enable_callback,
-            Window *p_ww
-        );
-        ~FPPCamera();
-
-        // Move camera position according to its coordinates
-        void moveW();
-        void moveRW();
-        void moveU();
-        void moveRU();
-        void moveV();
-        void moveRV();
-
-        // Wrapper around event update
-        void update(); 
-    };
-
-
-    /*
-     * Event handler class for editor camera
-     */
-    class EditorCameraEv : private EventBase {
-    private:
-        deng_EditorCameraEvent m_editor_cam_ev;
-        dengMath::vec2<deng_f64_t> m_last_rot = {0, 0};
-        deng_vec_t m_zoom_step;
-        deng_bool_t m_is_rot_cur = false;
-
-    public:
-        EditorCameraEv (
-            dengMath::vec2<deng_f64_t> mouse_sens,
-            deng_vec_t zoom_step,
-            dengMath::vec3<deng_vec_t> origin,
-            Window *p_ww,
-            dengMath::CameraMatrix *p_vm
-        );
-        void findEditorEvent(Window *p_ww);
-
-        void zoomIn (
-            Window *p_ww,
-            dengMath::CameraMatrix *p_vm
+        /*
+         * Move camera's position in world coordinate system
+         */
+        void moveCameraPOVW (
+            const dengMath::vec3<deng_vec_t> &delta_mov,
+            deng_bool_t ignore_pitch
         );
 
-        void zoomOut ( 
-            Window *p_ww,
-            dengMath::CameraMatrix *p_vm
-        );
-        
-        void updateEv (
-            Window *p_ww,
-            dengMath::vec3<deng_vec_t> origin,
-            dengMath::CameraMatrix *p_vm
-        );
-    };
+
+        /*
+         * Rotate camera's position by rot in camera's coordinate system
+         */
+        void rotCameraPOVC(const dengMath::vec2<deng_vec_t> &rot);
 
 
-    /*
-     * Main class for editor camera instance creation
-     */
-    class EditorCamera : private EditorCameraEv, private CameraBase {
-    private:
-        dengMath::vec3<deng_vec_t> m_origin;
+        /*
+         * Rotate camera's position by rot in world's coordinate system
+         */
+        void rotCameraPOVW(const dengMath::vec2<deng_vec_t> &rot);
 
-    public:
-        dengMath::CameraMatrix view_matrix;
-        dengMath::ProjectionMatrix *p_projection_matrix;
 
-    public:
-        EditorCamera (
-            deng_vec_t zoom_step,
-            const dengMath::vec3<deng_vec_t> &origin,
-            const dengMath::vec2<deng_f64_t> &mouse_sens,
-            deng_vec_t FOV,
-            deng_vec_t near_plane,
-            deng_vec_t far_plane,
-            Window *p_ww
-        );
-
-        ~EditorCamera();
-        
-        // Wrapper around event update
+        /*
+         * Main camera system update method
+         */
         void update();
+
+        
+        /*
+         * Get the camera type of the current camera instance
+         */
+        deng_CameraType getType();
+
+
+        /*
+         * Get the dot product of camera's view and projection matrix
+         */
+        dengMath::mat4<deng_vec_t> getCameraMat();
+
+
+        /*
+         * Get the bare camera view matrix
+         */
+        dengMath::mat4<deng_vec_t> getViewMat();
     };
 }
 

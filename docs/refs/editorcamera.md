@@ -1,3 +1,8 @@
+---
+title: EditorCamera
+date: 2021-04-07
+---
+
 # deng::EditorCamera
 
 C++ specification

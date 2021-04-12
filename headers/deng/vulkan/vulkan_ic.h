@@ -75,7 +75,7 @@
 
     #include <das/assets.h>
     #include <math/deng_math.h>
-    #include <deng/surface_window.h>
+    #include <deng/surface/surface_window.h>
     #include <deng/window.h>
 
     #include <deng/vulkan/vulkan_surface.h>
@@ -101,16 +101,18 @@ namespace deng {
             VkSampleCountFlagBits m_max_sample_count;
             VkPhysicalDeviceLimits m_dev_limits;
             const char *m_p_validation_layer = "VK_LAYER_KHRONOS_validation";
+            friend class deng::Window;
 
         private:
-            void __mkInstance(deng_bool_t &enable_validation_layers);
+            void __mkInstance(deng_bool_t &enable_vl);
             deng_bool_t __checkValidationLayerSupport();
             void __findSupportedProperties();
             void __mkDebugMessenger();
             void __selectPhysicalDevice();
-            void __mkLogicalDevice(deng_bool_t &enable_validation_layers);
+            void __mkLogicalDevice(deng_bool_t &enable_vl);
             void __mkWindowSurface();
 
+            
             // Debug messenger
             VkResult __mkDebugMessenger (
                 const VkDebugUtilsMessengerCreateInfoEXT *p_msg_createinfo
@@ -126,7 +128,7 @@ namespace deng {
         public:
             __vk_InstanceCreator (
                 Window *p_window_wrap, 
-                deng_bool_t enable_validation_layers
+                deng_bool_t enable_vl
             );
 
             static void destroyDebugUtils (
