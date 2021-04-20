@@ -13,19 +13,19 @@ endif
 ifeq ($(config),debug_win32)
   RESCOMP = windres
   TARGETDIR = build
-  TARGET = $(TARGETDIR)/dam
-  OBJDIR = obj/Win32/Debug/dam
-  DEFINES +=
-  INCLUDES += -Iheaders -Imodules/freetype/include -Imodules/freetype/include/freetype
+  TARGET = $(TARGETDIR)/libfreetype.so
+  OBJDIR = obj/Win32/Debug/freetype
+  DEFINES += -DFT2_BUILD_LIBRARY
+  INCLUDES += -Iheaders -Imodules/freetype/include/freetype -Imodules/freetype/include
   FORCE_INCLUDE +=
   ALL_CPPFLAGS += $(CPPFLAGS) -MMD -MP $(DEFINES) $(INCLUDES)
-  ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS)
-  ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -std=c++11
+  ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O2 -fPIC
+  ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O2 -fPIC
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
   LIBS +=
   LDDEPS +=
-  ALL_LDFLAGS += $(LDFLAGS) -s
-  LINKCMD = $(CXX) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
+  ALL_LDFLAGS += $(LDFLAGS) -shared -Wl,-soname=libfreetype.so -s
+  LINKCMD = $(CC) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
   endef
   define PRELINKCMDS
@@ -40,19 +40,19 @@ endif
 ifeq ($(config),debug_linux)
   RESCOMP = windres
   TARGETDIR = build
-  TARGET = $(TARGETDIR)/dam
-  OBJDIR = obj/Linux/Debug/dam
-  DEFINES +=
-  INCLUDES += -Iheaders -Imodules/freetype/include -Imodules/freetype/include/freetype
+  TARGET = $(TARGETDIR)/libfreetype.so
+  OBJDIR = obj/Linux/Debug/freetype
+  DEFINES += -DFT2_BUILD_LIBRARY
+  INCLUDES += -Iheaders -Imodules/freetype/include/freetype -Imodules/freetype/include
   FORCE_INCLUDE +=
   ALL_CPPFLAGS += $(CPPFLAGS) -MMD -MP $(DEFINES) $(INCLUDES)
-  ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS)
-  ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -std=c++11
+  ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O2 -fPIC
+  ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O2 -fPIC
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
   LIBS +=
   LDDEPS +=
-  ALL_LDFLAGS += $(LDFLAGS) -s
-  LINKCMD = $(CXX) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
+  ALL_LDFLAGS += $(LDFLAGS) -shared -Wl,-soname=libfreetype.so -s
+  LINKCMD = $(CC) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
   endef
   define PRELINKCMDS
@@ -67,19 +67,19 @@ endif
 ifeq ($(config),release_win32)
   RESCOMP = windres
   TARGETDIR = build
-  TARGET = $(TARGETDIR)/dam
-  OBJDIR = obj/Win32/Release/dam
-  DEFINES +=
-  INCLUDES += -Iheaders -Imodules/freetype/include -Imodules/freetype/include/freetype
+  TARGET = $(TARGETDIR)/libfreetype.so
+  OBJDIR = obj/Win32/Release/freetype
+  DEFINES += -DFT2_BUILD_LIBRARY
+  INCLUDES += -Iheaders -Imodules/freetype/include/freetype -Imodules/freetype/include
   FORCE_INCLUDE +=
   ALL_CPPFLAGS += $(CPPFLAGS) -MMD -MP $(DEFINES) $(INCLUDES)
-  ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS)
-  ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -std=c++11
+  ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O2 -fPIC
+  ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O2 -fPIC
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
   LIBS +=
   LDDEPS +=
-  ALL_LDFLAGS += $(LDFLAGS) -s
-  LINKCMD = $(CXX) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
+  ALL_LDFLAGS += $(LDFLAGS) -shared -Wl,-soname=libfreetype.so -s
+  LINKCMD = $(CC) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
   endef
   define PRELINKCMDS
@@ -94,19 +94,19 @@ endif
 ifeq ($(config),release_linux)
   RESCOMP = windres
   TARGETDIR = build
-  TARGET = $(TARGETDIR)/dam
-  OBJDIR = obj/Linux/Release/dam
-  DEFINES +=
-  INCLUDES += -Iheaders -Imodules/freetype/include -Imodules/freetype/include/freetype
+  TARGET = $(TARGETDIR)/libfreetype.so
+  OBJDIR = obj/Linux/Release/freetype
+  DEFINES += -DFT2_BUILD_LIBRARY
+  INCLUDES += -Iheaders -Imodules/freetype/include/freetype -Imodules/freetype/include
   FORCE_INCLUDE +=
   ALL_CPPFLAGS += $(CPPFLAGS) -MMD -MP $(DEFINES) $(INCLUDES)
-  ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS)
-  ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -std=c++11
+  ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O2 -fPIC
+  ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O2 -fPIC
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
   LIBS +=
   LDDEPS +=
-  ALL_LDFLAGS += $(LDFLAGS) -s
-  LINKCMD = $(CXX) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
+  ALL_LDFLAGS += $(LDFLAGS) -shared -Wl,-soname=libfreetype.so -s
+  LINKCMD = $(CC) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
   endef
   define PRELINKCMDS
@@ -119,13 +119,15 @@ all: prebuild prelink $(TARGET)
 endif
 
 OBJECTS := \
-	$(OBJDIR)/common.o \
-	$(OBJDIR)/hashmap.o \
-	$(OBJDIR)/uuid.o \
-	$(OBJDIR)/dam.o \
-	$(OBJDIR)/das_loader.o \
-	$(OBJDIR)/tex_loader.o \
-	$(OBJDIR)/wavefront_obj.o \
+	$(OBJDIR)/ftbase.o \
+	$(OBJDIR)/ftbbox.o \
+	$(OBJDIR)/ftbitmap.o \
+	$(OBJDIR)/ftdebug.o \
+	$(OBJDIR)/ftglyph.o \
+	$(OBJDIR)/ftinit.o \
+	$(OBJDIR)/ftsystem.o \
+	$(OBJDIR)/sfnt.o \
+	$(OBJDIR)/winfnt.o \
 
 RESOURCES := \
 
@@ -140,7 +142,7 @@ ifeq (/bin,$(findstring /bin,$(SHELL)))
 endif
 
 $(TARGET): $(GCH) ${CUSTOMFILES} $(OBJECTS) $(LDDEPS) $(RESOURCES)
-	@echo Linking dam
+	@echo Linking freetype
 ifeq (posix,$(SHELLTYPE))
 	$(SILENT) mkdir -p $(TARGETDIR)
 else
@@ -150,7 +152,7 @@ endif
 	$(POSTBUILDCMDS)
 
 clean:
-	@echo Cleaning dam
+	@echo Cleaning freetype
 ifeq (posix,$(SHELLTYPE))
 	$(SILENT) rm -f  $(TARGET)
 	$(SILENT) rm -rf $(OBJDIR)
@@ -174,10 +176,10 @@ ifeq (posix,$(SHELLTYPE))
 else
 	$(SILENT) mkdir $(subst /,\\,$(OBJDIR))
 endif
-	$(SILENT) $(CXX) -x c++-header $(ALL_CXXFLAGS) -o "$@" -MF "$(@:%.gch=%.d)" -c "$<"
+	$(SILENT) $(CC) -x c-header $(ALL_CFLAGS) -o "$@" -MF "$(@:%.gch=%.d)" -c "$<"
 endif
 
-$(OBJDIR)/common.o: src/common/common.c
+$(OBJDIR)/ftbase.o: modules/freetype/src/base/ftbase.c
 	@echo $(notdir $<)
 ifeq (posix,$(SHELLTYPE))
 	$(SILENT) mkdir -p $(OBJDIR)
@@ -185,7 +187,7 @@ else
 	$(SILENT) mkdir $(subst /,\\,$(OBJDIR))
 endif
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/hashmap.o: src/common/hashmap.c
+$(OBJDIR)/ftbbox.o: modules/freetype/src/base/ftbbox.c
 	@echo $(notdir $<)
 ifeq (posix,$(SHELLTYPE))
 	$(SILENT) mkdir -p $(OBJDIR)
@@ -193,7 +195,7 @@ else
 	$(SILENT) mkdir $(subst /,\\,$(OBJDIR))
 endif
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/uuid.o: src/common/uuid.c
+$(OBJDIR)/ftbitmap.o: modules/freetype/src/base/ftbitmap.c
 	@echo $(notdir $<)
 ifeq (posix,$(SHELLTYPE))
 	$(SILENT) mkdir -p $(OBJDIR)
@@ -201,15 +203,7 @@ else
 	$(SILENT) mkdir $(subst /,\\,$(OBJDIR))
 endif
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/dam.o: src/das/dam.cpp
-	@echo $(notdir $<)
-ifeq (posix,$(SHELLTYPE))
-	$(SILENT) mkdir -p $(OBJDIR)
-else
-	$(SILENT) mkdir $(subst /,\\,$(OBJDIR))
-endif
-	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/das_loader.o: src/das/das_loader.c
+$(OBJDIR)/ftdebug.o: modules/freetype/src/base/ftdebug.c
 	@echo $(notdir $<)
 ifeq (posix,$(SHELLTYPE))
 	$(SILENT) mkdir -p $(OBJDIR)
@@ -217,7 +211,7 @@ else
 	$(SILENT) mkdir $(subst /,\\,$(OBJDIR))
 endif
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/tex_loader.o: src/das/tex_loader.c
+$(OBJDIR)/ftglyph.o: modules/freetype/src/base/ftglyph.c
 	@echo $(notdir $<)
 ifeq (posix,$(SHELLTYPE))
 	$(SILENT) mkdir -p $(OBJDIR)
@@ -225,7 +219,31 @@ else
 	$(SILENT) mkdir $(subst /,\\,$(OBJDIR))
 endif
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/wavefront_obj.o: src/das/wavefront_obj.c
+$(OBJDIR)/ftinit.o: modules/freetype/src/base/ftinit.c
+	@echo $(notdir $<)
+ifeq (posix,$(SHELLTYPE))
+	$(SILENT) mkdir -p $(OBJDIR)
+else
+	$(SILENT) mkdir $(subst /,\\,$(OBJDIR))
+endif
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/ftsystem.o: modules/freetype/src/base/ftsystem.c
+	@echo $(notdir $<)
+ifeq (posix,$(SHELLTYPE))
+	$(SILENT) mkdir -p $(OBJDIR)
+else
+	$(SILENT) mkdir $(subst /,\\,$(OBJDIR))
+endif
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/sfnt.o: modules/freetype/src/sfnt/sfnt.c
+	@echo $(notdir $<)
+ifeq (posix,$(SHELLTYPE))
+	$(SILENT) mkdir -p $(OBJDIR)
+else
+	$(SILENT) mkdir $(subst /,\\,$(OBJDIR))
+endif
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/winfnt.o: modules/freetype/src/winfonts/winfnt.c
 	@echo $(notdir $<)
 ifeq (posix,$(SHELLTYPE))
 	$(SILENT) mkdir -p $(OBJDIR)

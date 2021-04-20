@@ -76,14 +76,9 @@ function ft.build()
             "modules/freetype/src/base/ftbase.c",
             "modules/freetype/src/base/ftbbox.c",
             "modules/freetype/src/base/ftglyph.c",
-            "modules/freetype/src/base/ftbdf.c",
-            "modules/freetype/src/base/ftwinfnt.c",
             "modules/freetype/src/base/ftbitmap.c",
-            "modules/freetype/src/bdf/bdf.c",
-            "modules/freetype/src/truetype/truetype.c",
+            "modules/freetype/src/sfnt/sfnt.c",
             "modules/freetype/src/winfonts/winfnt.c",
-            "modules/freetype/src/raster/raster.c",
-            "modules/freetype/src/smooth/smooth.c"
         }
 
         symbols "Off"

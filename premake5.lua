@@ -72,25 +72,32 @@ workspace "deng"
     includedirs { "./headers" }
     targetdir "build"
 
+
 -- Create an option to compile all submodule dependencies from source
 newoption {
     trigger = "use-modules",
     description = "Use submodule dependencies instead of searching them in system path"
 }
 
+
+
 -- Check if all submodule build configs should be created
 if _OPTIONS["use-modules"] then
-    local ft = require("premake/ft")
-    ft.build()
+    local ftbuild = ""
+    local ftbitmap = ""
+    ftbuild = os.findheader("ft2build.h", { "./modules/freetype/include/", "./modules/freetype/include/freetype" })
+    ftbitmap = os.findheader("ftbitmap.h", { "./modules/freetype/include/", "./modules/freetype/include/freetype" })
 
-    local ftbuild = os.findheader("ft2build.h", "modules/freetype/include/", "modules/freetype/include/freetype")
-    local ftbitmap = os.findheader("ftbitmap.h", "modules/freetype/include/", "modules/freetype/include/freetype")
-    if(not ftbuild or ftbitmap) then
+    if(not ftbuild or not ftbitmap) then
         error("Could not find freetype headers from submodules")
     else
+        print(ftbuild)
+        print(ftbitmap)
         includedirs { ftbuild, ftbitmap }
     end
-
+    
+    local ft = require("premake/ft")
+    ft.build()
 else
     local ftbuild = ""
     local ftbitmap = ""
@@ -100,6 +107,8 @@ else
     if(not ftbuild or not ftbitmap) then
         error("Could not find freetype headers. Make sure freetype is installed")
     else
+        print(ftbuild)
+        print(ftbitmap)
         includedirs { ftbuild, ftbitmap }
     end
 end

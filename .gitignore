@@ -9,6 +9,7 @@ init.sh
 init.bat
 make/
 build/
+obj/
 rgbbitmap.log
 matobject.log
 object.log

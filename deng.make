@@ -16,15 +16,15 @@ ifeq ($(config),debug_win32)
   TARGET = $(TARGETDIR)/libdeng.so
   OBJDIR = obj/Win32/Debug/deng
   DEFINES +=
-  INCLUDES += -Iheaders -I/usr/include/freetype2 -I/usr/include/freetype2/freetype
+  INCLUDES += -Iheaders -Imodules/freetype/include -Imodules/freetype/include/freetype
   FORCE_INCLUDE +=
   ALL_CPPFLAGS += $(CPPFLAGS) -MMD -MP $(DEFINES) $(INCLUDES)
   ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O2 -fPIC -g
   ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O2 -fPIC -g -std=c++11
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
-  LIBS += -lfreetype -lvulkan-1 -lcomctl32
-  LDDEPS +=
-  ALL_LDFLAGS += $(LDFLAGS) -shared -Wl,-soname=libdeng.so
+  LIBS += build/libfreetype.so -lvulkan-1 -lcomctl32
+  LDDEPS += build/libfreetype.so
+  ALL_LDFLAGS += $(LDFLAGS) -Wl,-rpath,'$$ORIGIN' -shared -Wl,-soname=libdeng.so
   LINKCMD = $(CXX) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
   endef
@@ -43,15 +43,15 @@ ifeq ($(config),debug_linux)
   TARGET = $(TARGETDIR)/libdeng.so
   OBJDIR = obj/Linux/Debug/deng
   DEFINES +=
-  INCLUDES += -Iheaders -I/usr/include/freetype2 -I/usr/include/freetype2/freetype
+  INCLUDES += -Iheaders -Imodules/freetype/include -Imodules/freetype/include/freetype
   FORCE_INCLUDE +=
   ALL_CPPFLAGS += $(CPPFLAGS) -MMD -MP $(DEFINES) $(INCLUDES)
   ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O2 -fPIC -g
   ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O2 -fPIC -g -std=c++11
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
-  LIBS += -lfreetype -lvulkan -lpthread -lX11 -lXcursor -ldl
-  LDDEPS +=
-  ALL_LDFLAGS += $(LDFLAGS) -shared -Wl,-soname=libdeng.so
+  LIBS += build/libfreetype.so -lvulkan -lpthread -lX11 -lXcursor -ldl
+  LDDEPS += build/libfreetype.so
+  ALL_LDFLAGS += $(LDFLAGS) -Wl,-rpath,'$$ORIGIN' -shared -Wl,-soname=libdeng.so
   LINKCMD = $(CXX) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
   endef
@@ -70,15 +70,15 @@ ifeq ($(config),release_win32)
   TARGET = $(TARGETDIR)/libdeng.so
   OBJDIR = obj/Win32/Release/deng
   DEFINES +=
-  INCLUDES += -Iheaders -I/usr/include/freetype2 -I/usr/include/freetype2/freetype
+  INCLUDES += -Iheaders -Imodules/freetype/include -Imodules/freetype/include/freetype
   FORCE_INCLUDE +=
   ALL_CPPFLAGS += $(CPPFLAGS) -MMD -MP $(DEFINES) $(INCLUDES)
   ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O2 -fPIC
   ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O2 -fPIC -std=c++11
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
-  LIBS += -lfreetype -lvulkan-1 -lcomctl32
-  LDDEPS +=
-  ALL_LDFLAGS += $(LDFLAGS) -shared -Wl,-soname=libdeng.so -s
+  LIBS += build/libfreetype.so -lvulkan-1 -lcomctl32
+  LDDEPS += build/libfreetype.so
+  ALL_LDFLAGS += $(LDFLAGS) -Wl,-rpath,'$$ORIGIN' -shared -Wl,-soname=libdeng.so -s
   LINKCMD = $(CXX) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
   endef
@@ -97,15 +97,15 @@ ifeq ($(config),release_linux)
   TARGET = $(TARGETDIR)/libdeng.so
   OBJDIR = obj/Linux/Release/deng
   DEFINES +=
-  INCLUDES += -Iheaders -I/usr/include/freetype2 -I/usr/include/freetype2/freetype
+  INCLUDES += -Iheaders -Imodules/freetype/include -Imodules/freetype/include/freetype
   FORCE_INCLUDE +=
   ALL_CPPFLAGS += $(CPPFLAGS) -MMD -MP $(DEFINES) $(INCLUDES)
   ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O2 -fPIC
   ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O2 -fPIC -std=c++11
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
-  LIBS += -lfreetype -lvulkan -lpthread -lX11 -lXcursor -ldl
-  LDDEPS +=
-  ALL_LDFLAGS += $(LDFLAGS) -shared -Wl,-soname=libdeng.so -s
+  LIBS += build/libfreetype.so -lvulkan -lpthread -lX11 -lXcursor -ldl
+  LDDEPS += build/libfreetype.so
+  ALL_LDFLAGS += $(LDFLAGS) -Wl,-rpath,'$$ORIGIN' -shared -Wl,-soname=libdeng.so -s
   LINKCMD = $(CXX) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
   endef
