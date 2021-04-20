@@ -1,5 +1,6 @@
 .vscode/
 .cache/
+.modules/
 .stfolder/
 website/
 Makefile
