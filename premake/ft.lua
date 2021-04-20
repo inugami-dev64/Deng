@@ -66,19 +66,28 @@ function ft.build()
     project "freetype"
         kind "StaticLib"
         language "C"
-        defines { "FT2_BUILD_LIBRARY" }
+        defines { 
+            "FT2_BUILD_LIBRARY"
+        }
 
         includedirs { "modules/freetype/include" }
         files {
-            "modules/freetype/src/base/ftsystem.c",
+            "modules/freetype/builds/unix/ftsystem.c",
             "modules/freetype/src/base/ftinit.c",
             "modules/freetype/src/base/ftdebug.c",
             "modules/freetype/src/base/ftbase.c",
             "modules/freetype/src/base/ftbbox.c",
             "modules/freetype/src/base/ftglyph.c",
             "modules/freetype/src/base/ftbitmap.c",
+            "modules/freetype/src/raster/raster.c",
+            "modules/freetype/src/smooth/smooth.c",
+            "modules/freetype/src/autofit/autofit.c",
+            "modules/freetype/src/psaux/psaux.c",
+            "modules/freetype/src/pshinter/pshinter.c",
             "modules/freetype/src/sfnt/sfnt.c",
-            "modules/freetype/src/winfonts/winfnt.c",
+            "modules/freetype/src/type1/type1.c",
+            "modules/freetype/src/type42/type42.c",
+            "modules/freetype/src/winfonts/winfnt.c"
         }
 
         symbols "Off"
