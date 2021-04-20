@@ -129,9 +129,14 @@ extern "C" {
     ) {
         p_hashmap->map_size = elem_c;
         p_hashmap->used_size = 0;
-        p_hashmap->map_data = (HashData*) calloc (
+        p_hashmap->map_data = (__HashData*) calloc (
             p_hashmap->map_size,
-            sizeof(HashData)
+            sizeof(__HashData)
+        );
+
+        p_hashmap->indices = (size_t*) calloc (
+            p_hashmap->map_size,
+            sizeof(size_t)
         );
     }
 
@@ -146,7 +151,7 @@ extern "C" {
      * 4. Multiply bit-shifted out_key with constant 0x9E3779B1
      * 5. Return hash % n
      */
-    size_t hashfunc (
+    static size_t __hashfunc (
         void *key,
         size_t key_size,
         size_t map_c
@@ -174,38 +179,40 @@ extern "C" {
     }
 
 
-    /* Reallocate more memory for hashmap */
-    void reallocateHashmap(Hashmap *p_hm) {
+    /* 
+     * Reallocate more memory for buckets in hashmap 
+     */
+    static void __reallocateHashmap(Hashmap *p_hm) {
         size_t old_size = p_hm->map_size;
         p_hm->map_size *= 2;
-        HashData *tmp = (HashData*) calloc ( 
+        __HashData *tmp = (__HashData*) calloc ( 
             p_hm->map_size,
-            sizeof(HashData)
+            sizeof(__HashData)
         );
 
-        // O(n)
-        size_t l_index = 0, r_index = 0;
-        for(l_index = 0; l_index < old_size; l_index++) {
-            if(p_hm->map_data[l_index].key) {
-                r_index = hashfunc (
-                    p_hm->map_data[l_index].key, 
-                    p_hm->map_data[l_index].key_len,
+        // Copy data from old map to a new one
+        size_t i = 0, j = 0;
+        for(i = 0; i < old_size; i++) {
+            if(p_hm->map_data[i].key) {
+                j = __hashfunc (
+                    p_hm->map_data[i].key, 
+                    p_hm->map_data[i].key_len,
                     p_hm->map_size
                 );
                 
                             
                 if
                 (
-                    (tmp[r_index].data || 
-                    tmp[r_index].key) && 
-                    p_hm->map_data[l_index].key_len < tmp[r_index].key_len ? 
-                    memcmp(p_hm->map_data[l_index].key, tmp[r_index].key, p_hm->map_data[l_index].key_len) :
-                    memcmp(p_hm->map_data[l_index].key, tmp[r_index].key, tmp[r_index].key_len)
+                    (tmp[j].data || 
+                    tmp[j].key) && 
+                    p_hm->map_data[i].key_len < tmp[j].key_len ? 
+                    memcmp(p_hm->map_data[i].key, tmp[j].key, p_hm->map_data[i].key_len) :
+                    memcmp(p_hm->map_data[i].key, tmp[j].key, tmp[j].key_len)
                 ) {
                     deng_bool_t is_found = false;
                     deng_i64_t i = 0;
                     // Check for empty array spaces after collided key value 
-                    for(i = (deng_i64_t) r_index; i < (deng_i64_t) p_hm->map_size; i++) {
+                    for(i = (deng_i64_t) j; i < (deng_i64_t) p_hm->map_size; i++) {
                         if(!tmp[i].key && !tmp[i].data) {
                             is_found = true;
                             break;
@@ -214,7 +221,7 @@ extern "C" {
                     
                     // Check for empty array spaces before collided key value
                     if(!is_found) {
-                        for(i = (deng_i64_t) r_index; i >= 0; i--) {
+                        for(i = (deng_i64_t) j; i >= 0; i--) {
                             if(!tmp[i].key && !tmp[i].data) {
                                 is_found = true;
                                 break;
@@ -222,26 +229,93 @@ extern "C" {
                         }
                     }
 
-                    if(!is_found) {
-                        perror("pushToHashmap(): Failed to find empty array index\n");
-                        exit(EXIT_FAILURE);
-                    }
-
-                    tmp[i].key = p_hm->map_data[l_index].key;
-                    tmp[i].key_len = p_hm->map_data[l_index].key_len;
-                    tmp[i].data = p_hm->map_data[l_index].data;
+                    tmp[i].key = p_hm->map_data[i].key;
+                    tmp[i].key_len = p_hm->map_data[i].key_len;
+                    tmp[i].data = p_hm->map_data[i].data;
                 }
                
                 else {
-                    tmp[r_index].key = p_hm->map_data[l_index].key;
-                    tmp[r_index].key_len = p_hm->map_data[l_index].key_len;
-                    tmp[r_index].data = p_hm->map_data[l_index].data;
+                    tmp[j].key = p_hm->map_data[i].key;
+                    tmp[j].key_len = p_hm->map_data[i].key_len;
+                    tmp[j].data = p_hm->map_data[i].data;
                 }
             }
         }
 
         free(p_hm->map_data);
         p_hm->map_data = tmp;
+    }
+
+
+    /*
+     * Key comparisson method
+     * Returns 0 if keys are equal, 1 if key1 is longer than key2, -1 if 
+     * key2 is longer than key1 then returns 2 if keys are the same length
+     * but their memory areas do not match
+     */
+    static int __keycmp(void *key1, size_t n1, void *key2, size_t n2) {
+        if(n1 < n2) return -1;
+        else if(n1 > n2) return 1;
+        else if(!memcmp(key1, key2, n1))
+            return 0;
+        else return 2;
+    }
+
+    
+    /*
+     * Search for the bucket index of the key element
+     */
+    static deng_i64_t __findIndex (
+        Hashmap *p_hm, 
+        void *key, 
+        size_t key_size
+    ) {
+        deng_i64_t out = INT64_MAX;
+        size_t index = __hashfunc (
+            key,
+            key_size,
+            p_hm->map_size
+        );
+
+        if (!__keycmp(p_hm->map_data[index].key, p_hm->map_data[index].key_len, key, key_size))
+            out = (deng_i64_t) index;
+        
+        else {
+            // Perform linear search for the key
+            deng_i64_t i = 0;
+            deng_bool_t is_found = false;
+
+            for(i = index; i < p_hm->map_size; i++) {
+                if
+                (
+                    p_hm->map_data[i].key && 
+                    p_hm->map_data[i].key_len &&
+                    !__keycmp(p_hm->map_data[i].key, p_hm->map_data[i].key_len, key, key_size)
+                ) {
+                    out = (deng_ui64_t) i;
+                    is_found = true;
+                    break;
+                }
+            }
+
+            // If correct bucket was not found search from the front of the array
+            if(!is_found) {
+                for(i = index; i >= 0; i--) {
+                    if
+                    (
+                        p_hm->map_data[i].key && 
+                        p_hm->map_data[i].key_len &&
+                        !__keycmp(p_hm->map_data[i].key, p_hm->map_data[i].key_len, key, key_size)
+                    ) {
+                        out = (deng_i64_t) i;
+                        is_found = true;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        return out;
     }
 
 
@@ -255,21 +329,21 @@ extern "C" {
         void *data
     ) {
         if(p_hm->used_size >= p_hm->map_size)
-           reallocateHashmap(p_hm); 
+           __reallocateHashmap(p_hm); 
+
         // Check if value with current key already exits
-        size_t index = hashfunc (
+        size_t index = __hashfunc (
             key, 
             key_size, 
             p_hm->map_size
         );
 
+        // Check if the bucket index is occupied with different data than the one being submitted
         if
         (
             (p_hm->map_data[index].data || 
             p_hm->map_data[index].key) && 
-            key_size < p_hm->map_data[index].key_len ? 
-            memcmp(p_hm->map_data[index].key, key, key_size) :
-            memcmp(p_hm->map_data[index].key, key, p_hm->map_data[index].key_len)
+            __keycmp(p_hm->map_data[index].key, p_hm->map_data[index].key_len, key, key_size)
         ) {
             deng_bool_t is_found = false;
             deng_i64_t i = 0;
@@ -291,61 +365,95 @@ extern "C" {
                 }
             }
 
-            if(!is_found) {
-                perror("pushToHashmap(): Failed to find empty array index\n");
-                exit(EXIT_FAILURE);
-            }
-
             p_hm->map_data[i].key = key;
             p_hm->map_data[i].key_len = key_size;
             p_hm->map_data[i].data = data;
+            p_hm->indices[p_hm->used_size] = i; 
         }
        
         else {
             p_hm->map_data[index].data = data;
             p_hm->map_data[index].key_len = key_size;
             p_hm->map_data[index].key = key;
+            p_hm->indices[p_hm->used_size] = index; 
         }
 
         p_hm->used_size++;
     }
 
 
-    /* Find value with certain key */
+    /*
+     * Pop the value from hashmap that is specified with the key
+     */
+    void *popFromHashmap (
+        Hashmap *p_hm,
+        void *key,
+        size_t key_size
+    ) {
+        deng_i64_t ind = __findIndex(p_hm, key, key_size);
+
+        // Nothing to pop
+        if(ind == INT64_MAX) return NULL;
+
+        void *data = p_hm->map_data[ind].data;
+        p_hm->map_data[ind].data = NULL;
+        p_hm->map_data[ind].key = NULL;
+        p_hm->map_data[ind].key_len = 0;
+
+        // Find the bucket index in element indices array
+        deng_bool_t shift = false;
+        for(size_t i = 0; i < p_hm->used_size; i++) {
+            if(!shift && p_hm->indices[i] == ind)
+                shift = true;
+            
+            else if(shift) {
+                p_hm->indices[i - 1] = p_hm->indices[i];
+                if(i == p_hm->used_size - 1)
+                    p_hm->indices[i] = 0;
+            }
+        }
+
+        p_hm->used_size--;
+        return data;
+    }
+
+
+    /*
+     * Find the list of all elements' pointers in hashmap
+     */
+    void **getHashmapList(Hashmap *p_hm) {
+        void **out = (void**) calloc (
+            p_hm->used_size,
+            sizeof(void*)
+        );
+
+        for(deng_i64_t i = 0; i < p_hm->used_size; i++)
+            out[i] = p_hm->map_data[p_hm->indices[i]].data;
+
+        return out;
+    }
+
+
+    /* 
+     * Find value with certain key 
+     */
     void *findValue (
         Hashmap *p_hm,
         void *key,
         size_t key_len
     ) {
-        size_t index = hashfunc (
-            key,
-            key_len,
-            p_hm->map_size
-        );
-        
-        if
-        (
-            key_len < p_hm->map_data[index].key_len ?
-            !memcmp(p_hm->map_data[index].key, key, key_len) :
-            !memcmp(p_hm->map_data[index].key, key, p_hm->map_data[index].key_len)
-        ) return p_hm->map_data[index].data;
-        
-        else {
-            // Perform linear search for the key
-            deng_i64_t i = 0;
-            for(i = index; i < p_hm->map_size; i++) {
-                if
-                (
-                    p_hm->map_data[i].key && 
-                    p_hm->map_data[i].key_len &&
-                    key_len < p_hm->map_data[i].key_len ?
-                    !memcmp(p_hm->map_data[i].key, key, key_len) :
-                    !memcmp(p_hm->map_data[i].key, key, p_hm->map_data[i].key_len)
-                ) return p_hm->map_data[i].data;
-            }
-        }
+        deng_i64_t i = __findIndex(p_hm, key, key_len);
+        if(i == INT64_MAX) return NULL;
+        return p_hm->map_data[i].data;
+    }
 
-        return NULL;
+
+    /*
+     * Destroy the given hashmap instance
+     */
+    void destroyHashmap(Hashmap *p_hm) {
+        free(p_hm->map_data);
+        free(p_hm->indices);
     }
 
 #ifdef __cplusplus

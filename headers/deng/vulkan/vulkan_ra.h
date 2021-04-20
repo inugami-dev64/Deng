@@ -66,6 +66,7 @@
 #ifdef __VULKAN_RA_CPP
     #include <vector>
     #include <array>
+    #include <queue>
     #include <mutex>
     #include <cmath>
 
@@ -73,6 +74,7 @@
     #include <common/base_types.h>
     #include <common/hashmap.h>
     #include <common/uuid.h>
+    #include <common/common.h>
     #include <common/err_def.h>
     #include <das/assets.h>
 
@@ -80,21 +82,18 @@
     #include <deng/window.h>
     #include <utils/timer.h>
     #include <deng/camera.h>
+
     #include <deng/vulkan/vulkan_sd.h>
     #include <deng/vulkan/vulkan_qm.h>
     #include <deng/vulkan/vulkan_resources.h>
     #include <deng/vulkan/vulkan_rend_infos.h>
+
+    #include <deng/lighting/light_srcs.h>
+    #include <deng/registry/registry.h>
+
 #endif
 
-#define __DEFAULT_ASSET_HM_CAP  64
-#define __DEFAULT_TEX_HM_CAP    64
-#define __DEFAULT_TEX_WIDTH     512
-#define __DEFAULT_TEX_HEIGHT    512
-#define __DEFAULT_TEX_SIZE      1048576 // bytes
-#define __DEFAULT_TEX_MEM_CAP   8388608 // bytes
-
-#define __DEFAULT_ASSET_HM_CAP  64
-#define __DEFAULT_TEX_HM_CAP    64
+#define __DEFAULT_ASSET_CAP     32
 #define __DEFAULT_TEX_WIDTH     512
 #define __DEFAULT_TEX_HEIGHT    512
 #define __DEFAULT_TEX_SIZE      1048576 // bytes
@@ -110,10 +109,12 @@ namespace deng {
          */
         class __vk_TextureAllocator : protected __vk_ResourceInfo {
         private:
-            std::vector<__vk_Texture> *m_p_textures = NULL;
-            Hashmap *m_p_tex_map = NULL;
-            char *m_dummy_tex_uuid = NULL;
+            std::vector<deng_Id> &m_textures;
             deng_ui32_t m_tex_mem_bits = 0;
+            deng_Id m_dummy_tex_uuid;
+
+        protected:
+            deng::__GlobalRegistry &m_reg;
 
         private:
             /*
@@ -158,41 +159,109 @@ namespace deng {
                 VkCommandPool cmd_pool,
                 VkQueue g_queue,
                 size_t sc_img_size,
-                std::vector<__vk_Texture> *p_tex,
-                Hashmap *p_tex_map
+                std::vector<deng_Id> &textures,
+                deng::__GlobalRegistry &reg
             );
 
 
             /*
-             * Allocate memory for texture buffers
-             * Despite its name this method acts like a reallocator as well
-             * In that case the method expects that the img_memory is correctly 
-             * allocated and data can be made
+             * Allocate memory for VkImage instances
              */
             void __allocateTexMemory (
                 VkDevice device,
                 VkPhysicalDevice gpu,
                 VkCommandPool commandpool, 
                 VkQueue g_queue, 
-                VkDeviceSize old_size,
-                VkDeviceSize req_size
+                VkDeviceSize size
+            );
+
+            
+            /*
+             * Destroy previous texture memory instances, allocate new one and 
+             * copy texture data over to the new memory area.
+             *
+             * Allocated memory size is at least min_size floored up to the nearest base 2 exponant,
+             * in case the required allocation size floored to nearest base 2 exponant is smaller 
+             * than the double of the previous capacity the latter will be used instead
+             */
+            void __reallocTexMemory (
+                VkDevice device,
+                VkPhysicalDevice gpu,
+                VkCommandPool cmd_pool,
+                VkQueue g_queue,
+                VkDeviceSize min_size,
+                deng_bool_t is_lf,
+                deng_ui32_t mip_levels
+            );
+
+            
+            /*
+             * Check if linear filtering is requested and if mipmaps should be created
+             */
+            void __mipmapTransition (
+                VkDevice device,
+                VkCommandPool cmd_pool,
+                VkQueue g_queue,
+                deng_bool_t is_lf,
+                deng_ui32_t mip_levels,
+                __vk_Texture &tex
+            );
+
+            
+            /*
+             * Create VkImageViews for texture images
+             */
+            void __mkImageView (
+                VkDevice device,
+                __vk_Texture &tex,
+                deng_ui32_t mip_levels
+            );
+
+
+            /*
+             * Copy all bitmap data to image bitmap buffer
+             * WARNING: This method performs no buffer bounds check and can cause errors!
+             * NOTE: Texture object must have a valid VkImage instance created before calling this 
+             * method
+             */
+            void __cpyBitmap (
+                VkDevice device,
+                VkPhysicalDevice gpu,
+                VkCommandPool cmd_pool,
+                VkQueue g_queue,
+                deng_ui32_t mip_levels,
+                __vk_Texture &tex
             );
 
 
             /*
              * Create new VkImage and VkImageView instances for single texture
-             * This method expects that enough memory is allocated for bitmap data
-             * of the given texture
              */
-            void __newImage (
+            void __newVkTexture (
                 VkDevice device,
                 VkPhysicalDevice gpu,
                 VkCommandPool cmd_pool,
                 VkQueue g_queue,
                 deng_ui32_t mip_levels,
                 deng_bool_t is_lf,
+                deng_bool_t ignore_mem_check,
+                deng_bool_t set_default_mem_req,
                 __vk_Texture &tex
             );
+
+
+            /*
+             * Create new vulkan textures
+             */
+            void __mkTextures (
+                VkDevice device, 
+                VkPhysicalDevice gpu, 
+                VkCommandPool command_pool,
+                deng_bool_t is_lf_supported, 
+                const dengMath::vec2<deng_ui32_t> &tex_bounds,
+                VkQueue g_queue
+            );
+
 
             char *__getDummyUUID();
         };
@@ -203,8 +272,8 @@ namespace deng {
          */ 
         class __vk_ResourceManager : private __vk_TextureAllocator {
         private:
-            std::vector<__vk_Asset> *m_p_assets;
-            std::vector<__vk_Texture> *m_p_textures;
+            std::vector<deng_Id> &m_assets;
+            std::vector<deng_Id> &m_textures;
             char *m_dummy_tex_uuid;
             deng_ui32_t m_tex_mem_bits = 0;
             const VkPhysicalDeviceLimits &m_gpu_limits;
@@ -239,7 +308,7 @@ namespace deng {
                 VkDevice &device, 
                 VkRenderPass &renderpass, 
                 VkExtent2D &ext, 
-                std::vector<VkImageView> &sc_img_views
+                const std::vector<VkImageView> &sc_img_views
             );
 
             void __mkColorResources (
@@ -257,22 +326,9 @@ namespace deng {
 
 
             /*
-             * This method either doubles the texture buffer memory capacity or 
-             * calculates the new capacity from given textures and 
-             * reallocates everything in it.
+             * This method reallocs ubo buffer to double its capacity
              */
-            void __reallocateTextureMemory (
-                VkDevice device,
-                VkPhysicalDevice gpu,
-                VkCommandPool cmd_pool,
-                VkQueue g_queue
-            );
-
-
-            /*
-             * This method reallocates ubo buffer to double its capacity
-             */
-            void __reallocateUniformBufferMemory (
+            void __reallocUniformBufferMemory (
                 VkDevice device,
                 VkPhysicalDevice gpu,
                 VkCommandPool cmd_pool,
@@ -288,20 +344,12 @@ namespace deng {
                 VkRenderPass renderpass, 
                 VkCommandPool cmd_pool,
                 VkQueue g_queue,
-                std::vector<VkImageView> sc_img_views,
-                const __vk_AssetsInfo &assets_info,
+                const std::vector<VkImageView> &sc_img_views,
+                deng::__GlobalRegistry &reg,
+                std::vector<deng_Id> &assets,
+                std::vector<deng_Id> &textures,
                 VkFormat sc_color_format,
                 const VkPhysicalDeviceLimits &gpu_limits
-            );
-
-
-            void mkTextures (
-                VkDevice device, 
-                VkPhysicalDevice gpu, 
-                VkCommandPool command_pool,
-                deng_bool_t is_lf_supported, 
-                dengMath::vec2<deng_ui32_t> tex_bounds,
-                VkQueue g_queue
             );
 
             void mkBuffers (
@@ -311,6 +359,14 @@ namespace deng {
                 VkQueue g_queue
             );
 
+            void mkTextures (
+                VkDevice device,
+                VkPhysicalDevice gpu,
+                VkCommandPool cmd_pool,
+                deng_bool_t is_lf_supported,
+                const dengMath::vec2<deng_ui32_t> &tex_bounds,
+                VkQueue g_queue
+            );
 
             void updateUniformData (
                 VkDevice device, 
@@ -333,7 +389,6 @@ namespace deng {
                 VkPhysicalDevice gpu,
                 VkCommandPool cmd_pool,
                 VkQueue g_queue,
-                __vk_UniformColorData *ubo_mem,
                 __vk_Asset &asset
             );
 

@@ -294,11 +294,6 @@ dam_AssetPreviewInfo __dam_FindPreviewInfo(int argc, char *argv[]) {
     // Read the asset data from file into das_Asset instance
     info.asset.force_unmap = true;
     info.asset.color = __DAM_DEFAULT_ASSET_COLOR;
-    das_ReadAsset (
-        &info.asset,
-        DAS_ASSET_MODE_DONT_CARE,
-        info.file_name
-    );
 
     return info;
 }

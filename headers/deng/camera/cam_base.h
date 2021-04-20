@@ -207,7 +207,7 @@ namespace deng {
     {
     protected:
         Window *m_p_win = NULL;
-        dengMath::vec2<deng_px_t> m_mouse_pos;
+        dengMath::vec2<deng_px_t> m_mouse_pos = (dengMath::vec2<deng_px_t>) {0, 0};
         dengMath::vec2<deng_VCPOverflowAction> m_vcp_overflow;
         dengMath::vec2<dengMath::vec2<deng_f64_t>> m_vc_bounds;
         dengMath::vec2<deng_f64_t> m_max_rot;

@@ -92,6 +92,26 @@ typedef float deng_vec_t;
 
 
 /*
+ * Universal DENG identifier type
+ */
+typedef char* deng_Id;
+typedef enum deng_SupportedRegType {
+    DENG_SUPPORTED_REG_TYPE_ASSET       = 0,
+    DENG_SUPPORTED_REG_TYPE_VK_ASSET    = 1,
+    DENG_SUPPORTED_REG_TYPE_GL_ASSET    = 2,
+    DENG_SUPPORTED_REG_TYPE_TEXTURE     = 3,
+    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE  = 4,
+    DENG_SUPPORTED_REG_TYPE_GL_TEXTURE  = 5,
+    DENG_SUPPORTED_REG_TYPE_PT_LIGHT    = 6,
+    DENG_SUPPORTED_REG_TYPE_SUN_LIGHT   = 7,
+    DENG_SUPPORTED_REG_TYPE_DIR_LIGHT   = 8,
+
+    DENG_SUPPORTED_REG_TYPE_FIRST       = DENG_SUPPORTED_REG_TYPE_ASSET,
+    DENG_SUPPORTED_REG_TYPE_LAST        = DENG_SUPPORTED_REG_TYPE_DIR_LIGHT
+} deng_SupportedRegTypes;
+
+
+/*
  * Uniform flags mainly reserved for future use
  */
 typedef deng_ui32_t deng_CameraUniformFlagBits;
@@ -222,6 +242,19 @@ typedef enum deng_InputType {
     DENG_INPUT_TYPE_LAST    = 1
 
 } deng_InputType;
+
+
+/*
+ * Light source type specifier enum
+ */
+typedef enum deng_LightSrcType {
+    DENG_LIGHT_SRC_TYPE_PT      = 0,
+    DENG_LIGHT_SRC_TYPE_SUN     = 1,
+    DENG_LIGHT_SRC_TYPE_DIR     = 2,
+
+    DENG_LIGHT_SRC_TYPE_FIRST   = DENG_LIGHT_SRC_TYPE_PT,
+    DENG_LIGHT_SRC_TYPE_LAST    = DENG_LIGHT_SRC_TYPE_DIR
+} deng_LightSrcType;
 
 
 /*

@@ -551,7 +551,7 @@ void __das_MergeVertices (
         break;
 
     default:
-        RUN_ERR("__das_MergeVertices: invalid asset mode");
+        RUN_ERR("__das_MergeVertices", "invalid asset mode");
         break;
     }
 

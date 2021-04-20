@@ -118,6 +118,6 @@
 #define FONT_ERR(msg)           fprintf(stderr, "Font rasterisation error: %s\n", x), \
                                 exit(EXIT_FAILURE)
 
-#define RUN_ERR(msg)            fprintf(stderr, "%s\n", msg), \
+#define RUN_ERR(func, msg)      fprintf(stderr, "%s: %s\n", func, msg), \
                                 exit(EXIT_FAILURE)
 #endif

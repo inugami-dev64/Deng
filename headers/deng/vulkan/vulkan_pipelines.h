@@ -149,7 +149,7 @@ namespace deng {
          * This class is used to simplify the process of creating pipelines
          * in Vulkan
          */
-        class __vk_PipelineCreator : private __vk_DeviceInfo, private __vk_PipelineCreateinfoSpecifiers {
+        class __vk_PipelineCreator : private __vk_PipelineCreateinfoSpecifiers {
         private:
             VkDevice m_device;
             __vk_PipelineData *m_p_pipeline_data;

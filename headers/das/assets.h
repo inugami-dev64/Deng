@@ -165,7 +165,6 @@ typedef struct das_VertDynamic {
     VERT_UNMAPPED_2D *vu2d;
 
     size_t n;
-    deng_ui64_t mem_offset;
 } das_VertDynamic;
 
 
@@ -175,7 +174,6 @@ typedef struct das_VertDynamic {
 typedef struct das_IndicesDynamic {
     deng_ui32_t *indices;
     size_t n;
-    deng_ui64_t mem_offset;
 } das_IndicesDynamic;
 
 
@@ -209,9 +207,11 @@ typedef enum das_AssetMode {
  * Main asset struct 
  */
 typedef struct das_Asset {
-    char *uuid;
+    deng_Id uuid;
+    deng_Id tex_uuid;
+    deng_Id vk_id;
+    deng_Id gl_id;
     char *name;
-    char *tex_uuid;
     das_AssetMode asset_mode;
     deng_ui8_t is_shown;
     deng_bool_t force_unmap;
@@ -221,9 +221,13 @@ typedef struct das_Asset {
 } das_Asset;
 
 
-/* Main texture struct */
+/* 
+ * Main texture struct 
+ */
 typedef struct das_Texture {
-    char *uuid;
+    deng_Id uuid;
+    deng_Id vk_id;
+    deng_Id gl_id;
     char *name;
     das_PixelDataDynamic pixel_data;
 } das_Texture;

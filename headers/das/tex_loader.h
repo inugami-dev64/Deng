@@ -89,6 +89,7 @@ typedef enum das_ImageFormat {
     #include <common/base_types.h>
     #include <common/common.h>
     #include <common/hashmap.h>
+    #include <common/uuid.h>
     #include <das/sreader.h>
     #include <das/assets.h>
 
@@ -97,7 +98,7 @@ typedef enum das_ImageFormat {
 
     /*
      * Read raw bitmap data from file
-     * This function expects the file to be uncompressed and
+     * This function expects the file to be uncompressed
      */
     void __das_ReadBitmap (
         FILE *file,
@@ -106,11 +107,19 @@ typedef enum das_ImageFormat {
         das_Texture* p_tex
     );
 
+
+    /*
+     * Load JPEG image into das_Texture instance
+     */
     void __das_LoadJPGImage (
         das_Texture *p_tex,
         const char *file_name
     );
 
+
+    /*
+     * Load BMP image data into das_Texture
+     */
     void __das_LoadBMPImage (
         das_Texture *p_tex, 
         const char *file_name
@@ -128,7 +137,7 @@ typedef enum das_ImageFormat {
 
 
 /* 
- * Texture image loading 
+ * Load texture bitmap data into das_Texture instance
  */
 void das_LoadTexture (
     das_Texture *p_tex, 

@@ -111,19 +111,23 @@ void __das_InitBMPImageHeaders (
 }
 
 
-// Callback function to get image data
-void das_LoadTexture(das_Texture *p_texture, const char *file_name) {
+/* 
+ * Load texture bitmap data into das_Texture instance
+ */
+void das_LoadTexture (
+    das_Texture *p_texture, 
+    const char *file_name
+) {
+    p_texture->uuid = uuid_Generate();
     das_ImageFormat format = __das_DetectImageFormat(file_name);
 
     switch (format)
     {
     case DAS_IMAGE_FORMAT_BMP:
-        printf("Detected BMP texture\n");
         __das_LoadBMPImage(p_texture, file_name);
         break;
 
     case DAS_IMAGE_FORMAT_TGA:
-        printf("Detected TGA texture\n");
         __das_LoadTGAImage(p_texture, file_name);
         break;
     

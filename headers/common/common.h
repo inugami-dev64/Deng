@@ -213,6 +213,15 @@ void cm_ConvertTime (
 
 
 /*
+ * The following functions are used to get nearest number which has power of 2
+ */
+deng_ui64_t cm_topow2i64(deng_ui64_t n);
+deng_ui32_t cm_topow2i32(deng_ui32_t n);
+deng_ui16_t cm_topow2i16(deng_ui16_t n);
+deng_ui8_t cm_topow2i8(deng_ui8_t n);
+
+
+/*
  * Find all instances of sub_str from str and
  * put their character positions into postions array
  * This function uses heap allocation on dereferenced p_pos 
@@ -239,12 +248,6 @@ void cm_FormatTimeFromEpoch (
     char **p_out_date,
     char **p_out_time
 );
-
-
-/* 
- * Sort all the strings in alphabetical order
- */
-void cm_SortAlphabetically(char **buffer, size_t buffer_count);
 
 
 // Log writers

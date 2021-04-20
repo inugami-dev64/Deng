@@ -79,6 +79,10 @@
     #include <deng/vulkan/vulkan_sd.h>
     #include <deng/vulkan/vulkan_qm.h>
     #include <deng/vulkan/vulkan_resources.h>
+    
+    #include <deng/lighting/light_srcs.h>
+    #include <deng/registry/registry.h>
+
     #include <deng/vulkan/vulkan_rend_infos.h>
     #include <deng/vulkan/vulkan_pipelines.h>
 #endif
@@ -91,8 +95,9 @@ namespace deng {
          */
         class __vk_DrawCaller {
         private:
-            std::vector<__vk_Asset> *m_p_assets = NULL;
-            std::vector<__vk_Texture> *m_p_textures = NULL;
+            std::vector<deng_Id> &m_assets;
+            std::vector<deng_Id> &m_textures;
+            deng::__GlobalRegistry &m_reg;
             std::vector<VkFramebuffer> m_framebuffers;
             std::array<__vk_PipelineData, __DENG_PIPELINE_COUNT> m_pl_data;
             __vk_QueueManager m_qff;
@@ -114,12 +119,10 @@ namespace deng {
         public:
             __vk_DrawCaller (
                 VkDevice device,
-                __vk_QueueManager qff
-            );
-            
-            void setAssetsData (
-                std::vector<__vk_Asset> *p_assets, 
-                std::vector<__vk_Texture> *p_textures
+                __vk_QueueManager qff,
+                std::vector<deng_Id> &assets,
+                std::vector<deng_Id> &textures,
+                deng::__GlobalRegistry &reg
             );
             
             void setMiscData (

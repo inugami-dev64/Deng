@@ -78,6 +78,10 @@
     #include <deng/vulkan/vulkan_sd.h>
     #include <deng/vulkan/vulkan_qm.h>
     #include <deng/vulkan/vulkan_resources.h>
+
+    #include <deng/lighting/light_srcs.h>
+    #include <deng/registry/registry.h>
+
     #include <deng/vulkan/vulkan_rend_infos.h>
     #include <deng/vulkan/vulkan_pipelines.h>
 
@@ -94,10 +98,9 @@ namespace deng {
          */
         class __vk_DescriptorCreator : private __vk_DescriptorInfo {
         private:
-            std::vector<__vk_Asset> *m_p_assets = NULL;
-            std::vector<__vk_Texture> *m_p_textures = NULL;
-            Hashmap *m_p_asset_map;
-            Hashmap *m_p_tex_map;
+            std::vector<deng_Id> &m_assets;
+            std::vector<deng_Id> &m_textures;
+            deng::__GlobalRegistry &m_reg;
             deng_ui32_t m_tex_cap = 0;
             deng_ui32_t m_unmapped_dc_pool_cap = 0;
             deng_ui32_t m_mapped_dc_pool_cap = 0;
@@ -186,7 +189,9 @@ namespace deng {
                 VkDevice device,
                 VkExtent2D ext,
                 VkRenderPass renderpass, 
-                const __vk_AssetsInfo &asset_info,
+                deng::__GlobalRegistry &reg,
+                std::vector<deng_Id> &assets,
+                std::vector<deng_Id> &textures,
                 VkSampleCountFlagBits sample_c
             );
 

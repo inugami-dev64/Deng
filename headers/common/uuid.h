@@ -87,7 +87,7 @@ extern "C" {
         #define __UUID_VERSION 0x10
         #define __UUID_VARIANT 0x40
         #define __UUID_VARIANT_C    2
-        #define __LINUX_NET_DEV_DIR     "/sys/class/net/"
+        #define __LINUX_NET_DEV_DIR     "/sys/class/net"
         
         /*
          * Basic structure for 16 byte UUID storage byte per byte

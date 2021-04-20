@@ -79,11 +79,18 @@ namespace deng {
             VkCommandPool cmd_pool,
             VkQueue g_queue,
             size_t sc_img_size,
-            std::vector<__vk_Texture> *p_tex,
-            Hashmap *p_tex_map
-        ) {
-            m_p_textures = p_tex;
-            m_p_tex_map = p_tex_map;
+            std::vector<deng_Id> &textures,
+            deng::__GlobalRegistry &reg
+        ) : m_textures(textures), m_reg(reg) {
+
+            //// Allocate memory for new texture image memory instance
+            //__allocateTexMemory (
+                //device,
+                //gpu,
+                //cmd_pool,
+                //g_queue,
+                //__DEFAULT_TEX_MEM_CAP
+            //);
 
             // Create dummy texture instance
             __mkDummyTex (
@@ -91,16 +98,6 @@ namespace deng {
                 gpu,
                 cmd_pool,
                 g_queue
-            );
-
-            // Allocate memory for new texture image memory instance
-            __allocateTexMemory (
-                device,
-                gpu,
-                cmd_pool,
-                g_queue,
-                0,
-                __DEFAULT_TEX_MEM_CAP
             );
         }
 
@@ -115,34 +112,42 @@ namespace deng {
             VkCommandPool cmd_pool,
             VkQueue g_queue
         ) {
-            size_t i = m_p_textures->size();
-            m_p_textures->resize(i + 1);
-            m_p_textures->at(i).texture.name = (char*) "dummy";
-            m_p_textures->at(i).texture.uuid = uuid_Generate();
-            m_dummy_tex_uuid = m_p_textures->at(i).texture.uuid;
-            LOG("Dummy texture generation uuid: " + std::string(m_dummy_tex_uuid));
-            m_p_textures->at(i).texture.pixel_data.width = __DEFAULT_TEX_WIDTH;
-            m_p_textures->at(i).texture.pixel_data.height = __DEFAULT_TEX_HEIGHT;
-            m_p_textures->at(i).texture.pixel_data.size = __DEFAULT_TEX_SIZE;
-
-            m_p_textures->at(i).texture.pixel_data.p_pixel_data = (deng_ui8_t*) malloc(__DEFAULT_TEX_SIZE);
-            memset(m_p_textures->at(i).texture.pixel_data.p_pixel_data, 255, __DEFAULT_TEX_SIZE);
-
-            pushToHashmap (
-                m_p_tex_map,
-                m_dummy_tex_uuid,
-                strlen(m_dummy_tex_uuid),
-                &m_p_textures->at(i)
+            deng::RegType dummy_base_tex = { { 0 } };
+            dummy_base_tex.tex.name = (char*) "dummy_base_tex";
+            dummy_base_tex.tex.uuid = uuid_Generate();
+            dummy_base_tex.tex.pixel_data.width = __DEFAULT_TEX_WIDTH;
+            dummy_base_tex.tex.pixel_data.height = __DEFAULT_TEX_HEIGHT;
+            dummy_base_tex.tex.pixel_data.size = __DEFAULT_TEX_SIZE;
+            dummy_base_tex.tex.pixel_data.p_pixel_data = (deng_ui8_t*) malloc(__DEFAULT_TEX_SIZE);
+            memset(dummy_base_tex.tex.pixel_data.p_pixel_data, 255, __DEFAULT_TEX_SIZE);
+            m_reg.push (
+                dummy_base_tex.tex.uuid, 
+                DENG_SUPPORTED_REG_TYPE_TEXTURE, 
+                dummy_base_tex
             );
 
-            __newImage (
+
+            deng::RegType dummy_vk_tex = { { 0 } };
+            dummy_vk_tex.vk_tex.base_id = dummy_base_tex.tex.uuid;
+            dummy_vk_tex.vk_tex.uuid = uuid_Generate();
+            m_dummy_tex_uuid = dummy_vk_tex.vk_tex.uuid;
+
+            __newVkTexture (
                 device,
                 gpu,
                 cmd_pool,
                 g_queue,
                 1,
                 false,
-                m_p_textures->at(i)
+                false,
+                true,
+                dummy_vk_tex.vk_tex
+            );
+
+            m_reg.push (
+                dummy_vk_tex.vk_tex.uuid, 
+                DENG_SUPPORTED_REG_TYPE_VK_TEXTURE, 
+                dummy_vk_tex
             );
         }
 
@@ -319,142 +324,175 @@ namespace deng {
             VkPhysicalDevice gpu,
             VkCommandPool cmd_pool, 
             VkQueue g_queue, 
-            VkDeviceSize old_size,
-            VkDeviceSize req_size
+            VkDeviceSize size
         ) {
-            m_buffer_data.img_memory_cap = req_size;
-
-            // VkBuffer object is needed for copying staging buffer data to 
-            // texture buffer 
-            VkBuffer dst_buf;
-            __vk_BufferCreator::makeBuffer (
-                device,
-                gpu, 
-                req_size, 
-                VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT,
-                dst_buf
-            );
-
-            // Check if memory was used before 
-            if(old_size) {
-                // Create staging buffer to store data for reallocating 
-                // texture buffer memory
-                VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer (
-                    device,
-                    gpu,
-                    m_buffer_data.img_memory_cap,
-                    VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                    m_buffer_data.staging_buffer
-                );
-
-                // Allocate memory for staging buffer
-                __vk_BufferCreator::allocateMemory (
-                    device, 
-                    gpu,
-                    mem_req.size,
-                    m_buffer_data.staging_buffer_memory,
-                    mem_req.memoryTypeBits,
-                    VK_MEMORY_PROPERTY_HOST_COHERENT_BIT |
-                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-                );
-
-                // Bind staging buffer to staging memory
-                vkBindBufferMemory (
-                    device,
-                    m_buffer_data.staging_buffer,
-                    m_buffer_data.staging_buffer_memory,
-                    0
-                );
-
-                // Copy old data from image buffer memory to new staging buffer
-                void *data = NULL;
-                vkMapMemory (
-                    device, 
-                    m_buffer_data.img_memory, 
-                    0, 
-                    old_size, 
-                    0, 
-                    &data
-                );
-                    __vk_BufferCreator::cpyToBufferMem (
-                        device,
-                        old_size,
-                        data,
-                        m_buffer_data.staging_buffer_memory,
-                        0
-                    );
-
-                vkUnmapMemory (
-                    device,
-                    m_buffer_data.img_memory
-                );
-
-                // Allocate memory for new texture image data buffer
-                __vk_BufferCreator::allocateMemory (
-                    device,
-                    gpu,
-                    req_size,
-                    m_buffer_data.img_memory,
-                    m_tex_mem_bits,
-                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-                );
-
-                // Bind memory with dst_buf
-                vkBindBufferMemory (
-                    device, 
-                    dst_buf,
-                    m_buffer_data.img_memory,
-                    0
-                );
-
-                // Copy the contents of staging buffer to image buffer
-                __vk_BufferCreator::cpyBufferToBuffer (
-                    device, 
-                    cmd_pool, 
-                    g_queue, 
-                    m_buffer_data.staging_buffer,
-                    dst_buf,
-                    old_size,
-                    0
-                );
-
-                // Destroy all buffer handles
-                vkDestroyBuffer(device, m_buffer_data.staging_buffer, NULL);
-                vkDestroyBuffer(device, dst_buf, NULL);
-                vkFreeMemory(device, m_buffer_data.staging_buffer_memory, NULL);
-            }
+            size = cm_topow2i64(size);
+            m_buffer_data.img_memory_cap = size + 1;
 
             // Allocate new memory for new texture image buffer
             __vk_BufferCreator::allocateMemory (
                 device,
                 gpu,
-                req_size,
+                size,
                 m_buffer_data.img_memory,
                 m_tex_mem_bits,
                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
             );
         }
+        
+
+        /*
+         * Destroy previous texture memory instances, allocate new one and 
+         * copy texture data over to the new memory area.
+         *
+         * Allocated memory size is at least min_size floored up to the nearest base 2 exponant,
+         * in case the required allocation size floored to nearest base 2 exponant is smaller 
+         * than the double of the previous capacity the latter will be used instead
+         */
+        void __vk_TextureAllocator::__reallocTexMemory (
+            VkDevice device,
+            VkPhysicalDevice gpu,
+            VkCommandPool cmd_pool,
+            VkQueue g_queue,
+            VkDeviceSize min_size,
+            deng_bool_t is_lf,
+            deng_ui32_t mip_levels
+        ) {
+            min_size = min_size < 2 * m_buffer_data.img_memory_cap ? 2 * m_buffer_data.img_memory_cap : min_size;
+            min_size = cm_topow2i64(min_size);
+
+            std::queue<deng_Id> realloc_queue;
+
+            // Iterate through every texture instance and destroy its VkImage and VkImageView instances
+            for(size_t i = 0; i < m_textures.size(); i++) {
+                RegType &reg_vk_tex = m_reg.retrieve(m_textures[i], DENG_SUPPORTED_REG_TYPE_VK_TEXTURE);
+                if(reg_vk_tex.vk_tex.is_buffered) {
+                    vkDestroyImageView(device, reg_vk_tex.vk_tex.image_view, NULL);
+                    vkDestroyImage(device, reg_vk_tex.vk_tex.image, NULL);
+                    realloc_queue.push(m_textures[i]);
+                }
+            }
+
+            vkFreeMemory(device, m_buffer_data.img_memory, NULL);
+            __allocateTexMemory(device, gpu, cmd_pool, g_queue, min_size);
+
+            // Create new VkImages and VkImageViews for all textures that were deallocated
+            while(!realloc_queue.empty()) {
+                RegType &reg_vk_tex = m_reg.retrieve (
+                    realloc_queue.front(), 
+                    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE
+                );
+
+                realloc_queue.pop();
+                __newVkTexture (
+                    device,
+                    gpu,
+                    cmd_pool,
+                    g_queue,
+                    mip_levels,
+                    is_lf,
+                    true,
+                    false,
+                    reg_vk_tex.vk_tex
+                );
+            }
+        }
+
+            
+        /*
+         * Check if linear filtering is requested and if mipmaps should be created
+         */
+        void __vk_TextureAllocator::__mipmapTransition (
+            VkDevice device,
+            VkCommandPool cmd_pool,
+            VkQueue g_queue,
+            deng_bool_t is_lf,
+            deng_ui32_t mip_levels,
+            __vk_Texture &tex
+        ) {
+            RegType &reg_tex = m_reg.retrieve(tex.base_id, DENG_SUPPORTED_REG_TYPE_TEXTURE);
+
+            // Check if linear filtering is enabled and if mipmapping should be enabled
+            if(is_lf) {
+                __mkMipMaps (
+                    device,
+                    cmd_pool,
+                    tex.image,
+                    g_queue,
+                    (deng_i32_t) reg_tex.tex.pixel_data.width,
+                    (deng_i32_t) reg_tex.tex.pixel_data.height,
+                    mip_levels
+                );
+            }
+
+            else {
+                __vk_ImageCreator::transitionImageLayout (
+                    device,
+                    tex.image,
+                    cmd_pool,
+                    g_queue,
+                    VK_FORMAT_B8G8R8A8_SRGB,
+                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                    mip_levels
+                );
+            }
+
+        }
+
+        
+        /*
+         * Create VkImageView for texture image
+         */
+        void __vk_TextureAllocator::__mkImageView (
+            VkDevice device,
+            __vk_Texture &tex,
+            deng_ui32_t mip_levels
+        ) {
+            VkImageViewCreateInfo viewinfo = __vk_ImageCreator::getImageViewInfo (
+                tex.image, 
+                VK_FORMAT_B8G8R8A8_SRGB, 
+                VK_IMAGE_ASPECT_COLOR_BIT,
+                mip_levels
+            );
+
+            if
+            (
+                vkCreateImageView (
+                    device, 
+                    &viewinfo, 
+                    NULL, 
+                    &tex.image_view
+                ) != VK_SUCCESS
+            ) VK_RES_ERR("Failed to create texture image view!");
+            LOG("Created image view for texture with id: " + std::string(tex.uuid));
+        }
 
 
         /*
-         * Create new VkImage and VkImageView instances for single texture
-         * This method expects that enough memory is allocated for bitmap data
-         * of the given texture
+         * Copy all bitmap data to image bitmap buffer
+         * WARNING: This method performs no buffer bounds check and can cause errors!
+         * NOTE: Texture object must have a valid VkImage instance created before calling this 
+         * method
          */
-        void __vk_TextureAllocator::__newImage (
+        void __vk_TextureAllocator::__cpyBitmap (
             VkDevice device,
             VkPhysicalDevice gpu,
             VkCommandPool cmd_pool,
             VkQueue g_queue,
             deng_ui32_t mip_levels,
-            deng_bool_t is_lf,
             __vk_Texture &tex
         ) {
+            RegType &reg_tex = m_reg.retrieve (
+                tex.base_id, 
+                DENG_SUPPORTED_REG_TYPE_TEXTURE
+            );
+
             // Create staging buffer
             VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer (
                 device,
                 gpu,
-                tex.texture.pixel_data.size,
+                reg_tex.tex.pixel_data.size,
                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                 m_buffer_data.staging_buffer
             );
@@ -481,62 +519,21 @@ namespace deng {
             // Copy all bitmap data to staging buffer
             __vk_BufferCreator::cpyToBufferMem (
                 device,
-                tex.texture.pixel_data.size,
-                tex.texture.pixel_data.p_pixel_data,
+                reg_tex.tex.pixel_data.size,
+                reg_tex.tex.pixel_data.p_pixel_data,
                 m_buffer_data.staging_buffer_memory,
                 0
             );
 
-            tex.texture.pixel_data.memory_offset = m_buffer_data.img_memory_offset;
-
-            // Create new VkImage instance
-            LOG("TEX width, height: " + std::to_string(tex.texture.pixel_data.width) + ";" + std::to_string(tex.texture.pixel_data.height));
-            mem_req = __vk_ImageCreator::makeImage (
-                device,
-                gpu,
-                tex.image,
-                (deng_ui32_t) tex.texture.pixel_data.width,
-                (deng_ui32_t) tex.texture.pixel_data.height, 
-                mip_levels,
-                VK_FORMAT_B8G8R8A8_SRGB,
-                VK_IMAGE_TILING_OPTIMAL,
-                VK_IMAGE_USAGE_SAMPLED_BIT |
-                VK_IMAGE_USAGE_TRANSFER_DST_BIT |
-                VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
-                VK_SAMPLE_COUNT_1_BIT
-            );
-            
-            // Check if image memory needs to be allocated
-            if(m_buffer_data.img_memory_offset + mem_req.size > m_buffer_data.img_memory_cap) {
-                VkDeviceSize req_size;
-                if(!m_buffer_data.img_memory_cap) {
-                    m_tex_mem_bits = mem_req.memoryTypeBits;
-                    LOG("Detected no capacity for texture images");
-                    req_size = 4194304;
-                }
-                else {
-                    req_size = m_buffer_data.img_memory_cap * 2 > m_buffer_data.img_memory_offset + mem_req.size ?
-                                            m_buffer_data.img_memory_cap * 2 :
-                                            (m_buffer_data.img_memory_offset + mem_req.size) * 2;
-                }
-                __allocateTexMemory (
-                    device, 
-                    gpu, 
-                    cmd_pool, 
-                    g_queue, 
-                    m_buffer_data.img_memory_cap,
-                    req_size
-                );
-            }
-            
+            reg_tex.tex.pixel_data.memory_offset = m_buffer_data.img_memory_offset;
             m_buffer_data.img_memory_offset += mem_req.size;
-
+            
             // Bind the image to its memory with correct offsets
             vkBindImageMemory (
                 device,
                 tex.image,
                 m_buffer_data.img_memory,
-                tex.texture.pixel_data.memory_offset
+                reg_tex.tex.pixel_data.memory_offset
             );
 
             // Transition image layout for copying from staging buffer
@@ -558,35 +555,9 @@ namespace deng {
                 g_queue,
                 m_buffer_data.staging_buffer,
                 tex.image,
-                tex.texture.pixel_data.width,
-                tex.texture.pixel_data.height
+                reg_tex.tex.pixel_data.width,
+                reg_tex.tex.pixel_data.height
             );
-
-            // Additional mipmap enable / disable flags should be implemented
-            if(is_lf) {
-                __mkMipMaps (
-                    device,
-                    cmd_pool,
-                    tex.image,
-                    g_queue,
-                    (deng_i32_t) tex.texture.pixel_data.width,
-                    (deng_i32_t) tex.texture.pixel_data.height,
-                    mip_levels
-                );
-            }
-
-            else {
-                __vk_ImageCreator::transitionImageLayout (
-                    device,
-                    tex.image,
-                    cmd_pool,
-                    g_queue,
-                    VK_FORMAT_B8G8R8A8_SRGB,
-                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                    mip_levels
-                );
-            }
 
             // Clean the staging buffer
             vkDestroyBuffer (
@@ -594,41 +565,174 @@ namespace deng {
                 m_buffer_data.staging_buffer, 
                 NULL
             );
+
+            // Free staging buffer's memory
             vkFreeMemory (
                 device, 
                 m_buffer_data.staging_buffer_memory, 
                 NULL
             );
-                
-            VkImageViewCreateInfo viewinfo = __vk_ImageCreator::getImageViewInfo (
-                tex.image, 
-                VK_FORMAT_B8G8R8A8_SRGB, 
-                VK_IMAGE_ASPECT_COLOR_BIT,
-                mip_levels
+        }
+
+
+        /*
+         * Create new VkImage and VkImageView instances for single texture
+         */
+        void __vk_TextureAllocator::__newVkTexture (
+            VkDevice device,
+            VkPhysicalDevice gpu,
+            VkCommandPool cmd_pool,
+            VkQueue g_queue,
+            deng_ui32_t mip_levels,
+            deng_bool_t is_lf,
+            deng_bool_t ignore_mem_check,
+            deng_bool_t set_default_mem_req,
+            __vk_Texture &tex
+        ) {
+            // Retrieve the base texture uuid from registry
+            deng::RegType &base_tex = m_reg.retrieve (
+                tex.base_id, 
+                DENG_SUPPORTED_REG_TYPE_TEXTURE
             );
 
-            if
-            (
-                vkCreateImageView (
-                    device, 
-                    &viewinfo, 
-                    NULL, 
-                    &tex.image_view
-                ) != VK_SUCCESS
-            ) VK_RES_ERR("Failed to create texture image view!");
+            // Create new VkImage instance
+            VkMemoryRequirements mem_req = __vk_ImageCreator::makeImage (
+                device,
+                gpu,
+                tex.image,
+                (deng_ui32_t) base_tex.tex.pixel_data.width,
+                (deng_ui32_t) base_tex.tex.pixel_data.height, 
+                mip_levels,
+                VK_FORMAT_B8G8R8A8_SRGB,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_SAMPLED_BIT |
+                VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+                VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+                VK_SAMPLE_COUNT_1_BIT
+            );
 
-            // Create texture sampler for every texture
+            if(set_default_mem_req) 
+                m_tex_mem_bits = mem_req.memoryTypeBits;
+            
+            // Check if image memory needs to be allocated
+            if(!ignore_mem_check && m_buffer_data.img_memory_offset + mem_req.size > m_buffer_data.img_memory_cap) {
+                VkDeviceSize req_size = 0;
+                if(!m_buffer_data.img_memory_cap) {
+                    req_size = 4194304 > mem_req.size ? 4194304 : mem_req.size;
+                    __allocateTexMemory (
+                        device,
+                        gpu,
+                        cmd_pool,
+                        g_queue,
+                        req_size
+                    );
+                }
+                else {
+                    __reallocTexMemory (
+                        device, 
+                        gpu, 
+                        cmd_pool, 
+                        g_queue, 
+                        req_size,
+                        is_lf,
+                        mip_levels
+                    );
+                }
+            }
+
+            // Copy bitmap data over to image buffer
+            __cpyBitmap (
+                device,
+                gpu,
+                cmd_pool,
+                g_queue,
+                mip_levels,
+                tex
+            );
+
+            tex.is_buffered = true;
+            
+            // Create mipmaps if required
+            __mipmapTransition (
+                device,
+                cmd_pool,
+                g_queue,
+                is_lf,
+                mip_levels,
+                tex
+            );
+
+            // Create VkImageView for the texture instance
+            __mkImageView(device, tex, mip_levels);
+
+            // Create texture sampler for the texture
             __mkTextureSampler (
                 device, 
                 tex.sampler,
                 mip_levels
             );
-
-            LOG("Created image view and sampler");
         }
 
 
-        char *__vk_TextureAllocator::__getDummyUUID() { return m_dummy_tex_uuid; }
+        /* 
+         * Set up texture image buffers, samplers and mipmaps if they
+         * are supported
+         */
+        void __vk_TextureAllocator::__mkTextures (
+            VkDevice device, 
+            VkPhysicalDevice gpu, 
+            VkCommandPool cmd_pool,
+            deng_bool_t is_lf, 
+            const dengMath::vec2<deng_ui32_t> &tex_bounds,
+            VkQueue g_queue
+        ) {
+            size_t index;
+            deng_ui32_t mip_levels = 1;
+
+            // Iterate through assets an check if it is texture mapped
+            for(index = tex_bounds.first; index < tex_bounds.second; index++) {
+                // Retrieve textures from registry
+                RegType &vk_tex_reg = m_reg.retrieve (
+                    m_textures[index], 
+                    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE
+                );
+
+                RegType &tex_reg = m_reg.retrieve (
+                    vk_tex_reg.vk_tex.base_id,
+                    DENG_SUPPORTED_REG_TYPE_TEXTURE
+                );
+
+                // Check if mipmapping is supported
+                if(is_lf) {
+                    mip_levels = (deng_i32_t) floor (
+                        log2 (
+                            std::max (
+                                tex_reg.tex.pixel_data.width,
+                                tex_reg.tex.pixel_data.height
+                            )
+                        )
+                    ) + 1;
+                }
+
+                else mip_levels = 1;
+                
+                // Create a new image
+                __newVkTexture (
+                    device,
+                    gpu,
+                    cmd_pool,
+                    g_queue,
+                    mip_levels,
+                    is_lf,
+                    false,
+                    false,
+                    vk_tex_reg.vk_tex
+                );
+            }
+        }
+
+
+        deng_Id __vk_TextureAllocator::__getDummyUUID() { return m_dummy_tex_uuid; }
         
 
         /*********************************************************/
@@ -645,24 +749,23 @@ namespace deng {
             VkRenderPass renderpass, 
             VkCommandPool cmd_pool,
             VkQueue g_queue,
-            std::vector<VkImageView> sc_img_views,
-            const __vk_AssetsInfo &assets_info,
+            const std::vector<VkImageView> &sc_img_views,
+            deng::__GlobalRegistry &reg,
+            std::vector<deng_Id> &assets,
+            std::vector<deng_Id> &textures,
             VkFormat sc_color_format,
             const VkPhysicalDeviceLimits &gpu_limits
         ) : __vk_TextureAllocator (
-            device, 
-            gpu,
-            cmd_pool, 
-            g_queue,
-            sc_img_views.size(), 
-            assets_info.p_tex,
-            assets_info.p_tex_map
-        ),  m_gpu_limits(gpu_limits) {
-            m_p_assets = assets_info.p_assets;
-            m_p_textures = assets_info.p_tex;
-
+                device, 
+                gpu,
+                cmd_pool, 
+                g_queue,
+                sc_img_views.size(),
+                textures,
+                reg
+            ), m_assets(assets), m_textures(textures), m_gpu_limits(gpu_limits)
+        {
             m_dummy_tex_uuid = __getDummyUUID();
-            LOG("Constructor dummy uuid: " + std::string(m_dummy_tex_uuid));
             m_sample_count = sample_c;
             __allocateUniformBuffer (
                 device, 
@@ -709,7 +812,7 @@ namespace deng {
                 is_init = true;
                 m_buffer_data.ubo_cap = 
                     __max_frame_c * + (
-                        __DEFAULT_ASSET_HM_CAP * 
+                        __DEFAULT_ASSET_CAP * 
                         std::max(sizeof(__vk_UniformColorData), m_gpu_limits.minUniformBufferOffsetAlignment) +
                         std::max(sizeof(__vk_UniformTransformation), m_gpu_limits.minUniformBufferOffsetAlignment)
                     );
@@ -901,7 +1004,7 @@ namespace deng {
                 NULL
             );
 
-            // Recreate and reallocate memory for uniform buffers
+            // Recreate and realloc memory for uniform buffers
             mem_req = __vk_BufferCreator::makeBuffer (
                 device, 
                 gpu, 
@@ -947,7 +1050,7 @@ namespace deng {
             VkDevice &device, 
             VkRenderPass &renderpass, 
             VkExtent2D &extent, 
-            std::vector<VkImageView> &sc_img_views
+            const std::vector<VkImageView> &sc_img_views
         ) {
             size_t index;
             m_framebuffers.resize(sc_img_views.size());
@@ -1073,52 +1176,6 @@ namespace deng {
         }
 
 
-
-
-        /* 
-         * Set up texture image buffers, samplers and mipmaps if they
-         * are supported
-         */
-        void __vk_ResourceManager::mkTextures (
-            VkDevice device, 
-            VkPhysicalDevice gpu, 
-            VkCommandPool cmd_pool,
-            deng_bool_t is_lf, 
-            dengMath::vec2<deng_ui32_t> tex_bounds,
-            VkQueue g_queue
-        ) {
-            size_t index;
-            deng_ui32_t mip_levels = 1;
-
-            // Iterate through assets an check if it is texture mapped
-            for(index = tex_bounds.first; index < tex_bounds.second; index++) {
-                // Check if mipmapping is supported
-                if(is_lf) {
-                    mip_levels = (deng_i32_t) floor (
-                        log2 (
-                            std::max (
-                                (*m_p_textures)[index].texture.pixel_data.width, 
-                                (*m_p_textures)[index].texture.pixel_data.height
-                            )
-                        )
-                    ) + 1;
-                }
-
-                else mip_levels = 1;
-                
-                __newImage (
-                    device,
-                    gpu,
-                    cmd_pool,
-                    g_queue,
-                    mip_levels,
-                    is_lf,
-                    m_p_textures->at(index)
-                );
-            }
-        }
-
-
         /* 
          * Create and populate main data buffer with asset
          * vertices and indices
@@ -1135,33 +1192,44 @@ namespace deng {
             VkMemoryRequirements mem_req;
 
             // Find the total amount of bytes needed to allocate for assets 
-            for(i = 0; i < m_p_assets->size(); i++) {
-                (*m_p_assets)[i].asset.vertices.mem_offset = m_buffer_data.main_buffer_size;
+            for(i = 0; i < m_assets.size(); i++) {
+                RegType &reg_vk_asset = m_reg.retrieve (
+                    m_assets[i], 
+                    DENG_SUPPORTED_REG_TYPE_VK_ASSET
+                );
 
-                switch ((*m_p_assets)[i].asset.asset_mode)
+                RegType &reg_asset = m_reg.retrieve (
+                    reg_vk_asset.vk_asset.base_id, 
+                    DENG_SUPPORTED_REG_TYPE_ASSET
+                );
+
+                reg_vk_asset.vk_asset.vert_offset = m_buffer_data.main_buffer_size;
+
+                LOG("Vert offset: " + std::to_string(reg_vk_asset.vk_asset.vert_offset));
+                switch (reg_asset.asset.asset_mode)
                 {
                 case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-                    m_buffer_data.main_buffer_size += (*m_p_assets)[i].asset.vertices.n * sizeof(VERT_MAPPED_UNOR);
+                    m_buffer_data.main_buffer_size += reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_UNOR);
                     break;
 
                 case DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
-                    m_buffer_data.main_buffer_size += (*m_p_assets)[i].asset.vertices.n * sizeof(VERT_MAPPED_NOR);
+                    m_buffer_data.main_buffer_size += reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_NOR);
                     break;
 
                 case DAS_ASSET_MODE_3D_UNMAPPED:
-                    m_buffer_data.main_buffer_size += (*m_p_assets)[i].asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR);
+                    m_buffer_data.main_buffer_size += reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR);
                     break;
                 
                 case DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED:
-                    m_buffer_data.main_buffer_size += (*m_p_assets)[i].asset.vertices.n * sizeof(VERT_UNMAPPED_NOR);
+                    m_buffer_data.main_buffer_size += reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_NOR);
                     break;
 
                 case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
-                    m_buffer_data.main_buffer_size += (*m_p_assets)[i].asset.vertices.n * sizeof(VERT_MAPPED_2D);
+                    m_buffer_data.main_buffer_size += reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_2D);
                     break;
 
                 case DAS_ASSET_MODE_2D_UNMAPPED:
-                    m_buffer_data.main_buffer_size += (*m_p_assets)[i].asset.vertices.n * sizeof(VERT_UNMAPPED_2D);
+                    m_buffer_data.main_buffer_size += reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_2D);
                     break;
                 
                 default:
@@ -1169,13 +1237,11 @@ namespace deng {
                 }
 
                 // Add indices to the buffer byte count
-                (*m_p_assets)[i].asset.indices.mem_offset = m_buffer_data.main_buffer_size;
-                m_buffer_data.main_buffer_size += (*m_p_assets)[i].asset.indices.n * sizeof(deng_ui32_t);
+                reg_vk_asset.vk_asset.ind_offset = m_buffer_data.main_buffer_size;
+                m_buffer_data.main_buffer_size += reg_asset.asset.indices.n * sizeof(deng_ui32_t);
             }
 
 
-            LOG("Main buffer size is: " + std::to_string(m_buffer_data.main_buffer_size));
-            
             // Create and allocate memory for staging buffer
             mem_req = __vk_BufferCreator::makeBuffer (
                 device, 
@@ -1203,74 +1269,84 @@ namespace deng {
             );
             
             // Assign correct offsets for buffers and populate buffer memory
-            for(i = 0, m_buffer_data.main_buffer_size = 0; i < m_p_assets->size(); i++) {
+            for(i = 0; i < m_assets.size(); i++) {
+                RegType &reg_vk_asset = m_reg.retrieve (
+                    m_assets[i], 
+                    DENG_SUPPORTED_REG_TYPE_VK_ASSET
+                );
+
+                RegType &reg_asset = m_reg.retrieve (
+                    reg_vk_asset.vk_asset.base_id,
+                    DENG_SUPPORTED_REG_TYPE_ASSET
+                );
+
                 // Populate staging buffer memory with vertices data
-                switch ((*m_p_assets)[i].asset.asset_mode)
+                switch (reg_asset.asset.asset_mode)
                 {
                 case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-                    cur_offset = (*m_p_assets)[i].asset.vertices.n * sizeof(VERT_MAPPED_UNOR);
                     __vk_BufferCreator::cpyToBufferMem (
                         device, 
-                        cur_offset, 
-                        (*m_p_assets)[i].asset.vertices.vmu, 
+                        reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_UNOR),
+                        reg_asset.asset.vertices.vmu, 
                         m_buffer_data.staging_buffer_memory, 
-                        m_buffer_data.main_buffer_size
+                        cur_offset
                     );
+                    cur_offset += reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_UNOR);
                     break;
 
                 case DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
-                    cur_offset = (*m_p_assets)[i].asset.vertices.n * sizeof(VERT_MAPPED_NOR);
                     __vk_BufferCreator::cpyToBufferMem (
                         device, 
-                        cur_offset, 
-                        (*m_p_assets)[i].asset.vertices.vmn, 
+                        reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_NOR),
+                        reg_asset.asset.vertices.vmn, 
                         m_buffer_data.staging_buffer_memory, 
-                        m_buffer_data.main_buffer_size
+                        cur_offset
                     );
+                    cur_offset += reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_NOR);
                     break;
 
                 case DAS_ASSET_MODE_3D_UNMAPPED:
-                    cur_offset = (*m_p_assets)[i].asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR);
                     __vk_BufferCreator::cpyToBufferMem (
                         device, 
-                        cur_offset, 
-                        (*m_p_assets)[i].asset.vertices.vuu, 
+                        reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR),
+                        reg_asset.asset.vertices.vuu, 
                         m_buffer_data.staging_buffer_memory, 
-                        m_buffer_data.main_buffer_size
+                        cur_offset
                     );
+                    cur_offset += reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR);
                     break;
 
                 case DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED:
-                    cur_offset = (*m_p_assets)[i].asset.vertices.n * sizeof(VERT_UNMAPPED_NOR);
                     __vk_BufferCreator::cpyToBufferMem (
                         device, 
-                        cur_offset, 
-                        (*m_p_assets)[i].asset.vertices.vun, 
+                        reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_NOR),
+                        reg_asset.asset.vertices.vun, 
                         m_buffer_data.staging_buffer_memory, 
-                        m_buffer_data.main_buffer_size
+                        cur_offset
                     );
+                    cur_offset += reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_NOR);
                     break;
 
                 case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
-                    cur_offset = (*m_p_assets)[i].asset.vertices.n * sizeof(VERT_MAPPED_2D);
                     __vk_BufferCreator::cpyToBufferMem (
                         device, 
-                        cur_offset, 
-                        (*m_p_assets)[i].asset.vertices.vm2d, 
+                        reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_2D),
+                        reg_asset.asset.vertices.vm2d, 
                         m_buffer_data.staging_buffer_memory, 
-                        m_buffer_data.main_buffer_size
+                        cur_offset
                     );
+                    cur_offset += reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_2D);
                     break;
 
                 case DAS_ASSET_MODE_2D_UNMAPPED: {
-                    cur_offset = (*m_p_assets)[i].asset.vertices.n * sizeof(VERT_UNMAPPED_2D);
                     __vk_BufferCreator::cpyToBufferMem (
                         device, 
-                        cur_offset, 
-                        (*m_p_assets)[i].asset.vertices.vu2d,
+                        reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_2D),
+                        reg_asset.asset.vertices.vu2d,
                         m_buffer_data.staging_buffer_memory, 
-                        m_buffer_data.main_buffer_size
+                        cur_offset
                     );
+                    cur_offset += reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_2D);
                     break;
                 }
 
@@ -1278,19 +1354,16 @@ namespace deng {
                     break;
                 }
 
-                m_buffer_data.main_buffer_size += cur_offset;
-
                 // Populate staging memory with indices data
-                cur_offset = (*m_p_assets)[i].asset.indices.n * sizeof(deng_ui32_t);
                 __vk_BufferCreator::cpyToBufferMem (
                     device, 
-                    cur_offset, 
-                    (*m_p_assets)[i].asset.indices.indices, 
+                    reg_asset.asset.indices.n * sizeof(deng_ui32_t),
+                    reg_asset.asset.indices.indices, 
                     m_buffer_data.staging_buffer_memory, 
-                    m_buffer_data.main_buffer_size
+                    cur_offset
                 );
 
-                m_buffer_data.main_buffer_size += cur_offset;
+                cur_offset = reg_asset.asset.indices.n * sizeof(deng_ui32_t);
             }
 
             // Push data from staging buffer to main buffer
@@ -1335,65 +1408,30 @@ namespace deng {
             vkFreeMemory(device, m_buffer_data.staging_buffer_memory, NULL);
         }
 
-
-        /*
-         * This method either doubles the texture buffer memory capacity or 
-         * calculates the new capacity from given textures and 
-         * reallocates everything in it.
-         */
-        void __vk_ResourceManager::__reallocateTextureMemory (
+        
+        void __vk_ResourceManager::mkTextures (
             VkDevice device,
             VkPhysicalDevice gpu,
             VkCommandPool cmd_pool,
+            deng_bool_t is_lf_supported,
+            const dengMath::vec2<deng_ui32_t> &tex_bounds,
             VkQueue g_queue
         ) {
-            // Find out how much memory needs to be allocated
-            size_t req_size = 0;
-            size_t old_size = m_buffer_data.img_memory_cap;
-            for(size_t i = 0; i < m_p_textures->size(); i++)
-                req_size += m_p_textures->at(i).texture.pixel_data.size;
-            
-            // Check how much the memory capacity should be incremented
-            if(req_size > m_buffer_data.img_memory_cap * 2) {
-                // Round the to the closest biggest base 2 exponent
-                m_buffer_data.img_memory_cap = req_size;
-                deng_f64_t exp = ceil(log2((deng_f64_t) m_buffer_data.img_memory_cap));
-
-                m_buffer_data.img_memory_cap = (VkDeviceSize) pow(2.0, exp);
-            }
-
-            else m_buffer_data.img_memory_cap *= 2;
-            
-            // Destroy all previously created VkImage instances
-            for(size_t i = 0; i < m_p_textures->size(); i++) {
-                vkDestroyImageView (
-                    device, 
-                    m_p_textures->at(i).image_view, 
-                    NULL
-                );
-
-                vkDestroyImage (
-                    device, 
-                    m_p_textures->at(i).image, 
-                    NULL
-                );
-            }
-                
-            __allocateTexMemory (
-                device, 
-                gpu, 
-                cmd_pool, 
-                g_queue, 
-                old_size, 
-                req_size
+            __mkTextures (
+                device,
+                gpu,
+                cmd_pool,
+                is_lf_supported,
+                tex_bounds,
+                g_queue
             );
         }
 
 
         /*
-         * This method reallocates ubo buffer to double its current capacity
+         * This method reallocs ubo buffer to double its current capacity
          */
-        void __vk_ResourceManager::__reallocateUniformBufferMemory (
+        void __vk_ResourceManager::__reallocUniformBufferMemory (
             VkDevice device,
             VkPhysicalDevice gpu,
             VkCommandPool cmd_pool,
@@ -1402,6 +1440,7 @@ namespace deng {
             VkDeviceSize old_size = m_buffer_data.ubo_cap;
             m_buffer_data.ubo_cap *= 2;
             
+            // Allocate 
             __allocateUniformBuffer (
                 device,
                 gpu,
@@ -1443,44 +1482,43 @@ namespace deng {
 
         /*
          * Copy asset color data to uniform buffer memory
-         * PS! ubo_mem pointer must have enough memory allocated for copying
-         * data to it 
          */
         void __vk_ResourceManager::reserveAssetUniformData (
             VkDevice device,
             VkPhysicalDevice gpu,
             VkCommandPool cmd_pool,
             VkQueue g_queue,
-            __vk_UniformColorData *ubo_mem,
-            __vk_Asset &asset
+            __vk_Asset &vk_asset
         ) {
-            asset.color_offset = m_buffer_data.ubo_offset;
-            LOG("Color offset " + std::to_string(asset.color_offset));
+            RegType &reg_asset = m_reg.retrieve(vk_asset.base_id, DENG_SUPPORTED_REG_TYPE_ASSET);
+            vk_asset.color_offset = m_buffer_data.ubo_offset;
+
             __vk_UniformColorData ubo;
             ubo.color = (dengMath::vec4<deng_vec_t>) {
-                asset.asset.color.col_r,
-                asset.asset.color.col_g,
-                asset.asset.color.col_b,
-                asset.asset.color.col_a
+                reg_asset.asset.color.col_r,
+                reg_asset.asset.color.col_g,
+                reg_asset.asset.color.col_b,
+                reg_asset.asset.color.col_a
             };
             
-            // Check if asset type is unmapped or not
+            // Check if reg type is unmapped or not
             if (
-                asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
-                asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
-                asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED
+                reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
+                reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
+                reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED ||
+                !reg_asset.asset.tex_uuid
             ) ubo.is_unmapped = true;
-            else ubo.is_unmapped = asset.asset.force_unmap; 
+            else ubo.is_unmapped = reg_asset.asset.force_unmap; 
 
             for(size_t i = 0; i < __max_frame_c; i++) {
-                // Check if buffer memory needs to be reallocated
+                // Check if buffer memory needs to be reallocd
                 if (
-                    asset.color_offset + i * std::max (
+                    vk_asset.color_offset + i * std::max (
                         sizeof(__vk_UniformColorData), 
                         m_gpu_limits.minUniformBufferOffsetAlignment
                     ) > m_buffer_data.ubo_cap
                 ) {
-                    __reallocateTextureMemory (
+                    __reallocUniformBufferMemory (
                         device,
                         gpu,
                         cmd_pool,
@@ -1494,15 +1532,19 @@ namespace deng {
                     sizeof(__vk_UniformColorData),
                     &ubo,
                     m_buffer_data.uniform_buffer_mem,
-                    asset.color_offset + i * std::max(sizeof(__vk_UniformColorData), m_gpu_limits.minUniformBufferOffsetAlignment)
+                    vk_asset.color_offset + i * std::max(sizeof(__vk_UniformColorData), m_gpu_limits.minUniformBufferOffsetAlignment)
                 );
             }
-            m_buffer_data.ubo_offset += __max_frame_c * std::max(sizeof(__vk_UniformColorData), m_gpu_limits.minUniformBufferOffsetAlignment);
+            m_buffer_data.ubo_offset += __max_frame_c * 
+                std::max(sizeof(__vk_UniformColorData), 
+                m_gpu_limits.minUniformBufferOffsetAlignment);
         }
 
 
         /*
          * Replace data in main buffer with newer data from given asset vertices
+         * This method gives undefined behaviour if asset element size changed without reallocating 
+         * graphics buffers
          */
         void __vk_ResourceManager::remapAssetVerts (
             VkDevice device,
@@ -1511,43 +1553,49 @@ namespace deng {
             VkQueue g_queue,
             dengMath::vec2<deng_ui32_t> asset_bounds
         ) {
-            // Verify asset bounds
-            if(asset_bounds.first >= m_p_assets->size() || asset_bounds.second > m_p_assets->size()) 
-                RUN_ERR("remapAssetVerts(): Invalid asset vertices bounds!");
-            
             // Find maximum vertex memory usage
             VkDeviceSize max_mem = 0;
             for(size_t i = asset_bounds.first; i < asset_bounds.second; i++) {
-                switch(m_p_assets->at(i).asset.asset_mode) 
+                RegType &reg_vk_asset = m_reg.retrieve (
+                    m_assets[i], 
+                    DENG_SUPPORTED_REG_TYPE_VK_ASSET
+                );
+
+                RegType &reg_asset = m_reg.retrieve (
+                    reg_vk_asset.vk_asset.base_id,
+                    DENG_SUPPORTED_REG_TYPE_ASSET
+                );
+
+                switch(reg_asset.asset.asset_mode) 
                 {
                 case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-                    if(max_mem < m_p_assets->at(i).asset.vertices.n * sizeof(VERT_MAPPED_UNOR))
-                        max_mem = m_p_assets->at(i).asset.vertices.n * sizeof(VERT_MAPPED_UNOR);
+                    if(max_mem < reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_UNOR))
+                        max_mem = reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_UNOR);
                     break;
 
                 case DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
-                    if(max_mem < m_p_assets->at(i).asset.vertices.n * sizeof(VERT_MAPPED_NOR))
-                        max_mem = m_p_assets->at(i).asset.vertices.n * sizeof(VERT_MAPPED_NOR);
+                    if(max_mem < reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_NOR))
+                        max_mem = reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_NOR);
                     break;
 
                 case DAS_ASSET_MODE_3D_UNMAPPED:
-                    if(max_mem < m_p_assets->at(i).asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR))
-                        max_mem = m_p_assets->at(i).asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR);
+                    if(max_mem < reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR))
+                        max_mem = reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR);
                     break;
 
                 case DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED:
-                    if(max_mem < m_p_assets->at(i).asset.vertices.n * sizeof(VERT_UNMAPPED_NOR))
-                        max_mem = m_p_assets->at(i).asset.vertices.n * sizeof(VERT_UNMAPPED_NOR);
+                    if(max_mem < reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_NOR))
+                        max_mem = reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_NOR);
                     break;
 
                 case DAS_ASSET_MODE_2D_UNMAPPED:
-                    if(max_mem < m_p_assets->at(i).asset.vertices.n * sizeof(VERT_UNMAPPED_2D))
-                        max_mem = m_p_assets->at(i).asset.vertices.n * sizeof(VERT_UNMAPPED_2D);
+                    if(max_mem < reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_2D))
+                        max_mem = reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_2D);
                     break;
 
                 case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
-                    if(max_mem < m_p_assets->at(i).asset.vertices.n * sizeof(VERT_UNMAPPED_2D))
-                        max_mem = m_p_assets->at(i).asset.vertices.n * sizeof(VERT_UNMAPPED_2D);
+                    if(max_mem < reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_2D))
+                        max_mem = reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_2D);
                     break;
 
                 default:
@@ -1587,81 +1635,91 @@ namespace deng {
             VkDeviceSize offset = 0;
             VkDeviceSize size = 0;
             for(size_t i = asset_bounds.first; i < asset_bounds.second; i++) {
-                switch(m_p_assets->at(i).asset.asset_mode) 
+                RegType &reg_vk_asset = m_reg.retrieve (
+                    m_assets[i],
+                    DENG_SUPPORTED_REG_TYPE_VK_ASSET
+                );
+
+                RegType &reg_asset = m_reg.retrieve (
+                    reg_vk_asset.vk_asset.base_id,
+                    DENG_SUPPORTED_REG_TYPE_ASSET
+                );
+
+                switch(reg_asset.asset.asset_mode) 
                 {
                 case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-                    offset = m_p_assets->at(i).asset.vertices.mem_offset;
-                    size = m_p_assets->at(i).asset.vertices.n * sizeof(VERT_MAPPED_UNOR);
+                    offset = reg_vk_asset.vk_asset.vert_offset;
+                    size = reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_UNOR);
 
                     __vk_BufferCreator::cpyToBufferMem ( 
                         device,
                         size,
-                        m_p_assets->at(i).asset.vertices.vmu,
+                        reg_asset.asset.vertices.vmu,
                         m_buffer_data.staging_buffer_memory,
                         0 
                     );
                     break;
 
                 case DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
-                    offset = m_p_assets->at(i).asset.vertices.mem_offset;
-                    size = m_p_assets->at(i).asset.vertices.n * sizeof(VERT_MAPPED_NOR);
+                    offset = reg_vk_asset.vk_asset.vert_offset;
+                    size = reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_NOR);
 
                     __vk_BufferCreator::cpyToBufferMem ( 
                         device,
                         size,
-                        m_p_assets->at(i).asset.vertices.vmn,
+                        reg_asset.asset.vertices.vmn,
                         m_buffer_data.staging_buffer_memory,
                         0 
                     );
                     break;
 
                 case DAS_ASSET_MODE_3D_UNMAPPED:
-                    offset = m_p_assets->at(i).asset.vertices.mem_offset;
-                    size = m_p_assets->at(i).asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR);
+                    offset = reg_vk_asset.vk_asset.vert_offset;
+                    size = reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR);
 
                     __vk_BufferCreator::cpyToBufferMem ( 
                         device,
                         size,
-                        m_p_assets->at(i).asset.vertices.vuu,
+                        reg_asset.asset.vertices.vuu,
                         m_buffer_data.staging_buffer_memory,
                         0 
                     );
                     break;
 
                 case DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED:
-                    offset = m_p_assets->at(i).asset.vertices.mem_offset;
-                    size = m_p_assets->at(i).asset.vertices.n * sizeof(VERT_UNMAPPED_NOR);
+                    offset = reg_vk_asset.vk_asset.vert_offset;
+                    size = reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_NOR);
 
                     __vk_BufferCreator::cpyToBufferMem ( 
                         device,
                         size,
-                        m_p_assets->at(i).asset.vertices.vun,
+                        reg_asset.asset.vertices.vun,
                         m_buffer_data.staging_buffer_memory,
                         0 
                     );
                     break;
 
                 case DAS_ASSET_MODE_2D_UNMAPPED:
-                    offset = m_p_assets->at(i).asset.vertices.mem_offset;
-                    size = m_p_assets->at(i).asset.vertices.n * sizeof(VERT_UNMAPPED_2D);
+                    offset = reg_vk_asset.vk_asset.vert_offset;
+                    size = reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_2D);
 
                     __vk_BufferCreator::cpyToBufferMem ( 
                         device,
                         size,
-                        m_p_assets->at(i).asset.vertices.vu2d,
+                        reg_asset.asset.vertices.vu2d,
                         m_buffer_data.staging_buffer_memory,
                         0 
                     );
                     break;
 
                 case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
-                    offset = m_p_assets->at(i).asset.vertices.mem_offset;
-                    size = m_p_assets->at(i).asset.vertices.n * sizeof(VERT_MAPPED_2D);
+                    offset = reg_vk_asset.vk_asset.vert_offset;
+                    size = reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_2D);
 
                     __vk_BufferCreator::cpyToBufferMem ( 
                         device,
                         size,
-                        m_p_assets->at(i).asset.vertices.vm2d,
+                        reg_asset.asset.vertices.vm2d,
                         m_buffer_data.staging_buffer_memory,
                         0 
                     );

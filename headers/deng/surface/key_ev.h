@@ -92,10 +92,8 @@ extern "C" {
     /*
      * Key event registry arrays
      */
-    deng_bool_t active_keys[DENG_KEY_COUNT] = {0};
-    deng_bool_t released_keys[DENG_KEY_COUNT] = {0};
-    deng_bool_t active_btns[DENG_MOUSE_BTN_COUNT] = {0};
-    deng_bool_t released_btns[DENG_MOUSE_BTN_COUNT] = {0};
+    deng_bool_t active_ev[DENG_INPUT_EV_COUNT] = {0};
+    deng_bool_t released_ev[DENG_INPUT_EV_COUNT] = {0};
 #endif
 
 

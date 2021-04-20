@@ -71,6 +71,7 @@
     #include <vulkan/vulkan.h>
     #include <common/base_types.h>
     #include <common/hashmap.h>
+    #include <common/uuid.h>
     #include <common/err_def.h>
     #include <das/assets.h>
 
@@ -78,17 +79,21 @@
     #include <deng/window.h>
     #include <utils/timer.h>
     #include <deng/camera.h>
+
     #include <deng/vulkan/vulkan_qm.h>
     #include <deng/vulkan/vulkan_sd.h>
     #include <deng/vulkan/vulkan_resources.h>
+
+    #include <deng/lighting/light_srcs.h>
+    #include <deng/registry/registry.h>
+    #include <utils/font.h>
+
     #include <deng/vulkan/vulkan_rend_infos.h>
     #include <deng/vulkan/vulkan_ic.h>
     #include <deng/vulkan/vulkan_scc.h>
     #include <deng/vulkan/vulkan_desc_c.h>
     #include <deng/vulkan/vulkan_dc.h>
     #include <deng/vulkan/vulkan_ra.h>
-
-    #include <utils/font.h>
 #endif
 
 
@@ -113,15 +118,11 @@ namespace deng {
          * assumes that no device queue operations are active
          */
         class __vk_RuntimeUpdater : protected __vk_RendererInitialisers {
-        private:
-            std::vector<__vk_Asset> *m_p_assets;
-            std::vector<__vk_Texture> *m_p_textures;
-            Hashmap *m_p_asset_map;
-            Hashmap *m_p_tex_map;
+        protected:
+            std::vector<deng_Id> m_assets;
+            std::vector<deng_Id> m_textures;
 
         protected:
-            __vk_RuntimeUpdater(const __vk_AssetsInfo &assets);
-
 
             /*
              * This method updates the vertices buffer that is allocated by
@@ -134,18 +135,6 @@ namespace deng {
              * Rerecord existing commandbuffers 
              */
             void __updateCmdBuffers(const dengMath::vec4<deng_vec_t> &background);
-             
-
-            /*
-             * Free everything from texture buffer and reallocate
-             */
-            void __realignTextureBuffers();
-
-            
-            /*
-             * Free all buffers related to asset data and reallocate them
-             */
-            void __realignAssetBuffers();
         };
 
 
@@ -168,19 +157,15 @@ namespace deng {
          */
         class __vk_Renderer : private __vk_RuntimeUpdater {
         private:
+            __GlobalRegistry &m_reg;
+            deng::Window &m_win;
             __vk_ConfigVars m_config;
 
-            // This is reserved for future
+            // This is reserved for future use
             dengUtils::StringRasterizer *m_p_sr = NULL;
 
-            // Assets and textures
-            std::vector<__vk_Asset> m_assets;
-            std::vector<__vk_Texture> m_textures;
-
-            Hashmap m_asset_map;
-            Hashmap m_tex_map;
-
-            deng::Window *m_p_win;
+            std::vector<deng_Id> m_assets;
+            std::vector<deng_Id> m_textures;
 
         private:
             /*
@@ -188,25 +173,17 @@ namespace deng {
              */
             void __initConstruct();
 
-
-
-
             /*
              * Free and destroy all active Vulkan API specific instances
              */
             void __cleanup();
-
-
-            /*
-             * Free asset and texture memory
-             */
-            void __cleanAssets();
             void __makeFrame();
 
         public:
             __vk_Renderer (
-                deng::Window *p_win,
-                const __vk_ConfigVars &cnf
+                deng::Window &win,
+                const __vk_ConfigVars &cnf,
+                deng::__GlobalRegistry &reg
             );
 
 
@@ -214,35 +191,23 @@ namespace deng {
 
             /*
              * Add new assets to renderer asset list.
-             * PS! UUIDs must be previously generated!
-             * Also no descriptor sets are allocated since that
+             * No descriptor sets are allocated since that
              * will be done when renderer is being fully initialised.
              */
             void submitAssets (
-                das_Asset *assets,
+                deng_Id *asset_ids,
                 deng_i32_t asset_c
             );
 
 
             /*
              * Add new textures to renderer texture list.
-             * PS! UUIDs must be previously generated!
              */
             void submitTextures (
-                das_Texture *textures,
+                deng_Id *tex_ids,
                 deng_i32_t tex_c
             );
 
-
-            /*
-             * This method changes the texture of given asset
-             * to the one with given uuid.
-             */
-            void changeTexture (
-                const char *asset_uuid, 
-                const char *tex_uuid
-            );
-            
 
             /*
              * Submit new draw call

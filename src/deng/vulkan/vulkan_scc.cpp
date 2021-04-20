@@ -74,16 +74,15 @@ namespace deng {
         /******************************************************/
         __vk_SwapChainCreator::__vk_SwapChainCreator (
             VkDevice device,
-            deng::Window *p_win,
+            deng::Window &win,
             VkPhysicalDevice gpu, 
             VkSurfaceKHR surface, 
             __vk_QueueManager qff,
             VkSampleCountFlagBits sample_c
-        ) { 
+        ) : __vk_DeviceInfo(win) { 
             m_msaa_sample_c = sample_c;       
             m_device = device;
             m_gpu = gpu;
-            m_p_win = p_win;
             m_qff = qff;
             
             m_p_sc_details = new __vk_SwapChainDetails(gpu, surface);
@@ -170,8 +169,8 @@ namespace deng {
             ) m_ext = m_p_sc_details->getCapabilities().currentExtent;
 
             else {
-                m_ext.width = m_p_win->getSize().first;
-                m_ext.height = m_p_win->getSize().second;
+                m_ext.width = m_win.getSize().first;
+                m_ext.height = m_win.getSize().second;
             }
         }
 

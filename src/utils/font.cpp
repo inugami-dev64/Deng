@@ -146,7 +146,7 @@ namespace dengUtils {
             // Open directory   
             DIR *dir;
             dir = opendir(root_path.c_str());
-            if(!dir) RUN_ERR("Invalid font root_path: " + root_path);
+            if(!dir) RUN_ERR("Invalid font root_path", root_path);
         
             // Read directory contents 
             struct dirent *contents;
@@ -218,7 +218,7 @@ namespace dengUtils {
 
     StringRasterizer::StringRasterizer (
         std::string custom_font_path, 
-        deng::WindowWrap *p_window_wrap
+        deng::Window *p_window_wrap
     ) {
         FT_Error res;
         m_p_win = p_window_wrap;
@@ -241,8 +241,7 @@ namespace dengUtils {
 
         return dengMath::Conversion::pixelSizeToVector2DSize (
             total_size,
-            m_p_win->getSize(),
-            DENG_COORD_AXIS_X
+            m_p_win->getSize().first
         );
     }
 
@@ -377,8 +376,7 @@ namespace dengUtils {
         str.font_file = path_str.c_str();
         deng_ui16_t px_size = (deng_vec_t) dengMath::Conversion::vector2DSizeToPixelSize (
             vec_size,
-            m_p_win->getSize(),
-            DENG_COORD_AXIS_Y
+            m_p_win->getSize().second
         );
 
         __mkGlyphs (
@@ -431,14 +429,12 @@ namespace dengUtils {
         dengMath::vec2<deng_vec_t> vec_size;
         vec_size.first = dengMath::Conversion::pixelSizeToVector2DSize (
             str.box_size.first,
-            m_p_win->getSize(),
-            DENG_COORD_AXIS_X
+            m_p_win->getSize().first
         );
 
         vec_size.second = dengMath::Conversion::pixelSizeToVector2DSize (
             str.box_size.second,
-            m_p_win->getSize(),
-            DENG_COORD_AXIS_Y
+            m_p_win->getSize().second
         );
         
         str.tex_data.resize (
@@ -548,8 +544,7 @@ namespace dengUtils {
         ras_str.font_file = font_path.c_str();
         deng_px_t px_height = dengMath::Conversion::vector2DSizeToPixelSize (
             vec_height,
-            deng_window_size,
-            DENG_COORD_AXIS_Y
+            deng_window_size.second
         );
 
         // Find all unique glyphs
@@ -562,8 +557,7 @@ namespace dengUtils {
 
         deng_px_t max_px_width = dengMath::Conversion::vector2DSizeToPixelSize (
             max_vec_width,
-            deng_window_size,
-            DENG_COORD_AXIS_X
+            deng_window_size.first
         );
 
         // Count the total size of the string
@@ -582,8 +576,7 @@ namespace dengUtils {
 
         *p_out_width = dengMath::Conversion::pixelSizeToVector2DSize (
             cur_px_width - ras_str.unique_glyphs[ras_str.rend_text[l_index].glyph_id].advance.first,
-            deng_window_size,
-            DENG_COORD_AXIS_X
+            deng_window_size.first
         );
 
         char *out_str;
@@ -645,14 +638,12 @@ namespace dengUtils {
         dengMath::vec2<deng_vec_t> vec_padding;
         vec_padding.first = dengMath::Conversion::pixelSizeToVector2DSize (
             px_padding, 
-            m_p_win->getSize(),
-            DENG_COORD_AXIS_X 
+            m_p_win->getSize().first
         );
 
         vec_padding.second = dengMath::Conversion::pixelSizeToVector2DSize (
             px_padding, 
-            m_p_win->getSize(), 
-            DENG_COORD_AXIS_Y
+            m_p_win->getSize().second
         );
 
         LOG (

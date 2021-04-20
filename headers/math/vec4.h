@@ -101,20 +101,20 @@ namespace dengMath {
         /***** Operator overloads *****/
         /******************************/
 
-        vec4<T> operator+(const vec4<T> &vec); 
-        vec4<T> operator+(const T &c); 
-        vec4<T> operator-(const vec4<T> &vec); 
-        vec4<T> operator-(const T &c); 
-        T operator*(const vec4<T> &vec); 
-        vec4<T> operator*(const T &c); 
-        vec4<T> operator/(const T &c); 
+        vec4<T> operator+(const vec4<T> &vec) const; 
+        vec4<T> operator+(const T &c) const; 
+        vec4<T> operator-(const vec4<T> &vec) const; 
+        vec4<T> operator-(const T &c) const; 
+        T operator*(const vec4<T> &vec) const; 
+        vec4<T> operator*(const T &c) const; 
+        vec4<T> operator/(const T &c) const; 
         void operator*=(const T &c); 
         void operator+=(const vec4<T> &vec); 
         void operator+=(const T &c); 
         void operator-=(const vec4<T> &vec); 
         void operator-=(const T &c); 
         void operator/=(const T &c); 
-        deng_bool_t operator==(const vec4<T> &vec); 
+        deng_bool_t operator==(const vec4<T> &vec) const; 
 
 
         /*
@@ -135,21 +135,21 @@ namespace dengMath {
         /*
          * C vertices structure comparison operators
          */
-        deng_bool_t operator==(const das_ObjColorData &color);
-        deng_bool_t operator==(const das_ObjVertData &vert);
-        deng_bool_t operator==(const das_ObjNormalData &norm);
+        deng_bool_t operator==(const das_ObjColorData &color) const;
+        deng_bool_t operator==(const das_ObjVertData &vert) const;
+        deng_bool_t operator==(const das_ObjNormalData &norm) const;
 
 
         /*
          * Get the current length of the vector
          */
-        T length(); 
+        T length() const;
 
         
         /*
          * Normalise the vector to length 1
          */
-        void norm(); 
+        void norm();
 
         
         /*

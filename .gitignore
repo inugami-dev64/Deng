@@ -12,10 +12,7 @@ matobject.log
 object.log
 src/helloworld.cpp
 src/helloworld
-dependencies/lib/debug/
-deng_webpage/
+*.make
 assets/private
 objects/private
-main_workspace.code-workspace
-compile_commands.json
 tags

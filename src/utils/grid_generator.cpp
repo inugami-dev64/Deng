@@ -102,20 +102,17 @@ namespace dengUtils {
         // Z axis rays
         cur_pos = -(len / 2);
         for(l_index = 0; l_index < row_c * 3; l_index += 3) {
-            m_asset.vertices.vuu[l_index].vert_data.vert_x = -(len / 2);
-            m_asset.vertices.vuu[l_index].vert_data.vert_y = 0;
-            m_asset.vertices.vuu[l_index].vert_data.vert_z = cur_pos;
-            m_asset.vertices.vuu[l_index].color_data = tmp_col;
+            m_asset.vertices.vuu[l_index].vert_x = -(len / 2);
+            m_asset.vertices.vuu[l_index].vert_y = 0;
+            m_asset.vertices.vuu[l_index].vert_z = cur_pos;
             
-            m_asset.vertices.vuu[l_index + 1].vert_data.vert_x = len / 2;
-            m_asset.vertices.vuu[l_index + 1].vert_data.vert_y = 0;
-            m_asset.vertices.vuu[l_index + 1].vert_data.vert_z = cur_pos;
-            m_asset.vertices.vuu[l_index + 1].color_data = tmp_col;
+            m_asset.vertices.vuu[l_index + 1].vert_x = len / 2;
+            m_asset.vertices.vuu[l_index + 1].vert_y = 0;
+            m_asset.vertices.vuu[l_index + 1].vert_z = cur_pos;
 
-            m_asset.vertices.vuu[l_index + 2].vert_data.vert_x = -(len / 2);
-            m_asset.vertices.vuu[l_index + 2].vert_data.vert_y = 0;
-            m_asset.vertices.vuu[l_index + 2].vert_data.vert_z = cur_pos + DENG_GRID_THICKNESS;
-            m_asset.vertices.vuu[l_index + 2].color_data = tmp_col;
+            m_asset.vertices.vuu[l_index + 2].vert_x = -(len / 2);
+            m_asset.vertices.vuu[l_index + 2].vert_y = 0;
+            m_asset.vertices.vuu[l_index + 2].vert_z = cur_pos + DENG_GRID_THICKNESS;
             
             m_asset.indices.indices[l_index] = l_index;
             m_asset.indices.indices[l_index + 1] = l_index + 1;
@@ -127,20 +124,17 @@ namespace dengUtils {
         r_index = l_index;
         cur_pos = -(len / 2);
         for(l_index = 0; l_index < row_c * 3; l_index += 3, r_index += 3) {
-            m_asset.vertices.vuu[r_index].vert_data.vert_x = cur_pos;
-            m_asset.vertices.vuu[r_index].vert_data.vert_y = 0;
-            m_asset.vertices.vuu[r_index].vert_data.vert_z = -(len / 2);
-            m_asset.vertices.vuu[r_index].color_data = tmp_col;
+            m_asset.vertices.vuu[r_index].vert_x = cur_pos;
+            m_asset.vertices.vuu[r_index].vert_y = 0;
+            m_asset.vertices.vuu[r_index].vert_z = -(len / 2);
 
-            m_asset.vertices.vuu[r_index + 1].vert_data.vert_x = cur_pos;
-            m_asset.vertices.vuu[r_index + 1].vert_data.vert_y = 0;
-            m_asset.vertices.vuu[r_index + 1].vert_data.vert_z = len / 2;
-            m_asset.vertices.vuu[r_index + 1].color_data = tmp_col;
+            m_asset.vertices.vuu[r_index + 1].vert_x = cur_pos;
+            m_asset.vertices.vuu[r_index + 1].vert_y = 0;
+            m_asset.vertices.vuu[r_index + 1].vert_z = len / 2;
 
-            m_asset.vertices.vuu[r_index + 2].vert_data.vert_x = cur_pos + DENG_GRID_THICKNESS;
-            m_asset.vertices.vuu[r_index + 2].vert_data.vert_y = 0;
-            m_asset.vertices.vuu[r_index + 2].vert_data.vert_z = -(len / 2);
-            m_asset.vertices.vuu[r_index + 2].color_data = tmp_col;
+            m_asset.vertices.vuu[r_index + 2].vert_x = cur_pos + DENG_GRID_THICKNESS;
+            m_asset.vertices.vuu[r_index + 2].vert_y = 0;
+            m_asset.vertices.vuu[r_index + 2].vert_z = -(len / 2);
 
             m_asset.indices.indices[r_index] = r_index;
             m_asset.indices.indices[r_index + 1] = r_index + 1;

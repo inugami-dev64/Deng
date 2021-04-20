@@ -59,6 +59,7 @@
 # the conditions stated in this License.
 
 
+project(deng)
 set(LIBFREETYPE_TARGET "freetype")
 
 
@@ -113,17 +114,28 @@ endfunction()
 # Check if building freetype from source is needed or not
 function(CheckFreetype)
     # Check if freetype header files are present somewhere in the system
-    find_file (
-        FREETYPE_BT_DIR
-        NAMES freetype/ftbitmap.h
+    set(CMAKE_FIND_ROOT_PATH ${CMAKE_SOURCE_DIR})
+    set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR})
+    find_path (
+        FREETYPE_BT_DIR 
+        NAMES "ftbitmap.h"
+        NO_CMAKE_ROOT_PATH
     )
 
-    find_file (
-        FREETYPE_INCLUDE_DIR
-        NAMES ft2build.h
+    find_path (
+        FREETYPE_INCLUDE_DIR 
+        NAMES "ft2build.h"
+        PATHS "${CMAKE_SOURCE_DIR}"
+        NO_CMAKE_ROOT_PATH
     )
 
-    if(NOT FREETYPE_BT_DIR OR NOT FREETYPE_INCLUDE_DIR) 
+    message(STATUS "CMAKE_SOURCE_DIR=" ${CMAKE_SOURCE_DIR})
+    message(STATUS "CMAKE_PREFIX_PATH=" ${CMAKE_PREFIX_PATH})
+    message(STATUS "CMAKE_FIND_ROOT_PATH=" ${CMAKE_FIND_ROOT_PATH})
+    message(STATUS "CMAKE_SYSTEM_INCLUDE_PATH=" ${CMAKE_SYSTEM_INCLUDE_PATH})
+    message(STATUS ${FREETYPE_BT_DIR})
+    message(STATUS ${FREETYPE_INCLUDE_DIR})
+    if(NOT ${FREETYPE_BT_DIR} AND NOT ${FREETYPE_INCLUDE_DIR}) 
         message (
             FATAL_ERROR 
             "No freetype headers found! Please make sure you have freetype installed on your system"
@@ -146,6 +158,7 @@ function(CheckFreetype)
     # If static library is not found build it from source
     if(NOT FREETYPE_LIB_DIR)
         BuildFreetype()
+        include_directories(BEFORE ./modules/freetype2/include)
     else()
         set(LIBFREETYPE ${FREETYPE_LIB_DIR}/libfreetype${STATIC_LIB_EXT})
     endif()

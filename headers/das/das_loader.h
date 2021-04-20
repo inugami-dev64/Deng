@@ -202,9 +202,11 @@ void das_Assemble (
 /* 
  * Read .das binary asset file into das_Asset instance
  */
-void das_ReadAsset (
+void das_LoadAsset (
     das_Asset *p_asset, 
     das_AssetMode dst_mode,
+    das_ObjColorData color,
+    char *tex_uuid,
     char *file_name
 );
 

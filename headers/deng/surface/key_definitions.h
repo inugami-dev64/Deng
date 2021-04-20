@@ -63,8 +63,7 @@
 #ifndef DENG_KEY_DEFINITIONS_H
 #define DENG_KEY_DEFINITIONS_H
 
-#define DENG_KEY_COUNT 115
-#define DENG_MOUSE_BTN_COUNT 5
+#define DENG_INPUT_EV_COUNT 126
 
 #ifdef __cplusplus
 extern "C" {

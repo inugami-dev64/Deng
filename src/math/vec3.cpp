@@ -77,7 +77,7 @@ namespace dengMath {
      * Add all vector coordinate members to members of another vector
      */
     template<typename T>
-    vec3<T> vec3<T>::operator+(const vec3<T> &vec) {
+    vec3<T> vec3<T>::operator+(const vec3<T> &vec) const {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             vec3<T> out = {
                 first + vec.first,
@@ -95,7 +95,7 @@ namespace dengMath {
      * Add all vector coordinate members with to a constant
      */
     template<typename T>
-    vec3<T> vec3<T>::operator+(const T &c) {
+    vec3<T> vec3<T>::operator+(const T &c) const {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             vec3<T> out = {
                 first + c,
@@ -114,7 +114,7 @@ namespace dengMath {
      * Substract all vector coordinate members with members of another vector
      */
     template<typename T>
-    vec3<T> vec3<T>::operator-(const vec3<T> &vec) {
+    vec3<T> vec3<T>::operator-(const vec3<T> &vec) const {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             vec3<T> out = {
                 first - vec.first,
@@ -132,7 +132,7 @@ namespace dengMath {
      * Substract all vector coordinate members with a constant
      */
     template<typename T>
-    vec3<T> vec3<T>::operator-(const T &c) {
+    vec3<T> vec3<T>::operator-(const T &c) const {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             vec3<T> out = {
                 first - c,
@@ -151,7 +151,7 @@ namespace dengMath {
      * vector given as an argument
      */
     template<typename T>
-    T vec3<T>::operator*(const vec3<T> &vec) {
+    T vec3<T>::operator*(const vec3<T> &vec) const {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             T out = (T) (
                 first * vec.first +
@@ -170,7 +170,7 @@ namespace dengMath {
      * Multiply all vector coordinate members with constant
      */
     template<typename T>
-    vec3<T> vec3<T>::operator*(const T &c) {
+    vec3<T> vec3<T>::operator*(const T &c) const {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             vec3<T> out = {
                 c * first,
@@ -188,7 +188,7 @@ namespace dengMath {
      * Divide all vector coordinate members with constant
      */
     template<typename T>
-    vec3<T> vec3<T>::operator/(const T &c) {
+    vec3<T> vec3<T>::operator/(const T &c) const {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             vec3<T> out = {
                 first / c,
@@ -290,7 +290,7 @@ namespace dengMath {
      * Check if vector value is equal to other vector's value
      */
     template<typename T>
-    deng_bool_t vec3<T>::operator==(const vec3<T> &vec) { 
+    deng_bool_t vec3<T>::operator==(const vec3<T> &vec) const {
         return (deng_bool_t) (
             first == vec.first && 
             second == vec.second && 
@@ -355,7 +355,7 @@ namespace dengMath {
      * Check if the vector values are equal to das_ObjVertData values
      */
     template<typename T>
-    deng_bool_t vec3<T>::operator==(const das_ObjVertData &vert) {
+    deng_bool_t vec3<T>::operator==(const das_ObjVertData &vert) const {
         if(std::is_floating_point<T>::value) {
             return (deng_bool_t) (
                 first == vert.vert_x &&
@@ -372,7 +372,7 @@ namespace dengMath {
      * Check if the vector values are equal to das_ObjNormalData values
      */
     template<typename T>
-    deng_bool_t vec3<T>::operator==(const das_ObjNormalData &norm) {
+    deng_bool_t vec3<T>::operator==(const das_ObjNormalData &norm) const {
         if(std::is_floating_point<T>::value) {
             return (deng_bool_t) (
                 first == norm.nor_x &&
@@ -389,7 +389,7 @@ namespace dengMath {
      * Check if the vector values are equal to das_ObjVertData2D values
      */
     template<typename T>
-    deng_bool_t vec3<T>::operator==(const das_ObjVertData2D &vert) {
+    deng_bool_t vec3<T>::operator==(const das_ObjVertData2D &vert) const {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             return (deng_bool_t) (
                 first == vert.vert_x &&
@@ -405,7 +405,7 @@ namespace dengMath {
      * Get the current length of the vector
      */
     template<typename T>
-    T vec3<T>::length() {
+    T vec3<T>::length() const {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             return (T) sqrt (
                 first * first +

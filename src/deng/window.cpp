@@ -236,8 +236,8 @@ namespace deng {
 
         else {
             return (dengMath::vec2<deng_px_t>) {
-                (deng_px_t) m_p_surface->vc_data.x,
-                (deng_px_t) m_p_surface->vc_data.y
+                (deng_px_t) m_p_surface->mx,
+                (deng_px_t) m_p_surface->my
             };
         }
     }

@@ -109,6 +109,52 @@ char *cm_ExtractFileExtName(char *file_name) {
 }
 
 
+/*******************************************************************************/
+/* The following functions are used to get nearest number which has power of 2 */
+/*******************************************************************************/
+
+deng_ui64_t cm_topow2i64(deng_ui64_t n) {
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+    n |= n >> 32;
+
+    return n;
+}
+
+
+deng_ui32_t cm_topow2i32(deng_ui32_t n) {
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+
+    return n;
+}
+
+
+deng_ui16_t cm_topow2i16(deng_ui16_t n) {
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+
+    return n;
+}
+
+
+deng_ui8_t cm_topow2i8(deng_ui8_t n) {
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+
+    return n;
+}
+
+
 /*
  * Convert time from epoch into TimeInfo struct
  */
@@ -538,48 +584,6 @@ char *cm_MakeLowerCase(const char *str) {
     }
 
     return out_str;
-}
-
-
-/* 
- * Sort all buffer contents alphabetically 
- */
-void cm_SortAlphabetically(char **buffer, size_t buffer_count) {
-    int is_sorted = false;
-    size_t l_index, r_index;
-    char *tmp1, *tmp2;
-    
-    for(l_index = 0; l_index < buffer_count; l_index++)
-        printf("%s\n", buffer[l_index]);
-
-    while(!is_sorted) {
-        is_sorted = true;
-        for(l_index = 0; l_index < buffer_count - 1; l_index++) {
-            // Check every char to see if it is bigger then the char in next string 
-            for(r_index = 0; r_index < strlen(buffer[l_index]) && r_index < strlen(buffer[l_index + 1]); r_index++) {
-                if(buffer[l_index][r_index] > buffer[l_index + 1][r_index]) {
-                    tmp1 = buffer[l_index];
-                    tmp2 = buffer[l_index + 1];
-                    buffer[l_index] = tmp2;
-                    buffer[l_index + 1] = tmp1;
-                    is_sorted = false;
-                    break;
-                }
-    
-                else if(buffer[l_index][r_index] < buffer[l_index + 1][r_index]) break;
-            }
-            
-            // Change order if first string is longer than other one and both strings are equal in char count they have in common
-            if((r_index == strlen(buffer[l_index]) || r_index == strlen(buffer[l_index + 1])) 
-            && strlen(buffer[l_index]) > strlen(buffer[l_index + 1])) {
-                tmp1 = buffer[l_index];
-                tmp2 = buffer[l_index + 1];
-                buffer[l_index] = tmp2;
-                buffer[l_index + 1] = tmp1;
-                is_sorted = false;
-            }
-        }
-    } 
 }
 
 

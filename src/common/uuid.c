@@ -60,7 +60,6 @@
  */ 
 
 
-#include <stdint.h>
 #define __UUID_C
 #include <common/uuid.h>
 
@@ -69,7 +68,7 @@
  * Find first non lo network device's mac address
  */
 char *__uuid_GetDevMacAddress() {
-    static char out[13] = {0};
+    static char out[16] = {0};
     char buf[18] = {0};
 
     #if defined(__linux__)
@@ -85,12 +84,14 @@ char *__uuid_GetDevMacAddress() {
                 c->d_type == DT_LNK && 
                 strcmp(c->d_name, ".") && 
                 strcmp(c->d_name, "..") && 
-                strcmp(c->d_name, "lo")
+                strcmp(c->d_name, "lo") &&
+                strcmp(c->d_name, "sit0")
             ) {
+                printf("Found network device: %s\n", c->d_name);
                 char addr[128] = {0};
                 sprintf (
                     addr,
-                    "%s%s/address",
+                    "%s/%s/address",
                     __LINUX_NET_DEV_DIR,
                     c->d_name
                 );
@@ -159,6 +160,7 @@ char *uuid_Generate() {
     __uuid.bytes[6] >>= 4;
     __uuid.bytes[7] >>= 4;
     __uuid.bytes[6] |= __UUID_VERSION;
+    deng_ui64_t mac_randomizer = 0;
 
     #if defined(__linux__)
         // Read random clock sequence from kernel random number generator
@@ -166,7 +168,8 @@ char *uuid_Generate() {
         file = fopen("/dev/urandom", "rb");
         if(!file) FILE_ERR("/dev/urandom");
 
-        fread(__clock_seq, 2, sizeof(deng_ui8_t), file);
+        fread(__clock_seq, sizeof(deng_ui8_t), 2, file);
+        fread(&mac_randomizer, sizeof(deng_ui64_t), 1, file);
         fclose(file);
     #elif defined(_WIN32)
     #endif
@@ -178,16 +181,19 @@ char *uuid_Generate() {
     __uuid.bytes[8] |= __UUID_VARIANT;
     
     char *mac = __uuid_GetDevMacAddress();
+    deng_ui32_t mac_hex = strtol(mac, NULL, 16);
+    mac_hex ^= mac_randomizer;
+
     char *out = calloc(33, sizeof(char));
 
     sprintf (
         out,
-        "%08x-%04x-%04x-%04x-%s",
+        "%08x-%04x-%04x-%04x-%08x",
         *(deng_ui32_t*) (__uuid.bytes),
         *(deng_ui16_t*) (__uuid.bytes + 4),
         *(deng_ui16_t*) (__uuid.bytes + 6),
         *(deng_ui16_t*) (__uuid.bytes + 8),
-        mac
+        mac_hex
     );
 
     return out;

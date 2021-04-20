@@ -3,7 +3,8 @@
 #include <common/uuid.h>
 
 int main() {
-    char *uuid = uuid_Generate();
-    printf("UUID: %s\n", uuid);
+    for(size_t i = 0; i < 20; i++) 
+        printf("%s\n", uuid_Generate());
+
     return EXIT_SUCCESS;
 }

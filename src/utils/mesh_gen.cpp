@@ -72,15 +72,15 @@ namespace dengUtils {
 
     CubeGenerator::CubeGenerator() {
         // Base cube has total dimentions of 1.0 x 1.0 x 1.0
-        m_base_cube_verts[0] = {-0.5f, -0.5f, -0.5f, 1.0f};
-        m_base_cube_verts[1] = {0.5f, -0.5f, -0.5f, 1.0f};
-        m_base_cube_verts[2] = {0.5f, 0.5f, -0.5f, 1.0f};
-        m_base_cube_verts[3] = {-0.5f, 0.5f, -0.5f, 1.0f};
+        m_base_cube_verts[0] = (dengMath::vec4<deng_vec_t>) {-0.5f, -0.5f, -0.5f, 1.0f};
+        m_base_cube_verts[1] = (dengMath::vec4<deng_vec_t>) {0.5f, -0.5f, -0.5f, 1.0f};
+        m_base_cube_verts[2] = (dengMath::vec4<deng_vec_t>) {0.5f, 0.5f, -0.5f, 1.0f};
+        m_base_cube_verts[3] = (dengMath::vec4<deng_vec_t>) {-0.5f, 0.5f, -0.5f, 1.0f};
 
-        m_base_cube_verts[4] = {-0.5f, -0.5f, 0.5f, 1.0f};
-        m_base_cube_verts[5] = {0.5f, -0.5f, 0.5f, 1.0f};
-        m_base_cube_verts[6] = {0.5f, 0.5f, 0.5f, 1.0f};
-        m_base_cube_verts[7] = {-0.5f, 0.5f, 0.5f, 1.0f};
+        m_base_cube_verts[4] = (dengMath::vec4<deng_vec_t>) {-0.5f, -0.5f, 0.5f, 1.0f};
+        m_base_cube_verts[5] = (dengMath::vec4<deng_vec_t>) {0.5f, -0.5f, 0.5f, 1.0f};
+        m_base_cube_verts[6] = (dengMath::vec4<deng_vec_t>) {0.5f, 0.5f, 0.5f, 1.0f};
+        m_base_cube_verts[7] = (dengMath::vec4<deng_vec_t>) {-0.5f, 0.5f, 0.5f, 1.0f};
 
 
         // Specify the flat hexahedron texture mapping
@@ -169,13 +169,13 @@ namespace dengUtils {
     /*
      * Construct transformation matrix based on given parameters
      */
-    dengMath::mat4<deng_vec_t> __mkTransformMatrix (
+    dengMath::mat4<deng_vec_t> CubeGenerator::__mkTransformMatrix (
         const dengMath::vec3<deng_vec_t> &pos,
         const dengMath::vec3<deng_vec_t> &size,
         const dengMath::vec3<deng_vec_t> &origin
     ) {
-        dengMath::vec4<deng_vec_t> rl_pos;
-        dengMath::mat4<deng_vec_t> tf_mat{};
+        dengMath::vec4<deng_vec_t> rl_pos = {pos.first, pos.second, pos.third, 1.0f};
+        dengMath::mat4<deng_vec_t> tf_mat;
 
         // Set scaling of the cube
         tf_mat.row1.first = size.first;
@@ -184,7 +184,7 @@ namespace dengUtils {
         tf_mat.row4.fourth = 1.0f;
 
         // Calculate position that has considered origin
-        rl_pos = tf_mat * pos;
+        rl_pos = tf_mat * rl_pos;
         rl_pos += {origin.first, origin.second, origin.third, 1.0f};
 
         // Set transformation
@@ -327,6 +327,39 @@ namespace dengUtils {
 
         das_Asset asset{};
         asset.asset_mode = DAS_ASSET_MODE_3D_TEXTURE_MAPPED;
-        asset.
+        asset.uuid = uuid_Generate();
+        asset.vk_id = NULL;
+        asset.gl_id = NULL;
+        asset.color = {1.0f, 1.0f, 1.0f, 1.0f};
+        asset.force_unmap = true;
+        asset.is_shown = true;
+        asset.vertices.vmu = (VERT_MAPPED_UNOR*) calloc (
+            vert.size(),
+            sizeof(VERT_MAPPED_UNOR)
+        );
+
+        memcpy (
+            asset.vertices.vmu,
+            vert.data(),
+            vert.size() * sizeof(VERT_MAPPED_UNOR)
+        );
+
+        asset.vertices.n = vert.size();
+
+        asset.indices.indices = (deng_ui32_t*) calloc (
+            ind.size(),
+            sizeof(deng_ui32_t)
+        );
+
+        memcpy (
+            asset.indices.indices,
+            ind.data(),
+            ind.size() * sizeof(deng_ui32_t)
+        );
+
+        asset.indices.n = ind.size();
+        asset.tex_uuid = NULL;
+        
+        return asset;
     }
 }

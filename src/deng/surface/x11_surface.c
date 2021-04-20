@@ -91,6 +91,8 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
     win.vc_data.is_enabled = 0;
     win.vc_data.orig_x = (deng_vec_t) width / 2;
     win.vc_data.orig_y = (deng_vec_t) height / 2;
+    win.vc_data.x = 0;
+    win.vc_data.y = 0;
  
     win.x11_handler.p_display = XOpenDisplay(NULL);
     win.x11_handler.screen = DefaultScreen(win.x11_handler.p_display);
@@ -410,6 +412,7 @@ void deng_GetMousePos (
     else {
         p_win->mx = (deng_px_t) x;
         p_win->my = (deng_px_t) y;
+
         /*if(init_vc) {*/
             /*deng_SetMouseCoords (*/
                 /*p_win, */

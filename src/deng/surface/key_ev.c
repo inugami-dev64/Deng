@@ -73,7 +73,7 @@ deng_InputBits deng_CreateInputMask(deng_ui32_t ev_c, ...) {
     va_start(args, ev_c);
 
     if(ev_c > 8)
-        RUN_ERR("deng_CreateInputMask: Cannot have more than 8 input events!");
+        RUN_ERR("deng_CreateInputMask", "Cannot have more than 8 input events!");
 
     for(deng_ui32_t i = 0; i < 8; i++) {
         if(i < ev_c)
@@ -127,12 +127,12 @@ void __deng_RegisterKeyEvent (
         if(key == DENG_KEY_UNKNOWN) 
             return;
         if(ev_type == DENG_INPUT_EVENT_TYPE_ACTIVE) {
-            active_keys[key] = true;
-            released_keys[key] = false;
+            active_ev[key] = true;
+            released_ev[key] = false;
         }
         else if(ev_type == DENG_INPUT_EVENT_TYPE_RELEASED) {
-            active_keys[key] = false;
-            released_keys[key] = true;
+            active_ev[key] = false;
+            released_ev[key] = true;
         }
     }
 
@@ -140,12 +140,12 @@ void __deng_RegisterKeyEvent (
         if(btn == DENG_MOUSE_BTN_UNKNOWN)
             return;
         if(ev_type == DENG_INPUT_EVENT_TYPE_ACTIVE) {
-            active_btns[btn] = true;
-            released_btns[btn] = false;
+            active_ev[btn] = true;
+            released_ev[btn] = false;
         }
         else if(ev_type == DENG_INPUT_EVENT_TYPE_RELEASED) {
-            active_btns[btn] = false;
-            released_btns[btn] = true;
+            active_ev[btn] = false;
+            released_ev[btn] = true;
         }
     }
 }
@@ -165,18 +165,18 @@ deng_bool_t __deng_FindKeyStatus (
         if(key == DENG_KEY_UNKNOWN)
             return false;
         if(ev_type == DENG_INPUT_EVENT_TYPE_ACTIVE)
-            stat = active_keys[key];
+            stat = active_ev[key];
         else if(ev_type == DENG_INPUT_EVENT_TYPE_RELEASED)
-            stat = released_keys[key];
+            stat = released_ev[key];
     }
 
     else if(in_type == DENG_INPUT_TYPE_MOUSE) {
         if(btn == DENG_MOUSE_BTN_UNKNOWN)
             return false;
         if(ev_type == DENG_INPUT_EVENT_TYPE_ACTIVE)
-            stat = active_btns[btn];
+            stat = active_ev[btn];
         else if(ev_type == DENG_INPUT_EVENT_TYPE_RELEASED)
-            stat = released_btns[btn];
+            stat = released_ev[btn];
     }
 
     return stat;
@@ -188,13 +188,13 @@ deng_bool_t __deng_FindKeyStatus (
  */
 void __deng_UnreleaseKeys() {
     memset (
-        released_keys, 
+        released_ev, 
         0x00, 
-        C_ARR_SIZE(released_keys)
+        C_ARR_SIZE(released_ev)
     );
     memset (
-        released_btns, 
+        released_ev, 
         0x00, 
-        C_ARR_SIZE(released_btns)
+        C_ARR_SIZE(released_ev)
     );
 }

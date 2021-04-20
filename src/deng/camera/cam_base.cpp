@@ -365,7 +365,6 @@ namespace deng {
             }
 
             else if(evs[i].md_mov <= DENG_MOUSE_DELTA_LAST && evs[i].md_mov >= DENG_MOUSE_DELTA_LAST) {
-                LOG("Mouse delta detected, val: " + std::to_string(evs[i].md_mov));
                 dengMath::vec2<deng_px_t> delta = m_p_win->getMDelta();
                 switch(evs[i].md_mov)
                 {

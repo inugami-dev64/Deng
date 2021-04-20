@@ -77,14 +77,12 @@ namespace deng {
             VkDevice device, 
             VkExtent2D extent, 
             VkRenderPass renderpass, 
-            const __vk_AssetsInfo &asset_info,
+            deng::__GlobalRegistry &reg,
+            std::vector<deng_Id> &assets,
+            std::vector<deng_Id> &textures,
             VkSampleCountFlagBits sample_c
-        ) {
-            m_p_assets = asset_info.p_assets;
-            m_p_textures = asset_info.p_tex;
-
-            m_p_asset_map = asset_info.p_asset_map;
-            m_p_tex_map = asset_info.p_tex_map;
+        ) : m_assets(assets), m_textures(textures), m_reg(reg) 
+        {
             __mkDescriptorSetLayouts(device);   
             __mkPipelineLayouts(device);
             __mkGraphicsPipelines (
@@ -107,19 +105,28 @@ namespace deng {
             const dengMath::vec2<deng_ui32_t> &asset_bounds,
             deng_ui64_t min_ubo_align
         ) {
-            LOG("Dummy UUID: " + std::string(dummy_tex_uuid));
             // Count new assets by their fragment type
             for(size_t i = asset_bounds.first; i < asset_bounds.second; i++) {
+                RegType &reg_vk_asset = m_reg.retrieve (
+                    m_assets[i], 
+                    DENG_SUPPORTED_REG_TYPE_VK_ASSET
+                );
+
+                RegType &reg_asset = m_reg.retrieve (
+                    reg_vk_asset.vk_asset.base_id,
+                    DENG_SUPPORTED_REG_TYPE_ASSET
+                );
+
                 if (
-                    m_p_assets->at(i).asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED ||
-                    m_p_assets->at(i).asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED ||
-                    m_p_assets->at(i).asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED
+                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED ||
+                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED ||
+                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED
                 ) m_mapped_asset_c++;
 
                 else if (
-                    m_p_assets->at(i).asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
-                    m_p_assets->at(i).asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
-                    m_p_assets->at(i).asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED
+                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
+                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
+                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED
                 ) m_unmapped_asset_c++;
             }
 
@@ -132,14 +139,24 @@ namespace deng {
 
             // Create new descriptor sets for all assets that are between given bounds
             for(size_t i = asset_bounds.first; i < asset_bounds.second; i++) {
+                RegType &reg_vk_asset = m_reg.retrieve (
+                    m_assets[i],
+                    DENG_SUPPORTED_REG_TYPE_VK_ASSET
+                );
+
+                RegType &reg_asset = m_reg.retrieve (
+                    reg_vk_asset.vk_asset.base_id,
+                    DENG_SUPPORTED_REG_TYPE_ASSET
+                );
+
                 if (
-                    m_p_assets->at(i).asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED ||
-                    m_p_assets->at(i).asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED ||
-                    m_p_assets->at(i).asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED
+                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED ||
+                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED ||
+                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED
                 ) {
                     __mkTexMappedDS (
                         device,
-                        m_p_assets->at(i),
+                        reg_vk_asset.vk_asset,
                         p_bd,
                         dummy_tex_uuid,
                         min_ubo_align
@@ -147,13 +164,13 @@ namespace deng {
                 }
 
                 else if (
-                    m_p_assets->at(i).asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
-                    m_p_assets->at(i).asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
-                    m_p_assets->at(i).asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED
+                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
+                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
+                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED
                 ) {
                     __mkUnmappedDS (
                         device,
-                        m_p_assets->at(i),
+                        reg_vk_asset.vk_asset,
                         p_bd,
                         min_ubo_align
                     );
@@ -481,7 +498,7 @@ namespace deng {
             LOG("Creating descriptor pool for texture mapped vertices");
             std::array<VkDescriptorPoolSize, 3> desc_pool_sizes;
             VkDescriptorPoolCreateInfo desc_pool_createinfo{};
-            m_tex_cap += (deng_ui32_t) (2 * m_p_textures->size());
+            m_tex_cap += (deng_ui32_t) (2 * m_textures.size());
 
             desc_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             desc_pool_sizes[0].descriptorCount = m_tex_cap * __max_frame_c;
@@ -521,8 +538,13 @@ namespace deng {
             VkDescriptorSetAllocateInfo allocinfo{};
             allocinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 
-            // Set up descriptor set allocate info struct for unmapped vertices
-            asset.desc_sets.resize(__max_frame_c);
+            // Allocate memory for descriptor sets
+            asset.desc_c = __max_frame_c;
+            asset.desc_sets = (VkDescriptorSet*) calloc (
+                asset.desc_c,
+                sizeof(VkDescriptorSet)
+            );
+
             for(index = 0; index < tmp_descriptor_set_layouts.size(); index++) 
                 tmp_descriptor_set_layouts[index] = m_unmapped_desc_set_layout;
             
@@ -531,11 +553,10 @@ namespace deng {
             allocinfo.pSetLayouts = tmp_descriptor_set_layouts.data();
 
             /* Allocate descriptor sets for unmapped 3D vertices */
-            if(vkAllocateDescriptorSets(device, &allocinfo, asset.desc_sets.data()) != VK_SUCCESS)
+            if(vkAllocateDescriptorSets(device, &allocinfo, asset.desc_sets) != VK_SUCCESS)
                 VK_DESC_ERR("failed to allocate descriptor sets for unmapped assets");
 
             for(index = 0; index < __max_frame_c; index++) {
-                LOG("unmapped assets");
                 // Set up descriptor buffer info struct
                 bufferinfos[0].buffer = p_bd->uniform_buffer;
                 bufferinfos[0].offset = index * std::max(sizeof(__vk_UniformColorData), min_align);
@@ -602,13 +623,18 @@ namespace deng {
                 tmp_descriptor_set_layouts[i] = m_tex_mapped_desc_set_layout;
 
             // Fill out VkDescriptorSetAllocateInfo instance
+            asset.desc_c = __max_frame_c;
+            asset.desc_sets = (VkDescriptorSet*) calloc (
+                asset.desc_c,
+                sizeof(VkDescriptorSet)
+            );
+
             allocinfo.descriptorPool = m_tex_mapped_desc_pool;
             allocinfo.descriptorSetCount = tmp_descriptor_set_layouts.size();   
             allocinfo.pSetLayouts = tmp_descriptor_set_layouts.data();
-            asset.desc_sets.resize(__max_frame_c);
             
             // Allocate descriptor sets
-            if(vkAllocateDescriptorSets(device, &allocinfo, asset.desc_sets.data()) != VK_SUCCESS)
+            if(vkAllocateDescriptorSets(device, &allocinfo, asset.desc_sets) != VK_SUCCESS)
                 VK_DESC_ERR("failed to allocate descriptor sets for texture mapped assets");
 
             // Iterate through every descriptor set in swapchain image and update it
@@ -624,27 +650,35 @@ namespace deng {
                 bufferinfo[1].range = sizeof(__vk_UniformColorData);
 
                 // Check if the requested texture is present otherwise attach dummy texture
-                __vk_Texture *p_tex = NULL;
-                if(asset.asset.tex_uuid) {
-                    p_tex = (__vk_Texture*) findValue (
-                        m_p_tex_map, 
-                        asset.asset.tex_uuid,
-                        strlen(asset.asset.tex_uuid)
+                RegType *p_reg_tex = NULL;
+                RegType &reg_asset = m_reg.retrieve (
+                    asset.base_id, 
+                    DENG_SUPPORTED_REG_TYPE_ASSET
+                );
+
+                if(reg_asset.asset.tex_uuid) {
+                    RegType reg_tex = m_reg.retrieve (
+                        reg_asset.asset.tex_uuid, 
+                        DENG_SUPPORTED_REG_TYPE_TEXTURE
+                    );
+
+                    p_reg_tex = m_reg.retrievePtr (
+                        reg_tex.tex.vk_id,
+                        DENG_SUPPORTED_REG_TYPE_VK_TEXTURE
                     );
                 }
 
                 else {
-                    p_tex = (__vk_Texture*) findValue (
-                        m_p_tex_map,
-                        (char*) dummy_tex_uuid,
-                        strlen(dummy_tex_uuid)
+                    p_reg_tex = m_reg.retrievePtr (
+                        (deng_Id) dummy_tex_uuid,
+                        DENG_SUPPORTED_REG_TYPE_VK_TEXTURE
                     );
                 }
 
-                // Check if retrieved texture exists
+                LOG("Binded texture base id: " + std::string(p_reg_tex->vk_tex.uuid));
                 desc_imageinfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                desc_imageinfo.imageView = p_tex->image_view;
-                desc_imageinfo.sampler = p_tex->sampler;
+                desc_imageinfo.imageView = p_reg_tex->vk_tex.image_view;
+                desc_imageinfo.sampler = p_reg_tex->vk_tex.sampler;
 
                 // Set up descriptor writes structs for texture mapped assets
                 descriptor_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -723,9 +757,14 @@ namespace deng {
                 );
 
                 for(size_t i = 0; i < inds.size(); i++) {
+                    RegType &reg_asset = m_reg.retrieve (
+                        m_assets[inds[i]], 
+                        DENG_SUPPORTED_REG_TYPE_VK_ASSET
+                    );
+
                     __mkUnmappedDS (
                         device, 
-                        m_p_assets->at(inds[i]),
+                        reg_asset.vk_asset,
                         p_bd,
                         min_ubo_align
                     );
@@ -760,9 +799,14 @@ namespace deng {
 
                 // Create new descriptor sets for destroyed ones
                 for(size_t i = 0; i < inds.size(); i++) {
+                    RegType &vk_reg_asset = m_reg.retrieve (
+                        m_assets[inds[i]], 
+                        DENG_SUPPORTED_REG_TYPE_VK_ASSET
+                    );
+
                     __mkTexMappedDS (
                         device,
-                        m_p_assets->at(inds[i]),
+                        vk_reg_asset.vk_asset,
                         p_bd,
                         dummy_tex_uuid,
                         min_ubo_align
@@ -779,14 +823,24 @@ namespace deng {
          */
         const std::vector<size_t> &__vk_DescriptorCreator::__cleanMappedDescSets(VkDevice device) {
             static std::vector<size_t> out_inds;
-            out_inds.reserve(m_p_assets->size());
-            for(size_t i = 0; i < m_p_assets->size(); i++) {
+            out_inds.reserve(m_assets.size());
+            for(size_t i = 0; i < m_assets.size(); i++) {
+                RegType &vk_reg_asset = m_reg.retrieve (
+                    m_assets[i], 
+                    DENG_SUPPORTED_REG_TYPE_VK_ASSET
+                );
+                
+                RegType &reg_asset = m_reg.retrieve (
+                    vk_reg_asset.vk_asset.base_id,
+                    DENG_SUPPORTED_REG_TYPE_ASSET
+                );
+
                 if (
-                    m_p_assets->at(i).is_desc &&
+                    reg_asset.vk_asset.is_desc &&
                     (
-                        m_p_assets->at(i).asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED ||
-                        m_p_assets->at(i).asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED ||
-                        m_p_assets->at(i).asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED
+                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED ||
+                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED ||
+                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED
                     )
                 ) {
                     out_inds.resize(out_inds.size() + 1);
@@ -794,8 +848,8 @@ namespace deng {
                     vkFreeDescriptorSets (
                         device, 
                         m_tex_mapped_desc_pool, 
-                        m_p_assets->at(i).desc_sets.size(), 
-                        m_p_assets->at(i).desc_sets.data()
+                        vk_reg_asset.vk_asset.desc_c, 
+                        vk_reg_asset.vk_asset.desc_sets
                     );
                 }
             }
@@ -811,14 +865,24 @@ namespace deng {
          */
         const std::vector<size_t> &__vk_DescriptorCreator::__cleanUnmappedDescSets(VkDevice device) {
             static std::vector<size_t> out_inds;
-            out_inds.reserve(m_p_assets->size());
-            for(size_t i = 0; i < m_p_assets->size(); i++) {
+            out_inds.reserve(m_assets.size());
+            for(size_t i = 0; i < m_assets.size(); i++) {
+                RegType &vk_reg_asset = m_reg.retrieve (
+                    m_assets[i], 
+                    DENG_SUPPORTED_REG_TYPE_VK_ASSET
+                );
+                
+                RegType &reg_asset = m_reg.retrieve (
+                    vk_reg_asset.vk_asset.base_id,
+                    DENG_SUPPORTED_REG_TYPE_ASSET
+                );
+
                 if (
-                    m_p_assets->at(i).is_desc &&
+                    vk_reg_asset.vk_asset.is_desc &&
                     (
-                        m_p_assets->at(i).asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
-                        m_p_assets->at(i).asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
-                        m_p_assets->at(i).asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED
+                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
+                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
+                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED
                     )
                 ) {
                     out_inds.resize(out_inds.size() + 1);
@@ -826,8 +890,8 @@ namespace deng {
                     vkFreeDescriptorSets (
                         device, 
                         m_unmapped_desc_pool, 
-                        m_p_assets->at(i).desc_sets.size(), 
-                        m_p_assets->at(i).desc_sets.data()
+                        vk_reg_asset.vk_asset.desc_c, 
+                        vk_reg_asset.vk_asset.desc_sets
                     );
                 }
             }

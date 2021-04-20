@@ -81,19 +81,6 @@ function(BuildSandbox)
         ${LIBDENG_TARGET}
     )
 
-    target_include_directories (
-        ${SANDBOX_TARGET} 
-        PUBLIC ./headers
-    )
-    
-    # Check if headers should be taken from submodule repository
-    if(BUILD_FREETYPE OR BUILD_ALL)
-        target_include_directories (
-            ${SANDBOX_TARGET}
-            PUBLIC modules/freetype2/include
-        )
-    endif()
-
     # Copy all sandbox textures, assets and shaders
     add_custom_command (
         TARGET ${SANDBOX_TARGET}

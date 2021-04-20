@@ -72,11 +72,10 @@ namespace deng {
         /***********************************************/
 
         __vk_InstanceCreator::__vk_InstanceCreator (
-            deng::Window *p_window_wrap, 
+            deng::Window &win, 
             deng_bool_t enable_vl
-        ) {
+        ) : __vk_DeviceInfo(win) {
             m_required_extension_names.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-            m_p_win = p_window_wrap;
 
             __mkInstance(enable_vl);
             __mkWindowSurface();
@@ -96,7 +95,7 @@ namespace deng {
             // Set up Vulkan application info
             VkApplicationInfo appinfo{};
             appinfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-            appinfo.pApplicationName = m_p_win->getTitle();
+            appinfo.pApplicationName = m_win.getTitle();
             appinfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
             appinfo.pEngineName = "DENG";
             appinfo.engineVersion = VK_MAKE_VERSION(0, 1, 0);
@@ -110,7 +109,7 @@ namespace deng {
             // Get all required extensions
             deng_ui32_t ext_c;
             
-            const char **extensions = (const char**) m_p_win->findVulkanSurfaceExtensions (
+            const char **extensions = (const char**) m_win.findVulkanSurfaceExtensions (
                 &ext_c,
                 enable_vl
             );
@@ -334,7 +333,7 @@ namespace deng {
          * Create window surface with deng surface library 
          */
         void __vk_InstanceCreator::__mkWindowSurface() {
-            if(m_p_win->initVkSurface(m_instance, m_surface) != VK_SUCCESS)
+            if(m_win.initVkSurface(m_instance, m_surface) != VK_SUCCESS)
                 VK_INSTANCE_ERR("failed to create window surface!");
         }
 
@@ -426,7 +425,9 @@ namespace deng {
 
 
 
-        /* __vk_InstanceCreator getter methods */
+        /* 
+         * __vk_InstanceCreator getter methods 
+         */
         VkInstance __vk_InstanceCreator::getIns() { return m_instance; }
         VkDevice __vk_InstanceCreator::getDev() { return m_device; }
         VkPhysicalDevice __vk_InstanceCreator::getGpu() { return m_gpu; }

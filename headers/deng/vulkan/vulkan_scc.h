@@ -104,7 +104,7 @@ namespace deng {
         public:
             __vk_SwapChainCreator (
                 VkDevice device, 
-                Window *p_win,
+                Window &win,
                 VkPhysicalDevice gpu, 
                 VkSurfaceKHR surface, 
                 __vk_QueueManager qff,

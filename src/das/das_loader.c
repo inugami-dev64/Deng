@@ -259,11 +259,19 @@ void das_Assemble (
 /* 
  * Read .das binary asset file into das_Asset instance
  */
-void das_ReadAsset (
+void das_LoadAsset (
     das_Asset *p_asset, 
     das_AssetMode dst_mode,
+    das_ObjColorData color,
+    char *tex_uuid,
     char *file_name
 ) {
+    p_asset->uuid = uuid_Generate();
+    p_asset->tex_uuid = tex_uuid;
+    p_asset->color = color;
+    p_asset->is_shown = true;
+    p_asset->force_unmap = false;
+
     // Write all file contents into a buffer
     __das_ReadAssetFile((char*) file_name);
 
@@ -411,8 +419,6 @@ void __das_CopyVertices (
     das_AssetMode src_mode,
     char *file_name
 ) {
-    size_t dst_offset = 0;
-
     deng_bool_t skip_tex = false;
     deng_bool_t skip_norm = false;
 

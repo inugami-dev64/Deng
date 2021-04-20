@@ -81,7 +81,6 @@ function(BuildDAM)
 
     target_include_directories (
         ${DAM_TARGET} 
-        PUBLIC ./headers
         PUBLIC ${LIBFREETYPE_INCLUDE_PATH}
     )
 endfunction()

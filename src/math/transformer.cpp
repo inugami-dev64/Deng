@@ -106,7 +106,7 @@ namespace dengMath {
             break;
 
         default:
-            RUN_ERR("dengMath::Transformer2D::__matApply(): Asset must be a 2D asset!");
+            RUN_ERR("dengMath::Transformer2D::__matApply()", "Asset must be a 2D asset!");
             break;
         }
     }
@@ -320,7 +320,7 @@ namespace dengMath {
             break;
 
         default:
-            RUN_ERR("dengMath::Transformer3D::__matApply(): Asset must be a 3D asset!");
+            RUN_ERR("dengMath::Transformer3D::__matApply()", "Asset must be a 3D asset!");
         }
     }
 

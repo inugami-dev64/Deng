@@ -65,6 +65,7 @@
 # BUILD_DAM - Build DENG asset manager (dam)
 # BUILD_FREETYPE - Build freetype library from source used as in a git submodule 
 # BUILD_LIBDENG - Build libdeng library
+# BUILD_VK_SANDBOX - Build sandbox application using base Vulkan renderer
 # BUILD_SANDBOX - Build sandbox application
 # BUILD_ALL - Build all targets
 
@@ -91,6 +92,7 @@ project(deng CXX C)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_POSITION_INDEPENDENT_CODE True)
+include_directories(BEFORE ./headers)
 
 
 # Find the correct library extensions
@@ -111,13 +113,15 @@ include(cmake/dam.cmake)
 
 
 # Build target list checking
-if(BUILD_ALL OR BUILD_SANDBOX OR BUILD_LIBDENG)
+if(BUILD_ALL OR BUILD_SANDBOX OR BUILD_VK_SANDBOX OR BUILD_LIBDENG)
     CheckFreetype()
     CheckVulkan()
     BuildLibdeng()
     
     if(BUILD_SANDBOX OR BUILD_ALL)
         BuildSandbox()
+    elseif(BUILD_VK_SANDBOX OR BUILD_ALL)
+        BuildVkSandbox()
     endif()
 endif()
 

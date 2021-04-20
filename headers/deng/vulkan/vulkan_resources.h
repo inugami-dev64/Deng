@@ -84,35 +84,33 @@ namespace deng {
          * Struct for assets in vulkan renderer
          */
         struct __vk_Asset {
-            das_Asset asset;
+            deng_Id base_id;
+            deng_Id tex_uuid;
+            deng_Id uuid;
             VkDeviceSize color_offset;
-            deng_bool_t is_desc = false;
-            std::vector<VkDescriptorSet> desc_sets;
+            VkDeviceSize ind_offset;
+            VkDeviceSize vert_offset;
+
+            // Boolean flag for checking if descriptor sets have been created
+            deng_bool_t is_desc;
+            VkDescriptorSet *desc_sets;
+            deng_i64_t desc_c;
         };
 
         
         /* 
          * Struct for texture images
-         * This struct __vk_contains textures and their Vulkan image buffers, views, samplers 
+         * This struct contains textures and their Vulkan image buffers, views, samplers 
          * and memory objects. Additionally each texture image instance in DENG contains 
          * data to uniform color data in case texture mapping is disabled for certain assets
          */
         struct __vk_Texture {
-            das_Texture texture;
+            deng_Id base_id;
+            deng_Id uuid;
+            deng_bool_t is_buffered;
             VkImage image;
             VkImageView image_view;
             VkSampler sampler;
-        };
-
-        /*
-         * This structure basically contains pointers to assets and textures and
-         * their hashmaps
-         */
-        struct __vk_AssetsInfo {
-            std::vector<__vk_Asset> *p_assets;
-            std::vector<__vk_Texture> *p_tex;
-            Hashmap *p_asset_map;
-            Hashmap *p_tex_map;
         };
         
 
@@ -202,6 +200,7 @@ namespace deng {
 
             // Device memory for mainly storing texture image data
             VkDeviceMemory img_memory;
+
             // The capacity of the image memory default size is able to hold 
             // four 512x512 bitmap images or 4194304 bytes or about 4MB
             VkDeviceSize img_memory_cap = 0;
@@ -257,6 +256,7 @@ namespace deng {
                 deng_ui32_t mip_levels
             );
 
+                
             /*
              * Create new VkImage instance
              * This method creates new VkImage instance and returns 

@@ -75,14 +75,6 @@ namespace deng {
         /*********** __vk_RuntimeUpdater Class ************/
         /**************************************************/
         /**************************************************/
-        __vk_RuntimeUpdater::__vk_RuntimeUpdater(const __vk_AssetsInfo &asset_info) {
-            m_p_assets = asset_info.p_assets;
-            m_p_textures = asset_info.p_tex;
-
-            m_p_asset_map = asset_info.p_asset_map;
-            m_p_tex_map = asset_info.p_tex_map;
-        }
-
 
         /*
          * This method updates the vertices buffer that is allocated by
@@ -111,35 +103,6 @@ namespace deng {
             );
         }
 
-
-        /*
-         * Reallocate texture buffer 
-         */
-        void __vk_RuntimeUpdater::__realignTextureBuffers() {
-            m_p_rm->getBD()->img_memory_offset = 0;
-
-            // Free all textue images, imageviews and samplers
-            for(size_t i = 0; i < m_p_textures->size(); i++) {
-                vkDestroyImageView (
-                    m_p_ic->getDev(),
-                    m_p_textures->at(i).image_view,
-                    NULL
-                );
-
-                vkDestroyImage (
-                    m_p_ic->getDev(),
-                    m_p_textures->at(i).image,
-                    NULL
-                );
-            }
-        }
-
-        
-        /*
-         * Free all buffers related to asset data and reallocate them
-         */
-        void __realignAssetBuffers();
-
         
         /********************************************/
         /********************************************/
@@ -149,18 +112,11 @@ namespace deng {
         /********************************************/
 
         __vk_Renderer::__vk_Renderer (
-            deng::Window *p_win,
-            const __vk_ConfigVars &cnf
-        ) : __vk_RuntimeUpdater (
-            {&m_assets, &m_textures, &m_asset_map, &m_tex_map}
-        ) {
-            m_p_win = p_win;
+            deng::Window &win,
+            const __vk_ConfigVars &cnf,
+            deng::__GlobalRegistry &reg
+        ) : m_reg(reg), m_win(win) { 
             m_config = cnf;
-
-            // Create new hashmap instances for assets and textures
-            newHashmap(&m_asset_map, __DEFAULT_ASSET_HM_CAP);
-            newHashmap(&m_tex_map, __DEFAULT_TEX_HM_CAP);
-
             __initConstruct();
         }
 
@@ -183,14 +139,14 @@ namespace deng {
         void __vk_Renderer::__initConstruct() {
             // Create new VkInstace
             m_p_ic = new __vk_InstanceCreator (
-                m_p_win,
+                m_win,
                 m_config.enable_validation_layers
             );
             
             // Create new swapchain 
             m_p_scc = new __vk_SwapChainCreator (
                 m_p_ic->getDev(),
-                m_p_win,
+                m_win,
                 m_p_ic->getGpu(), 
                 m_p_ic->getSu(), 
                 m_p_ic->getQFF(),
@@ -200,39 +156,41 @@ namespace deng {
             // Create new draw caller instance and make command pool
             m_p_dc = new __vk_DrawCaller (
                 m_p_ic->getDev(),
-                m_p_ic->getQFF()
+                m_p_ic->getQFF(),
+                m_assets,
+                m_textures,
+                m_reg
             );
             
             m_p_dc->mkCommandPool(m_p_ic->getDev());
 
-            __vk_AssetsInfo asset_info;
-            asset_info.p_asset_map = &m_asset_map;
-            asset_info.p_tex_map = &m_tex_map;
-            asset_info.p_assets = &m_assets;
-            asset_info.p_tex = &m_textures;
             __max_frame_c = m_p_scc->getSCImg().size();
 
             // Create new buffer resources allocator
             m_p_rm = new __vk_ResourceManager (
                 m_p_ic->getDev(), 
-                m_p_ic->getGpu(), 
-                m_p_scc->getExt(), 
+                m_p_ic->getGpu(),
+                m_p_scc->getExt(),
                 m_config.msaa_sample_count,
-                m_p_scc->getRp(), 
+                m_p_scc->getRp(),
                 m_p_dc->getComPool(),
                 m_p_ic->getQFF().graphics_queue,
-                m_p_scc->getSCImgViews(),
-                asset_info,
+                m_p_scc->getSCImgViews(), 
+                m_reg, 
+                m_assets,
+                m_textures,
                 m_p_scc->getSF(),
                 m_p_ic->getGpuLimits()
-            );
+            ); 
 
             // Create new vulkan descriptor creator
             m_p_desc_c = new __vk_DescriptorCreator (
                 m_p_ic->getDev(),
                 m_p_scc->getExt(),
                 m_p_scc->getRp(),
-                asset_info,
+                m_reg,
+                m_assets,
+                m_textures,
                 m_config.msaa_sample_count
             );
         }
@@ -248,11 +206,13 @@ namespace deng {
                 m_p_rm->getDepImgView(), 
                 nullptr
             );
+
             vkDestroyImage (
                 m_p_ic->getDev(), 
                 m_p_rm->getDepImg(), 
                 nullptr
             );
+
             vkFreeMemory (
                 m_p_ic->getDev(), 
                 m_p_rm->getDepImgMem(), 
@@ -265,11 +225,13 @@ namespace deng {
                 m_p_rm->getColorImgView(),
                 nullptr
             );
+
             vkDestroyImage (
                 m_p_ic->getDev(),
                 m_p_rm->getColorImg(),
                 nullptr
             );
+
             vkFreeMemory (
                 m_p_ic->getDev(),
                 m_p_rm->getColorImgMem(),
@@ -354,9 +316,6 @@ namespace deng {
                 nullptr
             );
 
-            // Clean texture images
-            __cleanAssets();
-
             // Clean descriptor set layouts
             vkDestroyDescriptorSetLayout (
                 m_p_ic->getDev(), 
@@ -437,108 +396,30 @@ namespace deng {
 
 
         /*
-         * Free asset and texture memory
-         */
-        void __vk_Renderer::__cleanAssets() {
-            // Destroy all descriptor sets and free all vertices' and indices' memory
-            for(size_t i = 0; i < m_assets.size(); i++) {
-                vkFreeDescriptorSets (
-                    m_p_ic->getDev(), 
-                    m_p_desc_c->getTexMappedDP(),
-                    (deng_ui32_t) m_assets[i].desc_sets.size(),
-                    m_assets[i].desc_sets.data()
-                );
-
-                // Free vertices and indices memory
-                switch(m_assets[i].asset.asset_mode) 
-                {
-                case DAS_ASSET_MODE_2D_UNMAPPED:
-                    free(m_assets[i].asset.vertices.vu2d);
-                    break;
-
-                case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
-                    free(m_assets[i].asset.vertices.vm2d);
-                    break;
-
-                case DAS_ASSET_MODE_3D_UNMAPPED:
-                    free(m_assets[i].asset.vertices.vuu);
-                    break;
-
-                case DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED:
-                    free(m_assets[i].asset.vertices.vun);
-                    break;
-
-                case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-                    free(m_assets[i].asset.vertices.vmu);
-                    break;
-
-                case DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
-                    free(m_assets[i].asset.vertices.vmn);
-                    break;
-
-                default:
-                    break;
-                }
-
-                free(m_assets[i].asset.indices.indices);
-                free(m_assets[i].asset.uuid);
-            }
-
-            // Destroy all VkImage instances for textures
-            for(size_t i = 0; i < m_textures.size(); i++) {
-                vkDestroySampler (
-                    m_p_ic->getDev(),
-                    m_textures[i].sampler,
-                    NULL
-                );
-
-                vkDestroyImageView (
-                    m_p_ic->getDev(),
-                    m_textures[i].image_view,
-                    NULL
-                );
-
-                vkDestroyImage (
-                    m_p_ic->getDev(),
-                    m_textures[i].image,
-                    NULL
-                );
-            }
-
-            // Free texture images memory
-            vkFreeMemory (
-                m_p_ic->getDev(),
-                m_p_rm->getBD()->img_memory,
-                NULL
-            );
-        }
-
-
-        /*
          * Add new assets to renderer asset list.
-         * PS! UUIDs must be previously generated!
          * Also no descriptor sets are allocated since that
          * will be done when renderer is being fully initialised.
          */
         void __vk_Renderer::submitAssets (
-            das_Asset *assets,
+            deng_Id *assets,
             deng_i32_t asset_c
         ) {
             size_t old_size = m_assets.size();
             m_assets.resize(m_assets.size() + asset_c);
 
-            LOG("Attempting to allocate " + std::to_string(__max_frame_c * sizeof(__vk_UniformColorData)) + " bytes of memory");
-            __vk_UniformColorData *ubo_mem = (__vk_UniformColorData*) malloc(__max_frame_c * sizeof(__vk_UniformColorData));
-
             // Create new assets with their descriptor sets
-            for(deng_i32_t i = 0; i < asset_c; i++) { 
-                m_assets[old_size + i].asset = assets[i];
-                pushToHashmap (
-                    &m_asset_map,
-                    assets[i].uuid,
-                    strlen(assets[i].uuid),
-                    &m_assets[old_size + i]
+            for(deng_i32_t i = old_size; i < m_assets.size(); i++) { 
+                RegType &reg_asset = m_reg.retrieve (
+                    assets[i - old_size], 
+                    DENG_SUPPORTED_REG_TYPE_ASSET
                 );
+
+                RegType reg_vk_asset;
+                reg_vk_asset.vk_asset.base_id = reg_asset.asset.uuid;
+                reg_vk_asset.vk_asset.tex_uuid = reg_asset.asset.tex_uuid;
+                reg_vk_asset.vk_asset.uuid = uuid_Generate();
+                reg_vk_asset.vk_asset.is_desc = false;
+                reg_asset.asset.vk_id = reg_vk_asset.vk_asset.uuid;
 
                 // Allocate uniform buffer memory for uniform color data
                 m_p_rm->reserveAssetUniformData (
@@ -546,36 +427,49 @@ namespace deng {
                     m_p_ic->getGpu(),
                     m_p_dc->getComPool(),
                     m_p_ic->getQFF().graphics_queue,
-                    ubo_mem,
-                    m_assets[old_size + i]
+                    reg_vk_asset.vk_asset
                 );
-            }
 
-            free(ubo_mem);
+                m_reg.push (
+                    reg_vk_asset.vk_asset.uuid, 
+                    DENG_SUPPORTED_REG_TYPE_VK_ASSET,
+                    reg_vk_asset
+                );
+                m_assets[i] = reg_vk_asset.vk_asset.uuid;
+            }
         }
 
-        
+
         /*
          * Add new textures to renderer texture list.
-         * PS! UUIDs must be previously generated!
          */
         void __vk_Renderer::submitTextures (
-            das_Texture *textures,
+            deng_Id *textures,
             deng_i32_t tex_c
         ) {
             size_t old_size = m_textures.size();
             m_textures.resize(m_textures.size() + tex_c);
 
             for(size_t i = old_size; i < m_textures.size(); i++) {
-                m_textures[i].texture = textures[i - old_size];
-                pushToHashmap (
-                    &m_tex_map,
-                    m_textures[i].texture.uuid,
-                    strlen(m_textures[i].texture.uuid),
-                    &m_textures[i]
+                RegType reg_vk_tex;
+                reg_vk_tex.vk_tex.base_id = textures[i - old_size];
+                reg_vk_tex.vk_tex.uuid = uuid_Generate();
+                reg_vk_tex.vk_tex.is_buffered = false;
+
+                m_textures[i] = reg_vk_tex.vk_tex.uuid;
+
+                m_reg.push (
+                    reg_vk_tex.vk_tex.uuid,
+                    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE,
+                    reg_vk_tex
                 );
 
-                LOG("Pushing texture with name and uuid: " + std::string(m_textures[i].texture.name) + ", " + std::string(m_textures[i].texture.uuid));
+                RegType &reg_tex = m_reg.retrieve (
+                    reg_vk_tex.vk_asset.base_id, 
+                    DENG_SUPPORTED_REG_TYPE_TEXTURE
+                );
+
+                reg_tex.tex.vk_id = reg_vk_tex.vk_tex.uuid;
             }
 
             // Create vulkan image resources
@@ -583,7 +477,7 @@ namespace deng {
                 m_p_ic->getDev(), 
                 m_p_ic->getGpu(),
                 m_p_dc->getComPool(),
-                m_p_ic->getLFSupport(),
+                false,
                 {(deng_ui32_t) old_size, (deng_ui32_t) m_textures.size()},
                 m_p_ic->getQFF().graphics_queue
             );
@@ -636,6 +530,7 @@ namespace deng {
 
             VkSemaphore wait_semaphores[] = 
             {m_p_dc->image_available_semaphore_set[m_p_dc->current_frame]};
+
             VkSemaphore signal_semaphores[] = 
             {m_p_dc->render_finished_semaphore_set[m_p_dc->current_frame]};
 
@@ -700,7 +595,6 @@ namespace deng {
             );
 
             // Create descriptor sets for all currently available assets
-            LOG("Test uuid: " + std::string(m_p_rm->getDummyTexUUID()));
             m_p_desc_c->mkDS (
                 m_p_ic->getDev(), 
                 m_p_rm->getBD(),
@@ -710,11 +604,6 @@ namespace deng {
             );
 
             // Start recording command buffers
-            m_p_dc->setAssetsData (
-                &m_assets, 
-                &m_textures
-            );
-
             m_p_dc->setMiscData (
                 m_p_desc_c->getPipelines(),
                 m_p_rm->getFB()

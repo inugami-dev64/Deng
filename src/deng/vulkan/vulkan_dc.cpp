@@ -75,8 +75,11 @@ namespace deng {
 
         __vk_DrawCaller::__vk_DrawCaller (
             VkDevice device,
-            __vk_QueueManager qff
-        ) {
+            __vk_QueueManager qff,
+            std::vector<deng_Id> &assets,
+            std::vector<deng_Id> &textures,
+            deng::__GlobalRegistry &reg
+        ) : m_assets(assets), m_textures(textures), m_reg(reg) {
             m_qff = qff;
             __mkSynchronisation(device);
         }
@@ -139,17 +142,9 @@ namespace deng {
         }
 
 
-        /* Set the correct pointer to assets and textures */
-        void __vk_DrawCaller::setAssetsData (
-            std::vector<__vk_Asset> *p_assets, 
-            std::vector<__vk_Texture> *p_textures
-        ) {
-            m_p_assets = p_assets;
-            m_p_textures = p_textures;
-        }
-
-
-        /* Set miscellanious data arrays */
+        /* 
+         * Set miscellanious data arrays 
+         */
         void __vk_DrawCaller::setMiscData (
             std::array<__vk_PipelineData, __DENG_PIPELINE_COUNT> pl_data, 
             std::vector<VkFramebuffer> fb
@@ -159,7 +154,9 @@ namespace deng {
         }
 
 
-        /* Record draw command buffers for assets */ 
+        /* 
+         * Record draw command buffers for assets 
+         */ 
         void __vk_DrawCaller::allocateMainCmdBuffers (
             VkDevice device, 
             VkQueue g_queue, 
@@ -196,7 +193,9 @@ namespace deng {
         }
 
 
-        /* Record main commandbuffers */
+        /* 
+         * Record main commandbuffers 
+         */
         void __vk_DrawCaller::recordMainCmdBuffers (
             VkRenderPass renderpass,
             VkExtent2D ext,
@@ -244,27 +243,39 @@ namespace deng {
                     VK_SUBPASS_CONTENTS_INLINE
                 );
                     // Iterate through every asset and submit a draw call
-                    for(j = 0; j < m_p_assets->size(); j++) {
-                        if(m_p_assets->at(j).asset.is_shown) {
+                    LOG("Draw caller asset count: " + std::to_string(m_assets.size()));
+                    for(j = 0; j < m_assets.size(); j++) {
+                        RegType reg_vk_asset = m_reg.retrieve (
+                            m_assets[j], 
+                            DENG_SUPPORTED_REG_TYPE_VK_ASSET
+                        );
+
+                        RegType reg_asset = m_reg.retrieve (
+                            reg_vk_asset.vk_asset.base_id,
+                            DENG_SUPPORTED_REG_TYPE_ASSET
+                        );
+
+                        if(reg_asset.asset.is_shown) {
                             VkPipeline pipeline;
                             VkPipelineLayout pipeline_layout;
+                            LOG("Binding asset with vert offset: " + std::to_string(reg_vk_asset.vk_asset.vert_offset));
                             vkCmdBindVertexBuffers (
                                 m_cmd_bufs[i], 
                                 0, 
                                 1, 
                                 &p_bd->main_buffer, 
-                                &m_p_assets->at(j).asset.vertices.mem_offset
+                                &reg_vk_asset.vk_asset.vert_offset
                             );
 
                             vkCmdBindIndexBuffer (
                                 m_cmd_bufs[i], 
                                 p_bd->main_buffer, 
-                                m_p_assets->at(j).asset.indices.mem_offset, 
+                                reg_vk_asset.vk_asset.ind_offset,
                                 VK_INDEX_TYPE_UINT32
                             );
 
                             // Bind pipelines and descriptor sets per each asset
-                            switch(m_p_assets->at(j).asset.asset_mode) 
+                            switch(reg_asset.asset.asset_mode) 
                             {
                             case DAS_ASSET_MODE_2D_UNMAPPED:
                                 pipeline = m_pl_data[UM2D_I].pipeline;
@@ -297,7 +308,10 @@ namespace deng {
                                 break;
 
                             default:
-                                UNDEFINED_ASSET_MODE(m_p_assets->at(j).asset.name, m_p_assets->at(j).asset.uuid);
+                                UNDEFINED_ASSET_MODE (
+                                    reg_asset.asset.name, 
+                                    reg_asset.asset.uuid
+                                );
                                 break;
                             }
 
@@ -313,14 +327,14 @@ namespace deng {
                                 pipeline_layout,
                                 0,
                                 1,
-                                &m_p_assets->at(j).desc_sets[i],
+                                &reg_vk_asset.vk_asset.desc_sets[i],
                                 0,
                                 NULL
                             );
 
                             vkCmdDrawIndexed (
                                 m_cmd_bufs[i], 
-                                m_p_assets->at(j).asset.indices.n, 
+                                reg_asset.asset.indices.n, 
                                 1, 
                                 0, 
                                 0, 

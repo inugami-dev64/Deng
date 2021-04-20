@@ -72,8 +72,9 @@ namespace deng {
          */
         struct __vk_DeviceInfo {
             VkDevice m_device;
-            deng::Window *m_p_win;
+            deng::Window &m_win;
             VkPhysicalDevice m_gpu;
+            __vk_DeviceInfo(deng::Window &win) : m_win(win) {} ;
         };
 
 

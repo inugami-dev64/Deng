@@ -101,7 +101,6 @@ namespace deng {
             VkSampleCountFlagBits m_max_sample_count;
             VkPhysicalDeviceLimits m_dev_limits;
             const char *m_p_validation_layer = "VK_LAYER_KHRONOS_validation";
-            friend class deng::Window;
 
         private:
             void __mkInstance(deng_bool_t &enable_vl);
@@ -127,7 +126,7 @@ namespace deng {
 
         public:
             __vk_InstanceCreator (
-                Window *p_window_wrap, 
+                Window &win, 
                 deng_bool_t enable_vl
             );
 

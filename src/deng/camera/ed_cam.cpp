@@ -103,7 +103,9 @@ namespace deng {
         deng_bool_t in_zoom = __checkInputAction(DENG_CAMERA_ACTION_MOV_NW);
 
         // Check if rotation mode should be enabled
-        if(rot_act) m_editor_cam_ev = DENG_EDITOR_CAMERA_EVENT_MOUSE_ROTATE;
+        if(rot_act) {
+            m_editor_cam_ev = DENG_EDITOR_CAMERA_EVENT_MOUSE_ROTATE;
+        }
         else if(out_zoom) m_editor_cam_ev = DENG_EDITOR_CAMERA_EVENT_Z_MOV_OUT;
         else if(in_zoom) m_editor_cam_ev = DENG_EDITOR_CAMERA_EVENT_Z_MOV_IN;
         else m_editor_cam_ev = DENG_EDITOR_CAMERA_EVENT_NONE;
@@ -145,8 +147,8 @@ namespace deng {
         dengMath::vec3<deng_vec_t> origin, 
         dengMath::CameraMatrix *p_vm
     ) {
-        LOG("rot: " + std::to_string(m_last_rot.first) + ", " + std::to_string(m_last_rot.second));
-        if(m_is_rot_cur) __EventBase::__updateMouseEvData();
+        if(m_is_rot_cur) 
+            __EventBase::__updateMouseEvData();
         findEditorEvent();
 
         switch(m_editor_cam_ev)
