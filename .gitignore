@@ -3,7 +3,8 @@
 .modules/
 .stfolder/
 website/
-Makefile
+./Makefile
+./*.make
 init.sh
 init.bat
 make/
@@ -13,7 +14,6 @@ matobject.log
 object.log
 src/helloworld.cpp
 src/helloworld
-*.make
 assets/private
 objects/private
 tags
