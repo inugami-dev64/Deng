@@ -105,6 +105,9 @@
 
 namespace Sandbox {
     
+    /*
+     * Vulkan sandbox application class
+     */
     class VulkanApp {
     private:
         deng::Window m_win;

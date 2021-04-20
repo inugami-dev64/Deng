@@ -152,7 +152,11 @@ end
 
 -- Libdeng build configuration
 local libdeng = require("premake/libdeng")
-libdeng.build()
+if _OPTIONS["build-static"] then
+    libdeng.build(true)
+else 
+    libdeng.build(false)
+end
 
 
 -- DENG asset manager build configuration

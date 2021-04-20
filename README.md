@@ -1,8 +1,9 @@
 # DENG
 
 ![logo](logo/logo_full.png)  
-DENG is a cross platform high level game engine designed to be easy to use. Currently not much has 
-been implemented, but the list of already implemented features is following: 
+DENG is a cross platform high level game development framework / engine designed to keep game development process
+simple and straight forward. Currently not much has been implemented yet, but the list of already implemented 
+features is following: 
 * 3D model renderering  
 * 2D model renderering  
 * 2D shape generator  
@@ -26,10 +27,11 @@ DENG can be built using [premake5](https://github.com/premake/premake-core)
 Additional premake flags for DENG are following:  
 | Flag          | Possible values       | Description                                                                   |
 | :---          | :--------------       | ----------:                                                                   |
-| build-static  | \-                    | Build DENG as a static library                                                |
+| build-static  | \-                    | Build DENG as a static library (Windows only)                                 |
 | use-modules   | \-                    | Build all dependencies from source instead of searching for their binaries    |
 | sandbox-mode  | DEFAULT, VKR, NONE    | Sandbox application mode (currently only VKR and NONE work)                   |
 
-### Unix like operating system
-In Unix like systems that are using GNU/Make and gcc you can just use: 
+### Unix like operating systems
+
+In Unix like systems that are using GNU/Make and/or gcc you can just use: 
 `$ premake5 [FLAGS] gmake`

@@ -83,15 +83,6 @@ namespace deng {
             deng::__GlobalRegistry &reg
         ) : m_textures(textures), m_reg(reg) {
 
-            //// Allocate memory for new texture image memory instance
-            //__allocateTexMemory (
-                //device,
-                //gpu,
-                //cmd_pool,
-                //g_queue,
-                //__DEFAULT_TEX_MEM_CAP
-            //);
-
             // Create dummy texture instance
             __mkDummyTex (
                 device,
@@ -149,6 +140,8 @@ namespace deng {
                 DENG_SUPPORTED_REG_TYPE_VK_TEXTURE, 
                 dummy_vk_tex
             );
+
+            m_textures.push_back(dummy_vk_tex.vk_tex.uuid);
         }
 
 

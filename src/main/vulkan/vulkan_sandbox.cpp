@@ -120,7 +120,7 @@ namespace Sandbox {
 
         deng::RegType *p_reg_asset;
         p_reg_asset = m_reg.retrievePtr(m_asset_uuids[0], DENG_SUPPORTED_REG_TYPE_ASSET);
-        p_reg_asset->asset.tex_uuid = m_tex_uuids[0];
+        p_reg_asset->asset.tex_uuid = m_tex_uuids[1];
 
         m_p_rend->submitTextures(m_tex_uuids.data(), m_tex_uuids.size());
         m_p_rend->submitAssets(m_asset_uuids.data(), m_asset_uuids.size());
@@ -221,9 +221,9 @@ namespace Sandbox {
 
     void VulkanApp::run() {
         while(deng_IsRunning()) {
-            __ext_md.mut.lock();
+            //__ext_md.mut.lock();
             m_win.update();
-            __ext_md.mut.unlock();
+            //__ext_md.mut.unlock();
             m_cam.update(),
             m_p_rend->makeFrame();
             std::this_thread::sleep_for(std::chrono::microseconds(50));

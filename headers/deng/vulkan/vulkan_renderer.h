@@ -177,6 +177,18 @@ namespace deng {
              * Free and destroy all active Vulkan API specific instances
              */
             void __cleanup();
+
+
+            void __cleanRendImgResources();
+            void __cleanDrawCommands();
+            void __cleanTextures();
+            void __cleanAssets();
+            void __cleanPipelines();
+            void __cleanDSL();
+            void __freeBuffers();
+            void __cleanSemaphores();
+            void __cleanDevice();
+
             void __makeFrame();
 
         public:

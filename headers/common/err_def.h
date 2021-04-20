@@ -65,8 +65,14 @@
 
 // Console loggers
 #include <iostream>
-#define LOG(x) std::cout << "LOG: " << x << std::endl
-#define WARNME(x) std::cout << "WARNING: " << x << std::endl
+
+#ifdef __DEBUG
+    #define LOG(x) std::cout << "LOG: " << x << std::endl
+    #define WARNME(x) std::cout << "WARNING: " << x << std::endl
+#else
+    #define LOG(x)
+    #define WARNME(x)
+#endif
 
 
 // Runtime errors

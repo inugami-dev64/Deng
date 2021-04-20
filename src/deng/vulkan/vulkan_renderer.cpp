@@ -197,9 +197,9 @@ namespace deng {
 
 
         /*
-         * Free and destroy all active vulkan instances
+         * Free all depth and color image data
          */
-        void __vk_Renderer::__cleanup() {
+        void __vk_Renderer::__cleanRendImgResources() {
             // Clean depth image resources
             vkDestroyImageView (
                 m_p_ic->getDev(), 
@@ -237,7 +237,10 @@ namespace deng {
                 m_p_rm->getColorImgMem(),
                 nullptr
             );
+        }
 
+
+        void __vk_Renderer::__cleanDrawCommands() {
             // Clean framebuffers
             std::vector<VkFramebuffer> fb;
             fb = m_p_rm->getFB();
@@ -256,7 +259,92 @@ namespace deng {
                 m_p_dc->getComBufs().size(), 
                 m_p_dc->getComBufs().data()
             );
+        }
 
+        
+        void __vk_Renderer::__cleanTextures() {
+            for(size_t i = 0; i < m_textures.size(); i++) {
+                RegType &reg_vk_tex = m_reg.retrieve (
+                    m_textures[i], 
+                    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE
+                );
+
+                // Check if image has been buffered and if it then has destroy all of its Vulkan related data
+                if(reg_vk_tex.vk_tex.is_buffered) {
+                    // Destroy texture sampler
+                    vkDestroySampler (
+                        m_p_ic->getDev(),
+                        reg_vk_tex.vk_tex.sampler,
+                        NULL
+                    );
+
+                    // Destroy texture's image views
+                    vkDestroyImageView (
+                        m_p_ic->getDev(),
+                        reg_vk_tex.vk_tex.image_view,
+                        NULL
+                    );
+
+                    // Destroy texture image 
+                    vkDestroyImage (
+                        m_p_ic->getDev(),
+                        reg_vk_tex.vk_tex.image,
+                        NULL
+                    );
+                }
+            }
+
+            // Free all memory allocated for texture images
+            vkFreeMemory (
+                m_p_ic->getDev(),
+                m_p_rm->getBD()->img_memory,
+                NULL
+            );
+        }
+
+        
+        void __vk_Renderer::__cleanAssets() {
+            for(size_t i = 0; i < m_assets.size(); i++) {
+                RegType &reg_vk_asset = m_reg.retrieve (
+                    m_assets[i],
+                    DENG_SUPPORTED_REG_TYPE_VK_ASSET
+                );
+
+                // Check if asset has descriptor sets allocated and if it does then destroy them
+                if(reg_vk_asset.vk_asset.is_desc) {
+                    RegType &reg_asset = m_reg.retrieve (
+                        reg_vk_asset.vk_asset.base_id,
+                        DENG_SUPPORTED_REG_TYPE_ASSET
+                    );
+
+                    if (
+                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
+                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
+                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED ||
+                        reg_asset.asset.force_unmap
+                    ) {
+                        vkFreeDescriptorSets (
+                            m_p_ic->getDev(),
+                            m_p_desc_c->getUnmappedDP(),
+                            static_cast<deng_ui32_t>(reg_vk_asset.vk_asset.desc_c),
+                            reg_vk_asset.vk_asset.desc_sets
+                        );
+                    }
+
+                    else {
+                        vkFreeDescriptorSets (
+                            m_p_ic->getDev(),
+                            m_p_desc_c->getTexMappedDP(),
+                            static_cast<deng_ui32_t>(reg_vk_asset.vk_asset.desc_c),
+                            reg_vk_asset.vk_asset.desc_sets
+                        );
+                    }
+                }
+            }
+        }
+
+        
+        void __vk_Renderer::__cleanPipelines() {
             // Clean pipeline related data
             std::array<__vk_PipelineData, __DENG_PIPELINE_COUNT> pd = m_p_desc_c->getPipelines();
             for(size_t i = 0; i < pd.size(); i++) { 
@@ -286,23 +374,10 @@ namespace deng {
                 m_p_scc->getRp(), 
                 nullptr
             );
+        }
 
-            // Destroy swapchain
-            m_p_scc->SCCleanup();
-
-            // Clean ubo buffer data 
-            vkDestroyBuffer (
-                m_p_ic->getDev(), 
-                m_p_rm->getBD()->uniform_buffer, 
-                nullptr
-            );
-
-            vkFreeMemory (
-                m_p_ic->getDev(), 
-                m_p_rm->getBD()->uniform_buffer_mem, 
-                nullptr
-            );
-
+        
+        void __vk_Renderer::__cleanDSL() {
             // Destroy descriptor pools 
             vkDestroyDescriptorPool (
                 m_p_ic->getDev(), 
@@ -329,6 +404,24 @@ namespace deng {
                 nullptr
             );
 
+        }
+
+
+        void __vk_Renderer::__freeBuffers() {
+            // Clean ubo buffer data 
+            vkDestroyBuffer (
+                m_p_ic->getDev(), 
+                m_p_rm->getBD()->uniform_buffer, 
+                nullptr
+            );
+
+            vkFreeMemory (
+                m_p_ic->getDev(), 
+                m_p_rm->getBD()->uniform_buffer_mem, 
+                nullptr
+            );
+
+
             // Clean main buffer data
             vkDestroyBuffer (
                 m_p_ic->getDev(), 
@@ -341,8 +434,10 @@ namespace deng {
                 m_p_rm->getBD()->main_buffer_memory, 
                 nullptr
             );
+        }
 
-
+        
+        void __vk_Renderer::__cleanSemaphores() {
             // Clean semaphores and fences
             for(size_t i = 0; i < __max_frame_c; i++) {
                 vkDestroySemaphore (
@@ -361,7 +456,10 @@ namespace deng {
                     nullptr
                 );
             }
+        }
 
+        
+        void __vk_Renderer::__cleanDevice() {
             vkDestroyCommandPool (
                 m_p_ic->getDev(), 
                 m_p_dc->getComPool(), 
@@ -392,6 +490,23 @@ namespace deng {
                 m_p_ic->getIns(), 
                 nullptr
             );
+        }
+
+
+        /*
+         * Free and destroy all active vulkan instances
+         */
+        void __vk_Renderer::__cleanup() {
+            __cleanRendImgResources();
+            __cleanDrawCommands();
+            __cleanTextures();
+            __cleanAssets();
+            __cleanPipelines();
+            m_p_scc->SCCleanup();
+            __cleanDSL();
+            __cleanSemaphores();
+            __freeBuffers();
+            __cleanDevice();
         }
 
 
@@ -629,4 +744,5 @@ namespace deng {
             vkDeviceWaitIdle(m_p_ic->getDev());
         }
     }
+
 }

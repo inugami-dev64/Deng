@@ -73,6 +73,8 @@ static void __deng_XSetCursor (
     deng_bool_t hide
 );
 
+static Atom __atom_kill;
+
 static Cursor __hidden_cur;
 static Cursor __default_cur;
 
@@ -138,6 +140,7 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
         0, 
         NULL
     );
+
     XSetWMNormalHints (
         win.x11_handler.p_display, 
         win.x11_handler.window, 
@@ -165,6 +168,7 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
             win.x11_handler.screen
         )
     );
+
     XSetForeground (
         win.x11_handler.p_display, 
         win.x11_handler.gc, 
@@ -184,11 +188,11 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
         )
     ) exit(EXIT_FAILURE);
 
-
     XClearWindow (
         win.x11_handler.p_display, 
         win.x11_handler.window
     );
+
     XMapRaised (
         win.x11_handler.p_display, 
         win.x11_handler.window
@@ -196,6 +200,19 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
 
     __is_running = true;
     win.mode = X11_WINDOW;
+
+    __atom_kill = XInternAtom (
+        win.x11_handler.p_display,
+        "WM_DELETE_WINDOW",
+        True
+    );
+
+    XSetWMProtocols (
+        win.x11_handler.p_display, 
+        win.x11_handler.window, 
+        &__atom_kill, 
+        True
+    );
     
     __deng_XInitCursors(&win);
     return &win;
@@ -506,6 +523,7 @@ void deng_UpdateWindow(deng_SurfaceWindow *p_win) {
             &p_win->x11_handler.event
         )
     ) {
+        printf("Closing window");
         __is_running = false;
         return;
     }

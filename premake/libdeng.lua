@@ -110,12 +110,11 @@ function libdeng.build(build_static)
             }
 
         filter "configurations:Debug"
-            --defines { "LOG(x)=std::cout << \"LOG:\" << x << \"\n\"" }
+            defines { "__DEBUG" }
             symbols "On"
             optimize "On"
 
         filter "configurations:Release"
-            --defines { "LOG(x)" }
             symbols "Off"
             optimize "On"
 end

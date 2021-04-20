@@ -67,8 +67,12 @@ function ft.build()
         kind "StaticLib"
         language "C"
         defines { 
-            "FT2_BUILD_LIBRARY"
+            "FT2_BUILD_LIBRARY",
+            "HAVE_FCNTL_H",
+            "HAVE_UNISTD_H"
         }
+
+        pic "on"
 
         includedirs { "modules/freetype/include" }
         files {
@@ -79,15 +83,27 @@ function ft.build()
             "modules/freetype/src/base/ftbbox.c",
             "modules/freetype/src/base/ftglyph.c",
             "modules/freetype/src/base/ftbitmap.c",
+            "modules/freetype/src/base/ftwinfnt.c",
+            "modules/freetype/src/cff/cff.c",
+            "modules/freetype/src/truetype/truetype.c",
+            "modules/freetype/src/winfonts/winfnt.c",
             "modules/freetype/src/raster/raster.c",
             "modules/freetype/src/smooth/smooth.c",
             "modules/freetype/src/autofit/autofit.c",
+            "modules/freetype/src/type1/type1.c",
+            "modules/freetype/src/cid/type1cid.c",
+            "modules/freetype/src/pfr/pfr.c",
+            "modules/freetype/src/sdf/sdf.c",
             "modules/freetype/src/psaux/psaux.c",
+            "modules/freetype/src/psnames/psnames.c",
             "modules/freetype/src/pshinter/pshinter.c",
             "modules/freetype/src/sfnt/sfnt.c",
-            "modules/freetype/src/type1/type1.c",
+            "modules/freetype/src/bdf/bdf.c",
             "modules/freetype/src/type42/type42.c",
-            "modules/freetype/src/winfonts/winfnt.c"
+            "modules/freetype/src/pcf/pcf.c",
+            "modules/freetype/src/bzip2/ftbzip2.c",
+            "modules/freetype/src/lzw/ftlzw.c",
+            "modules/freetype/src/gzip/ftgzip.c"
         }
 
         symbols "Off"

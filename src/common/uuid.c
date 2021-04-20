@@ -87,7 +87,6 @@ char *__uuid_GetDevMacAddress() {
                 strcmp(c->d_name, "lo") &&
                 strcmp(c->d_name, "sit0")
             ) {
-                printf("Found network device: %s\n", c->d_name);
                 char addr[128] = {0};
                 sprintf (
                     addr,
