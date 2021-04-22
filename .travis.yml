@@ -3,13 +3,9 @@ os:
 
 before_install:
   - sudo apt-get update
-  - sudo apt-get -y install make cmake xorg xorg-dev libc6-dev libvulkan1 libvulkan-dev vulkan-utils libxcursor1 libx11-dev
+  - sudo apt-get -y install make xorg xorg-dev libc6-dev libvulkan1 libvulkan-dev vulkan-utils libxcursor1 libx11-dev
   - git clone https://github.com/KhronosGroup/Vulkan-Headers
   - sudo cp -r Vulkan-Headers/include/vulkan /usr/include
-  - git clone https://github.com/inugami-dev64/saucer
-  - cd saucer
-  - sudo make clean install
-  - cd ..
 
 addons:
   apt:
@@ -24,7 +20,14 @@ language:
   - "c++"
 
 script:
-  - git submodule init
-  - git submodule update
-  - saucer build.yml
-  - make
+  - git clone https://github.com/premake/premake-core
+  - cd premake-core
+  - make -f Bootstrap.mak linux
+  - cd bin/release/
+  - sudo cp *.so /usr/lib/
+  - sudo cp premake5 /usr/bin
+  - cd ~
+  - git clone --recursive https://github.com/inugami-dev64/deng
+  - cd deng
+  - premake5 --use-modules --sandbox-mode=VKR gmake
+  - make config=debug_linux
