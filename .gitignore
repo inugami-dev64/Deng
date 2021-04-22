@@ -5,6 +5,7 @@
 .stfolder/
 *.vcxproj*
 *.sln
+*~*
 x64/
 website/
 Makefile
