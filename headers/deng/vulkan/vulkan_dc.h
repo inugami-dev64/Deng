@@ -67,6 +67,7 @@
 #ifdef __VULKAN_DC_CPP
     #include <vector>
     #include <array>
+	#include <string>
     
     #include <vulkan/vulkan.h>
     #include <common/base_types.h>
@@ -111,7 +112,7 @@ namespace deng {
 
         public:
             // Needed for synchronising frames
-            size_t current_frame = 0;
+            deng_ui32_t current_frame = 0;
             std::vector<VkFence> flight_fences;
             std::vector<VkSemaphore> image_available_semaphore_set;
             std::vector<VkSemaphore> render_finished_semaphore_set;

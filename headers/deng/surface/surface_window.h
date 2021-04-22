@@ -186,8 +186,8 @@ typedef struct deng_VCData {
     #endif
     // X and Y virtual position are in 64bit floating point integer since 
     // Arithmetic operation with these types are needed in camera classes
-    deng_f64_t x;
-    deng_f64_t y;
+    deng_px_t x;
+    deng_px_t y;
     deng_px_t orig_x;
     deng_px_t orig_y;
 } deng_VCData;
@@ -255,7 +255,7 @@ deng_bool_t deng_IsRunning();
 /*
  * Switch mouse cursor behaviour within the DENG window 
  */
-void deng_SetMouseCursorMode(
+void deng_SetMouseCursorMode (
     deng_SurfaceWindow* p_window,
     deng_MouseMode mouse_mode
 );
@@ -264,10 +264,10 @@ void deng_SetMouseCursorMode(
 /*
  * Force mouse cursor to certain location on window
  */
-void deng_SetMouseCoords(
+void deng_SetMouseCoords (
     deng_SurfaceWindow* p_window,
-    deng_i32_t x,
-    deng_i32_t y
+    deng_px_t x,
+    deng_px_t y
 );
 
 
@@ -284,7 +284,7 @@ void deng_GetMousePos(
  * Limit the largest and smallest virtual cursor position that can be achieved using 
  * virtual mouse positioning
  */
-void deng_LimitVirtualPos(
+void deng_LimitVirtualPos (
     deng_px_t max_x,
     deng_px_t min_x,
     deng_px_t max_y,
@@ -296,7 +296,7 @@ void deng_LimitVirtualPos(
  * Set virtual mouse position overflow actions that specify what
  * should happen if virtual mouse position limit has been reached
  */
-void deng_SetOverflowAction(
+void deng_SetOverflowAction (
     deng_VCPOverflowAction x_overflow_act,
     deng_VCPOverflowAction y_overflow_act
 );

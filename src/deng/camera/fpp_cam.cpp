@@ -80,7 +80,8 @@ namespace deng {
                 DENG_VCP_OVERFLOW_ACTION_TO_OPPOSITE_POSITION, 
                 DENG_VCP_OVERFLOW_ACTION_BLOCK_POSITION
             },
-            {{-BASE_MAX_VC_X / mouse_sens.first, BASE_MAX_VC_X / mouse_sens.first}, {-BASE_MAX_VC_Y / mouse_sens.second, BASE_MAX_VC_Y / mouse_sens.second}},
+            {{static_cast<deng_px_t>(-BASE_MAX_VC_X / mouse_sens.first), static_cast<deng_px_t>(BASE_MAX_VC_X / mouse_sens.first)}, 
+			 {static_cast<deng_px_t>(-BASE_MAX_VC_Y / mouse_sens.second), static_cast<deng_px_t>(BASE_MAX_VC_Y / mouse_sens.second)}},
             { PI / 2, PI * 2 },
             p_win
     ) {

@@ -94,7 +94,7 @@ namespace deng {
             // Boolean flag for checking if descriptor sets have been created
             deng_bool_t is_desc;
             VkDescriptorSet *desc_sets;
-            deng_i64_t desc_c;
+            deng_ui32_t desc_c;
         };
 
         

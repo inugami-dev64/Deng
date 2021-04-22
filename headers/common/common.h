@@ -76,9 +76,16 @@ extern "C" {
     #include <stdlib.h>
     #include <string.h>
     #include <stdio.h> 
+	#include <wchar.h>
+
     #include <common/cerr_def.h>
     #include <common/base_types.h>
-    #define __DENG_LOG_INIT_MSG "#ENTRY POINT\n";
+    #define __DENG_LOG_INIT_MSG "#ENTRY POINT\n"
+
+	#ifdef _WIN32
+		#include <windows.h>
+		#include <wincrypt.h>
+	#endif
 
     // Date and time formating
     #define __SECONDS_PER_YEAR 31536000 
@@ -215,10 +222,34 @@ void cm_ConvertTime (
 /*
  * The following functions are used to get nearest number which has power of 2
  */
-deng_ui64_t cm_topow2i64(deng_ui64_t n);
-deng_ui32_t cm_topow2i32(deng_ui32_t n);
-deng_ui16_t cm_topow2i16(deng_ui16_t n);
-deng_ui8_t cm_topow2i8(deng_ui8_t n);
+deng_ui64_t cm_ToPow2I64(deng_ui64_t n);
+deng_ui32_t cm_ToPow2I32(deng_ui32_t n);
+deng_ui16_t cm_ToPow2I16(deng_ui16_t n);
+deng_ui8_t cm_ToPow2I8(deng_ui8_t n);
+
+
+/*
+ * The following functions are used to generate cryptographically secure
+ * random numbers
+ */
+deng_ui64_t cm_RandI64();
+deng_ui32_t cm_RandI32();
+deng_ui16_t cm_RandI16();
+deng_ui8_t cm_RandI8();
+
+
+/*
+ * Convert regular ASCII string into wide UTF-16 string
+ * This method allocates memory on heap, manual cleanup is necessary
+ */
+wchar_t *cm_ToWideString(char *str);
+
+
+/*
+ * Convert wide string into regular string
+ * This functions reads first 8 least significant bits of the wide string
+ */
+char *cm_ToRegularString(wchar_t *wstr);
 
 
 /*

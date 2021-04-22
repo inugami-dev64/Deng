@@ -68,10 +68,13 @@
     #include <array>
     #include <string>
     #include <stdlib.h>
+	#include <string.h>
+
     #ifdef __linux__
         #include <dirent.h>
     #endif
     #ifdef _WIN32
+		#include <codecvt>
         #include <windows.h>
     #endif
     #include <vulkan/vulkan.h>

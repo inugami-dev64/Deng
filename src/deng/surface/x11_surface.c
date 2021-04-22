@@ -341,8 +341,8 @@ static void __deng_XHandleMouseEvents(deng_SurfaceWindow *p_win) {
  */
 void deng_SetMouseCoords (
     deng_SurfaceWindow *p_win, 
-    deng_i32_t x, 
-    deng_i32_t y
+    deng_px_t x, 
+    deng_px_t y
 ) {
     XWarpPointer (
         p_win->x11_handler.p_display, 

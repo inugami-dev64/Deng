@@ -73,6 +73,7 @@ function vk_sandbox.build()
             "src/main/vulkan/vulkan_sandbox.cpp"
         }
 
+		libdirs { "build" }
         links { "deng" }
 
         optimize "On"

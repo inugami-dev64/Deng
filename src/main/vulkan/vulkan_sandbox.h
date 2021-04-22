@@ -66,6 +66,7 @@
 
 #ifdef __VULKAN_SANDBOX_CPP
     #include <vector>
+	#include <array>
     #include <thread>
     #include <mutex>
     #include <vulkan/vulkan.h>

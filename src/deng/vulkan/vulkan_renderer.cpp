@@ -164,7 +164,7 @@ namespace deng {
             
             m_p_dc->mkCommandPool(m_p_ic->getDev());
 
-            __max_frame_c = m_p_scc->getSCImg().size();
+            __max_frame_c = static_cast<deng_ui32_t>(m_p_scc->getSCImg().size());
 
             // Create new buffer resources allocator
             m_p_rm = new __vk_ResourceManager (
@@ -256,7 +256,7 @@ namespace deng {
             vkFreeCommandBuffers (
                 m_p_ic->getDev(), 
                 m_p_dc->getComPool(), 
-                m_p_dc->getComBufs().size(), 
+                static_cast<deng_ui32_t>(m_p_dc->getComBufs().size()), 
                 m_p_dc->getComBufs().data()
             );
         }
@@ -517,13 +517,13 @@ namespace deng {
          */
         void __vk_Renderer::submitAssets (
             deng_Id *assets,
-            deng_i32_t asset_c
+            deng_ui32_t asset_c
         ) {
-            size_t old_size = m_assets.size();
+            deng_ui32_t old_size = static_cast<deng_ui32_t>(m_assets.size());
             m_assets.resize(m_assets.size() + asset_c);
 
             // Create new assets with their descriptor sets
-            for(deng_i32_t i = old_size; i < m_assets.size(); i++) { 
+            for(deng_ui32_t i = old_size; i < static_cast<deng_ui32_t>(m_assets.size()); i++) { 
                 RegType &reg_asset = m_reg.retrieve (
                     assets[i - old_size], 
                     DENG_SUPPORTED_REG_TYPE_ASSET
@@ -560,12 +560,12 @@ namespace deng {
          */
         void __vk_Renderer::submitTextures (
             deng_Id *textures,
-            deng_i32_t tex_c
+            deng_ui32_t tex_c
         ) {
-            size_t old_size = m_textures.size();
+            deng_ui32_t old_size = static_cast<deng_ui32_t>(m_textures.size());
             m_textures.resize(m_textures.size() + tex_c);
 
-            for(size_t i = old_size; i < m_textures.size(); i++) {
+            for(deng_ui32_t i = old_size; i < static_cast<deng_ui32_t>(m_textures.size()); i++) {
                 RegType reg_vk_tex;
                 reg_vk_tex.vk_tex.base_id = textures[i - old_size];
                 reg_vk_tex.vk_tex.uuid = uuid_Generate();
@@ -593,7 +593,7 @@ namespace deng {
                 m_p_ic->getGpu(),
                 m_p_dc->getComPool(),
                 false,
-                {(deng_ui32_t) old_size, (deng_ui32_t) m_textures.size()},
+                {old_size, static_cast<deng_ui32_t>(m_textures.size())},
                 m_p_ic->getQFF().graphics_queue
             );
         }

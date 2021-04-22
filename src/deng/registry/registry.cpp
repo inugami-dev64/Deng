@@ -186,7 +186,7 @@ namespace deng {
     
         // Push the element to entries and 
         std::vector<vulkan::__vk_Asset> asset;
-        m_entries.push_back((__RegEntry) {data, type, (deng_ui32_t) m_entries.size()});
+        m_entries.push_back(__RegEntry{data, type, (deng_ui32_t) m_entries.size()});
         pushToHashmap (
             &m_map,
             uuid,

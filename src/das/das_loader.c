@@ -113,7 +113,7 @@ void __das_AssembleVERTHDR (
         8
     );
 
-    vhdr.vert_c = vert.n;
+    vhdr.vert_c = (deng_ui32_t) vert.n;
 
     void *vert_data = NULL;
     size_t vert_size = 0;
@@ -168,8 +168,8 @@ void __das_AssembleINDXHDR(das_IndicesDynamic ind) {
         8
     );
 
-    ihdr.hdr_size = 16 + ind.n * sizeof(deng_ui32_t);
-    ihdr.ind_c = ind.n;
+    ihdr.hdr_size = (deng_ui32_t) (16 + ind.n * sizeof(deng_ui32_t));
+    ihdr.ind_c = (deng_ui32_t) ind.n;
 
     // Write stack allocated INDX_HDR data to a file
     fwrite(&ihdr, sizeof(das_INDX_HDR), 1, __wfile);
@@ -748,7 +748,7 @@ void das_DestroyAssets (
     deng_ui32_t asset_c
 ) {
     // O(n)
-    deng_i32_t l_index;
+    deng_ui32_t l_index;
     for(l_index = 0; l_index < asset_c; l_index++) {
         switch (assets[l_index].asset_mode)
         {
@@ -793,7 +793,7 @@ void das_DestroyTextures (
     das_Texture *textures,
     deng_ui32_t tex_c
 ) {
-    deng_i32_t l_index;
+    deng_ui32_t l_index;
     for(l_index = 0; l_index < tex_c; l_index++) 
         free(textures[l_index].pixel_data.p_pixel_data);
 

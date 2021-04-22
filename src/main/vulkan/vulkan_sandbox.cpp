@@ -70,8 +70,8 @@ namespace Sandbox {
     VulkanApp::VulkanApp() : 
         m_win(1200, 1000, "DENG game"),
         m_cam (
-            DENG_CAMERA_TYPE_EDITOR,
-            dengMath::Conversion::degToRad(65.0),
+            DENG_CAMERA_TYPE_FPP,
+            static_cast<deng_vec_t>(dengMath::Conversion::degToRad(65.0)),
             {0.1f, -25.0f},
             {0.7f, 0.7f, 0.7f},
             {0.3f, 0.3f},
@@ -106,7 +106,7 @@ namespace Sandbox {
         });
 
         deng::vulkan::__vk_ConfigVars cfg;
-        cfg.background = (dengMath::vec4<deng_vec_t>) { 0.f, 0.f, 0.f, 1.f };
+        cfg.background = dengMath::vec4<deng_vec_t>{ 0.f, 0.f, 0.f, 1.f };
         cfg.enable_validation_layers = true;
         cfg.enable_vsync = true;
         cfg.p_cam = &m_cam;
@@ -122,8 +122,15 @@ namespace Sandbox {
         p_reg_asset = m_reg.retrievePtr(m_asset_uuids[0], DENG_SUPPORTED_REG_TYPE_ASSET);
         p_reg_asset->asset.tex_uuid = m_tex_uuids[1];
 
-        m_p_rend->submitTextures(m_tex_uuids.data(), m_tex_uuids.size());
-        m_p_rend->submitAssets(m_asset_uuids.data(), m_asset_uuids.size());
+        m_p_rend->submitTextures (
+            m_tex_uuids.data(), 
+            static_cast<deng_ui32_t>(m_tex_uuids.size())
+        );
+
+        m_p_rend->submitAssets (
+            m_asset_uuids.data(), 
+            static_cast<deng_ui32_t>(m_asset_uuids.size())
+        );
     }
 
     
@@ -221,9 +228,9 @@ namespace Sandbox {
 
     void VulkanApp::run() {
         while(deng_IsRunning()) {
-            //__ext_md.mut.lock();
+            __ext_md.mut.lock();
             m_win.update();
-            //__ext_md.mut.unlock();
+            __ext_md.mut.unlock();
             m_cam.update(),
             m_p_rend->makeFrame();
             std::this_thread::sleep_for(std::chrono::microseconds(50));

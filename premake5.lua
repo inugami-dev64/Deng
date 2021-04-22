@@ -1,3 +1,4 @@
+--    ____         ________     __      _        ______
 --   |  _ \_      |  ______|   |  \    | |     _/  ____\
 --   | | \_ \_    |  |         |   \   | |    /  _/   
 --   | |   \  |   |  |_____    | |\ \  | |   |  |   _____ 
@@ -70,8 +71,26 @@ workspace "deng"
     configurations { "Debug", "Release" }
     platforms { "Win32", "Linux" }
     includedirs { "./headers" }
+	architecture "x86_64"
     targetdir "build"
+	pic "On"
 
+	-- Ignore safety warnings that MSVC gives
+	filter "platforms:Win32"
+		defines { "_CRT_SECURE_NO_WARNINGS" }
+
+
+-- Define the clean action 
+if _ACTION == "clean" then
+	if(package.config:sub(1,1) == '/') then
+		os.execute("rm -rf *.make obj Makefile")
+		os.exit()
+	else
+		os.execute("del /s /q deng.sln obj *.vcxproj*")
+		os.exit()
+	end
+	print("Successfully cleaned generated project files")
+end
 
 -- Create an option to compile all submodule dependencies from source
 newoption {
@@ -79,46 +98,50 @@ newoption {
     description = "Use submodule dependencies instead of searching them in system path"
 }
 
+-- Create an option to specify vulkan sdk library location (Windows only)
+newoption {
+	trigger = "vk-sdk-path",
+	description = "Specify Vulkan SDK path for Windows builds "
+}
+
+
+-- Check if Vulkan SDK path should and is specified
+if _OPTIONS["vk-sdk-path"] then
+	if package.config:sub(1,1) == '/' then
+		error("Vulkan SDK path is not supposed to be specified in GNU/Linux builds")
+	else
+		libdirs { _OPTIONS["vk-sdk-path"] .. "\\Lib" }
+		includedirs{ _OPTIONS["vk-sdk-path"] .. "\\Include" }
+	end
+elseif package.config:sub(1,1) == '\\' then
+	error("No Vulkan SDK path specified on Windows build")
+end
 
 
 -- Check if all submodule build configs should be created
 if _OPTIONS["use-modules"] then
-    local ftbuild = ""
-    local ftbitmap = ""
-    ftbuild = os.findheader("ft2build.h", { "./modules/freetype/include/", "./modules/freetype/include/freetype" })
-    ftbitmap = os.findheader("ftbitmap.h", { "./modules/freetype/include/", "./modules/freetype/include/freetype" })
-
-    if(not ftbuild or not ftbitmap) then
-        error("Could not find freetype headers from submodules")
-    else
-        print(ftbuild)
-        print(ftbitmap)
-        includedirs { ftbuild, ftbitmap }
-    end
-    
+	includedirs { 
+		"modules/freetype/include", 
+		"modules/freetype/include/freetype"
+	}
     local ft = require("premake/ft")
     ft.build()
 else
-    local ftbuild = ""
-    local ftbitmap = ""
-    ftbuild = os.findheader("ft2build.h", {"/usr/include", "/usr/include/freetype2/", "/usr/include/freetype2/freetype"})
-    ftbitmap = os.findheader("ftbitmap.h", {"/usr/include", "/usr/include/freetype2", "/usr/include/freetype2/freetype/"})
-
-    if(not ftbuild or not ftbitmap) then
-        error("Could not find freetype headers. Make sure freetype is installed")
-    else
-        print(ftbuild)
-        print(ftbitmap)
-        includedirs { ftbuild, ftbitmap }
-    end
+	filter "platforms:Win32"
+		error("Please use use-modules option on Windows builds!")
+	includedirs { "/usr/include/freetype2", "/usr/include/freetype2/freetype" }
 end
 
 
--- Create an option to build DENG as a static library instead of shared library 
+-- Create an option to build DENG as a static library instead of shared library (Windows only)
 newoption {
     trigger = "build-static",
-    description = "Build libdeng as static library"
+    description = "Build libdeng as static library (Windows only)"
 }
+
+if _OPTIONS["build-static"] and package.config:sub(1,1) == '/' then
+	error("Building DENG as static library is unsupported in GNU/Linux systems")
+end
 
 
 -- Create an option to build DENG sandboxapp using specific sandbox configuration
@@ -140,13 +163,6 @@ if not _OPTIONS["sandbox-mode"] then
 elseif _OPTIONS["sandbox-mode"] ~= "NONE" then
     local sandbox_data = require("premake/sandbox_data")
     sandbox_data.datacpy();
-end
-
-
--- Define the clean action 
-if _ACTION == "clean" then
-    os.execute("rm -rf *.make obj Makefile")
-    print("Successfully cleaned generated project files")
 end
 
 

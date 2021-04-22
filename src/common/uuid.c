@@ -65,11 +65,12 @@
 
 
 /*
- * Find first non lo network device's mac address
+ * Find first non loopback network device's mac address
  */
 char *__uuid_GetDevMacAddress() {
     static char out[16] = {0};
     char buf[18] = {0};
+    size_t offset = 0;
 
     #if defined(__linux__)
         // Read the mac address of the first network device that isn't lo
@@ -109,13 +110,52 @@ char *__uuid_GetDevMacAddress() {
         if(buf[0] == 0x00)
             perror("No mac address found!\n");
     #elif defined(_WIN32)
+		IP_ADAPTER_INFO *p_ad_info = (IP_ADAPTER_INFO*) malloc(sizeof(IP_ADAPTER_INFO));
+        ULONG out_buf_len = sizeof(IP_ADAPTER_INFO);
+        DWORD ret_val = 0;
+
+        // According to Microsoft documentation the initial call to GetAdaptersInfo()
+        // is supposed to fail, since we do not know how many network devices we have
+        if (GetAdaptersInfo(p_ad_info, &out_buf_len) != ERROR_SUCCESS) {
+            free(p_ad_info);
+            p_ad_info = (IP_ADAPTER_INFO*) malloc(out_buf_len);
+        }
+
+        // Now this call should be successful since we have allocated enough memory
+        // for all possible network adapters
+        if ((ret_val = GetAdaptersInfo(p_ad_info, &out_buf_len)) != ERROR_SUCCESS) {
+            RUN_ERR(
+                "__uuid_GetDevMacAddress",
+                "Failed to retrieve information about network devices"
+            );
+        }
+
+        PIP_ADAPTER_INFO p_ad = p_ad_info;
+
+        // Test the network device name retrieval
+        while (p_ad) {
+            char tmp_mac[18] = { 0 };
+            for (UINT i = 0; i < p_ad->AddressLength; i++) {
+                if (i == p_ad->AddressLength - 1)
+                    sprintf(tmp_mac + offset, "%02x", (int)p_ad->Address[i]);
+                else {
+                    sprintf(tmp_mac + offset, "%02x:", (int)p_ad->Address[i]);
+                    offset += 3;
+                }
+            }
+
+            // Verify that the mac address is not zeroed
+            if (strcmp(tmp_mac, "00:00:00:00:00:00"))
+                break;
+
+			p_ad = p_ad->Next;
+        }
     #endif
 
     // Parse MAC address into byte array
     char *ptr = buf;
     char *end = buf + 18;
     char *br = buf;
-    size_t offset = 0;
     while(ptr < end && offset < 12) {
         br = strchr(ptr, ':') ? strchr(ptr, ':') : end;
         strncpy (
@@ -141,9 +181,8 @@ char *uuid_Generate() {
 
     // Pseudo randomise the time value
     deng_ui32_t tval[2];
-    tval[0] = rand() % UINT32_MAX;
-    tval[1] = rand() % UINT32_MAX;
-
+    tval[0] = (deng_ui32_t) time(NULL) ^ cm_RandI32();
+    tval[1] = (deng_ui32_t) time(NULL) ^ cm_RandI32();
     deng_ui8_t *time_s = (deng_ui8_t*) tval;
     
     // Copy lower 4 bytes of the time to uuid instance
@@ -161,17 +200,10 @@ char *uuid_Generate() {
     __uuid.bytes[6] |= __UUID_VERSION;
     deng_ui64_t mac_randomizer = 0;
 
-    #if defined(__linux__)
-        // Read random clock sequence from kernel random number generator
-        FILE *file;
-        file = fopen("/dev/urandom", "rb");
-        if(!file) FILE_ERR("/dev/urandom");
-
-        fread(__clock_seq, sizeof(deng_ui8_t), 2, file);
-        fread(&mac_randomizer, sizeof(deng_ui64_t), 1, file);
-        fclose(file);
-    #elif defined(_WIN32)
-    #endif
+    deng_ui16_t cl_seq = cm_RandI16();
+    __clock_seq[0] = *(deng_ui8_t*) &cl_seq;
+    __clock_seq[1] = *(((deng_ui8_t*) &cl_seq) + 1);
+    mac_randomizer = cm_RandI64();
 
     // Copy clock sequence to uuid instance 
     memcpy(__uuid.bytes + 8, __clock_seq, 2);

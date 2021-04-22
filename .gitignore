@@ -1,7 +1,11 @@
 .vscode/
+.vs/
 .cache/
 .modules/
 .stfolder/
+*.vcxproj*
+*.sln
+x64/
 website/
 Makefile
 *.make

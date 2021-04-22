@@ -85,10 +85,10 @@ namespace dengMath {
      * from given private class members
      */
     void ProjectionMatrix::__calcMatrix() {
-        m_mat.row1 = (vec4<deng_vec_t>) {m_aspect_ratio / tanf(m_fov / 2), 0.0f, 0.0f, 0.0f};
-        m_mat.row2 = (vec4<deng_vec_t>) {0.0f, 1 / tanf(m_fov / 2), 0.0f, 0.0f};
-        m_mat.row3 = (vec4<deng_vec_t>) {0.0f, 0.0f, m_far / (m_far - m_near), 1.0};
-        m_mat.row4 = (vec4<deng_vec_t>) {0.0f, 0.0f, -(m_far * m_near) / (m_far - m_near), 0.0f};
+        m_mat.row1 = vec4<deng_vec_t>{m_aspect_ratio / tanf(m_fov / 2), 0.0f, 0.0f, 0.0f};
+        m_mat.row2 = vec4<deng_vec_t>{0.0f, 1 / tanf(m_fov / 2), 0.0f, 0.0f};
+        m_mat.row3 = vec4<deng_vec_t>{0.0f, 0.0f, m_far / (m_far - m_near), 1.0};
+        m_mat.row4 = vec4<deng_vec_t>{0.0f, 0.0f, -(m_far * m_near) / (m_far - m_near), 0.0f};
     }
 
 

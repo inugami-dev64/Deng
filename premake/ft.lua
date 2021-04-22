@@ -66,17 +66,10 @@ function ft.build()
     project "freetype"
         kind "StaticLib"
         language "C"
-        defines { 
-            "FT2_BUILD_LIBRARY",
-            "HAVE_FCNTL_H",
-            "HAVE_UNISTD_H"
-        }
-
-        pic "on"
+        defines { "FT2_BUILD_LIBRARY" }
 
         includedirs { "modules/freetype/include" }
         files {
-            "modules/freetype/builds/unix/ftsystem.c",
             "modules/freetype/src/base/ftinit.c",
             "modules/freetype/src/base/ftdebug.c",
             "modules/freetype/src/base/ftbase.c",
@@ -106,8 +99,19 @@ function ft.build()
             "modules/freetype/src/gzip/ftgzip.c"
         }
 
-        symbols "Off"
-        optimize "On"
+    symbols "Off"
+    optimize "On"
+
+	filter "platforms:Linux"
+		defines { 
+            "HAVE_FCNTL_H",
+            "HAVE_UNISTD_H"
+		}
+		files { "modules/freetype/builds/unix/ftsystem.c" }
+
+	filter "platforms:Win32"
+		removefiles { "modules/freetype/src/base/ftdebug.c" }
+		files { "modules/freetype/builds/windows/ftsystem.c" }
 end
 
 return ft

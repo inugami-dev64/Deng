@@ -217,7 +217,7 @@ namespace deng {
 
             // Set up descriptor set layout info for unmapped assets
             layout_createinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            layout_createinfo.bindingCount = bindings.size();
+            layout_createinfo.bindingCount = static_cast<deng_ui32_t>(bindings.size());
             layout_createinfo.pBindings = bindings.data();
             if
             (
@@ -240,7 +240,7 @@ namespace deng {
 
             // Set up descriptor set layout info for texture mapped assets
             texture_mapped_layout_createinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            texture_mapped_layout_createinfo.bindingCount = bindings.size();
+            texture_mapped_layout_createinfo.bindingCount = static_cast<deng_ui32_t>(bindings.size());
             texture_mapped_layout_createinfo.pBindings = bindings.data();
 
             // Create descriptor set layout for texture 
@@ -449,7 +449,7 @@ namespace deng {
                 vkCreateGraphicsPipelines (
                     device, 
                     VK_NULL_HANDLE, 
-                    pipeline_infos.size(), 
+                    static_cast<deng_ui32_t>(pipeline_infos.size()), 
                     pipeline_infos.data(), 
                     NULL, 
                     pipelines.data()
@@ -559,11 +559,11 @@ namespace deng {
             for(index = 0; index < __max_frame_c; index++) {
                 // Set up descriptor buffer info struct
                 bufferinfos[0].buffer = p_bd->uniform_buffer;
-                bufferinfos[0].offset = index * std::max(sizeof(__vk_UniformColorData), min_align);
+                bufferinfos[0].offset = index * std::max<deng_ui64_t>(sizeof(__vk_UniformColorData), min_align);
                 bufferinfos[0].range = sizeof(__vk_UniformTransformation);
 
                 bufferinfos[1].buffer = p_bd->uniform_buffer;
-                bufferinfos[1].offset = asset.color_offset + index * std::max(sizeof(__vk_UniformColorData), min_align);
+                bufferinfos[1].offset = asset.color_offset + index * std::max<deng_ui64_t>(sizeof(__vk_UniformColorData), min_align);
                 bufferinfos[1].range = sizeof(__vk_UniformColorData);
 
                 // Set up descriptor set write
@@ -630,7 +630,7 @@ namespace deng {
             );
 
             allocinfo.descriptorPool = m_tex_mapped_desc_pool;
-            allocinfo.descriptorSetCount = tmp_descriptor_set_layouts.size();   
+            allocinfo.descriptorSetCount = static_cast<deng_ui32_t>(tmp_descriptor_set_layouts.size());
             allocinfo.pSetLayouts = tmp_descriptor_set_layouts.data();
             
             // Allocate descriptor sets
@@ -641,12 +641,12 @@ namespace deng {
             for(i = 0; i < __max_frame_c; i++) {
                 // Set up uniform transformation data buffer
                 bufferinfo[0].buffer = p_bd->uniform_buffer;
-                bufferinfo[0].offset = i * std::max(sizeof(__vk_UniformTransformation), min_align);
+                bufferinfo[0].offset = i * std::max<VkDeviceSize>(sizeof(__vk_UniformTransformation), min_align);
                 bufferinfo[0].range = sizeof(__vk_UniformTransformation);
 
                 // Set up uniform color data buffer for each texture instance
                 bufferinfo[1].buffer = p_bd->uniform_buffer;
-                bufferinfo[1].offset = asset.color_offset + i * std::max(sizeof(__vk_UniformColorData), min_align);
+                bufferinfo[1].offset = asset.color_offset + i * std::max<VkDeviceSize>(sizeof(__vk_UniformColorData), min_align);
                 bufferinfo[1].range = sizeof(__vk_UniformColorData);
 
                 // Check if the requested texture is present otherwise attach dummy texture

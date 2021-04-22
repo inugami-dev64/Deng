@@ -69,6 +69,7 @@
     #include <queue>
     #include <mutex>
     #include <cmath>
+	#include <algorithm>
 
     #include <vulkan/vulkan.h>
     #include <common/base_types.h>

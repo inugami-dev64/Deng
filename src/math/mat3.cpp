@@ -73,9 +73,9 @@ namespace dengMath {
     mat3<T> mat3<T>::operator+(const mat3<T> &mat) {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             mat3<T> out;
-            out.row1 = (vec3<T>) {row1.first + mat.row1.first, row1.second + mat.row1.second, row1.third + mat.row1.third};
-            out.row2 = (vec3<T>) {row2.first + mat.row2.first, row2.second + mat.row2.second, row2.third + mat.row2.third};
-            out.row3 = (vec3<T>) {row3.first + mat.row3.first, row3.second + mat.row3.second, row3.third + mat.row3.third};
+            out.row1 = vec3<T>{row1.first + mat.row1.first, row1.second + mat.row1.second, row1.third + mat.row1.third};
+            out.row2 = vec3<T>{row2.first + mat.row2.first, row2.second + mat.row2.second, row2.third + mat.row2.third};
+            out.row3 = vec3<T>{row3.first + mat.row3.first, row3.second + mat.row3.second, row3.third + mat.row3.third};
             return out;
         }
 
@@ -90,9 +90,9 @@ namespace dengMath {
     mat3<T> mat3<T>::operator+(const T &c) {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             mat3<T> out{};
-            out.row1 = (vec3<T>) {row1.first + c, row1.second + c, row1.third + c};
-            out.row2 = (vec3<T>) {row2.first + c, row2.second + c, row2.third + c};
-            out.row3 = (vec3<T>) {row3.first + c, row3.second + c, row3.third + c};
+            out.row1 = vec3<T>{row1.first + c, row1.second + c, row1.third + c};
+            out.row2 = vec3<T>{row2.first + c, row2.second + c, row2.third + c};
+            out.row3 = vec3<T>{row3.first + c, row3.second + c, row3.third + c};
 
             return out;
         }
@@ -108,9 +108,9 @@ namespace dengMath {
     mat3<T> mat3<T>::operator-(const mat3<T> &mat) {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             mat3<T> out{};
-            out.row1 = (vec3<T>) {row1.first - mat.row1.first, row1.second - mat.row1.second, row1.third - mat.row1.third};
-            out.row2 = (vec3<T>) {row2.first - mat.row2.first, row2.second - mat.row2.second, row2.second - mat.row2.third};
-            out.row3 = (vec3<T>) {row3.first - mat.row3.first, row3.second - mat.row3.second, row3.second - mat.row3.third};
+            out.row1 = vec3<T>{row1.first - mat.row1.first, row1.second - mat.row1.second, row1.third - mat.row1.third};
+            out.row2 = vec3<T>{row2.first - mat.row2.first, row2.second - mat.row2.second, row2.second - mat.row2.third};
+            out.row3 = vec3<T>{row3.first - mat.row3.first, row3.second - mat.row3.second, row3.second - mat.row3.third};
 
             return out;
         }
@@ -126,9 +126,9 @@ namespace dengMath {
     mat3<T> mat3<T>::operator-(const T &c) {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             mat3<T> out{};
-            out.row1 = (vec3<T>) {row1.first - c, row1.second - c, row1.third - c};
-            out.row2 = (vec3<T>) {row2.first - c, row2.second - c, row2.third - c};
-            out.row3 = (vec3<T>) {row3.first - c, row3.second - c, row3.third - c};
+            out.row1 = vec3<T>{row1.first - c, row1.second - c, row1.third - c};
+            out.row2 = vec3<T>{row2.first - c, row2.second - c, row2.third - c};
+            out.row3 = vec3<T>{row3.first - c, row3.second - c, row3.third - c};
 
             return out;
         }
@@ -161,7 +161,7 @@ namespace dengMath {
     mat3<T> mat3<T>::operator*(const mat3<T> &matrix) {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             mat3<T> out_mat;
-            out_mat.row1 = (vec3<deng_vec_t>) {
+            out_mat.row1 = vec3<deng_vec_t>{
                 (
                     (row1.first * matrix.row1.first) + 
                     (row1.second * matrix.row2.first) + 
@@ -179,7 +179,7 @@ namespace dengMath {
                 )
             };
 
-            out_mat.row2 = (vec3<deng_vec_t>) {
+            out_mat.row2 = vec3<deng_vec_t>{
                 (
                     (row2.first * matrix.row1.first) + 
                     (row2.second * matrix.row2.first) + 
@@ -197,7 +197,7 @@ namespace dengMath {
                 )
             };
 
-            out_mat.row3 = (vec3<deng_vec_t>) {
+            out_mat.row3 = vec3<deng_vec_t>{
                 (
                     (row3.first * matrix.row1.first) + 
                     (row3.second * matrix.row2.first) + 
@@ -248,9 +248,9 @@ namespace dengMath {
     mat3<T> mat3<T>::operator/(const T &c) { 
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             mat3<T> out;
-            out.row1 = (vec3<T>) {row1.first / c, row1.second / c, row1.third / c};
-            out.row2 = (vec3<T>) {row2.first / c, row2.second / c, row2.third / c};
-            out.row3 = (vec3<T>) {row3.first / c, row3.second / c, row3.third / c};
+            out.row1 = vec3<T>{row1.first / c, row1.second / c, row1.third / c};
+            out.row2 = vec3<T>{row2.first / c, row2.second / c, row2.third / c};
+            out.row3 = vec3<T>{row3.first / c, row3.second / c, row3.third / c};
 
             return out;
         }
@@ -534,9 +534,9 @@ namespace dengMath {
     mat3<T> mat3<T>::transpose() {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             mat3<T> new_mat{};
-            new_mat.row1 = (vec3<T>) {row1.first, row2.first, row3.first};
-            new_mat.row2 = (vec3<T>) {row1.second, row2.second, row3.second};
-            new_mat.row3 = (vec3<T>) {row1.third, row2.third, row3.third};
+            new_mat.row1 = vec3<T>{row1.first, row2.first, row3.first};
+            new_mat.row2 = vec3<T>{row1.second, row2.second, row3.second};
+            new_mat.row3 = vec3<T>{row1.third, row2.third, row3.third};
 
             return new_mat;
         }

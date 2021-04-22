@@ -78,9 +78,9 @@
     #include <math/mat3.h>
     #include <math/mat4.h>
     
-    #define __DENG_CAMERA_RIGHT     (vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, 0.0f};
-    #define __DENG_CAMERA_UP        (vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, 0.0f};
-    #define __DENG_CAMERA_FORWARD   (vec4<deng_vec_t>) {0.0f, 0.0f, -1.0f, 0.0f};
+    #define __DENG_CAMERA_RIGHT     vec4<deng_vec_t>{1.0f, 0.0f, 0.0f, 0.0f};
+    #define __DENG_CAMERA_UP        vec4<deng_vec_t>{0.0f, 1.0f, 0.0f, 0.0f};
+    #define __DENG_CAMERA_FORWARD   vec4<deng_vec_t>{0.0f, 0.0f, -1.0f, 0.0f};
 #endif
 
 
@@ -99,9 +99,9 @@ namespace dengMath {
         deng_vec_t m_x_rot;
         deng_vec_t m_y_rot;
 
-        vec4<deng_vec_t> m_rs = (vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, 0.0f};
-        vec4<deng_vec_t> m_ts = (vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, 0.0f};
-        vec4<deng_vec_t> m_fs = (vec4<deng_vec_t>) {0.0f, 0.0f, -1.0f, 0.0f};
+        vec4<deng_vec_t> m_rs = vec4<deng_vec_t>{1.0f, 0.0f, 0.0f, 0.0f};
+        vec4<deng_vec_t> m_ts = vec4<deng_vec_t>{0.0f, 1.0f, 0.0f, 0.0f};
+        vec4<deng_vec_t> m_fs = vec4<deng_vec_t>{0.0f, 0.0f, -1.0f, 0.0f};
 
         // Camera coordinate specific rotation matrices
         mat4<deng_vec_t> m_rot_x_mat;

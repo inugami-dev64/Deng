@@ -78,12 +78,12 @@ namespace deng {
             DENG_WINDOW_MODE_FIXED
         );
 
-        m_size = (dengMath::vec2<deng_ui32_t>) { 
+        m_size = dengMath::vec2<deng_ui32_t> {
             (deng_ui32_t) m_p_surface->width, 
             (deng_ui32_t) m_p_surface->height 
         };
 
-        m_pixel_size = (dengMath::vec2<deng_vec_t>) { 
+        m_pixel_size = dengMath::vec2<deng_vec_t> {
             2.0f / (deng_vec_t) m_size.first,
             2.0f / (deng_vec_t) m_size.second
         };
@@ -228,14 +228,14 @@ namespace deng {
         );
 
         if(use_vcp) {
-            return (dengMath::vec2<deng_px_t>) {
+            return dengMath::vec2<deng_px_t>{
                 (deng_px_t) m_p_surface->vc_data.x, 
                 (deng_px_t) m_p_surface->vc_data.y
             };
         }
 
         else {
-            return (dengMath::vec2<deng_px_t>) {
+            return dengMath::vec2<deng_px_t>{
                 (deng_px_t) m_p_surface->mx,
                 (deng_px_t) m_p_surface->my
             };
@@ -248,14 +248,14 @@ namespace deng {
      */
     dengMath::vec2<deng_px_t> Window::getMDelta() {
         if(m_p_surface->vc_data.is_enabled) {
-            return (dengMath::vec2<deng_px_t>) {
+            return dengMath::vec2<deng_px_t>{
                 (deng_px_t) m_p_surface->vc_data.x - m_prev_vc_pos.first,
                 (deng_px_t) m_p_surface->vc_data.y - m_prev_vc_pos.second
             };
         }
 
         else {
-            return (dengMath::vec2<deng_px_t>) {
+            return dengMath::vec2<deng_px_t>{
                 (deng_px_t) m_p_surface->mx - m_prev_vc_pos.first,
                 (deng_px_t) m_p_surface->my - m_prev_vc_pos.second
             };

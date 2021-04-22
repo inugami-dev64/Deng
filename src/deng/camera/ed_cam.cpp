@@ -83,7 +83,8 @@ namespace deng {
                 DENG_VCP_OVERFLOW_ACTION_TO_OPPOSITE_POSITION,
                 DENG_VCP_OVERFLOW_ACTION_BLOCK_POSITION
             },
-            {{-BASE_MAX_VC_X / mouse_sens.first, BASE_MAX_VC_X / mouse_sens.first}, {-BASE_MAX_VC_Y / mouse_sens.second, BASE_MAX_VC_Y / mouse_sens.second}},
+            {{static_cast<deng_px_t>(-BASE_MAX_VC_X / mouse_sens.first), static_cast<deng_px_t>(BASE_MAX_VC_X / mouse_sens.first)}, 
+             {static_cast<deng_px_t>(-BASE_MAX_VC_Y / mouse_sens.second), static_cast<deng_px_t>(BASE_MAX_VC_Y / mouse_sens.second)}},
             {PI / 2, PI * 2},
             p_win
     ) { 
@@ -119,7 +120,7 @@ namespace deng {
      */
     void __EditorCameraEv::zoomIn(dengMath::CameraMatrix *p_vm) {
         p_vm->moveCamera (
-            (dengMath::vec3<deng_vec_t>) {0.0f, 0.0f, m_zoom_step},
+            dengMath::vec3<deng_vec_t>{0.0f, 0.0f, m_zoom_step},
             true,
             false,
             DENG_COORD_AXIS_Z
@@ -132,7 +133,7 @@ namespace deng {
      */
     void __EditorCameraEv::zoomOut(dengMath::CameraMatrix *p_vm) {
         p_vm->moveCamera (
-            (dengMath::vec3<deng_vec_t>) {0.0f, 0.0f, -m_zoom_step},
+            dengMath::vec3<deng_vec_t>{0.0f, 0.0f, -m_zoom_step},
             true,
             false,
             DENG_COORD_AXIS_Z
@@ -162,8 +163,8 @@ namespace deng {
             zoomIn(p_vm);
             p_vm->setOriginRotation (
                 origin, 
-                m_last_rot.first, 
-                m_last_rot.second
+                static_cast<deng_vec_t>(m_last_rot.first),
+                static_cast<deng_vec_t>(m_last_rot.second)
             );
             break;
         }
@@ -177,8 +178,8 @@ namespace deng {
             zoomOut(p_vm);
             p_vm->setOriginRotation (
                 origin,
-                m_last_rot.first, 
-                m_last_rot.second
+                static_cast<deng_vec_t>(m_last_rot.first), 
+                static_cast<deng_vec_t>(m_last_rot.second)
             );
 
             break;
@@ -193,8 +194,8 @@ namespace deng {
             m_last_rot = __EventBase::__getMouseRotation();
             p_vm->setOriginRotation (
                 origin,
-                m_last_rot.first,
-                m_last_rot.second
+                static_cast<deng_vec_t>(m_last_rot.first),
+                static_cast<deng_vec_t>(m_last_rot.second)
             );
             break;
         }

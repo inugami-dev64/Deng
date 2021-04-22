@@ -73,7 +73,7 @@ function libdeng.build(build_static)
         cppdialect "C++11"
 
         files {
-            "headers/*/*.h",
+            "headers/**/*.h",
             "src/common/*.c",
             "src/das/*.c",
             "src/deng/**.cpp",
@@ -94,7 +94,8 @@ function libdeng.build(build_static)
             links {
                 "freetype",
                 "vulkan-1",
-                "comctl32"
+                "comctl32",
+				"iphlpapi"
             }
 
         -- Link all GNU/Linux specific dependencies

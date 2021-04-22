@@ -112,6 +112,7 @@ namespace dengUtils {
      */
     void StringRasterizer::__findFontFiles(std::string root_path) {
         char* file_ext;
+        m_fonts.reserve(32);
 
         // Check if '/' needs to be added to the end of the path
         if (root_path != "" && root_path[root_path.size() - 1] != '/')
@@ -119,25 +120,28 @@ namespace dengUtils {
         else if (root_path == "") return;
 
         #ifdef _WIN32
-            char path[2048] = { 0 };
-            sprintf(path, "%s*.*", root_path.c_str());
+            std::wstring path = L"";
+            
+            // Convert path name to wide string
+            std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+            std::wstring wroot_path = converter.from_bytes(root_path) + L"*.*";
+
             WIN32_FIND_DATA file;
             HANDLE hdl = NULL;
 
-            if ((hdl = FindFirstFile(path, &file)) == INVALID_HANDLE_VALUE)
-                RUN_ERR("Invalid font path: " + root_path);
+            if ((hdl = FindFirstFile((LPCWSTR) wroot_path.c_str(), &file)) == INVALID_HANDLE_VALUE)
+                RUN_ERR("dengUtils::StringRasterizer::__findFontFiles()", "Invalid font path: " + root_path);
             
             // Skip ../ directory
             FindNextFile(hdl, &file);
             while (FindNextFile(hdl, &file)) {
-                file_ext = cm_GetFileExtName(file.cFileName);
-                sprintf(path, "%s%s", root_path.c_str(), file.cFileName);
+                file_ext = cm_ExtractFileExtName((char*) converter.to_bytes(std::wstring(file.cFileName)).c_str());
                 if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                    __findFontFiles(path);
+                    __findFontFiles(converter.to_bytes(path));
                 else if (
                     (file_ext && !strcmp(file_ext, "ttf")) ||
                     (file_ext && !strcmp(file_ext, "otf"))
-                ) m_fonts.push_back(path);
+                ) m_fonts.push_back(converter.to_bytes(path));
             }
 
             FindClose(hdl);
@@ -284,7 +288,7 @@ namespace dengUtils {
         res = FT_Set_Pixel_Sizes (
             str.font_face, 
             0, 
-            px_size
+            (FT_UInt) px_size
         );
 
         if(res) return;
@@ -563,7 +567,7 @@ namespace dengUtils {
         // Count the total size of the string
         deng_i32_t l_index;        
         deng_bool_t is_max = false;
-        deng_px_t cur_px_width = 0.0;
+        deng_px_t cur_px_width = 0;
         for(l_index = 0; l_index < (deng_i32_t) strlen(ras_str.text); l_index++) {
             // Check if the current size is bigger than maximum size
             if(cur_px_width >= max_px_width) { 

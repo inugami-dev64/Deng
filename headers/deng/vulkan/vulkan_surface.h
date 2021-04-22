@@ -77,18 +77,15 @@ extern "C" {
     #include <stdlib.h> // malloc(), calloc()
 
     #include <common/base_types.h>
+	#include <vulkan/vulkan.h>
     #ifdef __linux__
         #include <X11/XKBlib.h> // KeySym
-        #include <vulkan/vulkan.h>
         #include <vulkan/vulkan_xlib.h>
     #endif
     #include <deng/surface/key_definitions.h>
     #include <deng/surface/surface_window.h>
-    #ifdef __linux__
-    #endif
     #ifdef _WIN32
         #include <vulkan/vulkan_win32.h>
-        #include <windows.h>
     #endif
 #endif 
 

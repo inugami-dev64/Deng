@@ -319,7 +319,7 @@ namespace deng {
             VkQueue g_queue, 
             VkDeviceSize size
         ) {
-            size = cm_topow2i64(size);
+            size = cm_ToPow2I64(size);
             m_buffer_data.img_memory_cap = size + 1;
 
             // Allocate new memory for new texture image buffer
@@ -352,7 +352,7 @@ namespace deng {
             deng_ui32_t mip_levels
         ) {
             min_size = min_size < 2 * m_buffer_data.img_memory_cap ? 2 * m_buffer_data.img_memory_cap : min_size;
-            min_size = cm_topow2i64(min_size);
+            min_size = cm_ToPow2I64(min_size);
 
             std::queue<deng_Id> realloc_queue;
 
@@ -699,7 +699,7 @@ namespace deng {
                 if(is_lf) {
                     mip_levels = (deng_i32_t) floor (
                         log2 (
-                            std::max (
+                            std::max<VkDeviceSize> (
                                 tex_reg.tex.pixel_data.width,
                                 tex_reg.tex.pixel_data.height
                             )
@@ -806,8 +806,8 @@ namespace deng {
                 m_buffer_data.ubo_cap = 
                     __max_frame_c * + (
                         __DEFAULT_ASSET_CAP * 
-                        std::max(sizeof(__vk_UniformColorData), m_gpu_limits.minUniformBufferOffsetAlignment) +
-                        std::max(sizeof(__vk_UniformTransformation), m_gpu_limits.minUniformBufferOffsetAlignment)
+                        std::max<VkDeviceSize>(sizeof(__vk_UniformColorData), m_gpu_limits.minUniformBufferOffsetAlignment) +
+                        std::max<VkDeviceSize>(sizeof(__vk_UniformTransformation), m_gpu_limits.minUniformBufferOffsetAlignment)
                     );
             }
 
@@ -887,10 +887,10 @@ namespace deng {
             // In case of creating totally new buffer instance copy default transformation values
             if(is_init) {
                 __vk_UniformTransformation ubo;
-                ubo.transform.row1 = (dengMath::vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, 0.0f};
-                ubo.transform.row2 = (dengMath::vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, 0.0f};
-                ubo.transform.row3 = (dengMath::vec4<deng_vec_t>) {0.0f, 0.0f, 1.0f, 0.0f};
-                ubo.transform.row4 = (dengMath::vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f};
+                ubo.transform.row1 = dengMath::vec4<deng_vec_t>{1.0f, 0.0f, 0.0f, 0.0f};
+                ubo.transform.row2 = dengMath::vec4<deng_vec_t>{0.0f, 1.0f, 0.0f, 0.0f};
+                ubo.transform.row3 = dengMath::vec4<deng_vec_t>{0.0f, 0.0f, 1.0f, 0.0f};
+                ubo.transform.row4 = dengMath::vec4<deng_vec_t>{0.0f, 0.0f, 0.0f, 1.0f};
 
                 // These values are temporary
                 ubo.flags = DENG_CAMERA_UNIFORM_PERSPECTIVE_CAMERA_MODE_3D |
@@ -904,13 +904,13 @@ namespace deng {
                         sizeof(__vk_UniformTransformation),
                         &ubo,
                         m_buffer_data.uniform_buffer_mem,
-                        i * std::max(sizeof(__vk_UniformTransformation), m_gpu_limits.minUniformBufferOffsetAlignment)
+                        i * std::max<VkDeviceSize>(sizeof(__vk_UniformTransformation), m_gpu_limits.minUniformBufferOffsetAlignment)
                     );
                     
                 }
 
                 // Set the initial ubo offset
-                m_buffer_data.ubo_offset = __max_frame_c * std::max(sizeof(__vk_UniformTransformation), m_gpu_limits.minUniformBufferOffsetAlignment);
+                m_buffer_data.ubo_offset = __max_frame_c * std::max<VkDeviceSize>(sizeof(__vk_UniformTransformation), m_gpu_limits.minUniformBufferOffsetAlignment);
             }
 
             // Otherwise copy all data from created staging buffer
@@ -1055,7 +1055,7 @@ namespace deng {
                 VkFramebufferCreateInfo framebuffer_createinfo{};
                 framebuffer_createinfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
                 framebuffer_createinfo.renderPass = renderpass;
-                framebuffer_createinfo.attachmentCount = attachments.size();
+                framebuffer_createinfo.attachmentCount = static_cast<deng_ui32_t>(attachments.size());
                 framebuffer_createinfo.pAttachments = attachments.data();
                 framebuffer_createinfo.width = extent.width;
                 framebuffer_createinfo.height = extent.height;
@@ -1468,7 +1468,7 @@ namespace deng {
                 sizeof(__vk_UniformTransformation),
                 &ubo,
                 m_buffer_data.uniform_buffer_mem,
-                current_image * std::max(sizeof(__vk_UniformTransformation), m_gpu_limits.minUniformBufferOffsetAlignment)
+                current_image * std::max<VkDeviceSize>(sizeof(__vk_UniformTransformation), m_gpu_limits.minUniformBufferOffsetAlignment)
             );
         }
 
@@ -1487,7 +1487,7 @@ namespace deng {
             vk_asset.color_offset = m_buffer_data.ubo_offset;
 
             __vk_UniformColorData ubo;
-            ubo.color = (dengMath::vec4<deng_vec_t>) {
+            ubo.color = dengMath::vec4<deng_vec_t>{
                 reg_asset.asset.color.col_r,
                 reg_asset.asset.color.col_g,
                 reg_asset.asset.color.col_b,
@@ -1506,7 +1506,7 @@ namespace deng {
             for(size_t i = 0; i < __max_frame_c; i++) {
                 // Check if buffer memory needs to be reallocd
                 if (
-                    vk_asset.color_offset + i * std::max (
+                    vk_asset.color_offset + i * std::max<VkDeviceSize> (
                         sizeof(__vk_UniformColorData), 
                         m_gpu_limits.minUniformBufferOffsetAlignment
                     ) > m_buffer_data.ubo_cap
@@ -1525,11 +1525,11 @@ namespace deng {
                     sizeof(__vk_UniformColorData),
                     &ubo,
                     m_buffer_data.uniform_buffer_mem,
-                    vk_asset.color_offset + i * std::max(sizeof(__vk_UniformColorData), m_gpu_limits.minUniformBufferOffsetAlignment)
+                    vk_asset.color_offset + i * std::max<VkDeviceSize>(sizeof(__vk_UniformColorData), m_gpu_limits.minUniformBufferOffsetAlignment)
                 );
             }
             m_buffer_data.ubo_offset += __max_frame_c * 
-                std::max(sizeof(__vk_UniformColorData), 
+                std::max<VkDeviceSize>(sizeof(__vk_UniformColorData), 
                 m_gpu_limits.minUniformBufferOffsetAlignment);
         }
 

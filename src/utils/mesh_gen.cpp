@@ -72,15 +72,15 @@ namespace dengUtils {
 
     CubeGenerator::CubeGenerator() {
         // Base cube has total dimentions of 1.0 x 1.0 x 1.0
-        m_base_cube_verts[0] = (dengMath::vec4<deng_vec_t>) {-0.5f, -0.5f, -0.5f, 1.0f};
-        m_base_cube_verts[1] = (dengMath::vec4<deng_vec_t>) {0.5f, -0.5f, -0.5f, 1.0f};
-        m_base_cube_verts[2] = (dengMath::vec4<deng_vec_t>) {0.5f, 0.5f, -0.5f, 1.0f};
-        m_base_cube_verts[3] = (dengMath::vec4<deng_vec_t>) {-0.5f, 0.5f, -0.5f, 1.0f};
+        m_base_cube_verts[0] = dengMath::vec4<deng_vec_t>{-0.5f, -0.5f, -0.5f, 1.0f};
+        m_base_cube_verts[1] = dengMath::vec4<deng_vec_t>{0.5f, -0.5f, -0.5f, 1.0f};
+        m_base_cube_verts[2] = dengMath::vec4<deng_vec_t>{0.5f, 0.5f, -0.5f, 1.0f};
+        m_base_cube_verts[3] = dengMath::vec4<deng_vec_t>{-0.5f, 0.5f, -0.5f, 1.0f};
 
-        m_base_cube_verts[4] = (dengMath::vec4<deng_vec_t>) {-0.5f, -0.5f, 0.5f, 1.0f};
-        m_base_cube_verts[5] = (dengMath::vec4<deng_vec_t>) {0.5f, -0.5f, 0.5f, 1.0f};
-        m_base_cube_verts[6] = (dengMath::vec4<deng_vec_t>) {0.5f, 0.5f, 0.5f, 1.0f};
-        m_base_cube_verts[7] = (dengMath::vec4<deng_vec_t>) {-0.5f, 0.5f, 0.5f, 1.0f};
+        m_base_cube_verts[4] = dengMath::vec4<deng_vec_t>{-0.5f, -0.5f, 0.5f, 1.0f};
+        m_base_cube_verts[5] = dengMath::vec4<deng_vec_t>{0.5f, -0.5f, 0.5f, 1.0f};
+        m_base_cube_verts[6] = dengMath::vec4<deng_vec_t>{0.5f, 0.5f, 0.5f, 1.0f};
+        m_base_cube_verts[7] = dengMath::vec4<deng_vec_t>{-0.5f, 0.5f, 0.5f, 1.0f};
 
 
         // Specify the flat hexahedron texture mapping
@@ -150,7 +150,7 @@ namespace dengUtils {
             if(!p_val) {
                 vert.resize(unique_c + 1);
                 vert[unique_c] = key;
-                ind[i + old_ind_c] = unique_c;
+                ind[i + old_ind_c] = static_cast<deng_ui32_t>(unique_c);
                 unique_c++;
 
                 pushToHashmap (

@@ -139,7 +139,7 @@ namespace deng {
     {
     protected:
         deng_vec_t m_fov; // Radians
-        dengMath::vec4<deng_vec_t> m_origin = (dengMath::vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 0.0f}; // Origin doesn't accept transformations
+        dengMath::vec4<deng_vec_t> m_origin = dengMath::vec4<deng_vec_t>{0.0f, 0.0f, 0.0f, 0.0f}; // Origin doesn't accept transformations
         dengMath::CameraMatrix m_cam_mat;
         dengMath::ProjectionMatrix m_proj_mat;
 
@@ -207,9 +207,9 @@ namespace deng {
     {
     protected:
         Window *m_p_win = NULL;
-        dengMath::vec2<deng_px_t> m_mouse_pos = (dengMath::vec2<deng_px_t>) {0, 0};
+        dengMath::vec2<deng_px_t> m_mouse_pos = dengMath::vec2<deng_px_t>{0, 0};
         dengMath::vec2<deng_VCPOverflowAction> m_vcp_overflow;
-        dengMath::vec2<dengMath::vec2<deng_f64_t>> m_vc_bounds;
+        dengMath::vec2<dengMath::vec2<deng_px_t>> m_vc_bounds;
         dengMath::vec2<deng_f64_t> m_max_rot;
         Camera3DBindings m_bindings;
 
@@ -237,7 +237,7 @@ namespace deng {
     public:
         __EventBase (
             const dengMath::vec2<deng_VCPOverflowAction> &vcp_act,
-            const dengMath::vec2<dengMath::vec2<deng_f64_t>> &vc_bounds,
+            const dengMath::vec2<dengMath::vec2<deng_px_t>> &vc_bounds,
             const dengMath::vec2<deng_f64_t> &max_rot,
             Window *p_win
         );

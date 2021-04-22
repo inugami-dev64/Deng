@@ -67,6 +67,7 @@
 #ifdef __TRANSFORMER_CPP
     #include <type_traits>
     #include <stdlib.h>
+	#include <string>
     #include <cmath>
 
     #include <common/base_types.h>

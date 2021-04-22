@@ -88,7 +88,7 @@ namespace deng {
      */
     void __CameraBase::moveU(deng_vec_t delta, deng_bool_t ignore_pitch) {
         m_cam_mat.moveCamera (
-            (dengMath::vec3<deng_vec_t>) {delta, 0.0f, 0.0f},
+            dengMath::vec3<deng_vec_t>{delta, 0.0f, 0.0f},
             false,
             ignore_pitch,
             DENG_COORD_AXIS_X
@@ -98,7 +98,7 @@ namespace deng {
 
     void __CameraBase::moveV(deng_vec_t delta, deng_bool_t ignore_pitch) {
         m_cam_mat.moveCamera (
-            (dengMath::vec3<deng_vec_t>) {0.0f, delta, 0.0f},
+            dengMath::vec3<deng_vec_t>{0.0f, delta, 0.0f},
             false,
             ignore_pitch,
             DENG_COORD_AXIS_Y 
@@ -108,7 +108,7 @@ namespace deng {
 
     void __CameraBase::moveW(deng_vec_t delta, deng_bool_t ignore_pitch) {
         m_cam_mat.moveCamera (
-            (dengMath::vec3<deng_vec_t>) {0.0f, 0.0f, delta},
+            dengMath::vec3<deng_vec_t>{0.0f, 0.0f, delta},
             false,
             ignore_pitch,
             DENG_COORD_AXIS_Z 
@@ -121,7 +121,7 @@ namespace deng {
      */
     void __CameraBase::moveX(deng_vec_t delta, deng_bool_t ignore_pitch) {
         m_cam_mat.moveCamera (
-            (dengMath::vec3<deng_vec_t>) {delta, 0.0f, 0.0f},
+            dengMath::vec3<deng_vec_t>{delta, 0.0f, 0.0f},
             true,
             ignore_pitch,
             DENG_COORD_AXIS_X
@@ -131,7 +131,7 @@ namespace deng {
 
     void __CameraBase::moveY(deng_vec_t delta, deng_bool_t ignore_pitch) {
         m_cam_mat.moveCamera (
-            (dengMath::vec3<deng_vec_t>) {0.0f, delta, 0.0f},
+            dengMath::vec3<deng_vec_t>{0.0f, delta, 0.0f},
             true,
             ignore_pitch,
             DENG_COORD_AXIS_Y 
@@ -141,7 +141,7 @@ namespace deng {
 
     void __CameraBase::moveZ(deng_vec_t delta, deng_bool_t ignore_pitch) {
         m_cam_mat.moveCamera (
-            (dengMath::vec3<deng_vec_t>) {0.0f, 0.0f, delta},
+            dengMath::vec3<deng_vec_t>{0.0f, 0.0f, delta},
             true,
             ignore_pitch,
             DENG_COORD_AXIS_Z 
@@ -193,7 +193,7 @@ namespace deng {
 
     __EventBase::__EventBase (
 		const dengMath::vec2<deng_VCPOverflowAction> &vcp_act,
-		const dengMath::vec2<dengMath::vec2<deng_f64_t>> &vc_bounds,
+		const dengMath::vec2<dengMath::vec2<deng_px_t>> &vc_bounds,
 		const dengMath::vec2<deng_f64_t> &max_rot,
         Window *p_win
     ) {
@@ -235,8 +235,8 @@ namespace deng {
      */
     dengMath::vec2<deng_f64_t> __EventBase::__getMouseRotation() {
         dengMath::vec2<deng_f64_t> out_rot;
-        out_rot.first = m_mouse_pos.second / m_vc_bounds.second.second * m_max_rot.first;
-        out_rot.second = m_mouse_pos.first / m_vc_bounds.first.second * m_max_rot.second; 
+        out_rot.first = (deng_f64_t) m_mouse_pos.second / (deng_f64_t) m_vc_bounds.second.second * m_max_rot.first;
+        out_rot.second = (deng_f64_t) m_mouse_pos.first / (deng_f64_t) m_vc_bounds.first.second * m_max_rot.second; 
         return out_rot;
     }
 

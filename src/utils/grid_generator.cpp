@@ -114,9 +114,9 @@ namespace dengUtils {
             m_asset.vertices.vuu[l_index + 2].vert_y = 0;
             m_asset.vertices.vuu[l_index + 2].vert_z = cur_pos + DENG_GRID_THICKNESS;
             
-            m_asset.indices.indices[l_index] = l_index;
-            m_asset.indices.indices[l_index + 1] = l_index + 1;
-            m_asset.indices.indices[l_index + 2] = l_index + 2;
+            m_asset.indices.indices[l_index] = (deng_ui32_t) l_index;
+            m_asset.indices.indices[l_index + 1] = (deng_ui32_t) l_index + 1;
+            m_asset.indices.indices[l_index + 2] = (deng_ui32_t) l_index + 2;
             cur_pos += step;
         }
 
@@ -136,9 +136,9 @@ namespace dengUtils {
             m_asset.vertices.vuu[r_index + 2].vert_y = 0;
             m_asset.vertices.vuu[r_index + 2].vert_z = -(len / 2);
 
-            m_asset.indices.indices[r_index] = r_index;
-            m_asset.indices.indices[r_index + 1] = r_index + 1;
-            m_asset.indices.indices[r_index + 2] = r_index + 2;
+            m_asset.indices.indices[r_index] = (deng_ui32_t) r_index;
+            m_asset.indices.indices[r_index + 1 ] = (deng_ui32_t) r_index + 1;
+            m_asset.indices.indices[r_index + 2] = (deng_ui32_t) r_index + 2;
             cur_pos += step;
         }
     }

@@ -65,6 +65,7 @@
 #ifdef __VULKAN_IC_CPP
     #include <vector>
     #include <array>   
+	#include <string>
     #include <map>
 
     #include <vulkan/vulkan.h>

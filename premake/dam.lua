@@ -75,6 +75,9 @@ function dam.build()
             "src/das/*.cpp",
             "src/das/*.c"
         }
+
+		filter "platforms:Win32"
+			links { "iphlpapi" }
 end
 
 

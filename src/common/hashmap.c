@@ -285,7 +285,7 @@ extern "C" {
             deng_i64_t i = 0;
             deng_bool_t is_found = false;
 
-            for(i = index; i < p_hm->map_size; i++) {
+            for(i = index; i < (deng_i64_t) p_hm->map_size; i++) {
                 if
                 (
                     p_hm->map_data[i].key && 
@@ -427,7 +427,7 @@ extern "C" {
             sizeof(void*)
         );
 
-        for(deng_i64_t i = 0; i < p_hm->used_size; i++)
+        for(deng_ui64_t i = 0; i < p_hm->used_size; i++)
             out[i] = p_hm->map_data[p_hm->indices[i]].data;
 
         return out;

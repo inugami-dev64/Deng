@@ -334,7 +334,7 @@ namespace deng {
 
                             vkCmdDrawIndexed (
                                 m_cmd_bufs[i], 
-                                reg_asset.asset.indices.n, 
+                                static_cast<deng_ui32_t>(reg_asset.asset.indices.n), 
                                 1, 
                                 0, 
                                 0, 

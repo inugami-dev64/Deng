@@ -78,10 +78,14 @@ extern "C" {
         #ifdef __linux__
             #include <dirent.h>
             #include <linux/random.h>
+		#elif _WIN32
+			#include <Windows.h>
+			#include <iphlpapi.h>
         #endif
 
 
-        #include <common/base_types.h>
+        #include <common/base_types.h>  
+		#include <common/common.h>
         #include <common/cerr_def.h>
         
         #define __UUID_VERSION 0x10

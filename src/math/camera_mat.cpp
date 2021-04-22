@@ -70,20 +70,20 @@ namespace dengMath {
         // Set the default camera positions and rotations according to the camera type specified
 
         // I will probably add this to the constructor of mat4
-        m_rot_x_mat.row1 = (vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, 0.0f}; 
-        m_rot_x_mat.row2 = (vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, 0.0f}; 
-        m_rot_x_mat.row3 = (vec4<deng_vec_t>) {0.0f, 0.0f, 1.0f, 0.0f}; 
-        m_rot_x_mat.row4 = (vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f}; 
+        m_rot_x_mat.row1 = vec4<deng_vec_t>{1.0f, 0.0f, 0.0f, 0.0f}; 
+        m_rot_x_mat.row2 = vec4<deng_vec_t>{0.0f, 1.0f, 0.0f, 0.0f}; 
+        m_rot_x_mat.row3 = vec4<deng_vec_t>{0.0f, 0.0f, 1.0f, 0.0f}; 
+        m_rot_x_mat.row4 = vec4<deng_vec_t>{0.0f, 0.0f, 0.0f, 1.0f}; 
 
-        m_rot_y_mat.row1 = (vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, 0.0f}; 
-        m_rot_y_mat.row2 = (vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, 0.0f}; 
-        m_rot_y_mat.row3 = (vec4<deng_vec_t>) {0.0f, 0.0f, 1.0f, 0.0f}; 
-        m_rot_y_mat.row4 = (vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f}; 
+        m_rot_y_mat.row1 = vec4<deng_vec_t>{1.0f, 0.0f, 0.0f, 0.0f}; 
+        m_rot_y_mat.row2 = vec4<deng_vec_t>{0.0f, 1.0f, 0.0f, 0.0f}; 
+        m_rot_y_mat.row3 = vec4<deng_vec_t>{0.0f, 0.0f, 1.0f, 0.0f}; 
+        m_rot_y_mat.row4 = vec4<deng_vec_t>{0.0f, 0.0f, 0.0f, 1.0f}; 
 
         switch(cam_type)
         {
         case DENG_CAMERA_TYPE_FPP:
-            m_camera_pos = (vec4<deng_vec_t>) {
+            m_camera_pos = vec4<deng_vec_t>{
                 DENG_FPP_CAMERA_DEFAULT_POS_X,
                 DENG_FPP_CAMERA_DEFAULT_POS_Y,
                 DENG_FPP_CAMERA_DEFAULT_POS_Z,
@@ -97,7 +97,7 @@ namespace dengMath {
             break;
 
         case DENG_CAMERA_TYPE_EDITOR:
-            m_camera_pos = (vec4<deng_vec_t>) {
+            m_camera_pos = vec4<deng_vec_t>{
                 DENG_EDITOR_CAMERA_DEFAULT_POS_X,
                 DENG_EDITOR_CAMERA_DEFAULT_POS_Y,
                 DENG_EDITOR_CAMERA_DEFAULT_POS_Z,
@@ -110,10 +110,10 @@ namespace dengMath {
             break;
         }
         
-        //m_camera_mat.row1 = (vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, 0.0f};
-        //m_camera_mat.row2 = (vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, 0.0f};
-        //m_camera_mat.row3 = (vec4<deng_vec_t>) {0.0f, 0.0f, 1.0f, 0.0f};
-        //m_camera_mat.row4 = (vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f};
+        //m_camera_mat.row1 = vec4<deng_vec_t>{1.0f, 0.0f, 0.0f, 0.0f};
+        //m_camera_mat.row2 = vec4<deng_vec_t>{0.0f, 1.0f, 0.0f, 0.0f};
+        //m_camera_mat.row3 = vec4<deng_vec_t>{0.0f, 0.0f, 1.0f, 0.0f};
+        //m_camera_mat.row4 = vec4<deng_vec_t>{0.0f, 0.0f, 0.0f, 1.0f};
     }
 
 
@@ -190,15 +190,15 @@ namespace dengMath {
         m_x_rot = x_rot;
         m_y_rot = y_rot;
 
-        m_rot_x_mat.row1 = (vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, 0.0f};
-        m_rot_x_mat.row2 = (vec4<deng_vec_t>) {0.0f, cosf(m_x_rot), -sinf(m_x_rot), 0.0f};
-        m_rot_x_mat.row3 = (vec4<deng_vec_t>) {0.0f, sinf(m_x_rot), cosf(m_x_rot), 0.0f};
-        m_rot_x_mat.row4 = (vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f};
+        m_rot_x_mat.row1 = vec4<deng_vec_t>{1.0f, 0.0f, 0.0f, 0.0f};
+        m_rot_x_mat.row2 = vec4<deng_vec_t>{0.0f, cosf(m_x_rot), -sinf(m_x_rot), 0.0f};
+        m_rot_x_mat.row3 = vec4<deng_vec_t>{0.0f, sinf(m_x_rot), cosf(m_x_rot), 0.0f};
+        m_rot_x_mat.row4 = vec4<deng_vec_t>{0.0f, 0.0f, 0.0f, 1.0f};
         
-        m_rot_y_mat.row1 = (vec4<deng_vec_t>) {cosf(m_y_rot), 0.0f, -sinf(m_y_rot), 0.0f};
-        m_rot_y_mat.row2 = (vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, 0.0f};
-        m_rot_y_mat.row3 = (vec4<deng_vec_t>) {sinf(m_y_rot), 0.0f, cosf(m_y_rot), 0.0f};
-        m_rot_y_mat.row4 = (vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f};
+        m_rot_y_mat.row1 = vec4<deng_vec_t>{cosf(m_y_rot), 0.0f, -sinf(m_y_rot), 0.0f};
+        m_rot_y_mat.row2 = vec4<deng_vec_t>{0.0f, 1.0f, 0.0f, 0.0f};
+        m_rot_y_mat.row3 = vec4<deng_vec_t>{sinf(m_y_rot), 0.0f, cosf(m_y_rot), 0.0f};
+        m_rot_y_mat.row4 = vec4<deng_vec_t>{0.0f, 0.0f, 0.0f, 1.0f};
     }
 
 
@@ -214,23 +214,23 @@ namespace dengMath {
         m_y_rot = y_rot;
 
         mat4<deng_vec_t> transform_mat;
-        transform_mat.row1 = (dengMath::vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, m_camera_pos.first - point.first};
-        transform_mat.row2 = (dengMath::vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, m_camera_pos.second - point.second};
-        transform_mat.row3 = (dengMath::vec4<deng_vec_t>) {0.0f, 0.0f, 1.0f, m_camera_pos.third - point.third};
-        transform_mat.row4 = (dengMath::vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f};
+        transform_mat.row1 = vec4<deng_vec_t>{1.0f, 0.0f, 0.0f, m_camera_pos.first - point.first};
+        transform_mat.row2 = vec4<deng_vec_t>{0.0f, 1.0f, 0.0f, m_camera_pos.second - point.second};
+        transform_mat.row3 = vec4<deng_vec_t>{0.0f, 0.0f, 1.0f, m_camera_pos.third - point.third};
+        transform_mat.row4 = vec4<deng_vec_t>{0.0f, 0.0f, 0.0f, 1.0f};
 
         mat4<deng_vec_t> tmp_rot_mat;
-        tmp_rot_mat.row1 = (dengMath::vec4<deng_vec_t>) {1.0f, 0.0f, 0.0f, 0.0f};
-        tmp_rot_mat.row2 = (dengMath::vec4<deng_vec_t>) {0.0f, (deng_vec_t) cosf(m_x_rot), (deng_vec_t) -sinf(m_x_rot), 0.0f};
-        tmp_rot_mat.row3 = (dengMath::vec4<deng_vec_t>) {0.0f, (deng_vec_t) sinf(m_x_rot), (deng_vec_t) cosf(m_x_rot), 0.0f};
-        tmp_rot_mat.row4 = (dengMath::vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f};
+        tmp_rot_mat.row1 = vec4<deng_vec_t>{1.0f, 0.0f, 0.0f, 0.0f};
+        tmp_rot_mat.row2 = vec4<deng_vec_t>{0.0f, (deng_vec_t) cosf(m_x_rot), (deng_vec_t) -sinf(m_x_rot), 0.0f};
+        tmp_rot_mat.row3 = vec4<deng_vec_t>{0.0f, (deng_vec_t) sinf(m_x_rot), (deng_vec_t) cosf(m_x_rot), 0.0f};
+        tmp_rot_mat.row4 = vec4<deng_vec_t>{0.0f, 0.0f, 0.0f, 1.0f};
 
         m_rot_x_mat = transform_mat * tmp_rot_mat * transform_mat.inv();
 
-        tmp_rot_mat.row1 = (dengMath::vec4<deng_vec_t>) {(deng_vec_t) cosf(m_y_rot), 0.0f, (deng_vec_t) sinf(m_y_rot), 0.0f},
-        tmp_rot_mat.row2 = (dengMath::vec4<deng_vec_t>) {0.0f, 1.0f, 0.0f, 0.0f},
-        tmp_rot_mat.row3 = (dengMath::vec4<deng_vec_t>) {(deng_vec_t) -sinf(m_y_rot), 0.0f, (deng_vec_t) cosf(m_y_rot), 0.0f},
-        tmp_rot_mat.row4 = (dengMath::vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f};
+        tmp_rot_mat.row1 = vec4<deng_vec_t>{(deng_vec_t) cosf(m_y_rot), 0.0f, (deng_vec_t) sinf(m_y_rot), 0.0f},
+        tmp_rot_mat.row2 = vec4<deng_vec_t>{0.0f, 1.0f, 0.0f, 0.0f},
+        tmp_rot_mat.row3 = vec4<deng_vec_t>{(deng_vec_t) -sinf(m_y_rot), 0.0f, (deng_vec_t) cosf(m_y_rot), 0.0f},
+        tmp_rot_mat.row4 = vec4<deng_vec_t>{0.0f, 0.0f, 0.0f, 1.0f};
 
         m_rot_y_mat = transform_mat * tmp_rot_mat * transform_mat.inv();
     }
@@ -252,10 +252,10 @@ namespace dengMath {
             translation.second = -(m_ts * m_camera_pos);
             translation.third = -(m_fs * m_camera_pos);
 
-            m_camera_mat.row1 = (vec4<deng_vec_t>) {m_rs.first, m_rs.second, m_rs.third, translation.first};
-            m_camera_mat.row2 = (vec4<deng_vec_t>) {m_ts.first, m_ts.second, m_ts.third, translation.second};
-            m_camera_mat.row3 = (vec4<deng_vec_t>) {m_fs.first, m_fs.second, m_fs.third, translation.third};
-            m_camera_mat.row4 = (vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f};
+            m_camera_mat.row1 = vec4<deng_vec_t>{m_rs.first, m_rs.second, m_rs.third, translation.first};
+            m_camera_mat.row2 = vec4<deng_vec_t>{m_ts.first, m_ts.second, m_ts.third, translation.second};
+            m_camera_mat.row3 = vec4<deng_vec_t>{m_fs.first, m_fs.second, m_fs.third, translation.third};
+            m_camera_mat.row4 = vec4<deng_vec_t>{0.0f, 0.0f, 0.0f, 1.0f};
         }
 
         else {
@@ -264,10 +264,10 @@ namespace dengMath {
             m_fs = m_rot_y_mat * m_rot_x_mat * __DENG_CAMERA_FORWARD;
             vec4<deng_vec_t> translation = m_rot_y_mat * m_rot_x_mat * m_camera_pos;
 
-            m_camera_mat.row1 = (vec4<deng_vec_t>) {m_rs.first, m_rs.second, m_rs.third, translation.first};
-            m_camera_mat.row2 = (vec4<deng_vec_t>) {m_ts.first, m_ts.second, m_ts.third, translation.second};
-            m_camera_mat.row3 = (vec4<deng_vec_t>) {m_fs.first, m_fs.second, m_fs.third, translation.third};
-            m_camera_mat.row4 = (vec4<deng_vec_t>) {0.0f, 0.0f, 0.0f, 1.0f};
+            m_camera_mat.row1 = vec4<deng_vec_t>{m_rs.first, m_rs.second, m_rs.third, translation.first};
+            m_camera_mat.row2 = vec4<deng_vec_t>{m_ts.first, m_ts.second, m_ts.third, translation.second};
+            m_camera_mat.row3 = vec4<deng_vec_t>{m_fs.first, m_fs.second, m_fs.third, translation.third};
+            m_camera_mat.row4 = vec4<deng_vec_t>{0.0f, 0.0f, 0.0f, 1.0f};
         }
     }
 

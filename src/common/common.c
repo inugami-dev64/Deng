@@ -97,7 +97,7 @@ char *cm_ExtractFileExtName(char *file_name) {
     
     // Find the extension index
     for(l_index = strlen(file_name) - 1; l_index >= 0; l_index--) {
-        if(file_name[l_index] == '.' && l_index < strlen(file_name) - 1) {
+        if(file_name[l_index] == '.' && l_index < (deng_i64_t) strlen(file_name) - 1) {
             is_ext_found = true;
             l_index++;
             break;
@@ -113,7 +113,7 @@ char *cm_ExtractFileExtName(char *file_name) {
 /* The following functions are used to get nearest number which has power of 2 */
 /*******************************************************************************/
 
-deng_ui64_t cm_topow2i64(deng_ui64_t n) {
+deng_ui64_t cm_ToPow2I64(deng_ui64_t n) {
     n |= n >> 1;
     n |= n >> 2;
     n |= n >> 4;
@@ -125,7 +125,7 @@ deng_ui64_t cm_topow2i64(deng_ui64_t n) {
 }
 
 
-deng_ui32_t cm_topow2i32(deng_ui32_t n) {
+deng_ui32_t cm_ToPow2I32(deng_ui32_t n) {
     n |= n >> 1;
     n |= n >> 2;
     n |= n >> 4;
@@ -136,7 +136,7 @@ deng_ui32_t cm_topow2i32(deng_ui32_t n) {
 }
 
 
-deng_ui16_t cm_topow2i16(deng_ui16_t n) {
+deng_ui16_t cm_ToPow2I16(deng_ui16_t n) {
     n |= n >> 1;
     n |= n >> 2;
     n |= n >> 4;
@@ -146,12 +146,83 @@ deng_ui16_t cm_topow2i16(deng_ui16_t n) {
 }
 
 
-deng_ui8_t cm_topow2i8(deng_ui8_t n) {
+deng_ui8_t cm_ToPow2I8(deng_ui8_t n) {
     n |= n >> 1;
     n |= n >> 2;
     n |= n >> 4;
 
     return n;
+}
+
+
+/************************************************/
+/* The following functions are used to generate */
+/* random cryptographycally secure numbers      */
+/************************************************/
+
+deng_ui64_t cm_RandI64() {
+    deng_ui64_t out = 0;
+	#if defined(__linux__)
+        // Read random data from /dev/urandom
+        FILE* file;
+        file = fopen("/dev/urandom", "rb");
+        if (!file) FILE_ERR("/dev/urandom");
+
+        fread(out, sizeof(deng_ui64_t), 1, file);
+        fclose(file);
+    #elif defined(_WIN32)
+		HCRYPTPROV crypt_prov;
+        if (!CryptAcquireContext(&crypt_prov, NULL, NULL, PROV_RSA_FULL, 0))
+            RUN_ERR("cm_randi64()", "Failed to retrieve WIN32 cryptographic context");
+        if (!CryptGenRandom(crypt_prov, sizeof(deng_ui64_t), (BYTE*) &out))
+            RUN_ERR("cm_randi64()", "Failed to generate random cryptgraphically secure number");
+	#endif
+
+	return out;
+}
+
+
+deng_ui32_t cm_RandI32() {
+    deng_ui64_t tmp = cm_RandI64();
+    return *(deng_ui32_t*) &tmp;
+}
+
+
+deng_ui16_t cm_RandI16() {
+    deng_ui64_t tmp = cm_RandI64();
+    return *(deng_ui16_t*) &tmp;
+}
+
+
+deng_ui8_t cm_RandI8() {
+    deng_ui64_t tmp = cm_RandI64();
+    return *(deng_ui8_t*) &tmp;
+}
+
+
+/*
+ * Convert regular ASCII string into wide UTF-16 string
+ * This method allocates memory on heap, manual cleanup is necessary
+ */
+wchar_t* cm_ToWideString(char* str) {
+    wchar_t* out = (wchar_t*) calloc(strlen(str) + 1, sizeof(wchar_t));
+    for (size_t i = 0; i < strlen(str); i++)
+       out[i] = (wchar_t)str[i];
+
+	return out;
+}
+
+
+/*
+ * Convert wide string into regular string
+ * This functions reads first 8 least significant bits of the wide string
+ */
+char* cm_ToRegularString(wchar_t* wstr) {
+    char* out = (char*)calloc(wcslen(wstr) + 1, sizeof(char));
+    for (size_t i = 0; i < wcslen(wstr); i++)
+        out[i] = (char)wstr[i];
+
+    return out;
 }
 
 

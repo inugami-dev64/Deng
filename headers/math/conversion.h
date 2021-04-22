@@ -102,7 +102,7 @@ namespace dengMath {
         /*
          * Convert from pixel size into vector coordinate size
          */
-        static deng_px_t pixelSizeToVector2DSize (
+        static deng_vec_t pixelSizeToVector2DSize (
             deng_px_t pixel_size,
             deng_ui32_t window_size
         );

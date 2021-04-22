@@ -300,7 +300,7 @@ namespace deng {
             logical_device_createinfo.queueCreateInfoCount = static_cast<deng_ui32_t>(queue_createinfos.size());
             logical_device_createinfo.pQueueCreateInfos = queue_createinfos.data();
             logical_device_createinfo.pEnabledFeatures = &device_features;
-            logical_device_createinfo.enabledExtensionCount = m_required_extension_names.size();
+            logical_device_createinfo.enabledExtensionCount = static_cast<deng_ui32_t>(m_required_extension_names.size());
             logical_device_createinfo.ppEnabledExtensionNames = m_required_extension_names.data();
 
             if(enable_vl) {

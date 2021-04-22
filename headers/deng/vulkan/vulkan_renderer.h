@@ -208,7 +208,7 @@ namespace deng {
              */
             void submitAssets (
                 deng_Id *asset_ids,
-                deng_i32_t asset_c
+                deng_ui32_t asset_c
             );
 
 
@@ -217,7 +217,7 @@ namespace deng {
              */
             void submitTextures (
                 deng_Id *tex_ids,
-                deng_i32_t tex_c
+                deng_ui32_t tex_c
             );
 
 

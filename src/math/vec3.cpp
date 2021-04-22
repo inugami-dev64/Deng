@@ -439,7 +439,7 @@ namespace dengMath {
     template<typename CT>
     vec3<CT> vec3<T>::cross(const vec3<CT> &vec1, const vec3<CT> &vec2) {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
-            vec3<CT> out = (vec3<CT>) {
+            vec3<CT> out = vec3<CT>{
                 vec1.second * vec2.third -
                 vec1.third * vec2.second,
                 vec1.third * vec2.first -
