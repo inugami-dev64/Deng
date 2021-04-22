@@ -78,6 +78,7 @@ workspace "deng"
 	-- Ignore safety warnings that MSVC gives
 	filter "platforms:Win32"
 		defines { "_CRT_SECURE_NO_WARNINGS" }
+    filter {}
 
 
 -- Define the clean action 
@@ -120,15 +121,15 @@ end
 
 -- Check if all submodule build configs should be created
 if _OPTIONS["use-modules"] then
-	includedirs { 
-		"modules/freetype/include", 
+	includedirs {
+		"modules/freetype/include",
 		"modules/freetype/include/freetype"
 	}
     local ft = require("premake/ft")
     ft.build()
+elseif package.config:sub(1,1) == '\\' then
+    error("Please use use-modules option on Windows builds!")
 else
-	filter "platforms:Win32"
-		error("Please use use-modules option on Windows builds!")
 	includedirs { "/usr/include/freetype2", "/usr/include/freetype2/freetype" }
 end
 

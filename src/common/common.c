@@ -168,7 +168,8 @@ deng_ui64_t cm_RandI64() {
         file = fopen("/dev/urandom", "rb");
         if (!file) FILE_ERR("/dev/urandom");
 
-        fread(out, sizeof(deng_ui64_t), 1, file);
+        size_t res = fread(&out, sizeof(deng_ui64_t), 1, file);
+        if(!res) FILE_ERR("/dev/urandom");
         fclose(file);
     #elif defined(_WIN32)
 		HCRYPTPROV crypt_prov;

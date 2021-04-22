@@ -99,7 +99,8 @@ char *__uuid_GetDevMacAddress() {
                 file = fopen(addr, "rb");
                 if(!file) FILE_ERR(addr);
 
-                fread(buf, sizeof(char), 17, file);
+                size_t res = fread(buf, sizeof(char), 17, file);
+                if(!res) FILE_ERR(c->d_name);
                 fclose(file);
                 break;
             }

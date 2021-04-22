@@ -86,10 +86,13 @@ typedef enum das_ImageFormat {
     #include <stdlib.h>
     #include <stdio.h>
     #include <string.h>
+
     #include <common/base_types.h>
     #include <common/common.h>
     #include <common/hashmap.h>
     #include <common/uuid.h>
+    #include <common/cerr_def.h>
+
     #include <das/sreader.h>
     #include <das/assets.h>
 
@@ -102,6 +105,7 @@ typedef enum das_ImageFormat {
      */
     void __das_ReadBitmap (
         FILE *file,
+        char *file_name,
         deng_ui8_t bit_c,
         deng_bool_t vert_re,
         das_Texture* p_tex

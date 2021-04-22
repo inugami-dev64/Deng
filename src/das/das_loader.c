@@ -333,7 +333,8 @@ void __das_ReadAssetFile(char *file_name) {
         sizeof(char)
     );
 
-    fread(__buf, sizeof(char), __buf_size, file);
+    size_t res = fread(__buf, sizeof(char), __buf_size, file);
+    if(!res) FILE_ERR(file_name);
 
     fclose(file);
 }

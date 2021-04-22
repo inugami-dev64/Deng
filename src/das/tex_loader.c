@@ -143,6 +143,7 @@ void das_LoadTexture (
  */
 void __das_ReadBitmap (
     FILE* file,
+    char *file_name,
     deng_ui8_t bit_c,
     deng_bool_t vert_re,
     das_Texture *p_tex
@@ -150,7 +151,7 @@ void __das_ReadBitmap (
     deng_ui8_t *tmp_pix;
     size_t offset = 0, offseta;
     deng_i32_t i, k;
-    size_t j;
+    size_t j, res;
 
     switch (bit_c)
     {
@@ -163,12 +164,14 @@ void __das_ReadBitmap (
             sizeof(deng_ui8_t)
         );
 
-        fread(
+        res = fread (
             tmp_pix,
             offset,
             p_tex->pixel_data.height,
             file
         );
+
+        if(!res) FILE_ERR(file_name);
         
         // Check if pixel reaarangement should be done (bottom - left to top - left)
         if (vert_re) {
@@ -200,12 +203,13 @@ void __das_ReadBitmap (
         offset = 4 * p_tex->pixel_data.width * sizeof(deng_ui8_t);
            
         if (!vert_re) {
-            fread (
+            res = fread (
                 p_tex->pixel_data.p_pixel_data, 
                 sizeof(deng_ui8_t), 
                 p_tex->pixel_data.size, 
                 file
             );
+            if(!res) FILE_ERR(file_name);
         }
 
         else {
@@ -214,12 +218,14 @@ void __das_ReadBitmap (
                 offset
             );
 
-            fread(
+            res = fread (
                 tmp_pix,
                 offset,
                 p_tex->pixel_data.height,
                 file
             );
+
+            if(!res) FILE_ERR(file_name);
 
             for (i = p_tex->pixel_data.height; i >= 0; i--)
                 memcpy(p_tex->pixel_data.p_pixel_data, tmp_pix + i * offset, offset);
@@ -470,12 +476,14 @@ void __das_LoadBMPImage(das_Texture *p_texture, const char *file_name) {
     if (info_header.y_origin != p_asset->pixel_data.height)
         __das_ReadBitmap(
             __file,
+            (char*) file_name,
             info_header.bit_count,
             false,
             p_asset
         );
     else __das_ReadBitmap(
         __file,
+        (char*) file_name,
         info_header.bit_count,
         true,
         p_asset

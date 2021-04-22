@@ -81,12 +81,14 @@ void __das_ReadToBuffer(char *file_name) {
         sizeof(char)
     );
 
-    fread (
+    size_t res = fread (
         __buffer,
         file_c,
         sizeof(char),
         file
     );
+
+    if(!res) FILE_ERR(file_name);
 }
 
 
