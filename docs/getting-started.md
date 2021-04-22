@@ -1,91 +1,131 @@
+---
+title: started with DENG
+date: 2021-04-07
+---
+
 # Getting started with DENG
 
 Configuring DENG for your project is the first and the most important step of developing with DENG.   
 This page helps to get started with setting up your very first DENG project.   
 
-## Table of contents
-1. [Building DENG](#building-deng)    
-    1.1 [Build using Saucer](#build-using-saucer)  
-2. [Drawing simple 2D objects](#drawing-simple-2d-objects)    
-    2.1 [Includes](#includes)  
-    2.2 [Creating WindowWrap and Renderer instances](#creating-windowwrap-and-renderer-instances)  
-    2.3 [Setting hints for renderer](#setting-hints-for-renderer)  
-    2.4 [Generating 2D shape assets](#generating-2d-shape-assets)  
-    2.5 [Submit assets and finish renderer initialisation](#submit-assets-and-finish-renderer-initialisation)  
-    2.6 [Final Code](#final-code)  
-3. [Creating 3D assets](#3d-asset)    
-    3.1 [DAM](#dam)  
-    3.2 [Loading assets into DENG renderer](#model-loading)  
-4. [Creating main function for map editor](#map-editor)  
-5. [Creating main function for asset editor](#asset-editor)  
-
 
 ## Building DENG 
-DENG supports multiple ways of building binaries. However as a general rule of thumb it is recommended to use
-Saucer for GNU/Linux target platforms and Visual Studio for Windows. CMake can also be used but it is not recommended, since
-the CMake scripts are not regularly updated and only MinGW compiler is supported on Windows. 
+DENG can be built using CMake or Saucer (experimental). 
 
-### Build using Saucer    
-Saucer is a small subproject of DENG, created for the purpose of simplifying the Makefile generation.   
+### Build using CMake
+Builing DENG Using CMake is pretty straight forward. However if using Windows then `VULKAN_SDK_PATH` variable must be specified to the location of VulkanSDK installed on the system.
+List of all available CMake variables are 
+
+Variable | Expected value | Description
+--- | --- | ---
+VULKAN_SDK_PATH | [PATH TO VULKAN SDK] | Specify the path to Vulkan SDK (Windows only)
+BUILD_ALL | True / False | Build all targets available (including submodules)
+BUILD_DAM | True / False | Build DENG asset manager
+BUILD_LIBDENG | True / False | Build libdeng
+BUILD_FREETYPE | True / False | Add Freetype to build target list
+BUILD_SANDBOX_APP | True / False | Add sandbox application to build target list
+
+Building can then be done with following commands  
+* `$ mkdir build`
+* `$ cd build`
+* `$ cmake .. [FLAGS]`
+
+### Build using Saucer (experimental)   
+Saucer is a small subproject of DENG, created for the purpose of having small and unbloated program for generating Makefiles. Currently Saucer successfully generates Makefiles for Linux only.   
 Git repository for Saucer can be found [here](#https://github.com/inugami-dev64/saucer)  
-Makefile can be generated with the following command  
+Makefile for DENG can be generated with the following command  
 `$ saucer build.yml`  
+To generate a Makefile with sandboxapp included use
+`$ saucer build_devel.yml`
 Additionally target platform configuration can be specified with `-p` flag.  
-All that is left to do now is simply run `make`. Once the building has finished successfully build/ directory should have
-appeared. Inside build/deng/ you should find dam executable and inside build/deng/lib you should find
-libdeng(.so/.dll) and libdas(.so/.dll). These are the main libraries that need to be linked with DENG project.  
+All that is left to do now is simply run `make`. 
 
 ## Drawing simple 2D objects 
 ### Includes
-In order to use DENG we need to include `api_core.h` header which can be usually found in deng/headers/deng/ directory of the 
-main repository.
+In order to use DENG we need to include `deng/deng.h` header which can found in headers directory of the main repository. Before including `deng/deng.h` header it is good idea to define following preprocessor flag `DENG_ENABLE_STD_INCL`. What this does is it includes all required STL headers that are used in DENG. If this flag is not defined then all STL headers must be included manually.
 ```
-#include <deng/api_core.h>
+#define DENG_ENABLE_STD_INCL
+#include <deng/deng.h>
 ```
 
-### Creating WindowWrap and Renderer instances
-First steps of setting up any graphics library are usually related to creating surface window and setting up the main loop.
-In DENG the process is pretty similar, exept that for now we don't need to worry about the main loop, since by default it is handled
-by DENG API itself. Firstly [deng::WindowWrap](#../refs/deng/WindowWrap) instance needs to be created. This instance allows for
-window surface creation. Secondly we need to create a renderer instance, which in DENG is called [deng::Renderer](#../refs/deng/Renderer).  
+### Setting up renderer 
+First steps of setting up DENG renderer are creating a surface window and a camera instance. 
+In DENG there are currently two camera classes: `deng::EditorCamera` and `deng::FPPCamera`.
+`deng::EditorCamera` creates new editor camera and `deng::FPPCamera` creates new first person
+perspective camera instance.  
 
+
+In this example code we are going to use first person perspective camera 
+but the renderer accepts both camera types  
 ```
 deng::WindowWrap window(1280, 720, "My awesome game!");
-deng::Renderer rend;
+deng::FPPCamera fpp_cam (
+    {1.0f, 1.0f, 1.0f}, 
+    {0.7f, 0.7f}, 
+    dengMath::Conversion::degToRad(65.0f), 
+    DENG_DEFAULT_NEAR_PLANE, 
+    DENG_DEFAULT_FAR_PLANE, 
+    NULL, 
+    NULL,
+    &window
+);
+deng::Renderer rend(&window, &fpp_cam, DENG_CAMERA_FPP);
 ```
+
+As you can probably see the sample code is using `DENG_DEFAULT_NEAR_PLANE` and `DENG_DEFAULT_FAR_PLANE` preprocessor 
+definition values. These values expand to 0.1f and 25.0f accordingly.    
+
+More info about classes used in this example:  
+* `deng::FPPCamera` -- [link](refs/fppcamera.md)  
+* `deng::EditorCamera` -- [link](refs/editorcamera.md)   
+* `deng::Renderer` -- [link](refs/renderer.md)  
+* `deng::WindowWrap` -- [link](refs/windowwrap.md)  
 
 ### Setting hints for renderer
 Before we can proceed into generating 2D shapes we need to first give the renderer hints, which define how the renderer is going 
-to work. The full list of all possible renderer flags can be found [here](#../refs/global/deng_RendererHintBits). Please keep
+to work. The full list of all possible renderer flags can be found [here](refs/global/deng_rendererhintbits.md). Please keep
 in mind that using some combinations of these flags can result runtime errors (for example: using different msaa value flags at the same time).
 Check the flag reference page for more information. Flags can be submited to renderer via following method: `deng::Renderer::setHints(deng_RendererHintBits)`  
-In this example we use MSAA 2x antialiasing and Vulkan as our graphics api with FPS counter enabled.  
+In this example we use MSAA 2x antialiasing and Vulkan as our graphics api with console FPS counter enabled.
 
 ```
 deng::WindowWrap window(1280, 720, "My awesome game!");
-deng::Renderer rend;
+deng::FPPCamera fpp_cam (
+    {1.0f, 1.0f, 1.0f}, 
+    {0.7f, 0.7f}, 
+    dengMath::Conversion::degToRad(65.0f), 
+    DENG_DEFAULT_NEAR_PLANE, 
+    DENG_DEFAULT_FAR_PLANE, 
+    NULL, 
+    NULL,
+    &window
+);
+deng::Renderer rend(&window, &fpp_cam, DENG_CAMERA_FPP);
 
 rend.setHints (
     DENG_RENDERER_HINT_API_VULKAN |
-    DENG_RENDERER_HINT_SHOW_FPS_COUNTER |
+    DENG_RENDERER_HINT_SHOW_CMD_FPS_COUNTER |
     DENG_RENDERER_HINT_MSAA_2
 );
 ```
 
 ### Generating 2D shape assets
-In DENG there is universal asset struct for both 3D and 2D assets. In order to generate 2D shapes we can use [dengUtils::TriangleGenerator](#../refs/dengutils/TriangleGenerator.md),
-[dengUtils::RectangleGenerator](#../refs/dengutils/RectangleGenerator.md) and/or [dengUtils::CircleGenerator](#../refs/dengutils/CircleGenerator.md) classes accordingly. In this example
-code we generate one circle, one triangle and one rectangle. As a first step we need to create asset instances for each individual shape. In this example an array will be suitable for that  
-purpose. Once the array is created we can move on to generating 2D shapes into these asset instances. For this demo application we make all assets unmapped, which means that no texture mapping
-will be done. Texture mapping comes in later chapter.  
-For generating asset we are going to use following methods:   
-[dengUtils::TriangleGenerator::makeAbsTriangleAsset()](#../refs/dengUtils/TriangleGenerator#makeAbsTriangleAsset) for triangle asset  
-[dengUtils::CircleGenerator::makeAbsCircleAsset](#../refs/dengUtils/CircleGenerator#makeAbsCircleAsset) for circle asset  and
-[dengUtils::RectangleGenerator::makeUnmappedAbsRecAsset()](#../refs/dengUtils/RectangleGenerator#makeUnmappedAbsRecAsset) for rectangle asset  
-After generating new asset we also need to explicitly specify the visibility of an asset. This can be done by changing the value of `deng_Asset::is_shown` to `true`  
+In DENG there is universal asset structure for both 3D and 2D assets. In order to generate 2D shapes we can use `dengUtils::TriangleGenerator`, `dengUtils::RectangleGenerator` and/or `dengUtils::CircleGenerator` classes accordingly. In this example
+code we generate one circle, one triangle and one rectangle. As a first step we need to create all asset instances for each individual shape. In this example an `std::array` will be suitable for that purpose. Once the array is created we can move on to generating 2D shapes into these asset instances. For this demo application we make all assets unmapped, which means that no texture mapping
+will be done. Texture mapping tutorial comes later.  
+For generating assets we are going to use following methods:   
+`dengUtils::TriangleGenerator::makeAbsTriangleAsset()` for triangle assets  
+`dengUtils::CircleGenerator::makeAbsCircleAsset()` for circle assets and  
+`dengUtils::RectangleGenerator::makeUnmappedAbsRecAsset()` for rectangle assets  
+References to shape generators:  
+`dengUtils::RectangleGenerator` -- [link](refs/utils/rectanglegenerator.md)  
+`dengUtils::CircleGenerator` -- [link](refs/utils/circlegenerator.md)  
+`dengUtils::TriangleGenerator` -- [link](refs/utils/trianglegenerator.md)  
+
+After generating new assets we also need to explicitly specify the visibility of an asset. This can be done by changing the value of `das_Asset::is_shown` to `true`  
 
 ```
-std::array<deng_Asset, 3> assets;
+std::array<das_Asset, 3> assets;
 
 dengUtils::TriangleGenerator tri_gen(window.getSize());
 dengUtils::RectangleGenerator rec_gen(window.getSize());
@@ -131,7 +171,7 @@ assets[2].is_shown = true;
 
 ### Submit assets and finish renderer initialisation
 Now that 2D shape assets are generated we can finilise the renderer initialisation by first submitting the assets, then calling renderer initialisation method and finally calling the main run method.  
-Submiting assets in DENG can be done with [deng::Renderer::submitAssets()](#../refs/deng/Renderer#submitAssets) method   
+Submiting the assets in DENG can be done with `deng::Renderer::submitAssets()` method   
 ```
 ...
 rend.submitAssets ( 
@@ -140,9 +180,9 @@ rend.submitAssets (
 );
 ```
 
-Initialising the renderer can be done by calling [deng::Renderer::initRenderer()](#../refs/Renderer#initRenderer) method. This method takes three parametres, first pointer to WindowWrap instance,
-second renderer usage mode ([deng_RendererUsageMode](#../refs/deng_RendererUsageMode)), which in our case is specified as DENG_RENDERER_USAGE_GAME_MODE and third background color. For background color 
-we can create a new definition which we will call SANDBOX_BACKGROUND. The colors are specified as floating point RGB values.  
+Initialising the renderer can be done by calling `deng::Renderer::initRenderer()` method. This method takes three parametres, first pointer to WindowWrap instance,
+second renderer usage mode `deng_RendererUsageMode`, which in our case is specified as `DENG_RENDERER_USAGE_GAME_MODE` and third the background color. For background color 
+we can create a new definition which we will call `SANDBOX_BACKGROUND`. The colors are specified as floating point RGB values. We will use purpleish color for the background in this example application, because why not.   
 
 ```
 #include <deng/api_core.h>
@@ -170,11 +210,21 @@ Code should now look something like this.
 #include <deng/api_core.h>
 #define SANDBOX_BACKGROUND {0.1411765f, 0.0431372f, 0.2313725f, 1.0f}
 
-std::vector<deng_Asset> assets(3);
+std::vector<das_Asset> assets(3);
 
 int main() {
     deng::WindowWrap window(1280, 720, "My awesome game!");
-    deng::Renderer rend;
+    deng::FPPCamera fpp_cam (
+        {1.0f, 1.0f, 1.0f}, 
+        {0.7f, 0.7f}, 
+        dengMath::Conversion::degToRad(65.0f), 
+        DENG_DEFAULT_NEAR_PLANE, 
+        DENG_DEFAULT_FAR_PLANE, 
+        NULL, 
+        NULL,
+        &window
+    );
+    deng::Renderer rend(&window, &fpp_cam, DENG_CAMERA_FPP);
 
     rend.setHints (
         DENG_RENDERER_HINT_API_VULKAN | 

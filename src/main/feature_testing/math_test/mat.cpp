@@ -3,9 +3,10 @@
 #include <unordered_map>
 #include <vector>
 #include <string>
-#include "../../../../headers/common/base_types.h"
-#include "../../../../headers/das/assets.h"
-#include "../../../../headers/deng/deng_math.h"
+#include <random>
+#include <common/base_types.h>
+#include <das/assets.h>
+#include <deng/deng_math.h>
 
 void printmat(dengMath::mat2<deng_vec_t> mat) {
     printf (
@@ -41,18 +42,55 @@ void printmat(dengMath::mat4<deng_vec_t> mat) {
 }
 
 int main() {
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<deng_vec_t> num(0.0f, 100.0f); 
+    dengMath::mat4<deng_vec_t> test_mat4 = {
+        {num(mt), num(mt), 1.0f, num(mt)},
+        {num(mt), num(mt), num(mt), 1.0f},
+        {num(mt), 1.0f, num(mt), num(mt)},
+        {num(mt), num(mt), num(mt), num(mt)},
+    };
+
     dengMath::mat3<deng_vec_t> test_mat3 = {
-        {1.0f, 0.0f, 0.12f},
-        {0.0f, 1.0f, 0.9f},
-        {0.0f, 0.0f, 1.0f}
+        {num(mt), num(mt), num(mt)},
+        {num(mt), 1.0f, num(mt)},
+        {num(mt), num(mt), num(mt)},
     }; 
 
-    // Print 3x3 matrix, inverse and product of A x A^-1
-    printf("DET: %f\n", dengMath::mat3<deng_vec_t>::det(test_mat3));
+    dengMath::mat2<deng_vec_t> test_mat2 = {
+        {num(mt), num(mt)},
+        {num(mt), 1.0f},
+    };
+
+    dengMath::mat4<deng_vec_t> det_mat = {
+        {2, 4, 6, 5},
+        {9, 2, 1, 7},
+        {52, 45, 6, 9},
+        {1, 2, 4, 7}
+    };
+
+    // Print 4x4 matrix, inverse and product of A x A ^ (-1)
+    printf("DET: %f\n", dengMath::mat4<deng_vec_t>::det(det_mat));
+    printmat(test_mat4);
+    dengMath::mat4<deng_vec_t> inv_mat4 = test_mat4.inv();
+    printmat(inv_mat4);
+    printmat(test_mat4 * inv_mat4);
+    printf("_______________________________\n");
+
+    // Print 3x3 matrix, inverse and product of A x A ^(-1)
     printmat(test_mat3);
     dengMath::mat3<deng_vec_t> inv_mat3 = test_mat3.inv();
     printmat(inv_mat3);
     printmat(test_mat3 * inv_mat3);
+    printf("_______________________________\n");
+
+    // Print 2x2 matrix, inverse and product of A x A ^(-1)
+    printmat(test_mat2);
+    dengMath::mat2<deng_vec_t> inv_mat2 = test_mat2.inv();
+    printmat(inv_mat2);
+    printmat(test_mat2 * inv_mat2);
+    printf("_______________________________\n");
 
     return EXIT_SUCCESS;
 }

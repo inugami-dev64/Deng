@@ -1,6 +1,6 @@
-[submodule "modules/freetype2"]
-	path = modules/freetype2
-	url = https://github.com/inugami-dev64/freetype2
-[submodule "modules/Imgui"]
-	path = modules/Imgui
-	url = https://github.com/inugami-dev64/Imgui
+[submodule "modules/freetype"]
+	path = modules/freetype
+	url = https://gitlab.freedesktop.org/freetype/freetype.git
+[submodule "modules/premake_helpers.lua"]
+	path = modules/premake_helpers.lua
+	url = https://github.com/inugami-dev64/premake_helpers.lua

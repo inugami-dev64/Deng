@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>getting-started</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#getting-started-with-deng">Getting started with DENG</a>
+<ul>
+<li><a href="#building-deng">Building DENG</a>
+<ul>
+<li><a href="#build-using-cmake">Build using CMake</a></li>
+<li><a href="#build-using-saucer-experimental">Build using Saucer (experimental)</a></li>
+</ul></li>
+<li><a href="#drawing-simple-2d-objects">Drawing simple 2D objects</a>
+<ul>
+<li><a href="#includes">Includes</a></li>
+<li><a href="#setting-up-renderer">Setting up renderer</a></li>
+<li><a href="#setting-hints-for-renderer">Setting hints for renderer</a></li>
+<li><a href="#generating-2d-shape-assets">Generating 2D shape assets</a></li>
+<li><a href="#submit-assets-and-finish-renderer-initialisation">Submit assets and finish renderer initialisation</a></li>
+<li><a href="#final-code">Final code</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="getting-started-with-deng">Getting started with DENG</h1>
+<p>Configuring DENG for your project is the first and the most important step of developing with DENG.<br />
+This page helps to get started with setting up your very first DENG project.</p>
+<h2 id="building-deng">Building DENG</h2>
+<p>DENG can be built using CMake or Saucer (experimental).</p>
+<h3 id="build-using-cmake">Build using CMake</h3>
+<p>Builing DENG Using CMake is pretty straight forward. However if using Windows then <code>VULKAN_SDK_PATH</code> variable must be specified to the location of VulkanSDK installed on the system. List of all available CMake variables are</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Expected value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>VULKAN_SDK_PATH</td>
+<td>[PATH TO VULKAN SDK]</td>
+<td>Specify the path to Vulkan SDK (Windows only)</td>
+</tr>
+<tr class="even">
+<td>BUILD_ALL</td>
+<td>True / False</td>
+<td>Build all targets available (including submodules)</td>
+</tr>
+<tr class="odd">
+<td>BUILD_DAM</td>
+<td>True / False</td>
+<td>Build DENG asset manager</td>
+</tr>
+<tr class="even">
+<td>BUILD_LIBDENG</td>
+<td>True / False</td>
+<td>Build libdeng</td>
+</tr>
+<tr class="odd">
+<td>BUILD_FREETYPE</td>
+<td>True / False</td>
+<td>Add Freetype to build target list</td>
+</tr>
+<tr class="even">
+<td>BUILD_SANDBOX_APP</td>
+<td>True / False</td>
+<td>Add sandbox application to build target list</td>
+</tr>
+</tbody>
+</table>
+<p>Building can then be done with following commands<br />
+* <code>$ mkdir build</code> * <code>$ cd build</code> * <code>$ cmake .. [FLAGS]</code></p>
+<h3 id="build-using-saucer-experimental">Build using Saucer (experimental)</h3>
+<p>Saucer is a small subproject of DENG, created for the purpose of having small and unbloated program for generating Makefiles. Currently Saucer successfully generates Makefiles for Linux only.<br />
+Git repository for Saucer can be found <a href="#https://github.com/inugami-dev64/saucer">here</a><br />
+Makefile for DENG can be generated with the following command<br />
+<code>$ saucer build.yml</code><br />
+To generate a Makefile with sandboxapp included use <code>$ saucer build_devel.yml</code> Additionally target platform configuration can be specified with <code>-p</code> flag.<br />
+All that is left to do now is simply run <code>make</code>.</p>
+<h2 id="drawing-simple-2d-objects">Drawing simple 2D objects</h2>
+<h3 id="includes">Includes</h3>
+<p>In order to use DENG we need to include <code>deng/deng.h</code> header which can found in headers directory of the main repository. Before including <code>deng/deng.h</code> header it is good idea to define following preprocessor flag <code>DENG_ENABLE_STD_INCL</code>. What this does is it includes all required STL headers that are used in DENG. If this flag is not defined then all STL headers must be included manually.</p>
+<pre><code>#define DENG_ENABLE_STD_INCL
+#include &lt;deng/deng.h&gt;</code></pre>
+<h3 id="setting-up-renderer">Setting up renderer</h3>
+<p>First steps of setting up DENG renderer are creating a surface window and a camera instance. In DENG there are currently two camera classes: <code>deng::EditorCamera</code> and <code>deng::FPPCamera</code>. <code>deng::EditorCamera</code> creates new editor camera and <code>deng::FPPCamera</code> creates new first person perspective camera instance.</p>
+<p>In this example code we are going to use first person perspective camera but the renderer accepts both camera types</p>
+<pre><code>deng::FPPCamera fpp_cam (
+    {1.0f, 1.0f, 1.0f}, 
+    {0.7f, 0.7f}, 
+    dengMath::Conversion::degToRad(65.0f), 
+    DENG_DEFAULT_NEAR_PLANE, 
+    DENG_DEFAULT_FAR_PLANE, 
+    NULL, 
+    NULL,
+    &amp;window
+);
+deng::WindowWrap window(1280, 720, &quot;My awesome game!&quot;);
+deng::Renderer rend(&amp;window, &amp;fpp_cam, DENG_CAMERA_FPP);</code></pre>
+<p>As you can probably see the sample code is using <code>DENG_DEFAULT_NEAR_PLANE</code> and <code>DENG_DEFAULT_FAR_PLANE</code> preprocessor definition values. These values expand to 0.1f and 25.0f accordingly.</p>
+<p>More info about classes used in this example:<br />
+* <code>deng::FPPCamera</code> – <a href="refs/fppcamera.md">link</a><br />
+* <code>deng::EditorCamera</code> – <a href="refs/editorcamera.md">link</a><br />
+* <code>deng::Renderer</code> – <a href="refs/renderer.md">link</a><br />
+* <code>deng::WindowWrap</code> – <a href="refs/windowwrap.md">link</a></p>
+<h3 id="setting-hints-for-renderer">Setting hints for renderer</h3>
+<p>Before we can proceed into generating 2D shapes we need to first give the renderer hints, which define how the renderer is going to work. The full list of all possible renderer flags can be found <a href="refs/global/deng_rendererhintbits.md">here</a>. Please keep in mind that using some combinations of these flags can result runtime errors (for example: using different msaa value flags at the same time). Check the flag reference page for more information. Flags can be submited to renderer via following method: <code>deng::Renderer::setHints(deng_RendererHintBits)</code><br />
+In this example we use MSAA 2x antialiasing and Vulkan as our graphics api with console FPS counter enabled.</p>
+<pre><code>deng::FPPCamera fpp_cam (
+    {1.0f, 1.0f, 1.0f}, 
+    {0.7f, 0.7f}, 
+    dengMath::Conversion::degToRad(65.0f), 
+    DENG_DEFAULT_NEAR_PLANE, 
+    DENG_DEFAULT_FAR_PLANE, 
+    NULL, 
+    NULL,
+    &amp;window
+);
+deng::WindowWrap window(1280, 720, &quot;My awesome game!&quot;);
+deng::Renderer rend(&amp;window, &amp;fpp_cam, DENG_CAMERA_FPP);
+
+rend.setHints (
+    DENG_RENDERER_HINT_API_VULKAN |
+    DENG_RENDERER_HINT_SHOW_CMD_FPS_COUNTER |
+    DENG_RENDERER_HINT_MSAA_2
+);</code></pre>
+<h3 id="generating-2d-shape-assets">Generating 2D shape assets</h3>
+<p>In DENG there is universal asset structure for both 3D and 2D assets. In order to generate 2D shapes we can use <code>dengUtils::TriangleGenerator</code>, <code>dengUtils::RectangleGenerator</code> and/or <code>dengUtils::CircleGenerator</code> classes accordingly. In this example code we generate one circle, one triangle and one rectangle. As a first step we need to create all asset instances for each individual shape. In this example an <code>std::array</code> will be suitable for that purpose. Once the array is created we can move on to generating 2D shapes into these asset instances. For this demo application we make all assets unmapped, which means that no texture mapping will be done. Texture mapping tutorial comes later.<br />
+For generating assets we are going to use following methods:<br />
+<code>dengUtils::TriangleGenerator::makeAbsTriangleAsset()</code> for triangle assets<br />
+<code>dengUtils::CircleGenerator::makeAbsCircleAsset()</code> for circle assets and<br />
+<code>dengUtils::RectangleGenerator::makeUnmappedAbsRecAsset()</code> for rectangle assets<br />
+References to shape generators:<br />
+<code>dengUtils::RectangleGenerator</code> – <a href="refs/utils/rectanglegenerator.md">link</a><br />
+<code>dengUtils::CircleGenerator</code> – <a href="refs/utils/circlegenerator.md">link</a><br />
+<code>dengUtils::TriangleGenerator</code> – <a href="refs/utils/trianglegenerator.md">link</a></p>
+<p>After generating new assets we also need to explicitly specify the visibility of an asset. This can be done by changing the value of <code>das_Asset::is_shown</code> to <code>true</code></p>
+<pre><code>std::array&lt;das_Asset, 3&gt; assets;
+
+dengUtils::TriangleGenerator tri_gen(window.getSize());
+dengUtils::RectangleGenerator rec_gen(window.getSize());
+dengUtils::CircleGenerator cir_gen(window.getSize());
+
+
+assets[0] = tri_gen.makeAbsTriangleAsset (
+    &quot;triangle&quot;,
+    NULL,
+    {-1.0f, 0.0f},
+    {0.67, 0.67},
+    {-1.0f, 0.0f},
+    {1.0f, 0.0f, 0.0f, 1.0f},
+    {{-1.0f, 1.0f}, {0.0f, -1.0f}, {1.0f, 1.0f}},
+    0,
+    {0.0f, 0.0f, 0.0f, 0.0f}
+);
+assets[0].is_shown = true;
+
+assets[1] = cir_gen.makeAbsCircleAsset (
+    &quot;circle&quot;,
+    NULL,
+    {0.0f, 0.0f},
+    0.33f,
+    {0.0f, 1.0f, 0.0f, 1.0f},
+    0,
+    {0.0f, 0.0f, 0.0f, 0.0f}
+);
+assets[1].is_shown = true;
+
+assets[2] = rec_gen.makeUnmappedAbsRecAsset (
+    &quot;rectangle&quot;,
+    NULL,
+    {0.33f, 0.0f},
+    {0.67f, 0.67f},
+    {-1.0f, 0.0f},
+    {0.0f, 0.0f, 1.0f, 1.0f},
+    0,
+    {0.0f, 0.0f, 0.0f, 0.0f}
+);
+assets[2].is_shown = true;</code></pre>
+<h3 id="submit-assets-and-finish-renderer-initialisation">Submit assets and finish renderer initialisation</h3>
+<p>Now that 2D shape assets are generated we can finilise the renderer initialisation by first submitting the assets, then calling renderer initialisation method and finally calling the main run method.<br />
+Submiting the assets in DENG can be done with <code>deng::Renderer::submitAssets()</code> method</p>
+<pre><code>...
+rend.submitAssets ( 
+    assets.data(),
+    assets.size()
+);</code></pre>
+<p>Initialising the renderer can be done by calling <code>deng::Renderer::initRenderer()</code> method. This method takes three parametres, first pointer to WindowWrap instance, second renderer usage mode <code>deng_RendererUsageMode</code>, which in our case is specified as <code>DENG_RENDERER_USAGE_GAME_MODE</code> and third the background color. For background color we can create a new definition which we will call <code>SANDBOX_BACKGROUND</code>. The colors are specified as floating point RGB values. We will use purpleish color for the background in this example application, because why not.</p>
+<pre><code>#include &lt;deng/api_core.h&gt;
+#define SANDBOX_BACKGROUND {0.1411765f, 0.0431372f, 0.2313725f, 1.0f}</code></pre>
+<p>Now all that is left to do is call renderer initilisation and run methods. Run method takes no parametres and needs to be called when default main loop is needed.</p>
+<pre><code>...
+rend.initRenderer (
+    &amp;window,
+    DENG_RENDERER_USAGE_GAME_MODE,
+    SANDBOX_BACKGROUND
+);
+
+rend.run();</code></pre>
+<h3 id="final-code">Final code</h3>
+<p>Code should now look something like this.</p>
+<pre><code>#include &lt;deng/api_core.h&gt;
+#define SANDBOX_BACKGROUND {0.1411765f, 0.0431372f, 0.2313725f, 1.0f}
+
+std::vector&lt;das_Asset&gt; assets(3);
+
+int main() {
+    deng::FPPCamera fpp_cam (
+        {1.0f, 1.0f, 1.0f}, 
+        {0.7f, 0.7f}, 
+        dengMath::Conversion::degToRad(65.0f), 
+        DENG_DEFAULT_NEAR_PLANE, 
+        DENG_DEFAULT_FAR_PLANE, 
+        NULL, 
+        NULL,
+        &amp;window
+    );
+    deng::WindowWrap window(1280, 720, &quot;My awesome game!&quot;);
+    deng::Renderer rend(&amp;window, &amp;fpp_cam, DENG_CAMERA_FPP);
+
+    rend.setHints (
+        DENG_RENDERER_HINT_API_VULKAN | 
+        DENG_RENDERER_HINT_SHOW_FPS_COUNTER |
+        DENG_RENDERER_HINT_MSAA_2
+        &amp;window
+    );
+
+    dengUtils::TriangleGenerator tri_gen(window.getSize());
+    dengUtils::CircleGenerator cir_gen(window.getSize());
+    dengUtils::RectangleGenerator rec_gen(window.getSize());
+
+    assets[0] = tri_gen.makeAbsTriangleAsset (
+        &quot;triangle&quot;,
+        NULL,
+        {-1.0f, 0.0f},
+        {0.67, 0.67},
+        {-1.0f, 0.0f},
+        {1.0f, 0.0f, 0.0f, 1.0f},
+        {{-1.0f, 1.0f}, {0.0f, -1.0f}, {1.0f, 1.0f}},
+        0,
+        {0.0f, 0.0f, 0.0f, 0.0f}
+    );
+    assets[0].is_shown = true;
+
+    assets[1] = cir_gen.makeAbsCircleAsset (
+        &quot;circle&quot;,
+        NULL,
+        {0.0f, 0.0f},
+        0.33f,
+        {0.0f, 1.0f, 0.0f, 1.0f},
+        0,
+        {0.0f, 0.0f, 0.0f, 0.0f}
+    );
+    assets[1].is_shown = true;
+
+    assets[2] = rec_gen.makeUnmappedAbsRecAsset (
+        &quot;rectangle&quot;,
+        NULL,
+        {0.33f, 0.0f},
+        {0.67f, 0.67f},
+        {-1.0f, 0.0f},
+        {0.0f, 0.0f, 1.0f, 1.0f},
+        0,
+        {0.0f, 0.0f, 0.0f, 0.0f}
+    );
+    assets[2].is_shown = true;
+
+    rend.submitAssets (
+        assets.data(),
+        assets.size()
+    );
+
+    rend.initRenderer (
+        &amp;window,
+        DENG_RENDERER_USAGE_GAME_MODE,
+        SANDBOX_BACKGROUND
+    );
+
+    rend.run();
+
+    return 0;
+}</code></pre>
+</body>
+</html>
