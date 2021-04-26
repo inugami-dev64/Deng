@@ -76,7 +76,9 @@
     #include <common/hashmap.h>
     #include <common/common.h>
     #include <common/uuid.h>
-    #include <das/assets.h>
+    #include <data/assets.h>
+    #include <data/das_reader.h>
+    #include <data/tex_loader.h>
 
     #include <math/deng_math.h>
     #include <deng/window.h>
@@ -98,8 +100,6 @@
     #include <deng/vulkan/vulkan_dc.h>
     #include <deng/vulkan/vulkan_ra.h>
     #include <deng/vulkan/vulkan_renderer.h>
-    #include <das/das_loader.h>
-    #include <das/tex_loader.h>
     #include <deng/window.h>
     
 #endif

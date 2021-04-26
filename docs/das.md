@@ -11,17 +11,26 @@ DENG asset format, but if you want to create your own implementation of the
 format translator then read about the file structure below.  
 DAS format consists of mainly three headers INFO_HDR, VERT_HDR and INDX_HDR.  
 Additional headers are specified with following tags BEG_HDR and END_HDR and can
-contain various information.  
+contain various meta information.  
 **NOTE: Custom headers can only be placed in das file between INFO_HDR and VERT_HDR!**
 
-#### INFO_HDR  
+### Magic number 
+DENG asset format has three magic numbers which help to identify the specific
+use case for given file. The magic numbers in little endian are following:  
+* Static asset format `0x5453544553535144`  
+* Animation format `0x4e41544553535144` (reserved for future)  
+* Map data format `0x504d544553535144` (reserved for future)  
+
+
+### INFO_HDR  
 The layout for the INFO_HDR is following:  
+* 8 bytes: Magic number (in little endian: 0x5453544553535144)
 * 8 bytes: Header name  
 * 4 bytes: Header size 
 * 32 bytes: Asset UUID
 * 8 bytes: Timestamp  
 * 1 byte: Asset type
-* 1 byte Compression algorithm (default 0, reservered for future)
+* 1 byte Compression level (default 0, reservered for future)
 
 List of valid asset types are following:  
 * 0 - Texture mapped normalised asset
@@ -31,7 +40,7 @@ List of valid asset types are following:
 
 Currently compression algorithm specifying byte has to be 0 and is reserved for future use.
 
-#### VERT_HDR  
+### VERT_HDR  
 The layout for the VERT_HDR is following:  
 * 8 bytes: Header name  
 * 4 bytes: Header size  
@@ -41,19 +50,18 @@ The layout for the VERT_HDR is following:
     * 8 bytes: Texture coordinates (x, y: type f32)  
     * 12 bytes: Vertex normal coordinates (x, y, z: type f32)  
 
-#### INDX_HDR  
+### INDX_HDR  
 The layout for the INDX_HDR is following:  
 * 8 bytes: Header name  
 * 4 bytes: Header size (bytes)  
 * 4 bytes: Indices count  
 * n * 4 bytes: Indices data (type ui32)
 
-#### Custom headers 
-Custom headers can be used to store some loader specific information
+### META_HDR
+Meta headers can be used to store some additional information
 or they can be optionally ignored as well.  
-The layout for custom header is following:  
-* 7 bytes: Header begginning (BEG_HDR)
+The layout for META_HDR is following:  
+* 8 bytes: Header beginning (META_HDR)
 * 4 bytes: Header size
 * 4 bytes: Data size
 * n bytes: Data
-* 7 bytes: Header ending (END_HDR)

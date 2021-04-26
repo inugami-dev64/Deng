@@ -57,100 +57,85 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
- */ 
+ */
 
-
-#ifndef __TEX_LOADER_H
-#define __TEX_LOADER_H
+#ifndef __DAS_STATIC_ASSEMBLER_H
+#define __DAS_STATIC_ASSEMBLER_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define DEFAULT_ASSET_COLOR (das_ObjColorData) {0.7f, 0.7f, 0.7f, 1.0f}
-
-
-/*
- * This enum specifies the image file format 
- */
-typedef enum das_ImageFormat {
-    DAS_IMAGE_FORMAT_BMP = 0,
-    DAS_IMAGE_FORMAT_TGA = 1,
-    DAS_IMAGE_FORMAT_PNG = 2,
-    DAS_IMAGE_FORMAT_JPG = 3,
-    DAS_IMAGE_FORMAT_UNKNOWN = 4
-} das_ImageFormat;
-
-
-#ifdef __TEX_LOADER_C
+#ifdef __DAS_STATIC_ASSEMBLER_C
     #include <stdlib.h>
     #include <stdio.h>
     #include <string.h>
+    #include <time.h>
 
     #include <common/base_types.h>
-    #include <common/common.h>
-    #include <common/hashmap.h>
     #include <common/uuid.h>
     #include <common/cerr_def.h>
+    #include <data/assets.h>
+    #include <data/das_file.h>
 
-    #include <das/sreader.h>
-    #include <das/assets.h>
+    /***********************************/
+    /**** Header assembly functions ****/
+    /***********************************/
 
+    /*
+     * Assemble the info header of the asset
+     * This function call assumes that __wfile is a valid pointer to a stream
+     */
+    static void __das_AssembleINFO_HDR(das_AssetMode dst_mode);
+
+
+    /*
+     * Assemble vertex header of the asset
+     * This function call assumes that __wfile is a valid pointer to a stream
+     */
+    static void __das_AssembleVERT_HDR(das_VertDynamic vert, das_AssetMode dst_mode);
+
+        
+    /*
+     * Assemble META_HDR with additional meta data 
+     * This function call assumes that __wfile is a valid pointer to a stream
+     */
+    static void __das_AssembleMETA_HDR(char *meta_data);
+
+
+    /*
+     * Assemble indices header of the asset
+     * This function call assumes that __wfile is a valid pointer to a stream
+     */
+    static void __das_AssembleINDX_HDR(das_IndicesDynamic inds);
+
+
+    /*
+     * Open new file stream for writing 
+     */
+    static void __das_OpenFileStream(char *file_name);
     
-    das_ImageFormat __das_DetectImageFormat(const char *file_name);
 
     /*
-     * Read raw bitmap data from file
-     * This function expects the file to be uncompressed
+     * Close the current file stream
      */
-    void __das_ReadBitmap (
-        FILE *file,
-        char *file_name,
-        deng_ui8_t bit_c,
-        deng_bool_t vert_re,
-        das_Texture* p_tex
-    );
+    static void __das_CloseFileStream();
 
-
-    /*
-     * Load JPEG image into das_Texture instance
-     */
-    void __das_LoadJPGImage (
-        das_Texture *p_tex,
-        const char *file_name
-    );
-
-
-    /*
-     * Load BMP image data into das_Texture
-     */
-    void __das_LoadBMPImage (
-        das_Texture *p_tex, 
-        const char *file_name
-    );
-    
-
-    /*
-     * Load TGA image into das_Texture instance
-     */
-    void __das_LoadTGAImage (
-        das_Texture *p_tex, 
-        const char *file_name
-    );
+    FILE *__wfile = NULL;
 #endif
 
 
-/* 
- * Load texture bitmap data into das_Texture instance
+/*
+ * Assemble static DENG asset from das_Asset instance
  */
-void das_LoadTexture (
-    das_Texture *p_tex, 
-    const char *file_name
+void das_StaticAssemble (
+    das_Asset *p_asset,
+    char *file_name,
+    char **meta_data,
+    size_t meta_c
 );
 
-
 #ifdef __cplusplus
-    }
+}
 #endif
-
 #endif

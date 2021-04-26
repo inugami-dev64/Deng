@@ -68,7 +68,7 @@
     #include <type_traits>
     #include <stdlib.h>
     #include <common/base_types.h>
-    #include <das/assets.h>
+    #include <data/assets.h>
     #include <math/vec2.h>
 #endif
 

@@ -90,7 +90,7 @@ namespace deng {
         VkShaderModule __vk_PipelineCreator::__mkShaderModule(std::vector<char> &shader_bins) {
             VkShaderModuleCreateInfo createinfo{};
             createinfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-            createinfo.codeSize = (deng_ui32_t) shader_bins.size();
+            createinfo.codeSize = static_cast<deng_ui32_t>(shader_bins.size());
             createinfo.pCode = reinterpret_cast<const deng_ui32_t*>(shader_bins.data());
             VkShaderModule shader_module;
 
@@ -116,20 +116,11 @@ namespace deng {
             switch (m_p_pipeline_data->pipeline_type)
             {
             case DENG_PIPELINE_TYPE_UNMAPPED_3D:
-                input_binding_desc[0].stride = sizeof(VERT_UNMAPPED_UNOR);
-                break;
-
-            case DENG_PIPELINE_TYPE_UNMAPPED_3D_NORM:
-                input_binding_desc[0].stride = sizeof(VERT_UNMAPPED_NOR);
+                input_binding_desc[0].stride = sizeof(VERT_UNMAPPED);
                 break;
 
             case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D:
-                input_binding_desc[0].stride = sizeof(VERT_MAPPED_UNOR);
-                is_tex_mapped = true;
-                break;
-
-            case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D_NORM:
-                input_binding_desc[0].stride = sizeof(VERT_MAPPED_NOR);
+                input_binding_desc[0].stride = sizeof(VERT_MAPPED);
                 is_tex_mapped = true;
                 break;
 
@@ -157,58 +148,36 @@ namespace deng {
         std::vector<VkVertexInputAttributeDescription> __vk_PipelineCreator::__getAttributeDescs() {
             std::vector<VkVertexInputAttributeDescription> input_attr_desc{};
 
-            switch (m_p_pipeline_data->pipeline_type)
-            {
+            switch (m_p_pipeline_data->pipeline_type) {
             case DENG_PIPELINE_TYPE_UNMAPPED_3D:
-                input_attr_desc.resize(1);
-                input_attr_desc[0].binding = 0;
-                input_attr_desc[0].location = 0;
-                input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-                input_attr_desc[0].offset = 0;
-                break;
-
-            case DENG_PIPELINE_TYPE_UNMAPPED_3D_NORM:
                 input_attr_desc.resize(2);
                 input_attr_desc[0].binding = 0;
                 input_attr_desc[0].location = 0;
                 input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-                input_attr_desc[0].offset = offsetof(VERT_UNMAPPED_NOR, vert_data);
+                input_attr_desc[0].offset = offsetof(VERT_UNMAPPED, vert_data);
 
                 input_attr_desc[1].binding = 0;
                 input_attr_desc[1].location = 1;
                 input_attr_desc[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-                input_attr_desc[1].offset = offsetof(VERT_UNMAPPED_NOR, norm_data);
+                input_attr_desc[1].offset = offsetof(VERT_UNMAPPED, norm_data);
                 break;
 
             case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D:
-                input_attr_desc.resize(2);
-                input_attr_desc[0].binding = 0;
-                input_attr_desc[0].location = 0;
-                input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-                input_attr_desc[0].offset = offsetof(VERT_MAPPED_UNOR, vert_data);
-
-                input_attr_desc[1].binding = 0;
-                input_attr_desc[1].location = 1;
-                input_attr_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
-                input_attr_desc[1].offset = offsetof(VERT_MAPPED_UNOR, tex_data);
-                break;
-
-            case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D_NORM:
                 input_attr_desc.resize(3);
                 input_attr_desc[0].binding = 0;
                 input_attr_desc[0].location = 0;
                 input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-                input_attr_desc[0].offset = offsetof(VERT_MAPPED_NOR, vert_data);
+                input_attr_desc[0].offset = offsetof(VERT_MAPPED, vert_data);
 
                 input_attr_desc[1].binding = 0;
                 input_attr_desc[1].location = 1;
                 input_attr_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
-                input_attr_desc[1].offset = offsetof(VERT_MAPPED_NOR, tex_data);
+                input_attr_desc[1].offset = offsetof(VERT_MAPPED, tex_data);
 
                 input_attr_desc[2].binding = 0;
                 input_attr_desc[2].location = 2;
                 input_attr_desc[2].format = VK_FORMAT_R32G32B32_SFLOAT;
-                input_attr_desc[2].offset = offsetof(VERT_MAPPED_NOR, norm_data);
+                input_attr_desc[2].offset = offsetof(VERT_MAPPED, norm_data);
                 break;
 
             case DENG_PIPELINE_TYPE_UNMAPPED_2D:

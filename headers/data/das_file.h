@@ -60,41 +60,61 @@
  */ 
 
 
-#version 450
-#extension GL_ARB_separate_shader_objects : enable
+#ifndef __DAS_FILE_H
+#define __DAS_FILE_H
 
-const uint orthographic_camera_mode3D = 0x00000001u;
-const uint perspective_camera_mode3D = 0x00000002u;
+#define __DAS_INFO_HEADER_NAME          "INFO_HDR"
+#define __DAS_INFO_HEADER_SIZE          62
+#define __DAS_VERTICES_HEADER_NAME      "VERT_HDR"
+#define __DAS_INDICES_HEADER_NAME       "INDX_HDR"
+#define __DAS_META_HEADER_NAME          "META_HDR"
+#define __DAS_STATIC_MAGIC_NUMBER       0x5453544553534144
+#define __DAS_ANIMATION_MAGIC_NUMBER    0x4e41544553534144
+#define __DAS_MAP_MAGIC_NUMBER          0x504d544553534144
+#define __DAS_UUID_LEN                  32
 
-layout(binding = 0) uniform UniformBufferObj {
-    mat4 transform;
-    mat4 view;
-    uint ubo_flag_bits;
-} ubo;
+/*
+ * Information struct for META_HDR
+ */
+typedef struct das_META_HDR {
+    char beg[8]; // always has to be BEG_HDR
+    deng_ui32_t hdr_size;
+    deng_ui32_t data_size;
+    char *data;
+} das_META_HDR;
+
+/*
+ * Information structure for INFO_HDR
+ */
+typedef struct das_INFO_HDR {
+    deng_ui64_t magic_number;
+    char hdr_name[8];
+    deng_ui32_t hdr_size;
+    char uuid[__DAS_UUID_LEN];
+    deng_ui64_t time_st;
+    deng_ui8_t asset_type;
+    deng_ui8_t cmpr;
+} das_INFO_HDR;
+
+
+/* 
+ * Information structure for VERT_HDR
+ */
+typedef struct das_VERT_HDR {
+    char hdr_name[8];
+    deng_ui32_t hdr_size;
+    deng_ui32_t vert_c;
+} das_VERT_HDR;
+
 
 
 /*
- * Store color information about asset when it is not texture mapped
+ * Information structure for INDX_HDR
  */
-layout(binding = 1) uniform ColorData {
-    vec4 color;
-    int is_unmapped;
-} cl;
+typedef struct das_INDX_HDR {
+    char hdr_name[8];
+    deng_ui32_t hdr_size;
+    deng_ui32_t ind_c;
+} das_INDX_HDR;
 
-
-layout(location = 0) in vec3 in_pos;
-layout(location = 1) in vec3 in_norm_pos;
-
-layout(location = 0) out vec4 out_color;
-
-void main() {
-    if((ubo.ubo_flag_bits & orthographic_camera_mode3D) == orthographic_camera_mode3D)
-        gl_Position = ubo.view * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
-    
-    else if((ubo.ubo_flag_bits & perspective_camera_mode3D) == perspective_camera_mode3D)
-        gl_Position = ubo.transform * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
-
-    else gl_Position = vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
-
-    out_color = cl.color;   
-}
+#endif

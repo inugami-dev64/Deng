@@ -74,7 +74,7 @@
     #include <common/base_types.h>
     #include <common/hashmap.h>
     #include <common/err_def.h>
-    #include <das/assets.h>
+    #include <data/assets.h>
     #include <math/deng_math.h>
     #include <deng/vulkan/vulkan_qm.h>
     #include <deng/vulkan/vulkan_resources.h>
@@ -84,23 +84,17 @@
 #endif
 
 
-#define DENG_PIPELINE_COUNT 6
-
 /* Pipeline indices */
-#define UM3D_UNOR_I     0
-#define UM3D_NOR_I      1
-#define TM3D_UNOR_I     2
-#define TM3D_NOR_I      3
-#define UM2D_I          4
-#define TM2D_I          5
+#define UM3D_I          0
+#define TM3D_I          1
+#define UM2D_I          2
+#define TM2D_I          3
 
 #ifdef __linux__
     #define UNMAPPED_VERT_SHADER_2D             "./shaders/bin/2d_unmapped.spv"
     #define TEXTURE_MAPPED_VERT_SHADER_2D       "./shaders/bin/2d_tex_mapped.spv"
     #define UNMAPPED_VERT_SHADER_3D             "./shaders/bin/3d_unmapped.spv"
-    #define UNMAPPED_NORM_VERT_SHADER_3D        "./shaders/bin/3d_unmapped_nor.spv"
     #define TEXTURE_MAPPED_VERT_SHADER_3D       "./shaders/bin/3d_tex_mapped.spv"
-    #define TEXTURE_MAPPPED_NORM_VERT_SHADER_3D "./shaders/bin/3d_tex_mapped_nor.spv"
     #define TEXTURE_MAPPED_FRAG_SHADER          "./shaders/bin/tex_mapped_frag.spv"
     #define UNMAPPED_FRAG_SHADER                "./shaders/bin/unmapped_frag.spv"
 #endif
@@ -110,9 +104,7 @@
     #define UNMAPPED_VERT_SHADER_2D             ".\\shaders\\bin\\2d_unmapped.spv"
     #define TEXTURE_MAPPED_VERT_SHADER_2D       ".\\shaders\\bin\\2d_tex_mapped.spv"
     #define UNMAPPED_VERT_SHADER_3D             ".\\shaders\\bin\\3d_unmapped.spv"
-    #define UNMAPPED_NORM_VERT_SHADER_3D        ".\\shaders\\bin\\3d_unmapped_nor.spv"
     #define TEXTURE_MAPPED_VERT_SHADER_3D       ".\\shaders\\bin\\3d_tex_mapped.spv"
-    #define TEXTURE_MAPPPED_NORM_VERT_SHADER_3D ".\\shaders\\bin\\3d_tex_mapped_nor.spv"
     #define TEXTURE_MAPPED_FRAG_SHADER          ".\\shaders\\bin\\tex_mapped_frag.spv"
     #define UNMAPPED_FRAG_SHADER                ".\\shaders\\bin\\unmapped_frag.spv"
 #endif

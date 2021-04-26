@@ -70,7 +70,7 @@
 
     #include <common/base_types.h>
     #include <common/err_def.h>
-    #include <das/assets.h>
+    #include <data/assets.h>
     #include <deng/forward_dec.h>
     #include <math/deng_math.h>
     #include <vulkan/vulkan.h>

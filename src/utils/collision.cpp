@@ -90,8 +90,8 @@ namespace dengUtils {
                 if(j == vert_bounds.second) 
                     j = vert_bounds.first;
                 
-                vc = (dengMath::vec2<deng_vec_t>*) &p_asset->vertices.vu2d[i].vert_data;
-                vn = (dengMath::vec2<deng_vec_t>*) &p_asset->vertices.vu2d[j].vert_data;
+                vc = (dengMath::vec2<deng_vec_t>*) &p_asset->vertices.uni_vert.vu2d[i].vert_data;
+                vn = (dengMath::vec2<deng_vec_t>*) &p_asset->vertices.uni_vert.vu2d[j].vert_data;
 
                 if
                 (
@@ -108,8 +108,8 @@ namespace dengUtils {
                 if(j == vert_bounds.second) 
                     j = vert_bounds.first;
 
-                vc = (dengMath::vec2<deng_vec_t>*) &p_asset->vertices.vm2d[i].vert_data;
-                vn = (dengMath::vec2<deng_vec_t>*) &p_asset->vertices.vm2d[j].vert_data;
+                vc = (dengMath::vec2<deng_vec_t>*) &p_asset->vertices.uni_vert.vm2d[i].vert_data;
+                vn = (dengMath::vec2<deng_vec_t>*) &p_asset->vertices.uni_vert.vm2d[j].vert_data;
 
                 if
                 (

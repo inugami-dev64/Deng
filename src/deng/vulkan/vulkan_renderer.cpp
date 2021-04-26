@@ -317,12 +317,9 @@ namespace deng {
                         DENG_SUPPORTED_REG_TYPE_ASSET
                     );
 
-                    if (
-                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
-                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
-                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED ||
-                        reg_asset.asset.force_unmap
-                    ) {
+                    if(reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
+                       reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
+                       reg_asset.asset.force_unmap) {
                         vkFreeDescriptorSets (
                             m_p_ic->getDev(),
                             m_p_desc_c->getUnmappedDP(),
@@ -346,7 +343,7 @@ namespace deng {
         
         void __vk_Renderer::__cleanPipelines() {
             // Clean pipeline related data
-            std::array<__vk_PipelineData, __DENG_PIPELINE_COUNT> pd = m_p_desc_c->getPipelines();
+            std::array<__vk_PipelineData, DENG_PIPELINE_COUNT> pd = m_p_desc_c->getPipelines();
             for(size_t i = 0; i < pd.size(); i++) { 
                 vkDestroyPipeline (
                     m_p_ic->getDev(), 

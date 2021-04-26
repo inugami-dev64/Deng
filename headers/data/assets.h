@@ -116,26 +116,17 @@ typedef struct das_ObjColorData {
 /****** General shader vertices structs ******/
 /*********************************************/
 
-typedef struct VERT_MAPPED_UNOR {
-    das_ObjVertData vert_data;
-    das_ObjTextureData tex_data;
-} VERT_MAPPED_UNOR;
-
-
-typedef das_ObjVertData VERT_UNMAPPED_UNOR;
-
-
-typedef struct VERT_MAPPED_NOR {
+typedef struct VERT_MAPPED {
     das_ObjVertData vert_data;
     das_ObjTextureData tex_data;
     das_ObjNormalData norm_data;
-} VERT_MAPPED_NOR;
+} VERT_MAPPED;
 
 
-typedef struct VERT_UNMAPPED_NOR {
+typedef struct VERT_UNMAPPED {
     das_ObjVertData vert_data;
     das_ObjNormalData norm_data;
-} VERT_UNMAPPED_NOR;
+} VERT_UNMAPPED;
 
 
 // 2D vertices data
@@ -152,18 +143,39 @@ typedef struct VERT_UNMAPPED_2D {
 } VERT_UNMAPPED_2D;
 
 
+/***************************************************************************************/
+/* These unnormalised vertex structures are meant to be used in DAS file loading.      */ 
+/* All other vertices that are used in shaders are all normalised except 2D vertices   */
+/***************************************************************************************/
+
+typedef struct __VERT_MAPPED_UNOR {
+    das_ObjVertData vert_data;
+    das_ObjTextureData tex_data;
+} __VERT_MAPPED_UNOR;
+
+
+typedef das_ObjVertData __VERT_UNMAPPED_UNOR;
+
+
+/*
+ * Universal vertex type pointer union
+ */
+typedef union VERT_UNI {
+    VERT_MAPPED *vmn;
+    __VERT_MAPPED_UNOR *vmu;
+    VERT_UNMAPPED *vun;
+    __VERT_UNMAPPED_UNOR *vuu;
+
+    VERT_MAPPED_2D *vm2d;
+    VERT_UNMAPPED_2D *vu2d;
+} VERT_UNI;
+
+
 /* 
  * Structure for universal heap allocated vertices data storage
  */
 typedef struct das_VertDynamic {
-    VERT_MAPPED_UNOR *vmu;
-    VERT_UNMAPPED_UNOR *vuu;
-    VERT_MAPPED_NOR *vmn;
-    VERT_UNMAPPED_NOR *vun;
-
-    VERT_MAPPED_2D *vm2d;
-    VERT_UNMAPPED_2D *vu2d;
-
+    VERT_UNI uni_vert;
     size_t n;
 } das_VertDynamic;
 
@@ -193,13 +205,15 @@ typedef struct das_PixelDataDynamic {
  * Specify the type of the asset 
  */
 typedef enum das_AssetMode {
-    DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED    = 0,
-    DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED          = 1,
-    DAS_ASSET_MODE_3D_TEXTURE_MAPPED               = 2,
-    DAS_ASSET_MODE_3D_UNMAPPED                     = 3,
-    DAS_ASSET_MODE_2D_TEXTURE_MAPPED               = 4,
-    DAS_ASSET_MODE_2D_UNMAPPED                     = 5,
-    DAS_ASSET_MODE_DONT_CARE                       = 6
+    DAS_ASSET_MODE_UNDEFINED                        = -1,
+    DAS_ASSET_MODE_3D_TEXTURE_MAPPED                = 0,
+    __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR         = 1,
+    DAS_ASSET_MODE_3D_UNMAPPED                      = 2,
+    __DAS_ASSET_MODE_3D_UNMAPPED_UNOR               = 3,
+    DAS_ASSET_MODE_2D_TEXTURE_MAPPED                = 4,
+    DAS_ASSET_MODE_2D_UNMAPPED                      = 5,
+    DAS_ASSET_MODE_FIRST                            = DAS_ASSET_MODE_UNDEFINED,
+    DAS_ASSET_MODE_LAST                             = DAS_ASSET_MODE_2D_UNMAPPED
 } das_AssetMode;
 
 

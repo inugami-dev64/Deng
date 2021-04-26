@@ -69,7 +69,7 @@
 
     #include <common/base_types.h>
     #include <common/uuid.h>
-    #include <das/assets.h>
+    #include <data/assets.h>
     #include <math/deng_math.h>
 #endif
 

@@ -87,21 +87,21 @@ namespace dengMath {
         {
         case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
             for(size_t i = 0; i < asset.vertices.n; i++) {
-                tmp = asset.vertices.vm2d[i].vert_data;
+                tmp = asset.vertices.uni_vert.vm2d[i].vert_data;
                 tmp = mat * tmp;
 
-                asset.vertices.vm2d[i].vert_data.vert_x = tmp.first;
-                asset.vertices.vm2d[i].vert_data.vert_y = tmp.second;
+                asset.vertices.uni_vert.vm2d[i].vert_data.vert_x = tmp.first;
+                asset.vertices.uni_vert.vm2d[i].vert_data.vert_y = tmp.second;
             }
             break;
 
         case DAS_ASSET_MODE_2D_UNMAPPED:
             for(size_t i = 0; i < asset.vertices.n; i++) {
-                tmp = asset.vertices.vu2d[i].vert_data;
+                tmp = asset.vertices.uni_vert.vu2d[i].vert_data;
                 tmp = mat * tmp;
 
-                asset.vertices.vu2d[i].vert_data.vert_x = tmp.first;
-                asset.vertices.vu2d[i].vert_data.vert_y = tmp.second;
+                asset.vertices.uni_vert.vu2d[i].vert_data.vert_x = tmp.first;
+                asset.vertices.uni_vert.vu2d[i].vert_data.vert_y = tmp.second;
             }
             break;
 
@@ -275,47 +275,24 @@ namespace dengMath {
         {
         case DAS_ASSET_MODE_3D_UNMAPPED:
             for(size_t i = 0; i < asset.vertices.n; i++) {
-                tmp = asset.vertices.vuu[i];
+                tmp = asset.vertices.uni_vert.vun[i].vert_data;
                 tmp = mat * tmp;
 
-                asset.vertices.vuu[i].vert_x = tmp.first;
-                asset.vertices.vuu[i].vert_y = tmp.second;
-                asset.vertices.vuu[i].vert_z = tmp.third;
-            }
-            break;
-
-        case DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED:
-            for(size_t i = 0; i < asset.vertices.n; i++) {
-                tmp = asset.vertices.vun[i].vert_data;
-                tmp = mat * tmp;
-
-                asset.vertices.vun[i].vert_data.vert_x = tmp.first;
-                asset.vertices.vun[i].vert_data.vert_y = tmp.second;
-                asset.vertices.vun[i].vert_data.vert_z = tmp.third;
+                asset.vertices.uni_vert.vun[i].vert_data.vert_x = tmp.first;
+                asset.vertices.uni_vert.vun[i].vert_data.vert_y = tmp.second;
+                asset.vertices.uni_vert.vun[i].vert_data.vert_z = tmp.third;
             }
             break;
 
         case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
             for(size_t i = 0; i < asset.vertices.n; i++) {
-                tmp = asset.vertices.vmu[i].vert_data;
+                tmp = asset.vertices.uni_vert.vmu[i].vert_data;
                 tmp.fourth = 1.0f;
                 tmp = mat * tmp;
 
-                asset.vertices.vmu[i].vert_data.vert_x = tmp.first;
-                asset.vertices.vmu[i].vert_data.vert_y = tmp.second;
-                asset.vertices.vmu[i].vert_data.vert_z = tmp.third;
-            }
-            break;
-
-        case DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
-            for(size_t i = 0; i < asset.vertices.n; i++) {
-                tmp = asset.vertices.vmn[i].vert_data;
-                tmp.fourth = 1.0f;
-                tmp = mat * tmp;
-
-                asset.vertices.vmn[i].vert_data.vert_x = tmp.first;
-                asset.vertices.vmn[i].vert_data.vert_y = tmp.second;
-                asset.vertices.vmn[i].vert_data.vert_z = tmp.third;
+                asset.vertices.uni_vert.vmn[i].vert_data.vert_x = tmp.first;
+                asset.vertices.uni_vert.vmn[i].vert_data.vert_y = tmp.second;
+                asset.vertices.uni_vert.vmn[i].vert_data.vert_z = tmp.third;
             }
             break;
 

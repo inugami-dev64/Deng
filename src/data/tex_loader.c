@@ -61,7 +61,7 @@
 
 
 #define __TEX_LOADER_C
-#include <das/tex_loader.h>
+#include <data/tex_loader.h>
 
 static FILE *__file;
 

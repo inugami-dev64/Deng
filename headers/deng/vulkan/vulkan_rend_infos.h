@@ -63,7 +63,7 @@
 #ifndef __VULKAN_REND_INFOS_H
 #define __VULKAN_REND_INFOS_H
 
-#define __DENG_PIPELINE_COUNT 6
+#define DENG_PIPELINE_COUNT 4
 
 namespace deng {
     namespace vulkan {
@@ -119,7 +119,7 @@ namespace deng {
          * Struct for storing all vk_ descriptor related objects 
          */
         struct __vk_DescriptorInfo {
-            std::array<__vk_PipelineData, __DENG_PIPELINE_COUNT> m_pipelines;
+            std::array<__vk_PipelineData, DENG_PIPELINE_COUNT> m_pipelines;
             VkPipelineLayout m_unmapped_pl;
             VkPipelineLayout m_tex_mapped_pl;
             VkDescriptorPool m_unmapped_desc_pool;

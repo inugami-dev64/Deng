@@ -74,7 +74,7 @@
     #include <common/base_types.h>
     #include <common/err_def.h>
     #include <common/hashmap.h>
-    #include <das/assets.h>
+    #include <data/assets.h>
     
     #include <math/vec2.h>
     #include <math/vec3.h>

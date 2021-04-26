@@ -83,27 +83,27 @@ namespace deng {
                 switch(m_entries[i].element.asset.asset_mode)
                 {
                 case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
-                    free(m_entries[i].element.asset.vertices.vm2d);
+                    free(m_entries[i].element.asset.vertices.uni_vert.vm2d);
                     break;
 
                 case DAS_ASSET_MODE_2D_UNMAPPED:
-                    free(m_entries[i].element.asset.vertices.vu2d);
+                    free(m_entries[i].element.asset.vertices.uni_vert.vu2d);
                     break;
 
                 case DAS_ASSET_MODE_3D_UNMAPPED:
-                    free(m_entries[i].element.asset.vertices.vuu);
+                    free(m_entries[i].element.asset.vertices.uni_vert.vun);
                     break;
 
-                case DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED:
-                    free(m_entries[i].element.asset.vertices.vun);
+                case __DAS_ASSET_MODE_3D_UNMAPPED_UNOR:
+                    free(m_entries[i].element.asset.vertices.uni_vert.vuu);
                     break;
 
                 case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-                    free(m_entries[i].element.asset.vertices.vmu);
+                    free(m_entries[i].element.asset.vertices.uni_vert.vmn);
                     break;
 
-                case DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
-                    free(m_entries[i].element.asset.vertices.vmn);
+                case __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR:
+                    free(m_entries[i].element.asset.vertices.uni_vert.vmu);
                     break;
 
                 default:

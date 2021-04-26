@@ -81,8 +81,8 @@ extern "C" {
         #include <common/common.h>
         #include <common/hashmap.h>
 
-        #include <das/sreader.h>
-        #include <das/assets.h>
+        #include <data/sreader.h>
+        #include <data/assets.h>
 
         static char *__buffer = NULL;
 

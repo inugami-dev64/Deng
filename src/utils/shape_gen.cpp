@@ -224,13 +224,13 @@ namespace dengUtils {
 
         // Allocate memory and copy all vertices over
         out_asset.vertices.n = vert.size();
-        out_asset.vertices.vu2d = (VERT_UNMAPPED_2D*) calloc (
+        out_asset.vertices.uni_vert.vu2d = (VERT_UNMAPPED_2D*) calloc (
             vert.size(),
             sizeof(VERT_UNMAPPED_2D)
         );
         
         memcpy (
-            out_asset.vertices.vu2d,
+            out_asset.vertices.uni_vert.vu2d,
             vert.data(),
             vert.size() * sizeof(VERT_UNMAPPED_2D)
         );
@@ -287,13 +287,13 @@ namespace dengUtils {
 
         // Allocate memory and copy vertices over
         out_asset.vertices.n = vert.size();
-        out_asset.vertices.vm2d = (VERT_MAPPED_2D*) calloc (
+        out_asset.vertices.uni_vert.vm2d = (VERT_MAPPED_2D*) calloc (
             vert.size(),
             sizeof(VERT_MAPPED_2D)
         );
 
         memcpy (
-            out_asset.vertices.vm2d,
+            out_asset.vertices.uni_vert.vm2d,
             vert.data(),
             vert.size() * sizeof(VERT_MAPPED_2D)
         );

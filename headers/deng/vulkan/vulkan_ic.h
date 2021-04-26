@@ -74,7 +74,7 @@
     #include <common/uuid.h>
     #include <common/err_def.h>
 
-    #include <das/assets.h>
+    #include <data/assets.h>
     #include <math/deng_math.h>
     #include <deng/surface/surface_window.h>
     #include <deng/window.h>

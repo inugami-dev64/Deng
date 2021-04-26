@@ -71,7 +71,7 @@
     #include <common/base_types.h>
     #include <common/err_def.h>
     #include <common/hashmap.h>
-    #include <das/assets.h>
+    #include <data/assets.h>
 
     #include <math/deng_math.h>
     #include <deng/window.h>
@@ -210,7 +210,7 @@ namespace deng {
 
 
         public:
-            std::array<__vk_PipelineData, __DENG_PIPELINE_COUNT> getPipelines();
+            std::array<__vk_PipelineData, DENG_PIPELINE_COUNT> &getPipelines();
             VkPipelineLayout getUnmappedPL();
             VkPipelineLayout getTexMappedPL();
             VkDescriptorSetLayout getUnmappedDSL();

@@ -160,8 +160,8 @@ typedef enum deng_CoordinateAxisType {
     DENG_COORD_AXIS_X           = 0,
     DENG_COORD_AXIS_Y           = 1,
     DENG_COORD_AXIS_Z           = 2,
-    DENG_COORD_AXIS_FIRST       = -1,
-    DENG_COORD_AXIS_LAST        = 2
+    DENG_COORD_AXIS_FIRST       = DENG_COORD_AXIS_UNDEFINED,
+    DENG_COORD_AXIS_LAST        = DENG_COORD_AXIS_Z
 } deng_CoordinateAxisType;
 
 
@@ -176,8 +176,8 @@ typedef enum deng_MovementEvent {
     DENG_MOVEMENT_LEFTWARD      = 3,
     DENG_MOVEMENT_UPWARD        = 4,
     DENG_MOVEMENT_DOWNWARD      = 5,
-    DENG_MOVEMENT_FIRST         = -1,
-    DENG_MOVEMENT_LAST          = 5
+    DENG_MOVEMENT_FIRST         = DENG_MOVEMENT_NONE,
+    DENG_MOVEMENT_LAST          = DENG_MOVEMENT_DOWNWARD
 } deng_MovementEvent;
 
 
@@ -186,13 +186,11 @@ typedef enum deng_MovementEvent {
  */
 typedef enum deng_PipelineType {
     DENG_PIPELINE_TYPE_UNMAPPED_3D              = 0,
-    DENG_PIPELINE_TYPE_UNMAPPED_3D_NORM         = 1,
-    DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D        = 2,
-    DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D_NORM   = 3,
-    DENG_PIPELINE_TYPE_UNMAPPED_2D              = 4,
-    DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D        = 5,
-    DENG_PIPELINE_TYPE_FIRST                    = 0,
-    DENG_PIPELINE_TYPE_LAST                     = 5
+    DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D        = 1,
+    DENG_PIPELINE_TYPE_UNMAPPED_2D              = 2,
+    DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D        = 3,
+    DENG_PIPELINE_TYPE_FIRST                    = DENG_PIPELINE_TYPE_UNMAPPED_3D,
+    DENG_PIPELINE_TYPE_LAST                     = DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D
 } deng_PipelineType;
 
 
@@ -203,8 +201,8 @@ typedef enum deng_RendererUsageMode {
     DENG_RENDERER_USAGE_ASSET_EDITOR    = 0,
     DENG_RENDERER_USAGE_MAP_EDITOR      = 1,
     DENG_RENDERER_USAGE_GAME_MODE       = 2,
-    DENG_RENDERER_USAGE_FIRST           = 0,
-    DENG_RENDERER_USAGE_LAST            = 2
+    DENG_RENDERER_USAGE_FIRST           = DENG_RENDERER_USAGE_ASSET_EDITOR,
+    DENG_RENDERER_USAGE_LAST            = DENG_RENDERER_USAGE_GAME_MODE
 } deng_RendererUsageMode;
 
 

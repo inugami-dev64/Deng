@@ -119,7 +119,7 @@ namespace dengUtils {
      * for texture mapped cube
      */
     void CubeGenerator::__sortTexMapped (
-        std::vector<VERT_MAPPED_UNOR> &vert,
+        std::vector<VERT_MAPPED> &vert,
         std::vector<deng_ui32_t> &ind
     ) {
         Hashmap hm = {0};
@@ -134,7 +134,7 @@ namespace dengUtils {
         deng_ui32_t *p_val = NULL;
         
         for(size_t i = 0; i < m_base_cube_inds.size(); i++) {
-            VERT_MAPPED_UNOR key;
+            VERT_MAPPED key;
             key.vert_data.vert_x = m_base_cube_verts[m_base_cube_inds[i].first].first;
             key.vert_data.vert_y = m_base_cube_verts[m_base_cube_inds[i].first].second;
             key.vert_data.vert_z = m_base_cube_verts[m_base_cube_inds[i].first].third;
@@ -143,7 +143,7 @@ namespace dengUtils {
             p_val = (deng_ui32_t*) findValue ( 
                 &hm, 
                 &key,
-                sizeof(VERT_MAPPED_UNOR)
+                sizeof(VERT_MAPPED)
             );
 
             // No value found, increment index and add value to hashmap
@@ -156,7 +156,7 @@ namespace dengUtils {
                 pushToHashmap (
                     &hm,
                     &vert[vert.size() - 1],
-                    sizeof(VERT_MAPPED_UNOR),
+                    sizeof(VERT_MAPPED),
                     &ind[i]
                 );
             }
@@ -205,7 +205,7 @@ namespace dengUtils {
         const dengMath::vec3<deng_vec_t> &pos,
         const dengMath::vec3<deng_vec_t> &size,
         const dengMath::vec3<deng_vec_t> &origin,
-        std::vector<VERT_UNMAPPED_UNOR> &vert,
+        std::vector<VERT_UNMAPPED> &vert,
         std::vector<deng_ui32_t> &ind
     ) {
         dengMath::mat4<deng_vec_t> tf_mat = __mkTransformMatrix (
@@ -217,9 +217,9 @@ namespace dengUtils {
         size_t old_vert_c = vert.size();
         for(size_t i = old_vert_c; i < vert.size(); i++) {
             dengMath::vec4<deng_vec_t> tmp = tf_mat * m_base_cube_verts[i - old_vert_c];
-            vert[i].vert_x = tmp.first;
-            vert[i].vert_y = tmp.second;
-            vert[i].vert_z = tmp.third;
+            vert[i].vert_data.vert_x = tmp.first;
+            vert[i].vert_data.vert_y = tmp.second;
+            vert[i].vert_data.vert_z = tmp.third;
         
             ind[i] = m_base_cube_inds[i - old_vert_c].first;
         }
@@ -233,7 +233,7 @@ namespace dengUtils {
         const dengMath::vec3<deng_vec_t> &pos,
         const dengMath::vec3<deng_vec_t> &size,
         const dengMath::vec3<deng_vec_t> &origin,
-        std::vector<VERT_MAPPED_UNOR> &vert,
+        std::vector<VERT_MAPPED> &vert,
         std::vector<deng_ui32_t> &ind
     ) {
         dengMath::mat4<deng_vec_t> tf_mat = __mkTransformMatrix (
@@ -267,7 +267,7 @@ namespace dengUtils {
         const dengMath::vec3<deng_vec_t> &origin, 
         char *name
     ) {
-        std::vector<VERT_UNMAPPED_UNOR> vert;
+        std::vector<VERT_UNMAPPED> vert;
         std::vector<deng_ui32_t> ind;
 
         generateUnmappedCube (
@@ -286,13 +286,13 @@ namespace dengUtils {
         asset.vertices.n = vert.size();
         asset.indices.n = ind.size();
 
-        asset.vertices.vuu = (VERT_UNMAPPED_UNOR*) malloc(asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR));
+        asset.vertices.uni_vert.vun = (VERT_UNMAPPED*) malloc(asset.vertices.n * sizeof(VERT_UNMAPPED));
         asset.indices.indices = (deng_ui32_t*) malloc(asset.indices.n * sizeof(deng_ui32_t));
 
         memcpy (
-            asset.vertices.vuu,
+            asset.vertices.uni_vert.vuu,
             vert.data(),
-            asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR)
+            asset.vertices.n * sizeof(VERT_UNMAPPED)
         );
 
         memcpy (
@@ -315,7 +315,7 @@ namespace dengUtils {
         char *name,
         char *tex_uuid
     ) {
-        std::vector<VERT_MAPPED_UNOR> vert;
+        std::vector<VERT_MAPPED> vert;
         std::vector<deng_ui32_t> ind;
         
         generateMappedCube (
@@ -333,15 +333,15 @@ namespace dengUtils {
         asset.color = {1.0f, 1.0f, 1.0f, 1.0f};
         asset.force_unmap = true;
         asset.is_shown = true;
-        asset.vertices.vmu = (VERT_MAPPED_UNOR*) calloc (
+        asset.vertices.uni_vert.vmn = (VERT_MAPPED*) calloc (
             vert.size(),
-            sizeof(VERT_MAPPED_UNOR)
+            sizeof(VERT_MAPPED)
         );
 
         memcpy (
-            asset.vertices.vmu,
+            asset.vertices.uni_vert.vmn,
             vert.data(),
-            vert.size() * sizeof(VERT_MAPPED_UNOR)
+            vert.size() * sizeof(VERT_MAPPED)
         );
 
         asset.vertices.n = vert.size();

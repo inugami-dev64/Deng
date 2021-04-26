@@ -70,7 +70,7 @@
     #include <cstring>
     #include <common/base_types.h>
     #include <vulkan/vulkan.h>
-    #include <das/assets.h>
+    #include <data/assets.h>
 
     #include <deng/surface/key_definitions.h>
     #include <deng/surface/key_ev.h>

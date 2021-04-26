@@ -146,8 +146,8 @@ namespace deng {
          * Set miscellanious data arrays 
          */
         void __vk_DrawCaller::setMiscData (
-            std::array<__vk_PipelineData, __DENG_PIPELINE_COUNT> pl_data, 
-            std::vector<VkFramebuffer> fb
+            const std::array<__vk_PipelineData, DENG_PIPELINE_COUNT> &pl_data, 
+            const std::vector<VkFramebuffer> &fb
         ) {
             m_pl_data = pl_data;
             m_framebuffers = fb;
@@ -168,21 +168,15 @@ namespace deng {
             m_cmd_bufs.resize(m_framebuffers.size());
 
             // Set up commandbuffer allocate info
-            VkCommandBufferAllocateInfo commandbuffer_allocation_info{};
-            commandbuffer_allocation_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-            commandbuffer_allocation_info.commandPool = m_cmd_pool;
-            commandbuffer_allocation_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-            commandbuffer_allocation_info.commandBufferCount = static_cast<deng_ui32_t>(m_cmd_bufs.size());
+            VkCommandBufferAllocateInfo cmd_buf_alloc_info{};
+            cmd_buf_alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            cmd_buf_alloc_info.commandPool = m_cmd_pool;
+            cmd_buf_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+            cmd_buf_alloc_info.commandBufferCount = static_cast<deng_ui32_t>(m_cmd_bufs.size());
 
             // Allocate command buffers
-            if
-            (
-                vkAllocateCommandBuffers (
-                    device, 
-                    &commandbuffer_allocation_info, 
-                    m_cmd_bufs.data()
-                )
-            ) VK_DRAWCMD_ERR("failed to allocate command buffers");
+            if(vkAllocateCommandBuffers(device, &cmd_buf_alloc_info, m_cmd_bufs.data())) 
+                VK_DRAWCMD_ERR("failed to allocate command buffers");
             
             recordMainCmdBuffers (
                 renderpass,
@@ -282,29 +276,19 @@ namespace deng {
                                 pipeline_layout = *m_pl_data[UM2D_I].p_pipeline_layout;
                                 break;
 
-                            case DAS_ASSET_MODE_3D_UNMAPPED:
-                                pipeline = m_pl_data[UM3D_UNOR_I].pipeline;
-                                pipeline_layout = *m_pl_data[UM3D_UNOR_I].p_pipeline_layout;
-                                break;
-
-                            case DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED:
-                                pipeline = m_pl_data[UM3D_NOR_I].pipeline;
-                                pipeline_layout = *m_pl_data[UM3D_NOR_I].p_pipeline_layout;
-                                break;
-
                             case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
                                 pipeline = m_pl_data[TM2D_I].pipeline;
                                 pipeline_layout = *m_pl_data[TM2D_I].p_pipeline_layout;
                                 break;
 
-                            case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-                                pipeline = m_pl_data[TM3D_UNOR_I].pipeline;
-                                pipeline_layout = *m_pl_data[TM3D_UNOR_I].p_pipeline_layout;
+                            case DAS_ASSET_MODE_3D_UNMAPPED:
+                                pipeline = m_pl_data[UM3D_I].pipeline;
+                                pipeline_layout = *m_pl_data[UM3D_I].p_pipeline_layout;
                                 break;
 
-                            case DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
-                                pipeline = m_pl_data[TM3D_NOR_I].pipeline;
-                                pipeline_layout = *m_pl_data[TM3D_NOR_I].p_pipeline_layout;
+                            case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
+                                pipeline = m_pl_data[TM3D_I].pipeline;
+                                pipeline_layout = *m_pl_data[TM3D_I].p_pipeline_layout;
                                 break;
 
                             default:

@@ -182,8 +182,9 @@ namespace Sandbox {
             deng::RegType reg_elem = {{0}};
             das_LoadAsset (
                 &reg_elem.asset,
-                DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED,
+                DAS_ASSET_MODE_UNDEFINED,
                 {0.0f, 0.0f, 1.0f},
+                false,
                 NULL,
                 (char*) files[i]
             );

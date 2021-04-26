@@ -79,9 +79,9 @@ namespace dengUtils {
         m_asset.asset_mode = DAS_ASSET_MODE_3D_UNMAPPED;
         m_asset.uuid = uuid_Generate();
         m_asset.vertices.n = row_c * 6;
-        m_asset.vertices.vuu = (VERT_UNMAPPED_UNOR*) calloc (
+        m_asset.vertices.uni_vert.vun = (VERT_UNMAPPED*) calloc (
             m_asset.vertices.n,
-            sizeof(VERT_UNMAPPED_UNOR)
+            sizeof(VERT_UNMAPPED)
         );
 
         m_asset.indices.n = m_asset.vertices.n;
@@ -102,17 +102,17 @@ namespace dengUtils {
         // Z axis rays
         cur_pos = -(len / 2);
         for(l_index = 0; l_index < row_c * 3; l_index += 3) {
-            m_asset.vertices.vuu[l_index].vert_x = -(len / 2);
-            m_asset.vertices.vuu[l_index].vert_y = 0;
-            m_asset.vertices.vuu[l_index].vert_z = cur_pos;
+            m_asset.vertices.uni_vert.vuu[l_index].vert_x = -(len / 2);
+            m_asset.vertices.uni_vert.vuu[l_index].vert_y = 0;
+            m_asset.vertices.uni_vert.vuu[l_index].vert_z = cur_pos;
             
-            m_asset.vertices.vuu[l_index + 1].vert_x = len / 2;
-            m_asset.vertices.vuu[l_index + 1].vert_y = 0;
-            m_asset.vertices.vuu[l_index + 1].vert_z = cur_pos;
+            m_asset.vertices.uni_vert.vuu[l_index + 1].vert_x = len / 2;
+            m_asset.vertices.uni_vert.vuu[l_index + 1].vert_y = 0;
+            m_asset.vertices.uni_vert.vuu[l_index + 1].vert_z = cur_pos;
 
-            m_asset.vertices.vuu[l_index + 2].vert_x = -(len / 2);
-            m_asset.vertices.vuu[l_index + 2].vert_y = 0;
-            m_asset.vertices.vuu[l_index + 2].vert_z = cur_pos + DENG_GRID_THICKNESS;
+            m_asset.vertices.uni_vert.vuu[l_index + 2].vert_x = -(len / 2);
+            m_asset.vertices.uni_vert.vuu[l_index + 2].vert_y = 0;
+            m_asset.vertices.uni_vert.vuu[l_index + 2].vert_z = cur_pos + DENG_GRID_THICKNESS;
             
             m_asset.indices.indices[l_index] = (deng_ui32_t) l_index;
             m_asset.indices.indices[l_index + 1] = (deng_ui32_t) l_index + 1;
@@ -124,17 +124,17 @@ namespace dengUtils {
         r_index = l_index;
         cur_pos = -(len / 2);
         for(l_index = 0; l_index < row_c * 3; l_index += 3, r_index += 3) {
-            m_asset.vertices.vuu[r_index].vert_x = cur_pos;
-            m_asset.vertices.vuu[r_index].vert_y = 0;
-            m_asset.vertices.vuu[r_index].vert_z = -(len / 2);
+            m_asset.vertices.uni_vert.vuu[r_index].vert_x = cur_pos;
+            m_asset.vertices.uni_vert.vuu[r_index].vert_y = 0;
+            m_asset.vertices.uni_vert.vuu[r_index].vert_z = -(len / 2);
 
-            m_asset.vertices.vuu[r_index + 1].vert_x = cur_pos;
-            m_asset.vertices.vuu[r_index + 1].vert_y = 0;
-            m_asset.vertices.vuu[r_index + 1].vert_z = len / 2;
+            m_asset.vertices.uni_vert.vuu[r_index + 1].vert_x = cur_pos;
+            m_asset.vertices.uni_vert.vuu[r_index + 1].vert_y = 0;
+            m_asset.vertices.uni_vert.vuu[r_index + 1].vert_z = len / 2;
 
-            m_asset.vertices.vuu[r_index + 2].vert_x = cur_pos + DENG_GRID_THICKNESS;
-            m_asset.vertices.vuu[r_index + 2].vert_y = 0;
-            m_asset.vertices.vuu[r_index + 2].vert_z = -(len / 2);
+            m_asset.vertices.uni_vert.vuu[r_index + 2].vert_x = cur_pos + DENG_GRID_THICKNESS;
+            m_asset.vertices.uni_vert.vuu[r_index + 2].vert_y = 0;
+            m_asset.vertices.uni_vert.vuu[r_index + 2].vert_z = -(len / 2);
 
             m_asset.indices.indices[r_index] = (deng_ui32_t) r_index;
             m_asset.indices.indices[r_index + 1 ] = (deng_ui32_t) r_index + 1;

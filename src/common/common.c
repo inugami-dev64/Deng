@@ -292,35 +292,34 @@ void cm_ConvertTime (
 
 
 /*
- * Find all instances of sub_str from str and
- * put their character positions into postions array
- * This function uses heap allocation on dereferenced p_pos 
- * argument. That memory has to be freed afterwards
+ * Substring finder algorithm core function
  */
-void cm_FindAllSubstrings (
-    char *str, 
-    char *sub_str, 
-    deng_ui32_t **p_pos, 
-    deng_ui32_t *p_pos_c
+void __cm_SubstrAl (
+    char *str,
+    size_t str_len,
+    char *sub_str,
+    size_t substr_len,
+    deng_ui32_t **p_ind,
+    deng_ui32_t *p_ind_c
 ) {
     deng_ui32_t ind_cap = 16;
 
-    (*p_pos) = (deng_ui32_t*) calloc (
+    (*p_ind) = (deng_ui32_t*) calloc (
         ind_cap,
         sizeof(deng_ui32_t)
     );
-    (*p_pos_c) = 0;
+    (*p_ind_c) = 0;
 
     deng_ui32_t m, i;
     deng_ui32_t rep = UINT32_MAX;
 
     // Find all common repeating substring sequences
-    for(m = 0, i = 0; m < strlen(str); i++, m++) {
+    for(m = 0, i = 0; m < str_len; i++, m++) {
         // Add substring location to indices and redo the loop
-        if(i >= strlen(sub_str) - 1) {
-            (*p_pos_c)++;
+        if(i >= substr_len - 1) {
+            (*p_ind_c)++;
             // Check if memory reallocation is needed
-            if((*p_pos_c) >= ind_cap) {
+            if((*p_ind_c) >= ind_cap) {
                 ind_cap <<= 1;
                 deng_ui32_t *tmp = (deng_ui32_t*) calloc (
                     ind_cap,
@@ -329,10 +328,10 @@ void cm_FindAllSubstrings (
 
                 if(!tmp) MEM_ERR("indices");
 
-                (*p_pos) = tmp;
+                (*p_ind) = tmp;
             }
 
-            (*p_pos)[(*p_pos_c) - 1] = m - i; 
+            (*p_ind)[(*p_ind_c) - 1] = m - i; 
             rep = UINT32_MAX;
             i = 0;
         }
@@ -356,6 +355,54 @@ void cm_FindAllSubstrings (
             }
         }
     }
+}
+
+
+/*
+ * Find all instances of sub_str from str and
+ * put their character positions into postions array
+ * This function uses heap allocation on dereferenced p_pos 
+ * argument. That memory has to be freed afterwards
+ */
+void cm_FindAllSubstrings (
+    char *str, 
+    char *sub_str, 
+    deng_ui32_t **p_pos, 
+    deng_ui32_t *p_pos_c
+) {
+    __cm_SubstrAl (
+        str,
+        strlen(str),
+        sub_str,
+        strlen(sub_str),
+        p_pos,
+        p_pos_c
+    );
+}
+
+
+/*
+ * Find all instances of sub_str from str while reading maximum of str_len character from str
+ * and substr_len from sub_str.
+ * This function uses heap allocation on dereferenced p_ind
+ * argument. That memory has to be freed afterwards
+ */
+void cm_FindnAllSubstrings (
+    char *str,
+    size_t str_len,
+    char *sub_str,
+    size_t substr_len,
+    deng_ui32_t **p_ind,
+    deng_ui32_t *p_ind_c
+) {
+    __cm_SubstrAl (
+        str, 
+        str_len, 
+        sub_str, 
+        substr_len, 
+        p_ind, 
+        p_ind_c
+    );
 }
 
 

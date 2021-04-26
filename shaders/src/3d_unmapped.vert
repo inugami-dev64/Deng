@@ -63,10 +63,10 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-const uint OrthographicCameraMode3D = 0x00000001u;
-const uint PerspectiveCameraMode3D = 0x00000002u;
+const uint orthographic_camera_mode3D = 0x00000001u;
+const uint perspective_camera_mode3D = 0x00000002u;
 
-layout(binding = 0) uniform UniformBufferObject {
+layout(binding = 0) uniform UniformBufferObj {
     mat4 transform;
     mat4 view;
     uint ubo_flag_bits;
@@ -83,16 +83,18 @@ layout(binding = 1) uniform ColorData {
 
 
 layout(location = 0) in vec3 in_pos;
+layout(location = 1) in vec3 in_norm_pos;
+
 layout(location = 0) out vec4 out_color;
 
 void main() {
-    if((ubo.ubo_flag_bits & OrthographicCameraMode3D) == OrthographicCameraMode3D)
+    if((ubo.ubo_flag_bits & orthographic_camera_mode3D) == orthographic_camera_mode3D)
         gl_Position = ubo.view * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
-
-    else if((ubo.ubo_flag_bits & PerspectiveCameraMode3D) == PerspectiveCameraMode3D)
+    
+    else if((ubo.ubo_flag_bits & perspective_camera_mode3D) == perspective_camera_mode3D)
         gl_Position = ubo.transform * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
 
-    else gl_Position = vec4(in_pos[0], -in_pos[1], in_pos[2], 1.0f);
+    else gl_Position = vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
 
-    out_color = cl.color;
+    out_color = cl.color;   
 }

@@ -81,25 +81,10 @@
                                                 exit(EXIT_FAILURE)
 #endif
 
-#ifdef __DAS_LOADER_C
-    #define __DAS_CORRUPT_ERROR(file)               fprintf(stderr, "Corrupt DENG asset file: %s\n", file), \
-                                                    exit(EXIT_FAILURE)
-
-    #define __DAS_INVALID_ASSET_FORMAT(file)        fprintf(stderr, "Invalid requested asset file vertices mode in file: %s\n", file), \
-                                                    exit(EXIT_FAILURE)
+#if defined(__DAS_READER_C) || defined(__DAS_ASSEMBLER_C)
 #endif
 
 #ifdef __DAM_C
-    #define TO_HELP printf("Use --help for more information\n")
-    #define __DAM_INVALID_MODEL_FORMAT(ext)         fprintf(stderr, "Invalid 3D model file format %s\n", ext), \
-                                                    exit(EXIT_FAILURE)
-    #define __DAM_EXPECTED_PARAMETER(flag, param)   fprintf(stderr, "DAM usage error\n%s expects %s parameter\n", flag, param), \
-                                                    TO_HELP, \
-                                                    exit(EXIT_FAILURE)
-
-    #define __DAM_INVALID_PARAMETER(param, cparam)  fprintf(stderr, "Invalid parameter %s, correct would be %s\n", param, cparam), \
-                                                    TO_HELP, \
-                                                    exit(EXIT_FAILURE)
 #endif
 
 // Runtime errors

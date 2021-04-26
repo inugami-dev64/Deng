@@ -77,7 +77,7 @@
     #include <common/uuid.h>
     #include <common/common.h>
     #include <common/err_def.h>
-    #include <das/assets.h>
+    #include <data/assets.h>
 
     #include <math/deng_math.h>
     #include <deng/window.h>

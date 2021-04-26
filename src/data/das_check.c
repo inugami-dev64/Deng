@@ -57,113 +57,60 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
- */ 
+ */
 
 
-#ifndef __DAM_H
-#define __DAM_H
+#define __DAS_CHECK_C
+#include <data/das_check.h>
 
 
 /*
- * DAM has different version than DENG
+ * Check if the requested memory size is available for reading otherwise
+ * throw a runtime error
  */
-#define DAM_VERSION "0.1.0"
-
-#ifdef __DAM_C
-    #define __DAM_PREVIEW_TITLE     "DAM"
-    #include <stdlib.h>
-    #include <stdio.h>
-    #include <string.h>
-    
-    #include <common/cerr_def.h>
-    #include <common/base_types.h>
-    #include <common/common.h>
-
-    #include <das/assets.h>
-    #include <das/das_loader.h>
-    #include <das/wavefront_obj.h>
-#endif
+void das_ErrBufferReadCheck (
+    size_t req_size, 
+    size_t max_size,
+    char *file_name
+) {
+    if(req_size >= max_size) {
+        fprintf(stdout, "Failed to read from file %s, possible file corruption\n", file_name);
+        exit(DAS_ERROR_FILE_CORRUPTION);
+    }
+}
 
 
 /*
- * Structure for storing asset assembly info 
+ * Check if provided uuid is valid
  */
-typedef struct dam_AssetAsmInfo {
-    char *model_file;
-    char *out_file;
-    das_AssetMode am;
-} dam_AssetAsmInfo;
+das_Error das_UuidCheck(char *uuid) {
+    // Check if UUID length is correct and separators are in correct places
+    if(strlen(uuid) != __DAS_UUID_LEN || uuid[8] != '-' || 
+       uuid[14] != '-' || uuid[19] != '-' || uuid[23] != '-' || uuid[27] != '-')
+        return DAS_ERROR_INVALID_UUID;
+
+    // Check each character in uuid sequence for any invalid characters
+    for(size_t i = 0; i < strlen(uuid); i++) {
+        if(i == 14 || i == 19 || i == 23 || i == 27) 
+            continue;
+
+        if((uuid[i] < '0' && uuid[i] > '9') && (uuid[i] < 'a' && uuid[i] > 'z') &&
+           (uuid[i] < 'A' && uuid[i] > 'Z')) 
+            return DAS_ERROR_INVALID_UUID;
+    }
+
+    return DAS_ERROR_SUCCESS;
+}
 
 
 /*
- * Structure for specifying asset preview 
- * information
+ * Check if magic number provided is valid or not
  */
-typedef struct dam_AssetPreviewInfo {
-    char *file_name;
-    das_Asset asset;
-    deng_ui32_t width;
-    deng_ui32_t height;
-    deng_bool_t disable_menus;
-} dam_AssetPreviewInfo;
+das_Error das_MagicNumberCheck(deng_ui64_t num) {
+    if(num != __DAS_STATIC_MAGIC_NUMBER && 
+       num != __DAS_ANIMATION_MAGIC_NUMBER &&
+       num != __DAS_MAP_MAGIC_NUMBER)
+        return DAS_ERROR_INVALID_MAGIC_NUMBER;
 
-
-#ifdef __DAM_C
-    #define __DAM_DEFAULT_PREVIEW_WIDTH     1280
-    #define __DAM_DEFAULT_PREVIEW_HEIGHT    720
-    #define __DAM_DEFAULT_ASSET_COLOR       {0.7f, 0.7f, 0.7f, 1.0f}
-    const char *__help_text = 
-        "Usage flags for DAM:\n" \
-        "[ASSET] -- display information about the asset\n" \
-        "--version -- view the current version\n" \
-        "-h / --help -- view help text\n" \
-        "-p / --preview [ASSET] -- create preview for 3D asset\n" \
-        "   -g / --geometry [WIDTH]x[HEIGHT] -- specify the preview window size\n" \
-        "   --disable-menus -- disable all menus in previews\n" \
-        "-n / --new -- create new asset\n" \
-        "   -m / --model [FILE NAME] -- path to the model file used\n" \
-        "   -o [OUTPUT] -- path to the output file name\n" \
-        "   -v / --vert [v, vn, vm, vmn] -- specify the stored vertices\n";
-
-
-    /*
-     * Read information about the asset
-     * Information is following:
-     *  - Name of the asset
-     *  - Date and time of the creation
-     *  - Type of vertices
-     *  - Total count of unique vertices
-     *  - Total count of drawn vertices
-     */
-    void __dam_ListAsset(char *asset_file);
-
-
-    /*
-     * Find information about asset creation
-     */
-    dam_AssetAsmInfo __dam_FindAssetAsmInfo(int argc, char *argv[]);
-
-
-    /*
-     * Assemble deng asset from specified asset 
-     * assembly flags
-     */
-    void __dam_AssetAssemblyCaller(dam_AssetAsmInfo asm_info);
-
-
-    
-    /*
-     * Find information about asset preview 
-     */
-    dam_AssetPreviewInfo __dam_FindPreviewInfo(int argc, char *argv[]);
-
-
-    /*
-     * Create new DENG renderer instance and preview
-     * given DENG asset file
-     */
-    void __dam_PreviewAsset(dam_AssetPreviewInfo preview_info);
-#endif
-
-#endif
-
+    return DAS_ERROR_SUCCESS;
+}

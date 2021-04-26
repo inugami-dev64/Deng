@@ -60,123 +60,97 @@
  */ 
 
 
-#ifndef __CAMERA_MAT_H
-#define __CAMERA_MAT_H
+#ifndef __TEX_LOADER_H
+#define __TEX_LOADER_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define DEFAULT_ASSET_COLOR (das_ObjColorData) {0.7f, 0.7f, 0.7f, 1.0f}
 
 
-#ifdef __CAMERA_MAT_CPP
-    #include <type_traits>
+/*
+ * This enum specifies the image file format 
+ */
+typedef enum das_ImageFormat {
+    DAS_IMAGE_FORMAT_BMP = 0,
+    DAS_IMAGE_FORMAT_TGA = 1,
+    DAS_IMAGE_FORMAT_PNG = 2,
+    DAS_IMAGE_FORMAT_JPG = 3,
+    DAS_IMAGE_FORMAT_UNKNOWN = 4
+} das_ImageFormat;
+
+
+#ifdef __TEX_LOADER_C
     #include <stdlib.h>
-    #include <cmath>
+    #include <stdio.h>
+    #include <string.h>
 
     #include <common/base_types.h>
-    #include <common/err_def.h>
+    #include <common/common.h>
+    #include <common/hashmap.h>
+    #include <common/uuid.h>
+    #include <common/cerr_def.h>
+
+    #include <data/sreader.h>
     #include <data/assets.h>
-    #include <math/vec2.h>
-    #include <math/vec3.h>
-    #include <math/vec4.h>
-    #include <math/mat3.h>
-    #include <math/mat4.h>
+
     
-    #define __DENG_CAMERA_RIGHT     vec4<deng_vec_t>{1.0f, 0.0f, 0.0f, 0.0f};
-    #define __DENG_CAMERA_UP        vec4<deng_vec_t>{0.0f, 1.0f, 0.0f, 0.0f};
-    #define __DENG_CAMERA_FORWARD   vec4<deng_vec_t>{0.0f, 0.0f, -1.0f, 0.0f};
+    das_ImageFormat __das_DetectImageFormat(const char *file_name);
+
+    /*
+     * Read raw bitmap data from file
+     * This function expects the file to be uncompressed
+     */
+    void __das_ReadBitmap (
+        FILE *file,
+        char *file_name,
+        deng_ui8_t bit_c,
+        deng_bool_t vert_re,
+        das_Texture* p_tex
+    );
+
+
+    /*
+     * Load JPEG image into das_Texture instance
+     */
+    void __das_LoadJPGImage (
+        das_Texture *p_tex,
+        const char *file_name
+    );
+
+
+    /*
+     * Load BMP image data into das_Texture
+     */
+    void __das_LoadBMPImage (
+        das_Texture *p_tex, 
+        const char *file_name
+    );
+    
+
+    /*
+     * Load TGA image into das_Texture instance
+     */
+    void __das_LoadTGAImage (
+        das_Texture *p_tex, 
+        const char *file_name
+    );
 #endif
 
 
-namespace dengMath {
-
-    /*
-     * This class is used as an abstraction for performing transformations 
-     * on camera systems
-     */
-    class CameraMatrix 
-    {
-    private:
-        vec4<deng_vec_t> m_camera_pos;
-        mat4<deng_vec_t> m_camera_mat;
-
-        deng_vec_t m_x_rot;
-        deng_vec_t m_y_rot;
-
-        vec4<deng_vec_t> m_rs = vec4<deng_vec_t>{1.0f, 0.0f, 0.0f, 0.0f};
-        vec4<deng_vec_t> m_ts = vec4<deng_vec_t>{0.0f, 1.0f, 0.0f, 0.0f};
-        vec4<deng_vec_t> m_fs = vec4<deng_vec_t>{0.0f, 0.0f, -1.0f, 0.0f};
-
-        // Camera coordinate specific rotation matrices
-        mat4<deng_vec_t> m_rot_x_mat;
-        mat4<deng_vec_t> m_rot_y_mat;
-
-    public:
-        CameraMatrix(deng_CameraType type);
-
-        
-        /* 
-         * Force set camera position to a new one
-         */
-        void setCameraPosition(const vec3<deng_vec_t> &camera_pos);
+/* 
+ * Load texture bitmap data into das_Texture instance
+ */
+void das_LoadTexture (
+    das_Texture *p_tex, 
+    const char *file_name
+);
 
 
-        /*
-         * Move camera by one movement step
-         */
-        void moveCamera (
-            const vec3<deng_vec_t> &mov_speed, 
-            deng_bool_t is_world,
-            deng_bool_t ignore_pitch,
-            const deng_CoordinateAxisType &movement_type
-        );
-
-
-        /*
-         * Set new rotation for the camera relative to the its coordinate system
-         */
-        void setCameraRotation (
-            deng_vec_t x_rot, 
-            deng_vec_t y_rot
-        );
-
-
-        /*
-         * Set new rotation for the camera relative to its origin point in world coordinates
-         */
-        void setOriginRotation (
-            dengMath::vec3<deng_vec_t> point,
-            deng_vec_t x_rot,
-            deng_vec_t y_rot
-        );
-
-
-        /*
-         * Create transformation matrix for camera system based
-         * on previously submitted values
-         */
-        void camTransform(deng_bool_t is_world_origin);
-
-    // Getter methods
-    public: 
-        
-        /*
-         * Get the transformation matrix
-         */
-        mat4<deng_vec_t> getTransformMat();
-
-
-        /*
-         * Get the current position of the camera
-         */
-        vec4<deng_vec_t> getPosition();
-
-        
-        /*
-         * Get current camera sides' coordinates
-         */
-        void getSides (
-            vec4<deng_vec_t> *p_u,
-            vec4<deng_vec_t> *p_v,
-            vec4<deng_vec_t> *p_w
-        );
-    };
-}
+#ifdef __cplusplus
+    }
+#endif
 
 #endif

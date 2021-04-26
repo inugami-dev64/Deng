@@ -78,6 +78,10 @@ workspace "deng"
 	-- Ignore safety warnings that MSVC gives
 	filter "platforms:Win32"
 		defines { "_CRT_SECURE_NO_WARNINGS" }
+
+    -- Enable debug symbols if specified
+    filter "configurations:Debug"
+        symbols "On"
     filter {}
 
 

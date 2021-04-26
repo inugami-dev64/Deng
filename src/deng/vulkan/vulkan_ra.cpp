@@ -1202,21 +1202,13 @@ namespace deng {
                 switch (reg_asset.asset.asset_mode)
                 {
                 case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-                    m_buffer_data.main_buffer_size += reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_UNOR);
-                    break;
-
-                case DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
-                    m_buffer_data.main_buffer_size += reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_NOR);
+                    m_buffer_data.main_buffer_size += reg_asset.asset.vertices.n * sizeof(VERT_MAPPED);
                     break;
 
                 case DAS_ASSET_MODE_3D_UNMAPPED:
-                    m_buffer_data.main_buffer_size += reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR);
+                    m_buffer_data.main_buffer_size += reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED);
                     break;
                 
-                case DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED:
-                    m_buffer_data.main_buffer_size += reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_NOR);
-                    break;
-
                 case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
                     m_buffer_data.main_buffer_size += reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_2D);
                     break;
@@ -1226,6 +1218,11 @@ namespace deng {
                     break;
                 
                 default:
+                    RUN_ERR (
+                        "deng::vulkan::__vk_ResourceManager::mkBuffers()", 
+                        "Invalid asset vertices format for asset" + 
+                        std::string(reg_asset.asset.uuid)
+                    );
                     break;
                 }
 
@@ -1279,52 +1276,30 @@ namespace deng {
                 case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
                     __vk_BufferCreator::cpyToBufferMem (
                         device, 
-                        reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_UNOR),
-                        reg_asset.asset.vertices.vmu, 
+                        reg_asset.asset.vertices.n * sizeof(VERT_MAPPED),
+                        reg_asset.asset.vertices.uni_vert.vmn, 
                         m_buffer_data.staging_buffer_memory, 
                         cur_offset
                     );
-                    cur_offset += reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_UNOR);
-                    break;
-
-                case DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
-                    __vk_BufferCreator::cpyToBufferMem (
-                        device, 
-                        reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_NOR),
-                        reg_asset.asset.vertices.vmn, 
-                        m_buffer_data.staging_buffer_memory, 
-                        cur_offset
-                    );
-                    cur_offset += reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_NOR);
+                    cur_offset += reg_asset.asset.vertices.n * sizeof(VERT_MAPPED);
                     break;
 
                 case DAS_ASSET_MODE_3D_UNMAPPED:
                     __vk_BufferCreator::cpyToBufferMem (
                         device, 
-                        reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR),
-                        reg_asset.asset.vertices.vuu, 
+                        reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED),
+                        reg_asset.asset.vertices.uni_vert.vuu, 
                         m_buffer_data.staging_buffer_memory, 
                         cur_offset
                     );
-                    cur_offset += reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR);
-                    break;
-
-                case DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED:
-                    __vk_BufferCreator::cpyToBufferMem (
-                        device, 
-                        reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_NOR),
-                        reg_asset.asset.vertices.vun, 
-                        m_buffer_data.staging_buffer_memory, 
-                        cur_offset
-                    );
-                    cur_offset += reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_NOR);
+                    cur_offset += reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED);
                     break;
 
                 case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
                     __vk_BufferCreator::cpyToBufferMem (
                         device, 
                         reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_2D),
-                        reg_asset.asset.vertices.vm2d, 
+                        reg_asset.asset.vertices.uni_vert.vm2d, 
                         m_buffer_data.staging_buffer_memory, 
                         cur_offset
                     );
@@ -1335,7 +1310,7 @@ namespace deng {
                     __vk_BufferCreator::cpyToBufferMem (
                         device, 
                         reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_2D),
-                        reg_asset.asset.vertices.vu2d,
+                        reg_asset.asset.vertices.uni_vert.vu2d,
                         m_buffer_data.staging_buffer_memory, 
                         cur_offset
                     );
@@ -1402,6 +1377,9 @@ namespace deng {
         }
 
         
+        /*
+         * Create new vulkan textures
+         */
         void __vk_ResourceManager::mkTextures (
             VkDevice device,
             VkPhysicalDevice gpu,
@@ -1498,7 +1476,7 @@ namespace deng {
             if (
                 reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
                 reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
-                reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED ||
+                reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
                 !reg_asset.asset.tex_uuid
             ) ubo.is_unmapped = true;
             else ubo.is_unmapped = reg_asset.asset.force_unmap; 
@@ -1562,25 +1540,14 @@ namespace deng {
                 switch(reg_asset.asset.asset_mode) 
                 {
                 case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-                    if(max_mem < reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_UNOR))
-                        max_mem = reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_UNOR);
-                    break;
-
-                case DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
-                    if(max_mem < reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_NOR))
-                        max_mem = reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_NOR);
+                    if(max_mem < reg_asset.asset.vertices.n * sizeof(VERT_MAPPED))
+                        max_mem = reg_asset.asset.vertices.n * sizeof(VERT_MAPPED);
                     break;
 
                 case DAS_ASSET_MODE_3D_UNMAPPED:
-                    if(max_mem < reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR))
-                        max_mem = reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR);
+                    if(max_mem < reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED))
+                        max_mem = reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED);
                     break;
-
-                case DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED:
-                    if(max_mem < reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_NOR))
-                        max_mem = reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_NOR);
-                    break;
-
                 case DAS_ASSET_MODE_2D_UNMAPPED:
                     if(max_mem < reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_2D))
                         max_mem = reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_2D);
@@ -1642,25 +1609,12 @@ namespace deng {
                 {
                 case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
                     offset = reg_vk_asset.vk_asset.vert_offset;
-                    size = reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_UNOR);
+                    size = reg_asset.asset.vertices.n * sizeof(VERT_MAPPED);
 
                     __vk_BufferCreator::cpyToBufferMem ( 
                         device,
                         size,
-                        reg_asset.asset.vertices.vmu,
-                        m_buffer_data.staging_buffer_memory,
-                        0 
-                    );
-                    break;
-
-                case DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
-                    offset = reg_vk_asset.vk_asset.vert_offset;
-                    size = reg_asset.asset.vertices.n * sizeof(VERT_MAPPED_NOR);
-
-                    __vk_BufferCreator::cpyToBufferMem ( 
-                        device,
-                        size,
-                        reg_asset.asset.vertices.vmn,
+                        reg_asset.asset.vertices.uni_vert.vmu,
                         m_buffer_data.staging_buffer_memory,
                         0 
                     );
@@ -1668,25 +1622,12 @@ namespace deng {
 
                 case DAS_ASSET_MODE_3D_UNMAPPED:
                     offset = reg_vk_asset.vk_asset.vert_offset;
-                    size = reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR);
+                    size = reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED);
 
                     __vk_BufferCreator::cpyToBufferMem ( 
                         device,
                         size,
-                        reg_asset.asset.vertices.vuu,
-                        m_buffer_data.staging_buffer_memory,
-                        0 
-                    );
-                    break;
-
-                case DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED:
-                    offset = reg_vk_asset.vk_asset.vert_offset;
-                    size = reg_asset.asset.vertices.n * sizeof(VERT_UNMAPPED_NOR);
-
-                    __vk_BufferCreator::cpyToBufferMem ( 
-                        device,
-                        size,
-                        reg_asset.asset.vertices.vun,
+                        reg_asset.asset.vertices.uni_vert.vuu,
                         m_buffer_data.staging_buffer_memory,
                         0 
                     );
@@ -1699,7 +1640,7 @@ namespace deng {
                     __vk_BufferCreator::cpyToBufferMem ( 
                         device,
                         size,
-                        reg_asset.asset.vertices.vu2d,
+                        reg_asset.asset.vertices.uni_vert.vu2d,
                         m_buffer_data.staging_buffer_memory,
                         0 
                     );
@@ -1712,7 +1653,7 @@ namespace deng {
                     __vk_BufferCreator::cpyToBufferMem ( 
                         device,
                         size,
-                        reg_asset.asset.vertices.vm2d,
+                        reg_asset.asset.vertices.uni_vert.vm2d,
                         m_buffer_data.staging_buffer_memory,
                         0 
                     );

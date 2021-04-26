@@ -71,9 +71,9 @@ function dam.build()
         files {
             "headers/common/*.h",
             "src/common/*.c",
-            "headers/das/*.h",
-            "src/das/*.cpp",
-            "src/das/*.c"
+            "headers/data/*.h",
+            "src/data/*.cpp",
+            "src/data/*.c"
         }
 
 		filter "platforms:Win32"

@@ -77,7 +77,7 @@
     #include <common/base_types.h>
     #include <common/uuid.h>
     #include <common/hashmap.h>
-    #include <das/assets.h>
+    #include <data/assets.h>
     #include <math/deng_math.h>
 #endif
 
@@ -98,7 +98,7 @@ namespace dengUtils {
          * for texture mapped cube
          */
         void __sortTexMapped (
-            std::vector<VERT_MAPPED_UNOR> &vert,
+            std::vector<VERT_MAPPED> &vert,
             std::vector<deng_ui32_t> &ind
         );
 
@@ -123,7 +123,7 @@ namespace dengUtils {
             const dengMath::vec3<deng_vec_t> &pos,
             const dengMath::vec3<deng_vec_t> &size,
             const dengMath::vec3<deng_vec_t> &origin,
-            std::vector<VERT_UNMAPPED_UNOR> &vert,
+            std::vector<VERT_UNMAPPED> &vert,
             std::vector<deng_ui32_t> &ind
         );
 
@@ -135,7 +135,7 @@ namespace dengUtils {
             const dengMath::vec3<deng_vec_t> &pos,
             const dengMath::vec3<deng_vec_t> &size,
             const dengMath::vec3<deng_vec_t> &origin,
-            std::vector<VERT_MAPPED_UNOR> &vert,
+            std::vector<VERT_MAPPED> &vert,
             std::vector<deng_ui32_t> &ind
         );
 

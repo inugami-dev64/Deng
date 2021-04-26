@@ -73,7 +73,7 @@
     #include <common/base_types.h>
     #include <common/hashmap.h>
     #include <common/err_def.h>
-    #include <das/assets.h>
+    #include <data/assets.h>
 
     #include <math/deng_math.h>
     #include <deng/window.h>
@@ -100,7 +100,7 @@ namespace deng {
             std::vector<deng_Id> &m_textures;
             deng::__GlobalRegistry &m_reg;
             std::vector<VkFramebuffer> m_framebuffers;
-            std::array<__vk_PipelineData, __DENG_PIPELINE_COUNT> m_pl_data;
+            std::array<__vk_PipelineData, DENG_PIPELINE_COUNT> m_pl_data;
             __vk_QueueManager m_qff;
 
             // Commandpools and commandbuffers
@@ -127,8 +127,8 @@ namespace deng {
             );
             
             void setMiscData (
-                std::array<__vk_PipelineData, __DENG_PIPELINE_COUNT> pl_data, 
-                std::vector<VkFramebuffer> fb
+                const std::array<__vk_PipelineData, DENG_PIPELINE_COUNT> &pl_data, 
+                const std::vector<VkFramebuffer> &fb
             );
 
             void mkCommandPool(VkDevice device);

@@ -117,17 +117,13 @@ namespace deng {
                     DENG_SUPPORTED_REG_TYPE_ASSET
                 );
 
-                if (
-                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED ||
-                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED ||
-                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED
-                ) m_mapped_asset_c++;
+                if(reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED ||
+                   reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED) 
+                    m_mapped_asset_c++;
 
-                else if (
-                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
-                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
-                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED
-                ) m_unmapped_asset_c++;
+                else if(reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
+                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED) 
+                    m_unmapped_asset_c++;
             }
 
             __checkDescPoolCapacity (
@@ -149,11 +145,8 @@ namespace deng {
                     DENG_SUPPORTED_REG_TYPE_ASSET
                 );
 
-                if (
-                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED ||
-                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED ||
-                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED
-                ) {
+                if(reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED ||
+                   reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED) {
                     __mkTexMappedDS (
                         device,
                         reg_vk_asset.vk_asset,
@@ -163,11 +156,8 @@ namespace deng {
                     );
                 }
 
-                else if (
-                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
-                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
-                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED
-                ) {
+                else if(reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
+                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED) {
                     __mkUnmappedDS (
                         device,
                         reg_vk_asset.vk_asset,
@@ -302,43 +292,25 @@ namespace deng {
             size_t index;
             
             // Specify the pipiline type and layout
-            m_pipelines[UM3D_UNOR_I].pipeline_type = DENG_PIPELINE_TYPE_UNMAPPED_3D;
-            m_pipelines[UM3D_NOR_I].pipeline_type = DENG_PIPELINE_TYPE_UNMAPPED_3D_NORM;
-            m_pipelines[TM3D_UNOR_I].pipeline_type = DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D;
-            m_pipelines[TM3D_NOR_I].pipeline_type = DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D_NORM;
+            m_pipelines[UM3D_I].pipeline_type = DENG_PIPELINE_TYPE_UNMAPPED_3D;
+            m_pipelines[TM3D_I].pipeline_type = DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D;
             m_pipelines[UM2D_I].pipeline_type = DENG_PIPELINE_TYPE_UNMAPPED_2D;
             m_pipelines[TM2D_I].pipeline_type = DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D;
 
-            m_pipelines[UM3D_UNOR_I].p_pipeline_layout = &m_unmapped_pl;
-            m_pipelines[UM3D_NOR_I].p_pipeline_layout = &m_unmapped_pl;
-            m_pipelines[TM3D_UNOR_I].p_pipeline_layout = &m_tex_mapped_pl;
-            m_pipelines[TM3D_NOR_I].p_pipeline_layout = &m_tex_mapped_pl;
+            m_pipelines[UM3D_I].p_pipeline_layout = &m_unmapped_pl;
+            m_pipelines[TM3D_I].p_pipeline_layout = &m_tex_mapped_pl;
             m_pipelines[UM2D_I].p_pipeline_layout = &m_unmapped_pl;
             m_pipelines[TM2D_I].p_pipeline_layout = &m_tex_mapped_pl;
 
             __vk_PipelineCreator unmapped_pipeline_3d (
-                &m_pipelines[UM3D_UNOR_I],
-                device, 
-                extent, 
-                renderpass
-            );
-
-            __vk_PipelineCreator unmapped_nor_pipeline_3d (
-                &m_pipelines[UM3D_NOR_I],
+                &m_pipelines[UM3D_I],
                 device, 
                 extent, 
                 renderpass
             );
 
             __vk_PipelineCreator texture_mapped_pipeline_3d (
-                &m_pipelines[TM3D_UNOR_I], 
-                device, 
-                extent, 
-                renderpass
-            );
-
-            __vk_PipelineCreator texture_mapped_nor_pipeline_3d (
-                &m_pipelines[TM3D_NOR_I], 
+                &m_pipelines[TM3D_I], 
                 device, 
                 extent, 
                 renderpass
@@ -359,7 +331,7 @@ namespace deng {
             );
 
             std::array<VkGraphicsPipelineCreateInfo, DENG_PIPELINE_COUNT> pipeline_infos{};
-            pipeline_infos[UM3D_UNOR_I] = unmapped_pipeline_3d.mkGraphicsPipelineInfo (
+            pipeline_infos[UM3D_I] = unmapped_pipeline_3d.mkGraphicsPipelineInfo (
                 UNMAPPED_VERT_SHADER_3D, 
                 UNMAPPED_FRAG_SHADER, 
                 (char*) "main", 
@@ -373,36 +345,8 @@ namespace deng {
                 0
             );
 
-            pipeline_infos[UM3D_NOR_I] = unmapped_nor_pipeline_3d.mkGraphicsPipelineInfo (
-                UNMAPPED_NORM_VERT_SHADER_3D, 
-                UNMAPPED_FRAG_SHADER, 
-                (char*) "main", 
-                VK_POLYGON_MODE_FILL, 
-                VK_CULL_MODE_NONE, 
-                VK_FRONT_FACE_COUNTER_CLOCKWISE, 
-                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 
-                true, 
-                false, 
-                sample_c,
-                0
-            );
-
-            pipeline_infos[TM3D_UNOR_I] = texture_mapped_pipeline_3d.mkGraphicsPipelineInfo (
+            pipeline_infos[TM3D_I] = texture_mapped_pipeline_3d.mkGraphicsPipelineInfo (
                 TEXTURE_MAPPED_VERT_SHADER_3D, 
-                TEXTURE_MAPPED_FRAG_SHADER, 
-                (char*) "main", 
-                VK_POLYGON_MODE_FILL, 
-                VK_CULL_MODE_NONE, 
-                VK_FRONT_FACE_COUNTER_CLOCKWISE, 
-                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 
-                true, 
-                false,
-                sample_c, 
-                0
-            );
-
-            pipeline_infos[TM3D_NOR_I] = texture_mapped_nor_pipeline_3d.mkGraphicsPipelineInfo (
-                TEXTURE_MAPPPED_NORM_VERT_SHADER_3D, 
                 TEXTURE_MAPPED_FRAG_SHADER, 
                 (char*) "main", 
                 VK_POLYGON_MODE_FILL, 
@@ -444,17 +388,9 @@ namespace deng {
             );
 
             std::array<VkPipeline, DENG_PIPELINE_COUNT> pipelines;
-            if
-            (
-                vkCreateGraphicsPipelines (
-                    device, 
-                    VK_NULL_HANDLE, 
-                    static_cast<deng_ui32_t>(pipeline_infos.size()), 
-                    pipeline_infos.data(), 
-                    NULL, 
-                    pipelines.data()
-                ) != VK_SUCCESS
-            ) VK_DESC_ERR("failed to create graphics pipelines!");
+            if(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, static_cast<deng_ui32_t>(pipeline_infos.size()), 
+               pipeline_infos.data(), NULL, pipelines.data()) != VK_SUCCESS) 
+                VK_DESC_ERR("failed to create graphics pipelines!");
 
             else {
                 for(index = 0; index < pipelines.size(); index++)
@@ -835,14 +771,9 @@ namespace deng {
                     DENG_SUPPORTED_REG_TYPE_ASSET
                 );
 
-                if (
-                    reg_asset.vk_asset.is_desc &&
-                    (
-                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED ||
-                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED ||
-                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED
-                    )
-                ) {
+                if(reg_asset.vk_asset.is_desc && 
+                  (reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED || 
+                   reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED)) {
                     out_inds.resize(out_inds.size() + 1);
                     out_inds[out_inds.size() - 1] = i;
                     vkFreeDescriptorSets (
@@ -877,14 +808,9 @@ namespace deng {
                     DENG_SUPPORTED_REG_TYPE_ASSET
                 );
 
-                if (
-                    vk_reg_asset.vk_asset.is_desc &&
-                    (
-                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
-                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
-                        reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED
-                    )
-                ) {
+                if(vk_reg_asset.vk_asset.is_desc && 
+                  (reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
+                   reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED)) {
                     out_inds.resize(out_inds.size() + 1);
                     out_inds[out_inds.size() - 1] = i;
                     vkFreeDescriptorSets (
@@ -901,7 +827,7 @@ namespace deng {
 
 
         /* __vk_DescriptorCreator getters */
-        std::array<__vk_PipelineData, DENG_PIPELINE_COUNT> __vk_DescriptorCreator::getPipelines() { return m_pipelines; }
+        std::array<__vk_PipelineData, DENG_PIPELINE_COUNT> &__vk_DescriptorCreator::getPipelines() { return m_pipelines; }
         VkPipelineLayout __vk_DescriptorCreator::getUnmappedPL() { return m_unmapped_pl; }
         VkPipelineLayout __vk_DescriptorCreator::getTexMappedPL() { return m_tex_mapped_pl; }
         VkDescriptorSetLayout __vk_DescriptorCreator::getUnmappedDSL() { return m_unmapped_desc_set_layout; }

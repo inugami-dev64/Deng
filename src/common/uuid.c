@@ -176,7 +176,7 @@ char *__uuid_GetDevMacAddress() {
 /*
  * Init new uuid instance
  */
-char *uuid_Generate() {
+deng_Id uuid_Generate() {
     time_t time_val = time(NULL);
     srand(time_val);
 

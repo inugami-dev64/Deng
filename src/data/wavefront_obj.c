@@ -61,7 +61,7 @@
 
 
 #define __WAVEFRONT_OBJ_C
-#include <das/wavefront_obj.h>
+#include <data/wavefront_obj.h>
 
 /*
  * Read all filedata from stream to heap allocated memory
@@ -514,16 +514,16 @@ void __das_MergeVertices (
     // Allocate memory for dynamic vertices
     switch(asset_mode)
     {
-    case DAS_ASSET_MODE_3D_UNMAPPED:
+    case __DAS_ASSET_MODE_3D_UNMAPPED_UNOR:
         // Allocate memory and copy model vertices over as well as indices 
         // Nothing else to do here
-        p_out_vdy->vuu = (VERT_UNMAPPED_UNOR*) calloc (
+        p_out_vdy->uni_vert.vuu = (__VERT_UNMAPPED_UNOR*) calloc (
             vd_c,
-            sizeof(VERT_UNMAPPED_UNOR)
+            sizeof(__VERT_UNMAPPED_UNOR)
         );
 
         for(size_t i = 0; i < vd_c; i++)
-            p_out_vdy->vuu[i]= vd[i];
+            p_out_vdy->uni_vert.vuu[i]= vd[i];
 
         for(size_t i = 0; i < ind_c; i++)
             (*p_out_is)[i] = is[i].vert;
@@ -531,24 +531,24 @@ void __das_MergeVertices (
         p_out_vdy->n = vd_c;
         return;
 
-    case DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED:
-        p_out_vdy->vun = (VERT_UNMAPPED_NOR*) calloc (
+    case DAS_ASSET_MODE_3D_UNMAPPED:
+        p_out_vdy->uni_vert.vun = (VERT_UNMAPPED*) calloc (
             ind_c,
-            sizeof(VERT_UNMAPPED_NOR)
+            sizeof(VERT_UNMAPPED)
+        );
+        break;
+
+    case __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR:
+        p_out_vdy->uni_vert.vmu = (__VERT_MAPPED_UNOR*) calloc (
+            ind_c,
+            sizeof(__VERT_MAPPED_UNOR)
         );
         break;
 
     case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-        p_out_vdy->vmu = (VERT_MAPPED_UNOR*) calloc (
+        p_out_vdy->uni_vert.vmn = (VERT_MAPPED*) calloc (
             ind_c,
-            sizeof(VERT_MAPPED_UNOR)
-        );
-        break;
-
-    case DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
-        p_out_vdy->vmn = (VERT_MAPPED_NOR*) calloc (
-            ind_c,
-            sizeof(VERT_MAPPED_NOR)
+            sizeof(VERT_MAPPED)
         );
         break;
 
@@ -563,14 +563,14 @@ void __das_MergeVertices (
     newHashmap(&hm, 2 * ind_c);
 
     deng_ui32_t *p_ind;
-    VERT_UNMAPPED_NOR vun = {0};
-    VERT_MAPPED_UNOR vmu = {0};
-    VERT_MAPPED_NOR vmn = {0};
+    VERT_UNMAPPED vun = {0};
+    __VERT_MAPPED_UNOR vmu = {0};
+    VERT_MAPPED vmn = {0};
 
     for(size_t i = 0; i < ind_c; i++) {
         switch(asset_mode) 
         {
-        case DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+        case DAS_ASSET_MODE_3D_UNMAPPED:
             vun.vert_data = vd[is[i].vert];
             vun.norm_data = nd[is[i].norm];
 
@@ -579,7 +579,7 @@ void __das_MergeVertices (
                 (p_ind = (deng_ui32_t*) findValue ( 
                     &hm, 
                     &vun, 
-                    sizeof(VERT_UNMAPPED_NOR)
+                    sizeof(VERT_UNMAPPED)
                 ))
             ) (*p_out_is)[i] = *p_ind;
 
@@ -587,11 +587,34 @@ void __das_MergeVertices (
             else {
                 (*p_out_is)[i] = max_ind;
                 p_out_vdy->n++;
-                p_out_vdy->vun[max_ind] = vun;
+                p_out_vdy->uni_vert.vun[max_ind] = vun;
                 pushToHashmap (
                     &hm,
                     &vun,
-                    sizeof(VERT_UNMAPPED_NOR),
+                    sizeof(VERT_UNMAPPED),
+                    (*p_out_is) + i
+                );
+                max_ind++;
+            }
+            break;
+
+        case __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR:
+            vmu.vert_data = vd[is[i].vert];
+            vmu.tex_data = td[is[i].tex];
+
+            // Check if index exists in new_ind array
+            if((p_ind = (deng_ui32_t*) findValue(&hm, &vmu, sizeof(__VERT_MAPPED_UNOR)))) 
+                (*p_out_is)[i] = *p_ind;
+
+            // If it doesn't then push it to hashmap
+            else {
+                (*p_out_is)[i] = max_ind;
+                p_out_vdy->n++;
+                p_out_vdy->uni_vert.vmu[max_ind] = vmu;
+                pushToHashmap (
+                    &hm,
+                    &vmu,
+                    sizeof(__VERT_MAPPED_UNOR),
                     (*p_out_is) + i
                 );
                 max_ind++;
@@ -599,34 +622,6 @@ void __das_MergeVertices (
             break;
 
         case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-            vmu.vert_data = vd[is[i].vert];
-            vmu.tex_data = td[is[i].tex];
-
-            // Check if index exists in new_ind array
-            if ( 
-                (p_ind = (deng_ui32_t*) findValue ( 
-                    &hm, 
-                    &vmu, 
-                    sizeof(VERT_MAPPED_UNOR)
-                ))
-            ) (*p_out_is)[i] = *p_ind;
-
-            // If it doesn't then push it to hashmap
-            else {
-                (*p_out_is)[i] = max_ind;
-                p_out_vdy->n++;
-                p_out_vdy->vmu[max_ind] = vmu;
-                pushToHashmap (
-                    &hm,
-                    &vmu,
-                    sizeof(VERT_MAPPED_UNOR),
-                    (*p_out_is) + i
-                );
-                max_ind++;
-            }
-            break;
-
-        case DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
             vmn.vert_data = vd[is[i].vert];
             vmn.norm_data = nd[is[i].norm];
             vmn.tex_data = td[is[i].tex];
@@ -636,7 +631,7 @@ void __das_MergeVertices (
                 (p_ind = (deng_ui32_t*) findValue ( 
                     &hm, 
                     &vmn, 
-                    sizeof(VERT_MAPPED_NOR)
+                    sizeof(VERT_MAPPED)
                 ))
             ) (*p_out_is)[i] = *p_ind;
 
@@ -644,11 +639,11 @@ void __das_MergeVertices (
             else {
                 (*p_out_is)[i] = max_ind;
                 p_out_vdy->n++;
-                p_out_vdy->vmn[max_ind] = vmn;
+                p_out_vdy->uni_vert.vmn[max_ind] = vmn;
                 pushToHashmap (
                     &hm,
-                    &p_out_vdy->vmn[max_ind],
-                    sizeof(VERT_MAPPED_NOR),
+                    &p_out_vdy->uni_vert.vmn[max_ind],
+                    sizeof(VERT_MAPPED),
                     (*p_out_is) + i
                 );
                 max_ind++;
@@ -744,7 +739,7 @@ void das_ParseWavefrontOBJ (
     // Parse faces and recieve indices
     switch(am)
     {
-    case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
+    case __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR:
         __das_ParseFaces (
             &ind,
             &ind_c, 
@@ -753,7 +748,7 @@ void das_ParseWavefrontOBJ (
         );
         break;
     
-    case DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
+    case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
         __das_ParseFaces (
             &ind,
             &ind_c,
@@ -762,7 +757,7 @@ void das_ParseWavefrontOBJ (
         );
         break;
 
-    case DAS_ASSET_MODE_3D_UNMAPPED:
+    case __DAS_ASSET_MODE_3D_UNMAPPED_UNOR:
         __das_ParseFaces (
             &ind,
             &ind_c,
@@ -771,7 +766,7 @@ void das_ParseWavefrontOBJ (
         );
         break;
 
-    case DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED:
+    case DAS_ASSET_MODE_3D_UNMAPPED:
         __das_ParseFaces (
             &ind,
             &ind_c,
@@ -783,52 +778,6 @@ void das_ParseWavefrontOBJ (
     default:
         break;
     }
-
-
-    // Right now attempt to log all of the parsed data to certain file
-    /*char buf[128]; */
-    /*cm_OpenLogger("out.log");*/
-    /*// Log all vertices*/
-    /*cm_LogWrite("vert");*/
-    /*for(size_t i = 0; i < vd_c; i++) {*/
-        /*memset(buf, 0, 128);*/
-        /*sprintf (*/
-            /*buf,*/
-            /*"%f, %f, %f",*/
-            /*vd[i].vert_x,*/
-            /*vd[i].vert_y,*/
-            /*vd[i].vert_z*/
-        /*);*/
-
-        /*cm_LogWrite(buf);*/
-    /*}*/
-
-    /*cm_LogWrite("texture");*/
-    /*for(size_t i = 0; i < td_c; i++) {*/
-        /*memset(buf, 0, 128);*/
-        /*sprintf (*/
-            /*buf,*/
-            /*"%f, %f",*/
-            /*td[i].tex_x,*/
-            /*td[i].tex_y*/
-        /*);*/
-
-        /*cm_LogWrite(buf);*/
-    /*}*/
-
-    /*cm_LogWrite("normals");*/
-    /*for(size_t i = 0; i < nd_c; i++) {*/
-        /*memset(buf, 0, 128);*/
-        /*sprintf (*/
-            /*buf,*/
-            /*"%f, %f, %f",*/
-            /*nd[i].nor_x,*/
-            /*nd[i].nor_y,*/
-            /*nd[i].nor_z*/
-        /*);*/
-
-        /*cm_LogWrite(buf);*/
-    /*}*/
 
     __das_AssembleAsset (
         p_asset,

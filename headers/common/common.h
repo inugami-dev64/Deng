@@ -95,7 +95,17 @@ extern "C" {
     #define __SECONDS_IN_FEBRUARY 2419200
     #define __SECONDS_IN_LEAP_YEAR_FEBRUARY 2505600
 
-    void __cm_FindAllSubstringsRec();
+    /*
+     * Substring finder algorithm core function
+     */
+    void __cm_SubstrAl (
+        char *str,
+        size_t str_len,
+        char *sub_str,
+        size_t substr_len,
+        deng_ui32_t **p_ind,
+        deng_ui32_t *p_ind_c
+    );
 
     // This is needed when date and time formating requires it
     char *__month_names[] = {
@@ -255,12 +265,28 @@ char *cm_ToRegularString(wchar_t *wstr);
 /*
  * Find all instances of sub_str from str and
  * put their character positions into postions array
- * This function uses heap allocation on dereferenced p_pos 
+ * This function uses heap allocation on dereferenced p_ind
  * argument. That memory has to be freed afterwards
  */
 void cm_FindAllSubstrings (
     char *str, 
     char *sub_str,
+    deng_ui32_t **p_ind,
+    deng_ui32_t *p_ind_c
+);
+
+
+/*
+ * Find all instances of sub_str from str while reading maximum of str_len character from str
+ * and substr_len from sub_str.
+ * This function uses heap allocation on dereferenced p_ind
+ * argument. That memory has to be freed afterwards
+ */
+void cm_FindnAllSubstrings (
+    char *str,
+    size_t str_len,
+    char *sub_str,
+    size_t substr_len,
     deng_ui32_t **p_ind,
     deng_ui32_t *p_ind_c
 );
