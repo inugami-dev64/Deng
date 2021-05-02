@@ -44,18 +44,46 @@ Currently compression algorithm specifying byte has to be 0 and is reserved for 
 The layout for the VERT_HDR is following:  
 * 8 bytes: Header name  
 * 4 bytes: Header size  
+
+#### VPOS_HDR
+VPOS_HDR is a subheader of VERT_HDR, which contains information about vertex positions. This header is necessary at 
+all cases otherwise the asset is considered as corrupted.  
+The layout of VPOS_HDR is following:  
+* 8 bytes: Header name
+* 4 bytes: Header size
 * 4 bytes: Vertices count  
-* max(n * 32) bytes: Vertices data  
-    * 12 bytes: Vertex coordinates (x, y, z: type f32)  
-    * 8 bytes: Texture coordinates (x, y: type f32)  
-    * 12 bytes: Vertex normal coordinates (x, y, z: type f32)  
+* n * 12 bytes: Vertex coordinates (x, y, z: type f32)
+
+#### VTEX_HDR
+VTEX_HDR is a subheader of VERT_HDR, which contains information about texture positions. This header is not necessary if
+the asset mode is any of the following: `DAS_ASSET_MODE_UNMAPPED`, `__DAS_ASSET_MODE_UNMAPPED_UNOR`  
+The layout of VTEX_HDR is following:  
+* 8 bytes: Header name  
+* 4 bytes: Header size  
+* 4 bytes: Vertices count  
+* n * 8 bytes: Texture coordinates (x, y: type f32)  
+
+#### VNOR_HDR
+VNOR_HDR is a subheader of VERT_HDR, which contains information about vertex normals. This header is not necessary if
+the asset mode is any of the following: `__DAS_ASSET_MODE_UNMAPPED_UNOR`, `__DAS_ASSET_MODE_TEXTURE_MAPPED_UNOR`  
+The layout of VNOR_HDR is following:  
+* 8 bytes: Header name  
+* 4 bytes: Header size  
+* 4 bytes: Vertices count  
+* n * 12 bytes: Vertex normal coordinates (x, y, z: type f32)
 
 ### INDX_HDR  
 The layout for the INDX_HDR is following:  
 * 8 bytes: Header name  
 * 4 bytes: Header size (bytes)  
 * 4 bytes: Indices count  
-* n * 4 bytes: Indices data (type ui32)
+* m * n * 4 bytes: Indices data (type ui32)  
+
+Where m represents the vertex elements count which can be determined from the asset mode as follows:
+`__DAS_ASSET_MODE_3D_UNMAPPED_UNOR` - 1
+`DAS_ASSET_MODE_3D_UNMAPPED` - 2
+`__DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR` - 2
+`DAS_ASSET_MODE_3D_TEXTURE_MAPPED` - 3
 
 ### META_HDR
 Meta headers can be used to store some additional information

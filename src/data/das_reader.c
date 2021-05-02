@@ -75,6 +75,7 @@ void das_LoadAsset (
     char *tex_uuid,
     char *file_name
 ) {
+    p_asset->asset_mode = dst_mode;
     p_asset->tex_uuid = tex_uuid;
     p_asset->color = color;
     p_asset->is_shown = true;
@@ -83,14 +84,11 @@ void das_LoadAsset (
     // Write all file contents into a buffer
     __das_ReadAssetFile((char*) file_name);
 
-    das_INFO_HDR inf_hdr = {0};
-    das_VERT_HDR vert_hdr = {0};
-    das_INDX_HDR indx_hdr = {0};
+    das_INFO_HDR inf_hdr = { 0 };
+    das_VERT_HDR vert_hdr = { 0 };
+    das_INDX_HDR indx_hdr = { 0 };
 
-    __das_ReadINFO_HDR (
-        &inf_hdr,
-        file_name
-    );
+    __das_ReadINFO_HDR(&inf_hdr, file_name);
 
     // Copy uuid from read info header instance to asset uuid instance
     p_asset->uuid = (char*) calloc(__DAS_UUID_LEN + 1, sizeof(char));
@@ -98,39 +96,19 @@ void das_LoadAsset (
 
     // Check if metadata should be read or ignored
     if(read_meta)
-        __das_ReadMeta();
+        __das_ReadMeta(file_name);
     else __das_SkipMetaHeaders();
 
-    __das_ReadVERT_HDR (
-        &vert_hdr,
-        file_name
-    );
+    __das_ReadVERT_HDR(&vert_hdr, file_name);
+    __das_CopyVertices(p_asset, inf_hdr.asset_type, file_name);
 
-    p_asset->vertices.n = vert_hdr.vert_c;
-
-    __das_CopyVertices (
-        p_asset,
-        inf_hdr.asset_type,
-        file_name
-    );
-
-    __das_ReadINDX_HDR (
-        &indx_hdr,
-        file_name
-    );
-
-    p_asset->indices.n = indx_hdr.ind_c;
-
-    __das_CopyIndices (
-        &p_asset->indices.indices,
-        indx_hdr.ind_c,
-        file_name
-    );
+    __das_ReadINDX_HDR(&indx_hdr, file_name);
+    __das_CopyIndices(p_asset, inf_hdr.asset_type, indx_hdr.ind_c, file_name);
 
     // Check if vertices are unnormalised and if they are then normalise
     if(inf_hdr.asset_type == __DAS_ASSET_MODE_3D_UNMAPPED_UNOR ||
        inf_hdr.asset_type == __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR) {
-        __das_VertNormalise(p_asset);
+        das_MkAssetNormals(p_asset);
     }
 
     __das_ReadCleanup();
@@ -166,6 +144,17 @@ void das_CleanMeta() {
 /********** Header reading functions **********/
 /**********************************************/
 
+
+/*
+ * Read generic of data from __cbuf with bounds checking
+ */
+void __das_DataRead(void *buf, size_t chunk_size, size_t n, char *file_name) {
+    das_ErrBufferReadCheck(chunk_size * n, __buf_size, file_name);
+    memcpy(buf, __cbuf + __offset, chunk_size * n);
+    __offset += chunk_size * n;
+}
+
+
 /* 
  * Read asset information from INFO_HDR
  */
@@ -173,11 +162,8 @@ void __das_ReadINFO_HDR (
     das_INFO_HDR *out_hdr,
     char *file_name
 ) {
-    das_ErrBufferReadCheck(__offset + sizeof(das_INFO_HDR), __buf_size, file_name);
-
     // INFO_HDR is always the first header in .das file
-    memcpy(out_hdr, __cbuf + __offset, sizeof(das_INFO_HDR));
-    __offset += sizeof(das_INFO_HDR);
+    __das_DataRead(out_hdr, sizeof(das_INFO_HDR), 1, file_name);
 
     // Copy header name into larger array for verification purposes
     char pad_name[9] = {0};
@@ -210,7 +196,6 @@ void __das_SkipMetaHeaders(char *file_name) {
         &ind_c
     ); 
 
-    printf("ind_c: %d\n", ind_c);
     if(ind_c) {
         __offset = indices[ind_c - 1];
         deng_ui32_t hdr_size = 0;
@@ -218,9 +203,8 @@ void __das_SkipMetaHeaders(char *file_name) {
         // Buffer bounds check
         das_ErrBufferReadCheck(__offset + sizeof(deng_ui32_t) + 8, __buf_size, file_name);
         memcpy(&hdr_size, __cbuf + __offset + 8, sizeof(deng_ui32_t));
-        das_ErrBufferReadCheck(hdr_size, __buf_size, file_name);
+        das_ErrBufferReadCheck(__offset + hdr_size, __buf_size, file_name);
 
-        printf("hdr_size: %d\n", hdr_size);
         __offset += hdr_size;
         free(indices);
     }
@@ -231,7 +215,7 @@ void __das_SkipMetaHeaders(char *file_name) {
  * Read meta information contained between BEG_HDR and END_HDR
  * This function returns pointer to heap allocated memory, manual cleanup is necessary
  */
-void __das_ReadMeta() {
+void __das_ReadMeta(char *file_name) {
     // Check if previous metadata has been allocated and if it has 
     // then perform cleanup
     if(__meta_c && __meta_infos) {
@@ -264,6 +248,7 @@ void __das_ReadMeta() {
         __offset = indices[i] + 12;
         deng_ui32_t data_len = 0;
         memcpy(&data_len, __cbuf + __offset, sizeof(deng_ui32_t));
+        __das_DataRead(&data_len, sizeof(deng_ui32_t), 1, file_name);
         
         // Copy all metadata information to __meta_infos buffer
         __offset += 4;
@@ -273,6 +258,7 @@ void __das_ReadMeta() {
         __offset += data_len;
     }
 }
+
 
 /*
  * Read asset information from VERT_HDR
@@ -285,11 +271,7 @@ void __das_ReadVERT_HDR (
         __DAS_READ_CORRUPT_ERROR(file_name);
 
     // Copy the first part of the buffer into das_VERT_HDR struct
-    memcpy (
-        out_hdr, 
-        __cbuf + __offset, 
-        sizeof(das_VERT_HDR)
-    );
+    memcpy(out_hdr, __cbuf + __offset, sizeof(das_VERT_HDR));
     __offset += sizeof(das_VERT_HDR);
 
     char pad_hdr[9] = {0};
@@ -302,24 +284,31 @@ void __das_ReadVERT_HDR (
 
 
 /*
+ * Read information about one vertex element header type
+ */
+void __das_ReadGenVertHdr (
+    __das_VertTemplate *out_hdr,
+    char *hdr_name,
+    char *file_name
+) {
+    __das_DataRead(out_hdr, sizeof(__das_VertTemplate), 1, file_name);
+    char pad_hdr[8] = {0};
+    strncpy(pad_hdr, out_hdr->hdr_name, 8);
+
+    // Check if header name is correct
+    if(strcmp(pad_hdr, hdr_name))
+        __DAS_READ_CORRUPT_ERROR(file_name);
+}
+
+
+/*
  * Read asset information from INDX_HDR
  */
 void __das_ReadINDX_HDR (
     das_INDX_HDR *out_hdr,
     char *file_name
 ) {
-    if(__offset + sizeof(das_INDX_HDR) >= __buf_size)
-        __DAS_READ_CORRUPT_ERROR(file_name);
-
-
-    memcpy (
-        out_hdr, 
-        __cbuf + __offset, 
-        sizeof(das_INDX_HDR)
-    );
-
-    __offset += sizeof(das_INDX_HDR);
-
+    __das_DataRead(out_hdr, sizeof(das_INDX_HDR), 1, file_name);
     char pad_hdr[9] = {0};
     strncpy(pad_hdr, out_hdr->hdr_name, 8);
 
@@ -364,172 +353,56 @@ void __das_ReadCleanup() {
 
 
 /*
- * Allocate memory for vertices
- */
-void __das_AllocVertMem (
-    das_Asset *p_asset,
-    das_AssetMode src_mode,
-    deng_bool_t *p_skip_tex
-) {
-    switch(p_asset->asset_mode)
-    {
-    case DAS_ASSET_MODE_3D_UNMAPPED:
-    DAS_ASSET_MODE_3D_UNMAPPED:
-        p_asset->vertices.uni_vert.vun = (VERT_UNMAPPED*) calloc (
-            p_asset->vertices.n,
-            sizeof(VERT_UNMAPPED)
-        );
-        
-        *p_skip_tex = true;
-        break;
-
-    case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-    DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-        p_asset->vertices.uni_vert.vmn = (VERT_MAPPED*) calloc (
-            p_asset->vertices.n,
-            sizeof(VERT_MAPPED)
-        );
-
-        *p_skip_tex = false;
-        break;
-
-    case DAS_ASSET_MODE_UNDEFINED:
-        // Allocate memory according to src_mode
-        switch(src_mode)
-        {
-        case DAS_ASSET_MODE_3D_UNMAPPED:
-            goto DAS_ASSET_MODE_3D_UNMAPPED;
-            break;
-
-        case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-            goto DAS_ASSET_MODE_3D_TEXTURE_MAPPED;
-            break;
-        default:
-            break;
-        }
-        break;
-
-    default:
-        break;
-    }
-}
-
-
-/*
  * Copy asset vertices from buffer to out_vert
- * This functions assumes that the p_asset has correct vertices count set and
- * the offset is at the beginning of vertex data sequence
  */
 void __das_CopyVertices (
     das_Asset *p_asset,
-    das_AssetMode src_mode,
+    das_AssetMode asset_mode,
     char *file_name
 ) {
-    // Check if the source mode is unnormalised and if it is then perform copy and return
-    if(src_mode == __DAS_ASSET_MODE_3D_UNMAPPED_UNOR) {
-        das_ErrBufferReadCheck(p_asset->vertices.n * sizeof(__VERT_UNMAPPED_UNOR), __buf_size, file_name);
+    das_VPOS_HDR pos_hdr = { 0 };
+    das_VTEX_HDR tex_hdr = { 0 };
+    das_VNOR_HDR nor_hdr = { 0 };
 
-        p_asset->vertices.uni_vert.vuu = (__VERT_UNMAPPED_UNOR*) calloc (
-            p_asset->vertices.n,
-            sizeof(__VERT_UNMAPPED_UNOR)
-        );
+    // Read the position vertices header
+    __das_DataRead(&pos_hdr, sizeof(das_VPOS_HDR), 1, file_name);
+    
+    // Allocate enough memory for position vertices
+    p_asset->vertices.v3d.pn = pos_hdr.vert_c;
+    p_asset->vertices.v3d.pos = (das_ObjPosData*) malloc(cm_ToPow2I64(p_asset->vertices.v3d.pn * 
+        sizeof(das_ObjPosData)));
 
-        memcpy (
-            p_asset->vertices.uni_vert.vuu,
-            __cbuf,
-            sizeof(__VERT_UNMAPPED_UNOR) * p_asset->vertices.n
-        );
+    // Read position vertices
+    __das_DataRead(p_asset->vertices.v3d.pos, sizeof(das_ObjPosData), p_asset->vertices.v3d.pn, file_name);
+    
+    // Check if vertex textures should be read
+    if(p_asset->asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED ||
+       p_asset->asset_mode == __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR) {
+        // Read header info
+        __das_DataRead(&tex_hdr, sizeof(das_VTEX_HDR), 1, file_name);
 
-        return;
+        // Allocate memory for texture vertices
+        p_asset->vertices.v3d.tn = tex_hdr.vert_c;
+        p_asset->vertices.v3d.tex = (das_ObjTextureData*) malloc(cm_ToPow2I64(p_asset->vertices.v3d.tn * 
+            sizeof(das_ObjTextureData)));
+
+        // Read texture vertices
+        __das_DataRead(p_asset->vertices.v3d.tex, sizeof(das_ObjTextureData), p_asset->vertices.v3d.tn, file_name);
     }
 
-    else if(src_mode == __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR) {
-        das_ErrBufferReadCheck(p_asset->vertices.n * sizeof(__VERT_MAPPED_UNOR), __buf_size, file_name);
+    // Check if vertex normals should be read
+    if(p_asset->asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
+       p_asset->asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED) {
+        // Read header info
+        __das_DataRead(&nor_hdr, sizeof(das_VNOR_HDR), 1, file_name);
 
-        p_asset->vertices.uni_vert.vuu = (__VERT_UNMAPPED_UNOR*) calloc (
-            p_asset->vertices.n,
-            sizeof(__VERT_MAPPED_UNOR)
-        );
+        // Allocate memory for vertex normals
+        p_asset->vertices.v3d.nn = nor_hdr.vert_c;
+        p_asset->vertices.v3d.norm = (das_ObjNormalData*) malloc(cm_ToPow2I64(p_asset->vertices.v3d.nn) *
+            sizeof(das_ObjNormalData));
 
-        memcpy (
-            p_asset->vertices.uni_vert.vuu,
-            __cbuf,
-            sizeof(__VERT_MAPPED_UNOR) * p_asset->vertices.n
-        );
-
-        return;
-    }
-
-
-    deng_bool_t skip_tex = false;
-
-    // Allocate memory for vertices
-    __das_AllocVertMem (
-        p_asset,
-        src_mode,
-        &skip_tex
-    );
-
-    // Copy all data from buffer to out_vert
-    switch(src_mode) 
-    {
-    case DAS_ASSET_MODE_3D_UNMAPPED:
-        das_ErrBufferReadCheck(sizeof(VERT_UNMAPPED) * p_asset->vertices.n, __buf_size, file_name);
-
-        // Destination vertex is VERT_UNMAPPED
-        if(skip_tex) {
-            memcpy (
-                p_asset->vertices.uni_vert.vun,
-                __cbuf + __offset,
-                sizeof(VERT_UNMAPPED) * p_asset->vertices.n
-            );
-
-            __offset += sizeof(VERT_UNMAPPED) * p_asset->vertices.n;
-        }
-
-        else __DAS_READ_INVALID_VERT_FORMAT(file_name);
-        break;
-
-    case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-        das_ErrBufferReadCheck(sizeof(__VERT_MAPPED_UNOR) * p_asset->vertices.n, __buf_size, file_name);
-
-        // Destination vertex is VERT_MAPPED_NOR
-        if(!skip_tex) {
-            memcpy (
-                p_asset->vertices.uni_vert.vmn,
-                __cbuf + __offset,
-                sizeof(VERT_MAPPED) * p_asset->vertices.n
-            );
-
-            __offset += sizeof(VERT_MAPPED) * p_asset->vertices.n;
-        }
-
-        // Destination vertex is VERT_UNMAPPED
-        else {
-            // Allocate temporary buffer for storing vertices
-            VERT_MAPPED *tmp = (VERT_MAPPED*) calloc (
-                p_asset->vertices.n,
-                sizeof(VERT_MAPPED)
-            );
-
-            memcpy (
-                tmp,
-                __cbuf + __offset,
-                sizeof(VERT_MAPPED) * p_asset->vertices.n
-            );
-
-            __offset += sizeof(VERT_MAPPED) * p_asset->vertices.n;
-            for(size_t i = 0; i < p_asset->vertices.n; i++) {
-                p_asset->vertices.uni_vert.vun[i].vert_data = tmp[i].vert_data;
-                p_asset->vertices.uni_vert.vun[i].norm_data = tmp[i].norm_data;
-            }
-
-            free(tmp);
-        }
-        break;
-
-    default: 
-        break;
+        // Read vertex normals
+        __das_DataRead(p_asset->vertices.v3d.norm, sizeof(das_ObjNormalData), p_asset->vertices.v3d.nn, file_name);
     }
 }
 
@@ -540,26 +413,31 @@ void __das_CopyVertices (
  * the data from file buffer to *p_out_ind
  */
 void __das_CopyIndices (
-    deng_ui32_t **p_out_ind,
+    das_Asset *p_asset,
+    das_AssetMode src_mode,
     deng_ui32_t ind_c,
     char *file_name
 ) {
-    das_ErrBufferReadCheck(ind_c * sizeof(deng_ui32_t), __buf_size, file_name);
+    p_asset->indices.n = ind_c;
 
-    (*p_out_ind) = (deng_ui32_t*) calloc (
-        ind_c,
-        sizeof(deng_ui32_t)
-    );
+    // Read all position indices
+    p_asset->indices.pos = (deng_ui32_t*) malloc(cm_ToPow2I64(p_asset->indices.n * sizeof(deng_ui32_t)));
+    __das_DataRead(p_asset->indices.pos, sizeof(deng_ui32_t), p_asset->indices.n, file_name);
 
-    memcpy (
-        (*p_out_ind),
-        __cbuf + __offset,
-        ind_c * sizeof(deng_ui32_t) 
-    );
+    // Check if texture indices should be read
+    if(src_mode == __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR || 
+       src_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED) {
+        p_asset->indices.tex = (deng_ui32_t*) malloc(cm_ToPow2I64(p_asset->indices.n * sizeof(deng_ui32_t)));
+        __das_DataRead(p_asset->indices.tex, sizeof(deng_ui32_t), p_asset->indices.n, file_name);
+    }
 
-    __offset += ind_c * sizeof(deng_ui32_t);
+    // Check if vertex normal indices should be read
+    if(src_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
+       src_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED) {
+        p_asset->indices.norm = (deng_ui32_t*) malloc(cm_ToPow2I64(p_asset->indices.n * sizeof(deng_ui32_t)));
+        __das_DataRead(p_asset->indices.norm, sizeof(deng_ui32_t), p_asset->indices.n, file_name);
+    }
 }
-
 
 
 /*
@@ -567,25 +445,4 @@ void __das_CopyIndices (
  */
 void __das_IncrementOffset(size_t n) {
     __offset += n;
-}
-
-
-/*******************************************************************/
-/*********** Vertex normal calculation algorithm functions *********/
-/*******************************************************************/
-
-/*
- * Create vertex normals for vertices that are not normalised
- * and add them to closest 
- */
-static void __das_VertNormalise(das_Asset *p_asset) {
-    // Allocate memory for appropriate 
-    /*switch(p_asset->asset_mode) {*/
-    /*case __DAS_ASSET_MODE_3D_UNMAPPED_UNOR:*/
-        /*p_asset->vertices.uni_vert.vun = (VERT_UNMAPPED*) calloc (*/
-            /*p_asset->vertices.n,*/
-            /*sizeof(VERT_UNMAPPED)*/
-        /*);*/
-        /*break;*/
-    /*}*/
 }

@@ -132,6 +132,13 @@ extern "C" {
 
 
 /*
+ * Find the total line count from beg to rlen
+ * rlen must be less than the amount of memory under beg
+ */
+deng_ui32_t cm_FindLineCount(char *str, size_t rlen);
+
+
+/*
  * Make all the chars into upper case letters
  */
 char *cm_MakeUpperCase(const char *str); 
@@ -166,7 +173,6 @@ char *cm_ExtractFileName(char *path);
 char *cm_ExtractFileExtName(char *file_name);
 
 
-// Inefficient ! ! !  
 /*********************************************************/
 /************* Universally applicable algorithms *********/
 /*********************************************************/

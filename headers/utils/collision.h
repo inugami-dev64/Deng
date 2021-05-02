@@ -86,7 +86,7 @@ namespace dengUtils {
 
         deng_bool_t findPtCollision ( 
             dengMath::vec2<deng_vec_t> point,
-            das_ObjVertData2D *verts,
+            das_ObjPosData2D *verts,
             deng_ui32_t vert_c
         );
     };

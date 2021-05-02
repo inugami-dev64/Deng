@@ -679,6 +679,21 @@ char *cm_ExtractFileName(char *path) {
 }
 
 
+/*
+ * Find the total line count from beg to rlen
+ * rlen must be less than the amount of memory under beg
+ */
+deng_ui32_t cm_FindLineCount(char *str, size_t rlen) {
+    deng_ui32_t lc = 1;
+
+    // For each character check if it is newline
+    for(size_t i = 0; i < rlen; i++)
+        if(str[i] == 0x0A) lc++;
+
+    return lc;
+}
+
+
 /* 
  * Make all lowercase chars into uppercase chars 
  */

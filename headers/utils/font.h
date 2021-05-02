@@ -123,7 +123,7 @@ namespace dengUtils {
 
         std::vector<BitmapGlyphData> unique_glyphs;
         std::vector<deng_ui8_t> tex_data;
-        std::array<VERT_MAPPED_2D, 4> vert_pos;
+        std::array<das_ObjPosData2D, 4> vert_pos;
         std::array<deng_ui32_t, 6> vert_indices;
         dengMath::vec2<deng_i32_t> box_size;
 
@@ -138,7 +138,7 @@ namespace dengUtils {
     class StringRasterizer {
     private:
         FT_Library m_library_instance;
-        deng::Window *m_p_win;
+        deng::Window &m_win;
         std::vector<std::string> m_fonts;
 
     protected:
@@ -173,7 +173,7 @@ namespace dengUtils {
         // If custom font path is not needed then just pass nullptr
         StringRasterizer (
             std::string custom_font_path, 
-            deng::Window *p_window_wrap
+            deng::Window &win
         );
         ~StringRasterizer();
         

@@ -63,10 +63,10 @@
 #ifndef __WAVEFRONT_OBJ_H
 #define __WAVEFRONT_OBJ_H
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
     #ifdef __WAVEFRONT_OBJ_C
         #include <stdlib.h>
         #include <stdio.h>
@@ -81,11 +81,26 @@ extern "C" {
         #include <common/common.h>
         #include <common/hashmap.h>
 
-        #include <data/sreader.h>
         #include <data/assets.h>
+        #include <data/das_runtime.h>
+
+        /// Error handling macros
+        #define __DAS_WAVEFRONT_SYNTAX_ERROR(line, desc)        fprintf(stderr, "Wavefront OBJ syntax error on line %d: %s\n", line, desc), \
+                                                                exit(EXIT_FAILURE)
 
         static char *__buffer = NULL;
 
+        
+        /*
+         * This data structure is used in block parsing only
+         */
+        typedef struct __das_IndexBlock {
+            deng_ui32_t pos;
+            deng_ui32_t tex;
+            deng_ui32_t norm;
+        } __das_IndexBlock;
+
+        
         /*
          * Read all filedata from stream to heap allocated buffer
          */
@@ -129,7 +144,7 @@ extern "C" {
 
         /*
          * Start reading from beg until training characters are found
-         * and set end to the end of reading point
+         * and set end to the reading point
          */
         deng_ui32_t __das_ReadIntValue (
             char *beg,
@@ -141,8 +156,8 @@ extern "C" {
         /*
          * Parse one face block and return found indices
          * p_end is the pointer to the end of the block
-         */
-        IndexSet __das_ParseIndBlock (
+        */
+        __das_IndexBlock __das_ParseIndBlock (
             char *beg,
             char *nl,
             char **p_end
@@ -163,64 +178,19 @@ extern "C" {
         /*
          * Parse all data about vertices to their appropriate structures
          */
-        void __das_ParseVertices (
-            das_ObjVertData **pp_vd,
-            size_t *p_vd_c,
-            das_ObjTextureData **pp_td,
-            size_t *p_td_c,
-            das_ObjNormalData **pp_nd,
-            size_t *p_nd_c
-        );
+        void __das_ParseVertices(das_VertDynamic *p_vert);
         
 
         /*
          * Parse all data about indices to their appropriate structures
          */
         void __das_ParseFaces (
-            IndexSet **p_ind,
-            size_t *p_ind_c,
+            das_IndicesDynamic *p_ind,
             deng_bool_t read_tex_ind,
             deng_bool_t read_norm_ind
         );
-
-
-        /****************************/
-        /****** Vertex merging ******/
-        /****************************/
-
-        /*
-         * Merge vertices and vertex normals together
-         */
-        void __das_MergeVertices (
-            das_ObjVertData *vd,
-            size_t vd_c,
-            das_ObjTextureData *td,
-            size_t td_c,
-            das_ObjNormalData *nd,
-            size_t nd_c,
-            IndexSet *is,
-            size_t ind_c,
-            deng_ui32_t **p_out_ind,
-            das_VertDynamic *p_out_vdy,
-            das_AssetMode asset_mode
-        );
-
-
-        /*
-         * Create a valid asset instance with sorted indices
-         */
-        void __das_AssembleAsset (
-            das_Asset *p_asset,
-            IndexSet *ind,
-            size_t ind_c,
-            das_ObjVertData *p_vd,
-            size_t vd_c,
-            das_ObjTextureData *p_td,
-            size_t td_c,
-            das_ObjNormalData *p_nd,
-            size_t nd_c
-        );
     #endif 
+
 
     /*
      * Parse all data in Wavefront OBJ file and write

@@ -113,7 +113,7 @@ namespace dengMath {
          * vert must be a pointer to valid array with at least 4 members
          */
         static vec2<deng_vec_t> findAbsPosition (
-            VERT_UNMAPPED_2D *vert,
+            das_ObjPosData *vert,
             vec2<deng_vec_t> child_pos
         );
 
@@ -123,7 +123,7 @@ namespace dengMath {
          * vert must be a pointer to valid array with at least 4 members
          */
         static vec2<deng_vec_t> findRelPosition (
-            VERT_UNMAPPED_2D *vert,
+            das_ObjPosData *vert,
             vec2<deng_vec_t> abs_pos
         );
 

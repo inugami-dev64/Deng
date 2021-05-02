@@ -78,7 +78,6 @@ function libdeng.build(build_static)
             "src/data/*.c",
             "src/deng/**.cpp",
             "src/deng/**.c",
-            "src/deng/vulkan/vulkan_handler.c",
             "src/math/camera_mat.cpp",
             "src/math/conversion.cpp",
             "src/math/projection_mat.cpp",

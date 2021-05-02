@@ -186,6 +186,12 @@ namespace deng {
          * Get the bare camera view matrix
          */
         dengMath::mat4<deng_vec_t> getViewMat();
+
+        
+        /*
+         * Returns true if camera has perspective view
+         */
+        deng_bool_t isPerspective();
     };
 }
 

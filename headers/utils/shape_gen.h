@@ -72,6 +72,7 @@
 
     #include <common/base_types.h>
     #include <common/err_def.h>
+    #include <common/uuid.h>
     #include <data/assets.h>
     #include <math/deng_math.h>
 #endif
@@ -85,7 +86,7 @@ namespace dengUtils {
     /* Add borders around the shape */
     struct BorderGenerator {
         static void generateBorders (
-            std::vector<VERT_UNMAPPED_2D> &vert,
+            std::vector<das_ObjPosData2D> &vert,
             deng_bool_t new_vert,
             deng_ui64_t vert_offset,
             std::vector<deng_ui32_t> &indices,
@@ -100,70 +101,46 @@ namespace dengUtils {
     /* 2D asset construction */ 
     struct AssetMaker2D {
         static das_Asset makeUnmappedAsset (
-            const char *asset_uuid,
-            const char *asset_name,
-            std::vector<VERT_UNMAPPED_2D> &vert,
-            std::vector<deng_ui32_t> &indices
+            std::vector<das_ObjPosData2D> &vert,
+            std::vector<deng_ui32_t> &indices,
+            const dengMath::vec4<deng_vec_t> &color,
+            deng_ui32_t hier
         );
 
         static das_Asset makeTexMappedAsset (
-            const char *asset_uuid,
-            const char *asset_name,
-            const char *tex_id,
-            std::vector<VERT_MAPPED_2D> &vert,
-            std::vector<deng_ui32_t> &indices
+            std::vector<das_ObjPosData2D> &vert,
+            std::vector<deng_ui32_t> &indices,
+            deng_ui32_t hier
         );
     };
 
 
-    /* Collection of methods for generating rectangles */
+    /* 
+     * Collection of methods for generating rectangles 
+     */
     class RectangleGenerator : private BorderGenerator, AssetMaker2D {
     private:
         dengMath::vec2<deng_ui32_t> m_draw_bounds;
 
     public:
         RectangleGenerator(const dengMath::vec2<deng_ui32_t> &draw_bounds);
-        static void generateUnmappedAbsRec (
+        static void generateAbsRec (
             const dengMath::vec2<deng_vec_t> &pos,
             const dengMath::vec2<deng_vec_t> &size,
             const dengMath::vec2<deng_vec_t> &origin,
-            const dengMath::vec4<deng_vec_t> &color,
-            deng_ui32_t hier_level,
-            std::vector<VERT_UNMAPPED_2D> &vert   
+            std::vector<das_ObjPosData2D> &vert   
         );
 
-        static void generateUnmappedRelRec (
+        static void generateRelRec (
             const dengMath::vec2<deng_vec_t> &pos,
             dengMath::vec2<deng_vec_t> size,
             deng_bool_t is_abs_size,
             const dengMath::vec2<deng_vec_t> &origin,
-            VERT_UNMAPPED_2D *outer_rec,
-            const dengMath::vec4<deng_vec_t> &color,
-            deng_ui32_t hier_level,
-            std::vector<VERT_UNMAPPED_2D> &vert
-        );
-
-        static void generateMappedAbsRec (
-            const dengMath::vec2<deng_vec_t> &pos,
-            const dengMath::vec2<deng_vec_t> &size,
-            const dengMath::vec2<deng_vec_t> &origin,
-            deng_ui32_t hier_level,
-            std::vector<VERT_MAPPED_2D> &vert
-        );
-
-        static void generateMappedRelRec (
-            const dengMath::vec2<deng_vec_t> &pos,
-            dengMath::vec2<deng_vec_t> size,
-            deng_bool_t is_abs_size,
-            const dengMath::vec2<deng_vec_t> &origin,
-            VERT_UNMAPPED_2D *outer_rec,
-            deng_ui32_t hier_level,
-            std::vector<VERT_MAPPED_2D> &vert
+            das_ObjPosData2D *outer_rec,
+            std::vector<das_ObjPosData2D> &vert
         );
 
         das_Asset makeUnmappedAbsRecAsset (
-            const char *asset_uuid,
-            const char *asset_name,
             const dengMath::vec2<deng_vec_t> &pos,
             const dengMath::vec2<deng_vec_t> &size,
             const dengMath::vec2<deng_vec_t> &origin,
@@ -174,40 +151,32 @@ namespace dengUtils {
         );
 
         das_Asset makeMappedAbsRecAsset (
-            const char *asset_uuid,
-            const char *asset_name,
-            const char *tex_id,
             const dengMath::vec2<deng_vec_t> &pos,
             const dengMath::vec2<deng_vec_t> &size,
-            deng_ui32_t hier_level,
-            const dengMath::vec2<deng_vec_t> &origin
+            const dengMath::vec2<deng_vec_t> &origin,
+            deng_ui32_t hier_level
         );
 
         das_Asset makeUnmappedRelRecAsset (
-            const char *asset_uuid,
-            const char *asset_name,
             const dengMath::vec2<deng_vec_t> &pos,
             const dengMath::vec2<deng_vec_t> &size,
             deng_bool_t is_abs_size,
             const dengMath::vec2<deng_vec_t> &origin,
             const dengMath::vec4<deng_vec_t> &color,
-            VERT_UNMAPPED_2D *outer_rec,
+            das_ObjPosData2D *outer_rec,
             deng_px_t border_width,
             deng_ui32_t hier_level,
             const dengMath::vec4<deng_vec_t> &border_color
         );
 
         das_Asset makeMappedRelRecAsset (
-            const char *asset_uuid,
-            const char *asset_name,
-            const char *tex_id,
             const dengMath::vec2<deng_vec_t> &pos,
             const dengMath::vec2<deng_vec_t> &size,
             deng_bool_t is_abs_size,
             const dengMath::vec2<deng_vec_t> &origin,
             const dengMath::vec4<deng_vec_t> &color,
             deng_ui32_t hier_level,
-            VERT_UNMAPPED_2D *outer_rec
+            das_ObjPosData2D *outer_rec
         );
     };
 
@@ -219,7 +188,7 @@ namespace dengUtils {
     public:
         TriangleGenerator(const dengMath::vec2<deng_ui32_t> &draw_bounds);
         static void generateAbsTriangle (
-            std::vector<VERT_UNMAPPED_2D> &vert,
+            std::vector<das_ObjPosData2D> &vert,
             const dengMath::vec2<deng_vec_t> &tri_rec_pos,
             const dengMath::vec2<deng_vec_t> &tri_rec_size,
             const dengMath::vec2<deng_vec_t> &tri_rec_origin,
@@ -229,8 +198,8 @@ namespace dengUtils {
         );
 
         static void generateRelTriangle (
-            std::vector<VERT_UNMAPPED_2D> &vert,
-            VERT_UNMAPPED_2D *outer_rec,  
+            std::vector<das_ObjPosData2D> &vert,
+            das_ObjPosData2D *outer_rec,  
             dengMath::vec2<deng_vec_t> tri_rec_pos,
             dengMath::vec2<deng_vec_t> tri_rec_size,
             const dengMath::vec2<deng_vec_t> &tri_rec_origin,
@@ -241,8 +210,6 @@ namespace dengUtils {
         );
 
         das_Asset makeAbsTriangleAsset (
-            const char *asset_uuid,
-            const char *asset_name,
             const dengMath::vec2<deng_vec_t> &tri_rec_pos,
             const dengMath::vec2<deng_vec_t> &tri_rec_size,
             const dengMath::vec2<deng_vec_t> &tri_rec_origin,
@@ -254,9 +221,7 @@ namespace dengUtils {
         );
 
         das_Asset makeRelTriangleAsset (
-            const char *asset_uuid,
-            const char *asset_name,
-            VERT_UNMAPPED_2D *outer_rec,
+            das_ObjPosData2D *outer_rec,
             const dengMath::vec2<deng_vec_t> &tri_rec_pos,
             const dengMath::vec2<deng_vec_t> &tri_rec_size,
             const dengMath::vec2<deng_vec_t> &tri_rec_origin,
@@ -278,7 +243,7 @@ namespace dengUtils {
     public:
         CircleGenerator(const dengMath::vec2<deng_ui32_t> &draw_bounds);
         static void generateAbsCircle (
-            std::vector<VERT_UNMAPPED_2D> &vert,
+            std::vector<das_ObjPosData2D> &vert,
             std::vector<deng_ui32_t> &indices,
             const dengMath::vec2<deng_vec_t> &pos,
             deng_vec_t radius,
@@ -287,18 +252,16 @@ namespace dengUtils {
         );
 
         static void generateRelCircle (
-            std::vector<VERT_UNMAPPED_2D> &vert,
+            std::vector<das_ObjPosData2D> &vert,
             std::vector<deng_ui32_t> &indices,
             dengMath::vec2<deng_vec_t> pos,
             deng_vec_t radius,
             const dengMath::vec4<deng_vec_t> &color,
             deng_ui32_t hier_level,
-            VERT_UNMAPPED_2D *outer_rec
+            das_ObjPosData2D *outer_rec
         );
 
         das_Asset makeAbsCircleAsset (
-            const char *asset_uuid,
-            const char *asset_name,
             const dengMath::vec2<deng_vec_t> &pos,
             deng_vec_t radius,
             const dengMath::vec4<deng_vec_t> &color,
@@ -308,12 +271,10 @@ namespace dengUtils {
         );
 
         das_Asset makeRelCircleAsset (
-            const char *asset_uuid,
-            const char *asset_name,
             const dengMath::vec2<deng_vec_t> &pos,
             deng_vec_t radius,
             const dengMath::vec4<deng_vec_t> &color,
-            VERT_UNMAPPED_2D *outer_rec,
+            das_ObjPosData2D *outer_rec,
             deng_px_t border_width,
             deng_ui32_t hier_level,
             const dengMath::vec4<deng_vec_t> &border_color

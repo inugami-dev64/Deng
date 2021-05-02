@@ -78,7 +78,7 @@
 
 
 #include <deng/surface/surface_window.h>
-#include <deng/vulkan/vulkan_surface.h>
+#include <deng/vulkan/surface.h>
 
 
 namespace deng {   

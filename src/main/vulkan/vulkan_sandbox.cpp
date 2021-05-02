@@ -60,7 +60,7 @@
  */ 
 
 
-#define __VULKAN_SANDBOX_CPP
+#define __SANDBOX_CPP
 #include <../src/main/vulkan/vulkan_sandbox.h>
 
 extern deng::__SharedMouseData __ext_md;

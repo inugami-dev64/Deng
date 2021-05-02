@@ -78,10 +78,16 @@ extern "C" {
     #include <data/assets.h>
     #include <data/das_file.h>
     #include <data/das_check.h>
+    #include <data/das_runtime.h>
     
     /**********************************************/
     /********** Header reading functions **********/
     /**********************************************/
+
+    /*
+     * Read generic of data from __sbuf with bounds checking
+     */
+    void __das_DataRead(void *buf, size_t chunk_size, size_t n, char *file_name);
 
     /*
      * Read asset information from INFO_HDR
@@ -101,7 +107,7 @@ extern "C" {
     /*
      * Read meta information contained between BEG_HDR and END_HDR
      */
-    void __das_ReadMeta();
+    void __das_ReadMeta(char *file_name);
 
 
     /*
@@ -109,6 +115,16 @@ extern "C" {
      */
     void __das_ReadVERT_HDR (
         das_VERT_HDR *out_hdr,
+        char *file_name
+    );
+
+    
+    /*
+     * Read information about one vertex element header type
+     */
+    void __das_ReadGenVertHdr (
+        __das_VertTemplate *out_hdr,
+        char *hdr_name,
         char *file_name
     );
 
@@ -142,15 +158,6 @@ extern "C" {
     /******** Vertex copying functions *********/
     /*******************************************/
 
-    /*
-     * Allocate memory for vertices
-     */
-    static void __das_AllocVertMem (
-        das_Asset *p_asset,
-        das_AssetMode src_mode,
-        deng_bool_t *p_skip_tex
-    );
-
 
     /*
      * Copy asset vertices from buffer to out_vert
@@ -159,7 +166,7 @@ extern "C" {
      */
     static void __das_CopyVertices (
         das_Asset *p_asset,
-        das_AssetMode src_mode,
+        das_AssetMode asset_mode,
         char *file_name
     );
 
@@ -168,7 +175,8 @@ extern "C" {
      * Copy all indices from buffer to p_out_ind
      */
     static void __das_CopyIndices (
-        deng_ui32_t **p_out_ind,
+        das_Asset *p_asset,
+        das_AssetMode dst_mode,
         deng_ui32_t ind_c,
         char *file_name
     );

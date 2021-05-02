@@ -70,6 +70,7 @@
     #include <common/base_types.h>
     #include <common/uuid.h>
     #include <data/assets.h>
+    #include <data/das_runtime.h>
     #include <math/deng_math.h>
 #endif
 
@@ -94,7 +95,7 @@ namespace dengUtils {
             deng_vec_t len,
             deng_ui32_t row_c
         );
-        das_Asset getGrid();
+        das_Asset &getGrid();
     };
 }
 

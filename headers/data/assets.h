@@ -63,20 +63,37 @@
 #ifndef ASSETS_H
 #define ASSETS_H
 
+/*
+ * Universal asset element offset container struct 
+ */
+typedef struct das_OffsetData {
+    // Vertices offsets
+    deng_ui64_t pos_offset;
+    deng_ui64_t tex_offset;
+    deng_ui64_t nor_offset;
+
+    // Indices buffer offset
+    deng_ui64_t ind_offset;
+
+    // Color uniform buffer offset
+    deng_ui64_t ubo_offset;
+} das_OffsetData;
+
+
 /* 
  * Base structures for storing model vertices data 
  */
-typedef struct das_ObjVertData {
+typedef struct das_ObjPosData {
     deng_vec_t vert_x;
     deng_vec_t vert_y;
     deng_vec_t vert_z;
-} das_ObjVertData;
+} das_ObjPosData;
 
 
-typedef struct das_ObjVertData2D {
+typedef struct das_ObjPosData2D {
     deng_vec_t vert_x;
     deng_vec_t vert_y;
-} das_ObjVertData2D;
+} das_ObjPosData2D;
 
 
 /* 
@@ -111,72 +128,32 @@ typedef struct das_ObjColorData {
 } das_ObjColorData;
 
 
-
-/*********************************************/
-/****** General shader vertices structs ******/
-/*********************************************/
-
-typedef struct VERT_MAPPED {
-    das_ObjVertData vert_data;
-    das_ObjTextureData tex_data;
-    das_ObjNormalData norm_data;
-} VERT_MAPPED;
-
-
-typedef struct VERT_UNMAPPED {
-    das_ObjVertData vert_data;
-    das_ObjNormalData norm_data;
-} VERT_UNMAPPED;
+// Dynamic vertices structures
+typedef struct __das_VertDynamic3D {
+    das_ObjPosData *pos;
+    size_t pn;
+    das_ObjTextureData *tex;
+    size_t tn;
+    das_ObjNormalData *norm;
+    size_t nn;
+} __das_VertDynamic3D;
 
 
-// 2D vertices data
-typedef struct VERT_MAPPED_2D {
-    das_ObjVertData2D vert_data;
-    das_ObjTextureData tex_data;
-    deng_ui32_t z_hier_level;
-} VERT_MAPPED_2D;
-
-
-typedef struct VERT_UNMAPPED_2D {
-    das_ObjVertData2D vert_data;
-    deng_ui32_t z_hier_level;
-} VERT_UNMAPPED_2D;
-
-
-/***************************************************************************************/
-/* These unnormalised vertex structures are meant to be used in DAS file loading.      */ 
-/* All other vertices that are used in shaders are all normalised except 2D vertices   */
-/***************************************************************************************/
-
-typedef struct __VERT_MAPPED_UNOR {
-    das_ObjVertData vert_data;
-    das_ObjTextureData tex_data;
-} __VERT_MAPPED_UNOR;
-
-
-typedef das_ObjVertData __VERT_UNMAPPED_UNOR;
+typedef struct __das_VertDynamic2D {
+    das_ObjPosData2D *pos;
+    size_t pn;
+    das_ObjTextureData *tex;
+    size_t tn;
+    deng_ui32_t hier;
+} __das_VertDynamic2D;
 
 
 /*
- * Universal vertex type pointer union
+ * Universal dynamic vertices container union for both 3D and 2D assets
  */
-typedef union VERT_UNI {
-    VERT_MAPPED *vmn;
-    __VERT_MAPPED_UNOR *vmu;
-    VERT_UNMAPPED *vun;
-    __VERT_UNMAPPED_UNOR *vuu;
-
-    VERT_MAPPED_2D *vm2d;
-    VERT_UNMAPPED_2D *vu2d;
-} VERT_UNI;
-
-
-/* 
- * Structure for universal heap allocated vertices data storage
- */
-typedef struct das_VertDynamic {
-    VERT_UNI uni_vert;
-    size_t n;
+typedef union das_VertDynamic {
+    __das_VertDynamic2D v2d;
+    __das_VertDynamic3D v3d;
 } das_VertDynamic;
 
 
@@ -184,7 +161,9 @@ typedef struct das_VertDynamic {
  * Structure for universal heap allocated indices data storage
  */
 typedef struct das_IndicesDynamic {
-    deng_ui32_t *indices;
+    deng_ui32_t *pos;
+    deng_ui32_t *tex;
+    deng_ui32_t *norm;
     size_t n;
 } das_IndicesDynamic;
 
@@ -232,6 +211,7 @@ typedef struct das_Asset {
     das_ObjColorData color;
     das_VertDynamic vertices;
     das_IndicesDynamic indices;
+    das_OffsetData offsets;
 } das_Asset;
 
 

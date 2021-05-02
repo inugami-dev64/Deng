@@ -410,20 +410,11 @@ void __das_LoadBMPImage(das_Texture *p_texture, const char *file_name) {
     __TGATypeHeader type_header = {0};
     __TGAColorMapHeader color_header = {0};
     __TGAInfoHeader info_header = {0};
-
     __file = fopen(file_name, "rb");
     if(!__file) {
         printf("%s%s%s\n", "Failed to load texture image file ", file_name, "!");
         return;
     }
-
-    printf(
-        "Header sizes: %ld %ld %ld\n", 
-        sizeof(__TGATypeHeader), 
-        sizeof(__TGAColorMapHeader), 
-        sizeof(__TGAInfoHeader)
-    );
-    printf("deng_ui8_t: %ld\n", sizeof(deng_ui8_t));
 
     res = fread(&type_header, __TGATypeHeader_Size, 1, __file);
 

@@ -99,38 +99,29 @@ static void __das_AssembleINFO_HDR(das_AssetMode dst_mode) {
  */
 static void __das_AssembleVERT_HDR(das_VertDynamic vert, das_AssetMode dst_mode) {
     das_VERT_HDR vert_hdr = {
-        .hdr_name = __DAS_VERTICES_HEADER_NAME,
-        .vert_c = (deng_ui32_t) vert.n,
-        .hdr_size = 0
+        .hdr_name = __DAS_INFO_HEADER_NAME_NN
     };
-
-    void *vert_data = NULL;
-    size_t vert_size = 0;
 
     // Check the vertices' destination mode for calculating the header size
     switch(dst_mode) {
-    case DAS_ASSET_MODE_3D_UNMAPPED:
-        vert_hdr.hdr_size = vert_hdr.vert_c * sizeof(VERT_UNMAPPED) + 16;
-        vert_data = vert.uni_vert.vun;
-        vert_size = vert_hdr.vert_c * sizeof(VERT_UNMAPPED);
-        break;
-
     case __DAS_ASSET_MODE_3D_UNMAPPED_UNOR:
-        vert_hdr.hdr_size = vert_hdr.vert_c * sizeof(__VERT_UNMAPPED_UNOR) + 16;
-        vert_data = vert.uni_vert.vun;
-        vert_size = vert_hdr.vert_c * sizeof(__VERT_UNMAPPED_UNOR);
+        vert_hdr.hdr_size = sizeof(__das_VertTemplate) + vert.v3d.pn * sizeof(das_ObjPosData) + 28;
         break;
 
-    case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-        vert_hdr.hdr_size = vert_hdr.vert_c * sizeof(VERT_MAPPED) + 16;
-        vert_data = vert.uni_vert.vun;
-        vert_size = vert_hdr.vert_c * sizeof(VERT_MAPPED);
+    case DAS_ASSET_MODE_3D_UNMAPPED:
+        // Store only vertex position data
+        vert_hdr.hdr_size = 2 * sizeof(__das_VertTemplate) + vert.v3d.pn * sizeof(das_ObjPosData) + 
+            vert.v3d.nn + sizeof(das_ObjNormalData) + 28;
         break;
 
     case __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR:
-        vert_hdr.hdr_size = vert_hdr.vert_c * sizeof(__VERT_MAPPED_UNOR) + 16;
-        vert_data = vert.uni_vert.vun;
-        vert_size = vert_hdr.vert_c * sizeof(__VERT_MAPPED_UNOR);
+        vert_hdr.hdr_size = 2 * sizeof(__das_VertTemplate) + vert.v3d.pn * (sizeof(das_ObjPosData) + 
+            vert.v3d.tn * sizeof(das_ObjTextureData)) + 28;
+        break;
+
+    case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
+        vert_hdr.hdr_size = 3 * sizeof(__das_VertTemplate) + vert.v3d.pn * sizeof(das_ObjPosData) + 
+            vert.v3d.tn * sizeof(das_ObjTextureData) + vert.v3d.nn * sizeof(das_ObjNormalData) + 28;
         break;
 
     default:
@@ -140,8 +131,82 @@ static void __das_AssembleVERT_HDR(das_VertDynamic vert, das_AssetMode dst_mode)
     // Write vertices header data into stream
     fwrite(&vert_hdr, sizeof(das_VERT_HDR), 1, __wfile);
 
-    // Write vertices data into stream
-    fwrite(vert_data, 1, vert_size, __wfile);
+    // Check which subheaders to build
+    __das_AssembleVPOS_HDR(&vert);
+    switch(dst_mode) {
+    case DAS_ASSET_MODE_3D_UNMAPPED:
+        __das_AssembleVNOR_HDR(&vert);
+        break;
+
+    case __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR:
+        __das_AssembleVTEX_HDR(&vert);
+        break;
+
+    case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
+        __das_AssembleVTEX_HDR(&vert);
+        __das_AssembleVNOR_HDR(&vert);
+        break;
+
+    default:
+        break;
+    }
+}
+
+
+/*
+ * Assemble vertex position subheader
+ * This function call assumes that __wfile is a valid pointer to a stream
+ */
+static void __das_AssembleVPOS_HDR(das_VertDynamic *p_vert) {
+    das_VPOS_HDR vpos_hdr = {
+        .hdr_name = __DAS_VERT_POSITION_HEADER_NAME_NN,
+        .vert_c = p_vert->v3d.pn,
+        .hdr_size = p_vert->v3d.pn * sizeof(das_ObjPosData) + 16
+    };
+
+    // Write the header beginning to stream
+    fwrite(&vpos_hdr, sizeof(das_VPOS_HDR), 1, __wfile);
+
+    // Write vertices data to the stream
+    fwrite(p_vert->v3d.pos, sizeof(das_ObjPosData), vpos_hdr.vert_c, __wfile);
+}
+
+
+/*
+ * Assemble texture position subheader
+ * This function call assumes that __wfile is a valid pointer to a stream
+ */
+static void __das_AssembleVTEX_HDR(das_VertDynamic *p_vert) { 
+    das_VTEX_HDR vtex_hdr = {
+        .hdr_name = __DAS_TEX_POSITION_HEADER_NAME_NN,
+        .vert_c = p_vert->v3d.tn,
+        .hdr_size = p_vert->v3d.tn * sizeof(das_ObjTextureData) + 16
+    };
+    
+    // Write the header beginning to stream
+    fwrite(&vtex_hdr, sizeof(das_VTEX_HDR), 1, __wfile);
+
+    // Write vertices data to the stream
+    fwrite(p_vert->v3d.tex, sizeof(das_ObjTextureData), vtex_hdr.vert_c, __wfile);
+}
+
+
+/*
+ * Assemble texture position subheader
+ * This function call assumes that __wfile is a valid pointer to a stream
+ */
+static void __das_AssembleVNOR_HDR(das_VertDynamic *p_vert) { 
+    das_VTEX_HDR vnor_hdr = {
+        .hdr_name = __DAS_NORM_POSITION_HEADER_NAME_NN,
+        .vert_c = p_vert->v3d.nn,
+        .hdr_size = p_vert->v3d.nn * sizeof(das_ObjNormalData) + 16
+    };
+    
+    // Write the header beginning to stream
+    fwrite(&vnor_hdr, sizeof(das_VNOR_HDR), 1, __wfile);
+
+    // Write vertices data to the stream
+    fwrite(p_vert->v3d.norm, sizeof(das_ObjNormalData), vnor_hdr.vert_c, __wfile);
 }
 
     
@@ -170,7 +235,8 @@ static void __das_AssembleMETA_HDR(char *meta_data) {
  * Assemble indices header of the asset
  * This function call assumes that __wfile is a valid pointer to a stream
  */
-static void __das_AssembleINDX_HDR(das_IndicesDynamic inds) {
+static void __das_AssembleINDX_HDR(das_IndicesDynamic inds, das_AssetMode am) {
+    // 
     das_INDX_HDR indx_hdr = {
         .hdr_name = __DAS_INDICES_HEADER_NAME,
         .hdr_size = (deng_ui32_t) (16 + inds.n * sizeof(deng_ui32_t)),
@@ -180,8 +246,18 @@ static void __das_AssembleINDX_HDR(das_IndicesDynamic inds) {
     // Write the header into the stream
     fwrite(&indx_hdr, sizeof(das_INDX_HDR), 1, __wfile);
 
-    // Write indices array into the stream
-    fwrite(inds.indices, sizeof(deng_ui32_t), inds.n, __wfile);
+    // Write position indices array into the stream
+    fwrite(inds.pos, sizeof(deng_ui32_t), inds.n, __wfile);
+
+    // Write position indices array into the stream
+    if(am == __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR || 
+       am == DAS_ASSET_MODE_3D_TEXTURE_MAPPED)
+        fwrite(inds.tex, sizeof(deng_ui32_t), inds.n, __wfile);
+
+    // Write position indices array into the stream
+    if(am == DAS_ASSET_MODE_3D_UNMAPPED ||
+       am == DAS_ASSET_MODE_3D_TEXTURE_MAPPED)
+        fwrite(inds.norm, sizeof(deng_ui32_t), inds.n, __wfile);
 }
 
 
@@ -228,7 +304,7 @@ void das_StaticAssemble (
     __das_AssembleVERT_HDR(p_asset->vertices, p_asset->asset_mode);
 
     // Assemble INDX_HDR
-    __das_AssembleINDX_HDR(p_asset->indices);
+    __das_AssembleINDX_HDR(p_asset->indices, p_asset->asset_mode);
     __das_CloseFileStream();
 }
 

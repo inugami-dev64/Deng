@@ -95,6 +95,27 @@ extern "C" {
      */
     static void __das_AssembleVERT_HDR(das_VertDynamic vert, das_AssetMode dst_mode);
 
+
+    /*
+     * Assemble vertex position subheader
+     * This function call assumes that __wfile is a valid pointer to a stream
+     */
+    static void __das_AssembleVPOS_HDR(das_VertDynamic *p_vert);
+
+
+    /*
+     * Assemble texture position subheader
+     * This function call assumes that __wfile is a valid pointer to a stream
+     */
+    static void __das_AssembleVTEX_HDR(das_VertDynamic *p_vert);
+
+
+    /*
+     * Assemble normal position subheader
+     * This function call assumes that __wfile is a valid pointer to a stream
+     */
+    static void __das_AssembleVNOR_HDR(das_VertDynamic *p_vert);
+
         
     /*
      * Assemble META_HDR with additional meta data 
@@ -107,7 +128,7 @@ extern "C" {
      * Assemble indices header of the asset
      * This function call assumes that __wfile is a valid pointer to a stream
      */
-    static void __das_AssembleINDX_HDR(das_IndicesDynamic inds);
+    static void __das_AssembleINDX_HDR(das_IndicesDynamic inds, das_AssetMode am);
 
 
     /*
@@ -126,7 +147,7 @@ extern "C" {
 
 
 /*
- * Assemble static DENG asset from das_Asset instance
+ * Assemble static DENG asset file from das_Asset instance
  */
 void das_StaticAssemble (
     das_Asset *p_asset,

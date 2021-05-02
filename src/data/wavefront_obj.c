@@ -137,7 +137,7 @@ void __das_ReallocCheck (
         );
 
         if(!tmp) MEM_ERR(err_msg);
-
+        
         (*p_data) = tmp;
     }
 }
@@ -218,22 +218,17 @@ deng_ui32_t __das_ReadIntValue (
  * Parse one face block and return found indices
  * p_end is the pointer to the end of the block
  */
-IndexSet __das_ParseIndBlock (
-    char *beg,
-    char *nl,
-    char **p_end
-) {
-    IndexSet is = {0};
+__das_IndexBlock __das_ParseIndBlock(char *beg, char *nl, char **p_end) {
+    __das_IndexBlock is = {0};
 
-    // Skip whitespaces from beginning
+    // Skip whitespaces from the beginning
     while(beg < nl) {
         if(*beg <= '9' && *beg >= '0')
             break;
-
         beg++;
     }
 
-    // Skip whitspaces and tabs
+    // Find the end of the index block
     deng_bool_t found_end = false;
     *p_end = beg;
     while((*p_end) < nl) {
@@ -254,18 +249,20 @@ IndexSet __das_ParseIndBlock (
     // Find separating slashes
     char *sl1 = strchr(ptr, '/');
     char *sl2 = sl1 ? strchr(sl1 + 1, '/') : NULL;
-    
+
     // Find model vertex index
-    is.vert = __das_ReadIntValue(ptr, nl, &end);
+    is.pos = __das_ReadIntValue(ptr, nl, &end);
     if(!sl1 || sl1 + 1 >= *p_end)
         return is;
 
     // Find texture index
-    ptr = sl1;
-    is.tex = __das_ReadIntValue(ptr, nl, &end);
+    if(sl2 - sl1 != 1) {
+        ptr = sl1;
+        is.tex = __das_ReadIntValue(ptr, nl, &end);
+    }
 
-    if(!sl2 || sl2 >= *p_end)
-        return is;
+    // Return if no second slash was found
+    if(!sl2) return is;
 
     // Find vertex normal index
     ptr = sl2;
@@ -279,103 +276,92 @@ IndexSet __das_ParseIndBlock (
 /*
  * Parse all data about vertices to their appropriate structures
  */
-void __das_ParseVertices (
-    das_ObjVertData **pp_vd,
-    size_t *p_vd_c,
-    das_ObjTextureData **pp_td,
-    size_t *p_td_c,
-    das_ObjNormalData **pp_nd,
-    size_t *p_nd_c
-) {
-    size_t vd_cap = BUFFER_CAP(das_ObjVertData);
+void __das_ParseVertices(das_VertDynamic *p_vert) {
+    // Initialise asset vertex type capacities and allocate memory accordingly
+    size_t vd_cap = BUFFER_CAP(das_ObjPosData);
     size_t td_cap = BUFFER_CAP(das_ObjTextureData);
     size_t nd_cap = BUFFER_CAP(das_ObjNormalData);
 
-    (*pp_vd) = (das_ObjVertData*) malloc(vd_cap);
-    (*pp_td) = (das_ObjTextureData*) malloc(td_cap);
-    (*pp_nd) = (das_ObjNormalData*) malloc(nd_cap);
+    p_vert->v3d.pos = (das_ObjPosData*) malloc(vd_cap);
+    p_vert->v3d.tex = (das_ObjTextureData*) malloc(td_cap);
+    p_vert->v3d.norm = (das_ObjNormalData*) malloc(nd_cap);
 
-    (*p_vd_c) = 0;
-    (*p_td_c) = 0;
-    (*p_nd_c) = 0;
+    p_vert->v3d.pn = 0;
+    p_vert->v3d.tn = 0;
+    p_vert->v3d.nn = 0;
 
     char *ptr = __buffer;
     char *end = __buffer;
     char *nl = __buffer;
     char *max = __buffer + strlen(__buffer);
     size_t li = 0;
-    size_t vdi = 0, tdi = 0, ndi = 0;
+    size_t pdi = 0, tdi = 0, ndi = 0;
 
 
     // Start searching for vertices marked as 'v', 'vt' or 'vn'
     while(ptr && ptr < max && (ptr = strchr(ptr, (int) 'v'))) {
         // Verify vertex line correctness
-        nl = !strchr(ptr, 0x0a) ? max : strchr(ptr, 0x0a);
+        nl = strchr(ptr, 0x0a);
+        nl = !nl ? max : nl;
         li++;
-        char *vptr = ptr;
-        deng_bool_t is_vert = true;
+        char *cptr = ptr + 2 > nl ? nl : ptr + 2;
+
+        // Skip the whitespaces for the cptr
+        while(cptr < nl && (*cptr == 0x20 || *cptr == 0x09))
+            cptr++;
 
         // Check if all conditions for vertex data declaration are satisfied
-        while(vptr < nl) {
-            if (
-                (*vptr > '9' || *vptr <= '0') && 
-                *vptr != '-' &&
-                *vptr != '.' &&
-                *vptr != 'v' && 
-                *vptr != 't' && 
-                *vptr != 'n' && 
-                *vptr != 0x20 && 
-                *vptr != 0x09
-            ) {
-                is_vert = false;
+        while(cptr < nl) {
+            deng_bool_t is_num = *cptr <= '9' && *cptr >= '0';
+
+            // Basically this means that the sign cannot be the last element. Also this check verifies 
+            // if that the previous character is either space or a tab and the next character some number.
+            deng_bool_t is_sign = cptr != nl - 1 && (*cptr == '-' || *cptr == '+') && (*(cptr - 1) == 0x20 || 
+                *(cptr - 1) == 0x09) && (*(cptr + 1) <= '9' && *(cptr + 1) >= '0');
+
+            // Period cannot be the last element before newline, also previous and next characters 
+            // have to be ASCII numbers
+            deng_bool_t is_period = cptr != nl - 1 && *cptr == '.' && *(cptr - 1) <= '9' && *(cptr + 1) >= '0';
+
+            // If not a single check was successful then the vertex declaration syntax is invalid
+            if(!is_num && !is_sign && !is_period && *cptr != 0x20 && *cptr != 0x09) {
+                deng_ui32_t line = cm_FindLineCount(__buffer, cptr - __buffer);
+                char msg_buf[128] = { 0 };
+                sprintf(msg_buf, "Invalid symbol '%c' on vertex declaration", *cptr);
+                __DAS_WAVEFRONT_SYNTAX_ERROR(line, msg_buf);
                 break;
             }
 
-            vptr++;
+            cptr++;
         }
 
-        if(is_vert) {
-            ptr++;
-            continue;
-        }
-
-        // Check for position vertex
-        if(ptr + 1 < max && *(ptr + 1) == 0x20) {
+        // Check if the vertex block is a position vertex
+        if(ptr + 1 < max && (*(ptr + 1) == 0x20 || *(ptr + 1) == 0x09)) {
             // Skip whitespaces and tabs
             ptr++;
             // Check if memory needs to be reallocated
-            __das_ReallocCheck (
-                (void**) pp_vd, 
-                &vd_cap, 
-                vdi + 1, 
-                sizeof(das_ObjVertData),
-                "vertex data buffer"
-            );
+            __das_ReallocCheck((void**) &p_vert->v3d.pos, &vd_cap, pdi + 1, 
+                sizeof(das_ObjPosData), "vertex data buffer");
 
-            (*pp_vd)[vdi].vert_x = __das_ReadFloatValue(ptr, max, &end);
+            p_vert->v3d.pos[p_vert->v3d.pn].vert_x = __das_ReadFloatValue(ptr, max, &end);
             ptr = end;
-            (*pp_vd)[vdi].vert_y = __das_ReadFloatValue(ptr, max, &end);
+            p_vert->v3d.pos[p_vert->v3d.pn].vert_y = __das_ReadFloatValue(ptr, max, &end);
             ptr = end;
-            (*pp_vd)[vdi].vert_z = __das_ReadFloatValue(ptr, max, &end);
+            p_vert->v3d.pos[p_vert->v3d.pn].vert_z = __das_ReadFloatValue(ptr, max, &end);
             ptr = end;
-            vdi++;
+            pdi++;
         }
 
         else if(ptr + 2 < max && *(ptr + 1) == 't' && *(ptr + 2) == 0x20) {
             // Skip whitespaces and tabs
             ptr++;
             // Check if memory needs to be reallocated
-            __das_ReallocCheck (
-                (void**) pp_td, 
-                &td_cap, 
-                tdi + 1, 
-                sizeof(das_ObjTextureData),
-                "texture vertex data buffer"
-            );
+            __das_ReallocCheck((void**) &p_vert->v3d.tex, &td_cap, tdi + 1, 
+                sizeof(das_ObjTextureData), "texture vertex data buffer");
 
-            (*pp_td)[tdi].tex_x = __das_ReadFloatValue(ptr, max, &end);
+            p_vert->v3d.tex[p_vert->v3d.tn].tex_x = __das_ReadFloatValue(ptr, max, &end);
             ptr = end;
-            (*pp_td)[tdi].tex_y = __das_ReadFloatValue(ptr, max, &end);
+            p_vert->v3d.tex[p_vert->v3d.tn].tex_y = __das_ReadFloatValue(ptr, max, &end);
             ptr = end;
             tdi++;
         }
@@ -384,19 +370,14 @@ void __das_ParseVertices (
             // Skip whitespaces and tabs
             ptr++;
             // Check if memory needs to be reallocated
-            __das_ReallocCheck (
-                (void**) pp_nd, 
-                &nd_cap, 
-                ndi + 1, 
-                sizeof(das_ObjNormalData),
-                "vertex normals data buffer"
-            );
+            __das_ReallocCheck((void**) &p_vert->v3d.norm, &nd_cap, ndi + 1, 
+                sizeof(das_ObjNormalData), "vertex normals data buffer");
 
-            (*pp_nd)[ndi].nor_x = __das_ReadFloatValue(ptr, max, &end);
+            p_vert->v3d.norm[p_vert->v3d.nn].nor_x = __das_ReadFloatValue(ptr, max, &end);
             ptr = end;
-            (*pp_nd)[ndi].nor_y = __das_ReadFloatValue(ptr, max, &end);
+            p_vert->v3d.norm[p_vert->v3d.nn].nor_y = __das_ReadFloatValue(ptr, max, &end);
             ptr = end;
-            (*pp_nd)[ndi].nor_z = __das_ReadFloatValue(ptr, max, &end);
+            p_vert->v3d.norm[p_vert->v3d.nn].nor_z = __das_ReadFloatValue(ptr, max, &end);
             ptr = end;
             ndi++;
         }
@@ -404,26 +385,9 @@ void __das_ParseVertices (
         else ptr++;
     }
 
-    (*p_vd_c) = vdi;
-    (*p_td_c) = tdi;
-    (*p_nd_c) = ndi;
-
-    // LOG vertices into a file
-    char buf[128];
-    cm_OpenLogger("vert_log.txt");
-    for(size_t i = 0; i < (*p_nd_c); i++) {
-        memset(buf, 0, 128);
-        sprintf (
-            buf,
-            "vn %f %f %f",
-            (*pp_nd)[i].nor_x,
-            (*pp_nd)[i].nor_y,
-            (*pp_nd)[i].nor_z
-        );
-        cm_LogWrite(buf);
-    }
-
-    cm_CloseLogger();
+    p_vert->v3d.pn = pdi;
+    p_vert->v3d.tn = tdi;
+    p_vert->v3d.nn = ndi;
 }
 
 
@@ -431,276 +395,71 @@ void __das_ParseVertices (
  * Parse all data about indices to their appropriate structures
  */
 void __das_ParseFaces (
-    IndexSet **p_ind,
-    size_t *p_ind_c,
+    das_IndicesDynamic *p_ind,
     deng_bool_t read_tex_ind,
     deng_bool_t read_norm_ind
 ) {
+    // In wavefront obj format faces are stored like this:
     // f v1/vt1/vn1 v2/vt2/vt2 v3/vt3/vn3
+    // Or like this:
+    // f v1//vn1 v2//vn2 v3//vn3
+    // Or like this:
+    // f v1/vt1 v2/vt2 v3/vt3
     char *ptr = __buffer;
     char *nl = __buffer;
     char *max = __buffer + strlen(__buffer);
     char *end;
 
-    IndexSet is;
-    size_t ind_cap = BUFFER_CAP(IndexSet);
-    (*p_ind_c) = 0;
-    (*p_ind) = (IndexSet*) malloc(ind_cap); 
+    // Allocate memory for indices
+    size_t pos_ind_cap = BUFFER_CAP(deng_ui32_t);
+    size_t tex_ind_cap = BUFFER_CAP(deng_ui32_t);
+    size_t nor_ind_cap = BUFFER_CAP(deng_ui32_t);
 
+    p_ind->n = 0;
+    p_ind->pos = (deng_ui32_t*) calloc(pos_ind_cap, sizeof(deng_ui32_t)); 
+    p_ind->tex = (deng_ui32_t*) calloc(tex_ind_cap, sizeof(deng_ui32_t)); 
+    p_ind->norm = (deng_ui32_t*) calloc(nor_ind_cap, sizeof(deng_ui32_t)); 
+    __das_IndexBlock ib = { 0 };
+
+    // For each face parse it
     while(ptr && ptr < max && (ptr = strchr(ptr, (int) 'f'))) {
         if(ptr + 1 >= max || *(ptr + 1) != 0x20) {
             ptr++;
             continue;
         }
-
-        nl = strchr(ptr, 0x0a) ? strchr(ptr, 0x0a) : max;
         
+        nl = strchr(ptr, 0x0a);
+        nl = nl ? nl : max;
+        
+        // Parse every single face block
         while(ptr < nl) {
-            is = __das_ParseIndBlock(ptr, nl, &end);
+            // Parse the current index 
+            ib = __das_ParseIndBlock(ptr, nl, &end);
 
-            // Check if reallocation is needed
-            __das_ReallocCheck (
-                (void**) p_ind, 
-                &ind_cap, 
-                (*p_ind_c) + 1, 
-                sizeof(IndexSet),
-                "faces indices buffer"
-            );
+            // Check if reallocation is needed for any indices elements
+            __das_ReallocCheck((void**) &p_ind->pos, &pos_ind_cap, p_ind->n + 1, 
+                sizeof(deng_ui32_t), "position indices buffer");
+
+            __das_ReallocCheck((void**) &p_ind->tex, &tex_ind_cap, p_ind->n + 1, 
+                sizeof(deng_ui32_t), "texture indices buffer");
+
+            __das_ReallocCheck((void**) &p_ind->norm, &nor_ind_cap, p_ind->n + 1, 
+                sizeof(deng_ui32_t), "vertex normal indices buffer");
 
 
             // Verify that normals and texture indices are not read if not needed
-            if(!read_tex_ind)
-                is.tex = 0;
-            if(!read_norm_ind)
-                is.norm = 0;
+            ib.pos = 0;
+            ib.tex = 0;
+            ib.norm = 0;
 
-            (*p_ind_c)++;
-            (*p_ind)[(*p_ind_c) - 1] = is;
+            p_ind->n++;
+            p_ind->pos[p_ind->n - 1] = ib.pos;
+            p_ind->tex[p_ind->n - 1] = ib.tex;
+            p_ind->norm[p_ind->n - 1] = ib.norm;
             ptr = end;
 
         }
     }
-}
-
-
-/****************************/
-/****** Vertex merging ******/
-/****************************/
-
-
-/*
- * Merge multiple different vertices into one vertex
- */
-void __das_MergeVertices (
-    das_ObjVertData *vd,
-    size_t vd_c,
-    das_ObjTextureData *td,
-    size_t td_c,
-    das_ObjNormalData *nd,
-    size_t nd_c,
-    IndexSet *is,
-    size_t ind_c,
-    deng_ui32_t **p_out_is,
-    das_VertDynamic *p_out_vdy,
-    das_AssetMode asset_mode
-) {
-    // Allocate memory for output indices
-    deng_ui32_t max_ind = 0;
-    (*p_out_is) = (deng_ui32_t*) calloc (
-        ind_c,
-        sizeof(deng_ui32_t)
-    );
-
-    // Allocate memory for dynamic vertices
-    switch(asset_mode)
-    {
-    case __DAS_ASSET_MODE_3D_UNMAPPED_UNOR:
-        // Allocate memory and copy model vertices over as well as indices 
-        // Nothing else to do here
-        p_out_vdy->uni_vert.vuu = (__VERT_UNMAPPED_UNOR*) calloc (
-            vd_c,
-            sizeof(__VERT_UNMAPPED_UNOR)
-        );
-
-        for(size_t i = 0; i < vd_c; i++)
-            p_out_vdy->uni_vert.vuu[i]= vd[i];
-
-        for(size_t i = 0; i < ind_c; i++)
-            (*p_out_is)[i] = is[i].vert;
-
-        p_out_vdy->n = vd_c;
-        return;
-
-    case DAS_ASSET_MODE_3D_UNMAPPED:
-        p_out_vdy->uni_vert.vun = (VERT_UNMAPPED*) calloc (
-            ind_c,
-            sizeof(VERT_UNMAPPED)
-        );
-        break;
-
-    case __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR:
-        p_out_vdy->uni_vert.vmu = (__VERT_MAPPED_UNOR*) calloc (
-            ind_c,
-            sizeof(__VERT_MAPPED_UNOR)
-        );
-        break;
-
-    case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-        p_out_vdy->uni_vert.vmn = (VERT_MAPPED*) calloc (
-            ind_c,
-            sizeof(VERT_MAPPED)
-        );
-        break;
-
-    default:
-        RUN_ERR("__das_MergeVertices", "invalid asset mode");
-        break;
-    }
-
-
-    // Make hashmap twice as big than indices to avoid collisions
-    Hashmap hm;
-    newHashmap(&hm, 2 * ind_c);
-
-    deng_ui32_t *p_ind;
-    VERT_UNMAPPED vun = {0};
-    __VERT_MAPPED_UNOR vmu = {0};
-    VERT_MAPPED vmn = {0};
-
-    for(size_t i = 0; i < ind_c; i++) {
-        switch(asset_mode) 
-        {
-        case DAS_ASSET_MODE_3D_UNMAPPED:
-            vun.vert_data = vd[is[i].vert];
-            vun.norm_data = nd[is[i].norm];
-
-            // Check if index exists in new_ind array
-            if ( 
-                (p_ind = (deng_ui32_t*) findValue ( 
-                    &hm, 
-                    &vun, 
-                    sizeof(VERT_UNMAPPED)
-                ))
-            ) (*p_out_is)[i] = *p_ind;
-
-            // If it doesn't then push it to hashmap
-            else {
-                (*p_out_is)[i] = max_ind;
-                p_out_vdy->n++;
-                p_out_vdy->uni_vert.vun[max_ind] = vun;
-                pushToHashmap (
-                    &hm,
-                    &vun,
-                    sizeof(VERT_UNMAPPED),
-                    (*p_out_is) + i
-                );
-                max_ind++;
-            }
-            break;
-
-        case __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR:
-            vmu.vert_data = vd[is[i].vert];
-            vmu.tex_data = td[is[i].tex];
-
-            // Check if index exists in new_ind array
-            if((p_ind = (deng_ui32_t*) findValue(&hm, &vmu, sizeof(__VERT_MAPPED_UNOR)))) 
-                (*p_out_is)[i] = *p_ind;
-
-            // If it doesn't then push it to hashmap
-            else {
-                (*p_out_is)[i] = max_ind;
-                p_out_vdy->n++;
-                p_out_vdy->uni_vert.vmu[max_ind] = vmu;
-                pushToHashmap (
-                    &hm,
-                    &vmu,
-                    sizeof(__VERT_MAPPED_UNOR),
-                    (*p_out_is) + i
-                );
-                max_ind++;
-            }
-            break;
-
-        case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-            vmn.vert_data = vd[is[i].vert];
-            vmn.norm_data = nd[is[i].norm];
-            vmn.tex_data = td[is[i].tex];
-
-            // Check if index exists in new_ind array
-            if ( 
-                (p_ind = (deng_ui32_t*) findValue ( 
-                    &hm, 
-                    &vmn, 
-                    sizeof(VERT_MAPPED)
-                ))
-            ) (*p_out_is)[i] = *p_ind;
-
-            // If it doesn't then push it to hashmap
-            else {
-                (*p_out_is)[i] = max_ind;
-                p_out_vdy->n++;
-                p_out_vdy->uni_vert.vmn[max_ind] = vmn;
-                pushToHashmap (
-                    &hm,
-                    &p_out_vdy->uni_vert.vmn[max_ind],
-                    sizeof(VERT_MAPPED),
-                    (*p_out_is) + i
-                );
-                max_ind++;
-            }
-            break;
-
-        default:
-            break;
-        }
-    }
-
-    free(hm.map_data);
-}
-
-
-/*
- * Create a valid asset instance with sorted indices
- */
-void __das_AssembleAsset (
-    das_Asset *p_asset,
-    IndexSet *inds,
-    size_t ind_c,
-    das_ObjVertData *vd,
-    size_t vd_c,
-    das_ObjTextureData *td,
-    size_t td_c,
-    das_ObjNormalData *nd,
-    size_t nd_c
-) {
-    // Reduce indices size by one
-    for(size_t i = 0; i < ind_c; i++) {
-        inds[i].vert--;
-        inds[i].norm--;
-        inds[i].tex--;
-    }
-
-    p_asset->indices.n = ind_c;
-    __das_MergeVertices (
-        vd,
-        vd_c, 
-        td, 
-        td_c, 
-        nd, 
-        nd_c, 
-        inds, 
-        ind_c, 
-        &p_asset->indices.indices,
-        &p_asset->vertices,
-        p_asset->asset_mode
-    );
-
-
-    // Free all memory resources used
-    if(inds) free(inds);
-    if(vd) free(vd);
-    if(td) free(td);
-    if(nd) free(nd);
 }
 
 
@@ -716,79 +475,46 @@ void das_ParseWavefrontOBJ (
     __das_ReadToBuffer(file_name);
     __das_Uncomment();
     p_asset->asset_mode = am;
-    das_ObjVertData *vd = NULL;   
-    size_t vd_c = 0;
-    das_ObjTextureData *td = NULL;
-    size_t td_c = 0;
-    das_ObjNormalData *nd = NULL;
-    size_t nd_c = 0;
 
     // Parse all vertices in OBJ file
-    __das_ParseVertices (
-        &vd,
-        &vd_c,
-        &td,
-        &td_c,
-        &nd,
-        &nd_c
-    );
-
-    IndexSet *ind = NULL;
-    size_t ind_c = 0;
+    __das_ParseVertices(&p_asset->vertices);
 
     // Parse faces and recieve indices
-    switch(am)
-    {
+    switch(am) {
     case __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR:
-        __das_ParseFaces (
-            &ind,
-            &ind_c, 
-            true,
-            false
-        );
+        __das_ParseFaces(&p_asset->indices, true, false);
         break;
     
     case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-        __das_ParseFaces (
-            &ind,
-            &ind_c,
-            true,
-            true
-        );
+        __das_ParseFaces(&p_asset->indices, true, true);
         break;
 
     case __DAS_ASSET_MODE_3D_UNMAPPED_UNOR:
-        __das_ParseFaces (
-            &ind,
-            &ind_c,
-            false,
-            false
-        );
+        __das_ParseFaces(&p_asset->indices, false, false);
         break;
 
     case DAS_ASSET_MODE_3D_UNMAPPED:
-        __das_ParseFaces (
-            &ind,
-            &ind_c,
-            false,
-            true
-        );
+        __das_ParseFaces(&p_asset->indices, false, true);
         break;
 
     default:
         break;
     }
 
-    __das_AssembleAsset (
-        p_asset,
-        ind,
-        ind_c,
-        vd,
-        vd_c,
-        td,
-        td_c,
-        nd,
-        nd_c
-    );
+    
+    // Check if vertex normals need to be generated
+    if(!p_asset->vertices.v3d.nn) 
+        das_MkAssetNormals(p_asset);
+
+    // Write all vertices into log file 
+    cm_OpenLogger("vert.log");
+    char buf[256] = {0};
+    for(size_t i = 0; i < p_asset->vertices.v3d.pn; i++) {
+        memset(buf, 0, 256);
+        sprintf(buf, "v %f %f %f", p_asset->vertices.v3d.pos[i].vert_x, 
+            p_asset->vertices.v3d.pos[i].vert_y, p_asset->vertices.v3d.pos[i].vert_z);
+        cm_LogWrite(buf);
+    }
+    cm_CloseLogger();
     __das_FreeBuffer();
 }

@@ -60,11 +60,11 @@
  */ 
 
 
-#ifndef __VULKAN_SANDBOX_H
-#define __VULKAN_SANDBOX_H
+#ifndef __SANDBOX_H
+#define __SANDBOX_H
 
 
-#ifdef __VULKAN_SANDBOX_CPP
+#ifdef __SANDBOX_CPP
     #include <vector>
 	#include <array>
     #include <thread>
@@ -86,20 +86,22 @@
     #include <utils/timer.h>
     #include <utils/font.h>
     #include <deng/camera.h>
-    #include <deng/vulkan/vulkan_sd.h>
-    #include <deng/vulkan/vulkan_qm.h>
-    #include <deng/vulkan/vulkan_resources.h>
+    #include <deng/vulkan/sd.h>
+    #include <deng/vulkan/qm.h>
+    #include <deng/vulkan/resources.h>
 
     #include <deng/lighting/light_srcs.h>
     #include <deng/registry/registry.h>
 
-    #include <deng/vulkan/vulkan_rend_infos.h>
-    #include <deng/vulkan/vulkan_ic.h>
-    #include <deng/vulkan/vulkan_scc.h>
-    #include <deng/vulkan/vulkan_desc_c.h>
-    #include <deng/vulkan/vulkan_dc.h>
-    #include <deng/vulkan/vulkan_ra.h>
-    #include <deng/vulkan/vulkan_renderer.h>
+    #include <deng/vulkan/rend_infos.h>
+    #include <deng/vulkan/ic.h>
+    #include <deng/vulkan/scc.h>
+    #include <deng/vulkan/desc_c.h>
+    #include <deng/vulkan/dc.h>
+    #include <deng/vulkan/tm.h>
+    #include <deng/vulkan/bm.h>
+    #include <deng/vulkan/rm.h>
+    #include <deng/vulkan/renderer.h>
     #include <deng/window.h>
     
 #endif

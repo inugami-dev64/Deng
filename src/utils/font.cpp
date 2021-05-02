@@ -222,10 +222,9 @@ namespace dengUtils {
 
     StringRasterizer::StringRasterizer (
         std::string custom_font_path, 
-        deng::Window *p_window_wrap
-    ) {
+        deng::Window &win
+    ) : m_win(win) {
         FT_Error res;
-        m_p_win = p_window_wrap;
         __findFontFiles(DEFAULT_FONT_PATH);
         __findFontFiles(custom_font_path);
 
@@ -236,7 +235,9 @@ namespace dengUtils {
     StringRasterizer::~StringRasterizer() { FT_Done_FreeType(m_library_instance); }
 
 
-    /* Find the total width of the textbox in vertices unit */
+    /* 
+     * Find the total width of the textbox in vertices unit 
+     */
     deng_vec_t StringRasterizer::__findTextSizeVec(BitmapStr &str) {
         deng_ui64_t l_index;
         deng_px_t total_size = 0;
@@ -245,7 +246,7 @@ namespace dengUtils {
 
         return dengMath::Conversion::pixelSizeToVector2DSize (
             total_size,
-            m_p_win->getSize().first
+            m_win.getSize().first
         );
     }
 
@@ -380,26 +381,15 @@ namespace dengUtils {
         str.font_file = path_str.c_str();
         deng_ui16_t px_size = (deng_vec_t) dengMath::Conversion::vector2DSizeToPixelSize (
             vec_size,
-            m_p_win->getSize().second
-        );
-
-        __mkGlyphs (
-            str,
-            px_size,
-            pos,
-            color
+            m_win.getSize().second
         );
 
         deng_px_t width = __findTextSizePx(str);
 
-        __mkTextbox (
-            str,
-            width,
-            hier_level,
-            color,
-            pos,
-            origin
-        );
+        // Create glyphs and textbox
+        __mkGlyphs(str, px_size, pos, color);
+        __mkTextbox(str, width, hier_level,
+            color, pos, origin);
     }
 
 
@@ -433,12 +423,12 @@ namespace dengUtils {
         dengMath::vec2<deng_vec_t> vec_size;
         vec_size.first = dengMath::Conversion::pixelSizeToVector2DSize (
             str.box_size.first,
-            m_p_win->getSize().first
+            m_win.getSize().first
         );
 
         vec_size.second = dengMath::Conversion::pixelSizeToVector2DSize (
             str.box_size.second,
-            m_p_win->getSize().second
+            m_win.getSize().second
         );
         
         str.tex_data.resize (
@@ -509,14 +499,9 @@ namespace dengUtils {
             }
         }
 
-        std::vector<VERT_MAPPED_2D> tmp_vec;
-        RectangleGenerator::generateMappedAbsRec (
-            pos,
-            vec_size,
-            origin,
-            hier_level,
-            tmp_vec
-        );
+        std::vector<das_ObjPosData2D> tmp_vec;
+        RectangleGenerator::generateAbsRec (
+            pos, vec_size, origin, tmp_vec);
 
         str.vert_pos[0] = tmp_vec[0];
         str.vert_pos[1] = tmp_vec[1];
@@ -642,12 +627,12 @@ namespace dengUtils {
         dengMath::vec2<deng_vec_t> vec_padding;
         vec_padding.first = dengMath::Conversion::pixelSizeToVector2DSize (
             px_padding, 
-            m_p_win->getSize().first
+            m_win.getSize().first
         );
 
         vec_padding.second = dengMath::Conversion::pixelSizeToVector2DSize (
             px_padding, 
-            m_p_win->getSize().second
+            m_win.getSize().second
         );
 
         LOG (

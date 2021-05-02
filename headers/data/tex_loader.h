@@ -93,7 +93,7 @@ typedef enum das_ImageFormat {
     #include <common/uuid.h>
     #include <common/cerr_def.h>
 
-    #include <data/sreader.h>
+    #include <data/image_headers.h>
     #include <data/assets.h>
 
     
@@ -150,7 +150,7 @@ void das_LoadTexture (
 
 
 #ifdef __cplusplus
-    }
+}
 #endif
 
 #endif

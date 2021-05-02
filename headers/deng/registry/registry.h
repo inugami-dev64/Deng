@@ -82,7 +82,7 @@
     #include <math/mat3.h>
     #include <math/mat4.h>
     #include <deng/lighting/light_srcs.h>
-    #include <deng/vulkan/vulkan_resources.h>
+    #include <deng/vulkan/resources.h>
 #endif
 
 namespace deng {

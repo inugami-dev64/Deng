@@ -20,6 +20,9 @@ Features that are not yet implemented but are coming soon are following:
 * Custom mapdata format  
 * Map editor tool  
 
+Features that work but are messy and should be refactored:
+* Wavefront OBJ parser
+
 
 ## Getting started
 DENG can be built using [premake5](https://github.com/premake/premake-core) 
