@@ -121,7 +121,7 @@ namespace dengMath {
          * C vertices structure assignment operators
          */
         void operator=(const das_ObjColorData &color); 
-        void operator=(const das_ObjVertData &vert); 
+        void operator=(const das_ObjPosData &vert); 
         void operator=(const das_ObjNormalData &nor); 
 
 
@@ -136,7 +136,7 @@ namespace dengMath {
          * C vertices structure comparison operators
          */
         deng_bool_t operator==(const das_ObjColorData &color) const;
-        deng_bool_t operator==(const das_ObjVertData &vert) const;
+        deng_bool_t operator==(const das_ObjPosData &vert) const;
         deng_bool_t operator==(const das_ObjNormalData &norm) const;
 
 

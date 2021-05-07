@@ -74,7 +74,7 @@
     #include <common/base_types.h>
     #include <common/err_def.h>
     #include <common/hashmap.h>
-    #include <das/assets.h>
+    #include <data/assets.h>
     
     #include <math/vec2.h>
     #include <math/vec3.h>
@@ -82,7 +82,7 @@
     #include <math/mat3.h>
     #include <math/mat4.h>
     #include <deng/lighting/light_srcs.h>
-    #include <deng/vulkan/vulkan_resources.h>
+    #include <deng/vulkan/resources.h>
 #endif
 
 namespace deng {

@@ -77,7 +77,8 @@
     #include <common/base_types.h>
     #include <common/uuid.h>
     #include <common/hashmap.h>
-    #include <das/assets.h>
+    #include <data/assets.h>
+    #include <data/das_runtime.h>
     #include <math/deng_math.h>
 #endif
 
@@ -93,15 +94,6 @@ namespace dengUtils {
         std::array<das_ObjTextureData, __CUBE_TEX_MAP_VERT_C> m_base_cube_tex_verts;
 
     private:
-        /*
-         * Sort cube vertices and indices into correct data types
-         * for texture mapped cube
-         */
-        void __sortTexMapped (
-            std::vector<VERT_MAPPED_UNOR> &vert,
-            std::vector<deng_ui32_t> &ind
-        );
-
 
         /*
          * Construct transformation matrix based on given parameters
@@ -123,7 +115,7 @@ namespace dengUtils {
             const dengMath::vec3<deng_vec_t> &pos,
             const dengMath::vec3<deng_vec_t> &size,
             const dengMath::vec3<deng_vec_t> &origin,
-            std::vector<VERT_UNMAPPED_UNOR> &vert,
+            std::vector<das_ObjPosData> &vert,
             std::vector<deng_ui32_t> &ind
         );
 
@@ -135,19 +127,20 @@ namespace dengUtils {
             const dengMath::vec3<deng_vec_t> &pos,
             const dengMath::vec3<deng_vec_t> &size,
             const dengMath::vec3<deng_vec_t> &origin,
-            std::vector<VERT_MAPPED_UNOR> &vert,
-            std::vector<deng_ui32_t> &ind
+            std::vector<das_ObjPosData> &out_pos,
+            std::vector<das_ObjTextureData> &out_tex,
+            std::vector<deng_ui32_t> &out_pos_ind,
+            std::vector<deng_ui32_t> &out_tex_ind
         );
 
         
         /*
-         * Generate unmapped cube asset
+         * Create new unmapped cube asset
          */
         das_Asset generateUnmappedCubeAsset (
             const dengMath::vec3<deng_vec_t> &pos,
             const dengMath::vec3<deng_vec_t> &size,
-            const dengMath::vec3<deng_vec_t> &origin,
-            char *name
+            const dengMath::vec3<deng_vec_t> &origin
         );
 
         
@@ -157,11 +150,8 @@ namespace dengUtils {
         das_Asset generateMappedCubeAsset (
             const dengMath::vec3<deng_vec_t> &pos,
             const dengMath::vec3<deng_vec_t> &size,
-            const dengMath::vec3<deng_vec_t> &origin,
-            char *name,
-            char *tex_uuid
+            const dengMath::vec3<deng_vec_t> &origin
         );
-
     };
 }
 

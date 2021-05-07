@@ -83,25 +83,24 @@ namespace dengMath {
      */
     void Transformer2D::__matApply(mat3<deng_vec_t> &mat, das_Asset &asset) {
         vec3<deng_vec_t> tmp{};
-        switch(asset.asset_mode)
-        {
+        switch(asset.asset_mode) {
         case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
-            for(size_t i = 0; i < asset.vertices.n; i++) {
-                tmp = asset.vertices.vm2d[i].vert_data;
+            for(size_t i = 0; i < asset.vertices.v2d.pn; i++) {
+                tmp = asset.vertices.v2d.pos[i];
                 tmp = mat * tmp;
 
-                asset.vertices.vm2d[i].vert_data.vert_x = tmp.first;
-                asset.vertices.vm2d[i].vert_data.vert_y = tmp.second;
+                asset.vertices.v2d.pos[i].vert_x = tmp.first;
+                asset.vertices.v2d.pos[i].vert_y = tmp.second;
             }
             break;
 
         case DAS_ASSET_MODE_2D_UNMAPPED:
-            for(size_t i = 0; i < asset.vertices.n; i++) {
-                tmp = asset.vertices.vu2d[i].vert_data;
+            for(size_t i = 0; i < asset.vertices.v2d.pn; i++) {
+                tmp = asset.vertices.v2d.pos[i];
                 tmp = mat * tmp;
 
-                asset.vertices.vu2d[i].vert_data.vert_x = tmp.first;
-                asset.vertices.vu2d[i].vert_data.vert_y = tmp.second;
+                asset.vertices.v2d.pos[i].vert_x = tmp.first;
+                asset.vertices.v2d.pos[i].vert_y = tmp.second;
             }
             break;
 
@@ -271,51 +270,27 @@ namespace dengMath {
     void Transformer3D::__matApply(mat4<deng_vec_t> &mat, das_Asset &asset) {
         vec4<deng_vec_t> tmp;
 
-        switch(asset.asset_mode) 
-        {
+        switch(asset.asset_mode) {
         case DAS_ASSET_MODE_3D_UNMAPPED:
-            for(size_t i = 0; i < asset.vertices.n; i++) {
-                tmp = asset.vertices.vuu[i];
+            for(size_t i = 0; i < asset.vertices.v3d.pn; i++) {
+                tmp = asset.vertices.v3d.pos[i];
                 tmp = mat * tmp;
 
-                asset.vertices.vuu[i].vert_x = tmp.first;
-                asset.vertices.vuu[i].vert_y = tmp.second;
-                asset.vertices.vuu[i].vert_z = tmp.third;
-            }
-            break;
-
-        case DAS_ASSET_MODE_3D_UNMAPPED_NORMALISED:
-            for(size_t i = 0; i < asset.vertices.n; i++) {
-                tmp = asset.vertices.vun[i].vert_data;
-                tmp = mat * tmp;
-
-                asset.vertices.vun[i].vert_data.vert_x = tmp.first;
-                asset.vertices.vun[i].vert_data.vert_y = tmp.second;
-                asset.vertices.vun[i].vert_data.vert_z = tmp.third;
+                asset.vertices.v3d.pos[i].vert_x = tmp.first;
+                asset.vertices.v3d.pos[i].vert_y = tmp.second;
+                asset.vertices.v3d.pos[i].vert_z = tmp.third;
             }
             break;
 
         case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-            for(size_t i = 0; i < asset.vertices.n; i++) {
-                tmp = asset.vertices.vmu[i].vert_data;
+            for(size_t i = 0; i < asset.vertices.v3d.pn; i++) {
+                tmp = asset.vertices.v3d.pos[i];
                 tmp.fourth = 1.0f;
                 tmp = mat * tmp;
 
-                asset.vertices.vmu[i].vert_data.vert_x = tmp.first;
-                asset.vertices.vmu[i].vert_data.vert_y = tmp.second;
-                asset.vertices.vmu[i].vert_data.vert_z = tmp.third;
-            }
-            break;
-
-        case DAS_ASSET_MODE_3D_TEXTURE_MAPPED_NORMALISED:
-            for(size_t i = 0; i < asset.vertices.n; i++) {
-                tmp = asset.vertices.vmn[i].vert_data;
-                tmp.fourth = 1.0f;
-                tmp = mat * tmp;
-
-                asset.vertices.vmn[i].vert_data.vert_x = tmp.first;
-                asset.vertices.vmn[i].vert_data.vert_y = tmp.second;
-                asset.vertices.vmn[i].vert_data.vert_z = tmp.third;
+                asset.vertices.v3d.pos[i].vert_x = tmp.first;
+                asset.vertices.v3d.pos[i].vert_y = tmp.second;
+                asset.vertices.v3d.pos[i].vert_z = tmp.third;
             }
             break;
 

@@ -99,7 +99,6 @@ function ft.build()
             "modules/freetype/src/gzip/ftgzip.c"
         }
 
-    symbols "Off"
     optimize "On"
 
 	filter "platforms:Linux"

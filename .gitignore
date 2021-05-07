@@ -6,6 +6,7 @@
 *.vcxproj*
 *.sln
 *~*
+normalising.txt
 x64/
 website/
 Makefile

@@ -300,10 +300,10 @@ namespace dengMath {
 
 
     /*
-     * Assign das_ObjVertData instance values to current vector
+     * Assign das_ObjPosData instance values to current vector
      */
     template<typename T>
-    void vec3<T>::operator=(const das_ObjVertData &vert) {
+    void vec3<T>::operator=(const das_ObjPosData &vert) {
         if(std::is_floating_point<T>::value::value) {
             first = vert.vert_x;
             second = vert.vert_y;
@@ -326,10 +326,10 @@ namespace dengMath {
 
 
     /*
-     * Assign das_ObjVertData2D instance values to current vector
+     * Assign das_ObjPosData2D instance values to current vector
      */
     template<typename T>
-    void vec3<T>::operator=(const das_ObjVertData2D &vert) {
+    void vec3<T>::operator=(const das_ObjPosData2D &vert) {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             first = vert.vert_x;
             second = vert.vert_y;
@@ -352,10 +352,10 @@ namespace dengMath {
 
 
     /*
-     * Check if the vector values are equal to das_ObjVertData values
+     * Check if the vector values are equal to das_ObjPosData values
      */
     template<typename T>
-    deng_bool_t vec3<T>::operator==(const das_ObjVertData &vert) const {
+    deng_bool_t vec3<T>::operator==(const das_ObjPosData &vert) const {
         if(std::is_floating_point<T>::value) {
             return (deng_bool_t) (
                 first == vert.vert_x &&
@@ -386,10 +386,10 @@ namespace dengMath {
 
 
     /*
-     * Check if the vector values are equal to das_ObjVertData2D values
+     * Check if the vector values are equal to das_ObjPosData2D values
      */
     template<typename T>
-    deng_bool_t vec3<T>::operator==(const das_ObjVertData2D &vert) const {
+    deng_bool_t vec3<T>::operator==(const das_ObjPosData2D &vert) const {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             return (deng_bool_t) (
                 first == vert.vert_x &&

@@ -4,3 +4,6 @@
 [submodule "modules/premake_helpers.lua"]
 	path = modules/premake_helpers.lua
 	url = https://github.com/inugami-dev64/premake_helpers.lua
+[submodule "modules/lz4"]
+	path = modules/lz4
+	url = https://github.com/lz4/lz4

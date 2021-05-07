@@ -68,7 +68,7 @@
     #include <stdlib.h>
 
     #include <common/base_types.h>
-    #include <das/assets.h>
+    #include <data/assets.h>
     #include <math/deng_math.h>
 #endif
 
@@ -86,7 +86,7 @@ namespace dengUtils {
 
         deng_bool_t findPtCollision ( 
             dengMath::vec2<deng_vec_t> point,
-            das_ObjVertData2D *verts,
+            das_ObjPosData2D *verts,
             deng_ui32_t vert_c
         );
     };

@@ -84,7 +84,6 @@ layout(binding = 1) uniform ColorData {
 
 layout(location = 0) in vec2 in_pos;
 layout(location = 1) in vec2 in_tex_pos;
-layout(location = 2) in uint in_hier;
 
 layout(location = 0) out vec4 out_color;
 layout(location = 1) out vec2 out_tex_pos;
@@ -93,7 +92,7 @@ layout(location = 2) out int out_is_unmapped;
 void main() {
     // Pardon me
     if((ubo.ubo_flag_bits & orthographic_camera_mode2D) == orthographic_camera_mode2D)
-        gl_Position = ubo.view * vec4(in_pos, float(in_hier), 1.0f);
+        gl_Position = ubo.view * vec4(in_pos, 0.0f, 1.0f);
     
     else gl_Position = vec4(in_pos, 0.0f, 1.0f);
 

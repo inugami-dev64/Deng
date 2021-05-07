@@ -70,7 +70,7 @@
     #include <cmath>
 
     #include <common/base_types.h>
-    #include <das/assets.h>
+    #include <data/assets.h>
     #include <math/vec2.h>
     #include <math/vec3.h>
     #include <math/vec4.h>

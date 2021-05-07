@@ -59,6 +59,7 @@
  * the conditions stated in this License.
  */ 
 
+
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
@@ -68,7 +69,7 @@ const uint perspective_camera_mode3D = 0x00000002u;
 layout(binding = 0) uniform UniformData {
     mat4 transform;
     mat4 view;
-    uint ubo_flag_bits;
+    uint no_perspective;
 } ubo;
 
 
@@ -80,25 +81,22 @@ layout(binding = 1) uniform ColorData {
     int is_unmapped;
 } cl;
 
-
 layout(location = 0) in vec3 in_pos;
 layout(location = 1) in vec2 in_tex_pos;
+layout(location = 2) in vec3 in_norm_pos;
 
 layout(location = 0) out vec4 out_color;
 layout(location = 1) out vec2 out_tex_pos;
 layout(location = 2) out int out_is_unmapped;
 
 void main() {
-    if((ubo.ubo_flag_bits & orthographic_camera_mode3D) == orthographic_camera_mode3D)
-        gl_Position = ubo.view * vec4(-in_pos[0], in_pos[1], in_pos[2], 1.0f);
-
-    else if((ubo.ubo_flag_bits & perspective_camera_mode3D) == perspective_camera_mode3D)
-        gl_Position = ubo.transform * vec4(in_pos[0], in_pos[1], in_pos[2], 1.0f);
-
-    else gl_Position = vec4(in_pos[0], in_pos[1], in_pos[2], 1.0f);
+    if(ubo.no_perspective == 1)
+        gl_Position = ubo.view * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
     
+    else 
+        gl_Position = ubo.transform * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
 
     out_color = cl.color;
-    out_tex_pos = in_tex_pos;
+    out_tex_pos = in_tex_pos;   
     out_is_unmapped = cl.is_unmapped;
 }

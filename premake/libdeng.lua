@@ -75,10 +75,9 @@ function libdeng.build(build_static)
         files {
             "headers/**/*.h",
             "src/common/*.c",
-            "src/das/*.c",
+            "src/data/*.c",
             "src/deng/**.cpp",
             "src/deng/**.c",
-            "src/deng/vulkan/vulkan_handler.c",
             "src/math/camera_mat.cpp",
             "src/math/conversion.cpp",
             "src/math/projection_mat.cpp",
@@ -112,12 +111,8 @@ function libdeng.build(build_static)
 
         filter "configurations:Debug"
             defines { "__DEBUG" }
-            symbols "On"
-            optimize "On"
-
-        filter "configurations:Release"
-            symbols "Off"
-            optimize "On"
+        filter {}
+        optimize "On"
 end
 
 return libdeng

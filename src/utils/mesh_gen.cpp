@@ -115,58 +115,6 @@ namespace dengUtils {
 
 
     /*
-     * Sort cube vertices and indices into correct data types
-     * for texture mapped cube
-     */
-    void CubeGenerator::__sortTexMapped (
-        std::vector<VERT_MAPPED_UNOR> &vert,
-        std::vector<deng_ui32_t> &ind
-    ) {
-        Hashmap hm = {0};
-        newHashmap(&hm, 4 * __CUBE_INDICES_C);
-
-        size_t unique_c = 0;
-        size_t old_vert_c = vert.size();
-        size_t old_ind_c = ind.size();
-        vert.reserve(old_vert_c + __CUBE_INDICES_C);
-        ind.resize(old_ind_c + __CUBE_INDICES_C);
-
-        deng_ui32_t *p_val = NULL;
-        
-        for(size_t i = 0; i < m_base_cube_inds.size(); i++) {
-            VERT_MAPPED_UNOR key;
-            key.vert_data.vert_x = m_base_cube_verts[m_base_cube_inds[i].first].first;
-            key.vert_data.vert_y = m_base_cube_verts[m_base_cube_inds[i].first].second;
-            key.vert_data.vert_z = m_base_cube_verts[m_base_cube_inds[i].first].third;
-            key.tex_data = m_base_cube_tex_verts[m_base_cube_inds[i].second];
-
-            p_val = (deng_ui32_t*) findValue ( 
-                &hm, 
-                &key,
-                sizeof(VERT_MAPPED_UNOR)
-            );
-
-            // No value found, increment index and add value to hashmap
-            if(!p_val) {
-                vert.resize(unique_c + 1);
-                vert[unique_c] = key;
-                ind[i + old_ind_c] = static_cast<deng_ui32_t>(unique_c);
-                unique_c++;
-
-                pushToHashmap (
-                    &hm,
-                    &vert[vert.size() - 1],
-                    sizeof(VERT_MAPPED_UNOR),
-                    &ind[i]
-                );
-            }
-
-            else ind[i + old_ind_c] = *p_val;
-        }
-    }
-
-
-    /*
      * Construct transformation matrix based on given parameters
      */
     dengMath::mat4<deng_vec_t> CubeGenerator::__mkTransformMatrix (
@@ -205,24 +153,29 @@ namespace dengUtils {
         const dengMath::vec3<deng_vec_t> &pos,
         const dengMath::vec3<deng_vec_t> &size,
         const dengMath::vec3<deng_vec_t> &origin,
-        std::vector<VERT_UNMAPPED_UNOR> &vert,
-        std::vector<deng_ui32_t> &ind
+        std::vector<das_ObjPosData> &out_pos,
+        std::vector<deng_ui32_t> &out_ind
     ) {
-        dengMath::mat4<deng_vec_t> tf_mat = __mkTransformMatrix (
-            pos,
-            size,
-            origin
-        );
+        // Generate transformation matrix for the cube
+        dengMath::mat4<deng_vec_t> tf_mat = __mkTransformMatrix(pos, size, origin); 
 
-        size_t old_vert_c = vert.size();
-        for(size_t i = old_vert_c; i < vert.size(); i++) {
-            dengMath::vec4<deng_vec_t> tmp = tf_mat * m_base_cube_verts[i - old_vert_c];
-            vert[i].vert_x = tmp.first;
-            vert[i].vert_y = tmp.second;
-            vert[i].vert_z = tmp.third;
-        
-            ind[i] = m_base_cube_inds[i - old_vert_c].first;
+        // Find the previous position and indices sizes and resize their corresponding vectors
+        size_t old_pos_c = out_pos.size();
+        size_t old_ind_c = out_ind.size();
+        out_pos.resize(old_pos_c + m_base_cube_verts.size());
+        out_ind.resize(old_ind_c + m_base_cube_inds.size());
+
+        // For each new vertex in out_pos assign new values according to the transformation matrix
+        for(size_t i = old_pos_c; i < out_pos.size(); i++) {
+            dengMath::vec4<deng_vec_t> tmp = tf_mat * m_base_cube_verts[i - old_pos_c];
+            out_pos[i].vert_x = tmp.first;
+            out_pos[i].vert_y = tmp.second;
+            out_pos[i].vert_z = tmp.third;
         }
+
+        // For each new index in out_ind assign new values from base indices vector
+        for(size_t i = old_ind_c; i < out_ind.size(); i++) 
+            out_ind[i] = m_base_cube_inds[i].first;
     }
 
 
@@ -233,74 +186,82 @@ namespace dengUtils {
         const dengMath::vec3<deng_vec_t> &pos,
         const dengMath::vec3<deng_vec_t> &size,
         const dengMath::vec3<deng_vec_t> &origin,
-        std::vector<VERT_MAPPED_UNOR> &vert,
-        std::vector<deng_ui32_t> &ind
+        std::vector<das_ObjPosData> &out_pos,
+        std::vector<das_ObjTextureData> &out_tex,
+        std::vector<deng_ui32_t> &out_pos_ind,
+        std::vector<deng_ui32_t> &out_tex_ind
     ) {
-        dengMath::mat4<deng_vec_t> tf_mat = __mkTransformMatrix (
-            pos,
-            size,
-            origin
-        );
+        // Generate transformation matrix for the cube
+        dengMath::mat4<deng_vec_t> tf_mat = __mkTransformMatrix(pos, size, origin); 
 
-        size_t old_vert_c = vert.size();
-        __sortTexMapped(vert, ind);
+        // Find the previous output vector sizes and resize them accordingly
+        size_t old_pos_c = out_pos.size();
+        size_t old_tex_c = out_tex.size();
+        size_t old_pos_ind_c = out_pos_ind.size();
+        size_t old_tex_ind_c = out_tex_ind.size();
 
-        // Apply transformations
-        for(size_t i = old_vert_c; i < vert.size(); i++) {
-            dengMath::vec4<deng_vec_t> tmp{};
-            tmp = vert[i].vert_data;
-            tmp = tf_mat * tmp;
+        out_pos.resize(old_pos_c + m_base_cube_verts.size());
+        out_tex.resize(old_tex_c + m_base_cube_verts.size());
+        out_pos_ind.resize(old_pos_ind_c + m_base_cube_inds.size());
+        out_tex_ind.resize(old_tex_ind_c + m_base_cube_inds.size());
 
-            vert[i].vert_data.vert_x = tmp.first;
-            vert[i].vert_data.vert_y = tmp.second;
-            vert[i].vert_data.vert_z = tmp.third;
+        // For each new position vertex assign new value
+        for(size_t i = old_pos_c; i < out_pos.size(); i++) {
+            dengMath::vec4<deng_vec_t> tmp = tf_mat * m_base_cube_verts[i - old_pos_c];
+            out_pos[i].vert_x = tmp.first;
+            out_pos[i].vert_y = tmp.second;
+            out_pos[i].vert_z = tmp.third;
+        }
+
+        // For each new texture vertex assign new value
+        for(size_t i = old_tex_c; i < out_tex.size(); i++)
+            out_tex[i] = m_base_cube_tex_verts[i];
+
+
+        // For each new index assign new value
+        for(size_t i = old_pos_ind_c, j = old_tex_ind_c; i < out_pos_ind.size(); i++, j++) {
+            out_pos_ind[i] = m_base_cube_inds[i - old_pos_ind_c].first;
+            out_tex_ind[j] = m_base_cube_inds[j - old_tex_ind_c].second;
         }
     }
 
 
     /*
-     * Generate unmapped cube asset 
+     * Create new unmapped cube asset
      */
     das_Asset CubeGenerator::generateUnmappedCubeAsset (
         const dengMath::vec3<deng_vec_t> &pos, 
         const dengMath::vec3<deng_vec_t> &size, 
-        const dengMath::vec3<deng_vec_t> &origin, 
-        char *name
+        const dengMath::vec3<deng_vec_t> &origin
     ) {
-        std::vector<VERT_UNMAPPED_UNOR> vert;
+        std::vector<das_ObjPosData> vert;
         std::vector<deng_ui32_t> ind;
 
-        generateUnmappedCube (
-            pos, 
-            size, 
-            origin, 
-            vert, 
-            ind
-        );
+        // First generate base vertices for the cube
+        generateUnmappedCube(pos, size, origin, vert, ind);
 
-        // Create a new asset and copy all data over
-        das_Asset asset;
+        // Create a new asset, set the asset mode and generate uuid
+        das_Asset asset = { 0 };
         asset.asset_mode = DAS_ASSET_MODE_3D_UNMAPPED;
         asset.uuid = uuid_Generate();
-        asset.name = name;
-        asset.vertices.n = vert.size();
+
+        // Set vertices sizes
+        asset.vertices.v3d.pn = vert.size();
         asset.indices.n = ind.size();
 
-        asset.vertices.vuu = (VERT_UNMAPPED_UNOR*) malloc(asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR));
-        asset.indices.indices = (deng_ui32_t*) malloc(asset.indices.n * sizeof(deng_ui32_t));
+        // Allocate memory for vertices and indices
+        asset.vertices.v3d.pos = (das_ObjPosData*) malloc(asset.vertices.v3d.pn * sizeof(das_ObjPosData));
+        asset.indices.pos = (deng_ui32_t*) malloc(asset.indices.n * sizeof(deng_ui32_t));
 
-        memcpy (
-            asset.vertices.vuu,
-            vert.data(),
-            asset.vertices.n * sizeof(VERT_UNMAPPED_UNOR)
-        );
+        // Copy all vertices and indices to the asset
+        memcpy(asset.vertices.v3d.pos, vert.data(),
+            asset.vertices.v3d.pn * sizeof(das_ObjPosData));
 
-        memcpy (
-            asset.indices.indices,
-            ind.data(),
-            asset.indices.n * sizeof(deng_ui32_t)
-        );
+        memcpy(asset.indices.pos, ind.data(),
+            asset.indices.n * sizeof(deng_ui32_t));
 
+        // Generate vertex normals
+        das_MkAssetNormals(&asset);
         return asset;
     }
 
@@ -311,55 +272,49 @@ namespace dengUtils {
     das_Asset CubeGenerator::generateMappedCubeAsset (
         const dengMath::vec3<deng_vec_t> &pos,
         const dengMath::vec3<deng_vec_t> &size,
-        const dengMath::vec3<deng_vec_t> &origin,
-        char *name,
-        char *tex_uuid
+        const dengMath::vec3<deng_vec_t> &origin
     ) {
-        std::vector<VERT_MAPPED_UNOR> vert;
-        std::vector<deng_ui32_t> ind;
+        // Create vectors for storing retrieved data
+        std::vector<das_ObjPosData> pos_vert(m_base_cube_verts.size());
+        std::vector<das_ObjTextureData> tex_vert(m_base_cube_tex_verts.size());
+        std::vector<deng_ui32_t> pos_ind(m_base_cube_inds.size());
+        std::vector<deng_ui32_t> tex_ind(m_base_cube_inds.size());
         
-        generateMappedCube (
-            pos,
-            size, origin,
-            vert,
-            ind
-        );
+        // First generate base vertices for the cube
+        generateMappedCube(pos, size, origin, pos_vert, tex_vert, pos_ind, tex_ind);
 
-        das_Asset asset{};
-        asset.asset_mode = DAS_ASSET_MODE_3D_TEXTURE_MAPPED;
-        asset.uuid = uuid_Generate();
-        asset.vk_id = NULL;
-        asset.gl_id = NULL;
-        asset.color = {1.0f, 1.0f, 1.0f, 1.0f};
-        asset.force_unmap = true;
+        // Create a new asset, set the asset mode and is_shown and finally generate uuid
+        das_Asset asset = { 0 };
+        asset.asset_mode = DAS_ASSET_MODE_3D_UNMAPPED;
         asset.is_shown = true;
-        asset.vertices.vmu = (VERT_MAPPED_UNOR*) calloc (
-            vert.size(),
-            sizeof(VERT_MAPPED_UNOR)
-        );
+        asset.uuid = uuid_Generate();
 
-        memcpy (
-            asset.vertices.vmu,
-            vert.data(),
-            vert.size() * sizeof(VERT_MAPPED_UNOR)
-        );
+        // Set the vertices and indices sizes
+        asset.vertices.v3d.pn = pos_vert.size();
+        asset.vertices.v3d.tn = tex_vert.size();
+        asset.indices.n = pos_ind.size();
 
-        asset.vertices.n = vert.size();
+        // Allocate memory for vertices and indices
+        asset.vertices.v3d.pos = (das_ObjPosData*) malloc(asset.vertices.v3d.pn * sizeof(das_ObjPosData)); 
+        asset.vertices.v3d.tex = (das_ObjTextureData*) malloc(asset.vertices.v3d.tn * sizeof(das_ObjTextureData));
+        asset.indices.pos = (deng_ui32_t*) malloc(asset.indices.n * sizeof(deng_ui32_t));
+        asset.indices.tex = (deng_ui32_t*) malloc(asset.indices.n * sizeof(deng_ui32_t));
 
-        asset.indices.indices = (deng_ui32_t*) calloc (
-            ind.size(),
-            sizeof(deng_ui32_t)
-        );
+        // Copy all vertices and indices to asset instace
+        memcpy(asset.vertices.v3d.pos, pos_vert.data(),
+            pos_vert.size() * sizeof(das_ObjPosData));
 
-        memcpy (
-            asset.indices.indices,
-            ind.data(),
-            ind.size() * sizeof(deng_ui32_t)
-        );
+        memcpy(asset.vertices.v3d.tex, tex_vert.data(),
+            tex_vert.size() * sizeof(das_ObjTextureData));
 
-        asset.indices.n = ind.size();
-        asset.tex_uuid = NULL;
-        
+        memcpy(asset.indices.pos, pos_ind.data(),
+            pos_ind.size() * sizeof(deng_ui32_t));
+
+        memcpy(asset.indices.tex, tex_ind.data(),
+            tex_ind.size() * sizeof(deng_ui32_t));
+
+        // Generate vertex normals
+        das_MkAssetNormals(&asset);
         return asset;
     }
 }

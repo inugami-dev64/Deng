@@ -82,14 +82,12 @@ layout(binding = 1) uniform ColorData {
 
 
 layout(location = 0) in vec2 in_position;
-layout(location = 1) in uint in_hier;
-
 layout(location = 0) out vec4 out_color;
 
 void main() {
     // Check how to handle vertex
     if((ubo.ubo_flag_bits & ortho_cam_mode) == ortho_cam_mode)
-        gl_Position = ubo.view * vec4(in_position, float(in_hier), 1.0f);
+        gl_Position = ubo.view * vec4(in_position, 0.0f, 1.0f);
 
     else gl_Position = vec4(in_position, 0.0f, 1.0f);
     

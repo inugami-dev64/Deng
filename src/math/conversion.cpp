@@ -117,16 +117,16 @@ namespace dengMath {
      * vert must be a pointer to valid array with at least 4 members
      */
     vec2<deng_vec_t> Conversion::findAbsPosition (
-        VERT_UNMAPPED_2D *vert,
+        das_ObjPosData *vert,
         vec2<deng_vec_t> child_pos
     ) {
         vec2<deng_vec_t> size;
-        size.first = vert[1].vert_data.vert_x - vert[0].vert_data.vert_x;
-        size.second = vert[3].vert_data.vert_y - vert[0].vert_data.vert_y;
+        size.first = vert[1].vert_x - vert[0].vert_x;
+        size.second = vert[3].vert_y - vert[0].vert_y;
 
         vec2<deng_vec_t> abs_coords = {
-            vert[0].vert_data.vert_x + (child_pos.first + 1.0f / 2 * size.first),
-            vert[0].vert_data.vert_y + (child_pos.second + 1.0f) / 2 * size.second
+            vert[0].vert_x + (child_pos.first + 1.0f / 2 * size.first),
+            vert[0].vert_y + (child_pos.second + 1.0f) / 2 * size.second
         };
        
         return abs_coords;
@@ -138,16 +138,16 @@ namespace dengMath {
      * vert must be a pointer to valid array with at least 4 members
      */
     vec2<deng_vec_t> Conversion::findRelPosition (
-        VERT_UNMAPPED_2D *vert,
+        das_ObjPosData *vert,
         vec2<deng_vec_t> abs_pos
     ) {
         vec2<deng_vec_t> size;
-        size.first = vert[1].vert_data.vert_x - vert[0].vert_data.vert_x;
-        size.second = vert[3].vert_data.vert_y - vert[0].vert_data.vert_y;
+        size.first = vert[1].vert_x - vert[0].vert_x;
+        size.second = vert[3].vert_y - vert[0].vert_y;
 
         vec2<deng_vec_t> rel_pos = {
-            2 * (abs_pos.first + vert[0].vert_data.vert_x) / size.first - 1.0f,
-            2 * (abs_pos.second + vert[0].vert_data.vert_y) / size.second - 1.0f
+            2 * (abs_pos.first + vert[0].vert_x) / size.first - 1.0f,
+            2 * (abs_pos.second + vert[0].vert_y) / size.second - 1.0f
         }; 
 
         return rel_pos; 

@@ -122,7 +122,9 @@ extern "C" {
         0x2d02ef8dL
     };
 
-    // Create new hashmap 
+    /* 
+     * Create a new hashmap 
+     */
     void newHashmap (
         Hashmap *p_hashmap,
         size_t elem_c

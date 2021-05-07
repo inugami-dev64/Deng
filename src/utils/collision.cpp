@@ -82,47 +82,20 @@ namespace dengUtils {
         dengMath::vec2<deng_vec_t> *vn;
 
         // Check every triangle for potential collision
-        switch (p_asset->asset_mode)
-        {
-        case DAS_ASSET_MODE_2D_UNMAPPED:
-            for(i = vert_bounds.first; i < vert_bounds.second; i++) {
-                j = i + 1;
-                if(j == vert_bounds.second) 
-                    j = vert_bounds.first;
-                
-                vc = (dengMath::vec2<deng_vec_t>*) &p_asset->vertices.vu2d[i].vert_data;
-                vn = (dengMath::vec2<deng_vec_t>*) &p_asset->vertices.vu2d[j].vert_data;
+        for(i = vert_bounds.first; i < vert_bounds.second; i++) {
+            j = i + 1;
+            if(j == vert_bounds.second) 
+                j = vert_bounds.first;
+            
+            vc = (dengMath::vec2<deng_vec_t>*) &p_asset->vertices.v2d.pos[i];
+            vn = (dengMath::vec2<deng_vec_t>*) &p_asset->vertices.v2d.pos[j];
 
-                if
-                (
-                    ((vc->second >= point.second && vn->second < point.second) ||
-                    (vc->second < point.second && vn->second >= point.second)) &&
-                    (point.first < (vn->first - vc->first) * (point.second - vc->second) / (vn->second - vc->second) + vc->first)
-                ) is_colliding = !is_colliding;
-            }
-            break;
-
-        case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
-            for(i = vert_bounds.first; i < vert_bounds.second; i++) {
-                j = i + 1;
-                if(j == vert_bounds.second) 
-                    j = vert_bounds.first;
-
-                vc = (dengMath::vec2<deng_vec_t>*) &p_asset->vertices.vm2d[i].vert_data;
-                vn = (dengMath::vec2<deng_vec_t>*) &p_asset->vertices.vm2d[j].vert_data;
-
-                if
-                (
-                    ((vc->second >= point.second && vn->second < point.second) ||
-                    (vc->second < point.second && vn->second >= point.second)) &&
-                    (point.first < (vn->first - vc->first) * (point.second - vc->second) / (vn->second - vc->second) + vc->first)
-                ) is_colliding = !is_colliding;
-
-            }
-            break;
-
-        default:
-            break;
+            if
+            (
+                ((vc->second >= point.second && vn->second < point.second) ||
+                (vc->second < point.second && vn->second >= point.second)) &&
+                (point.first < (vn->first - vc->first) * (point.second - vc->second) / (vn->second - vc->second) + vc->first)
+            ) is_colliding = !is_colliding;
         }
 
         return is_colliding;
@@ -134,7 +107,7 @@ namespace dengUtils {
      */
     deng_bool_t Collision2D::findPtCollision (
         dengMath::vec2<deng_vec_t> point,
-        das_ObjVertData2D *verts,
+        das_ObjPosData2D *verts,
         deng_ui32_t vert_c
     ) {
         size_t i, j;

@@ -331,4 +331,10 @@ namespace deng {
             return dengMath::mat4<deng_vec_t>();
         }
     }
+
+
+    /*
+     * Returns true if camera has perspective view
+     */
+    deng_bool_t Camera3D::isPerspective() { return true; }
 }
