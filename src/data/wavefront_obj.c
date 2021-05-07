@@ -705,7 +705,6 @@ void das_WavefrontObjEntityWritePrompt (
 
         if(entities[i].data.ind_data.n) {
             // Check if any additional memory is needed for indices
-            printf("cap, count: %ld %ld\n", ind_cap, entities[i].data.ind_data.n);
             size_t old_cap = ind_cap;
             __das_ReallocCheck((void**) &p_asset->indices.pos, &ind_cap, p_asset->indices.n +  
                 entities[i].data.ind_data.n, sizeof(deng_ui32_t), "position indices");
@@ -715,8 +714,6 @@ void das_WavefrontObjEntityWritePrompt (
             ind_cap = old_cap;
             __das_ReallocCheck((void**) &p_asset->indices.norm, &ind_cap, p_asset->indices.n +  
                 entities[i].data.ind_data.n, sizeof(deng_ui32_t), "vertex normal indices");
-
-            printf("2 cap, count: %ld %ld\n", ind_cap, entities[i].data.ind_data.n);
 
             // Copy all indices to the asset
             memcpy(p_asset->indices.pos + p_asset->indices.n, entities[i].data.ind_data.pos, 

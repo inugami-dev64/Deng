@@ -92,7 +92,7 @@ layout(location = 2) out int out_is_unmapped;
 void main() {
     // Pardon me
     if((ubo.ubo_flag_bits & orthographic_camera_mode2D) == orthographic_camera_mode2D)
-        gl_Position = ubo.view * vec4(in_pos, float(in_hier), 1.0f);
+        gl_Position = ubo.view * vec4(in_pos, 0.0f, 1.0f);
     
     else gl_Position = vec4(in_pos, 0.0f, 1.0f);
 

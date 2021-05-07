@@ -139,9 +139,6 @@ namespace deng {
             vkCmdBindVertexBuffers(cur_buf, 0, 1, &bd.main_buffer, 
                 &asset.offsets.pos_offset);
 
-            // Bind the position indices location in buffer
-            vkCmdBindIndexBuffer(cur_buf, bd.main_buffer, 
-                asset.offsets.ind_offset, VK_INDEX_TYPE_UINT32);
 
             // Check if texture vertices should be bound
             if(asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED ||
@@ -149,10 +146,6 @@ namespace deng {
                 // Bind texture vertex location in buffer
                 vkCmdBindVertexBuffers(cur_buf, 1, 1, &bd.main_buffer, 
                     &asset.offsets.tex_offset);
-
-                vkCmdBindIndexBuffer(cur_buf, bd.main_buffer,
-                    asset.offsets.ind_offset + asset.indices.n * sizeof(deng_ui32_t),
-                    VK_INDEX_TYPE_UINT32);
 
                 nor_bind_nr = 2;
             }
@@ -163,11 +156,11 @@ namespace deng {
                 // Bind vertex normals location in buffer
                 vkCmdBindVertexBuffers(cur_buf, nor_bind_nr, 1, &bd.main_buffer,
                     &asset.offsets.nor_offset);
-
-                vkCmdBindIndexBuffer(cur_buf, bd.main_buffer, 
-                    asset.offsets.ind_offset + nor_bind_nr * asset.indices.n * sizeof(deng_ui32_t), 
-                    VK_INDEX_TYPE_UINT32);
             }
+
+            // Bind the position indices location in buffer
+            vkCmdBindIndexBuffer(cur_buf, bd.main_buffer, 
+                asset.offsets.ind_offset, VK_INDEX_TYPE_UINT32);
         }
 
 

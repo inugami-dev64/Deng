@@ -67,11 +67,11 @@
 /// Temporarely log every vertex and index
 void tmpLog(das_Asset *p_asset) {
     cm_OpenLogger("asset.log");
-    char buf[256];
+    char buf[512];
 
     // Log every position vertex
     for(size_t i = 0; i < p_asset->vertices.v3d.pn; i++) {
-        memset(buf, 0, 256);
+        memset(buf, 0, 512);
         sprintf(buf, "v %f %f %f", p_asset->vertices.v3d.pos[i].vert_x, 
             p_asset->vertices.v3d.pos[i].vert_y, p_asset->vertices.v3d.pos[i].vert_z);
 
@@ -80,7 +80,7 @@ void tmpLog(das_Asset *p_asset) {
 
     // Log every texture vertex
     for(size_t i = 0; i < p_asset->vertices.v3d.tn; i++) {
-        memset(buf, 0, 256);
+        memset(buf, 0, 512);
         sprintf(buf, "vt %f %f", p_asset->vertices.v3d.tex[i].tex_x, 
             p_asset->vertices.v3d.tex[i].tex_y);
 
@@ -89,7 +89,7 @@ void tmpLog(das_Asset *p_asset) {
 
     // Log every vertex normal
     for(size_t i = 0; i < p_asset->vertices.v3d.nn; i++) {
-        memset(buf, 0, 256);
+        memset(buf, 0, 512);
         sprintf(buf, "vn %f %f %f", p_asset->vertices.v3d.norm[i].nor_x, 
             p_asset->vertices.v3d.norm[i].nor_y, p_asset->vertices.v3d.norm[i].nor_z);
 
@@ -97,10 +97,13 @@ void tmpLog(das_Asset *p_asset) {
     }
 
     // Log every face
-    for(size_t i = 0; i < p_asset->indices.n; i++) {
-        memset(buf, 0, 256);
-        sprintf(buf, "f %d/%d/%d", p_asset->indices.pos[i], 
-            p_asset->indices.tex[i], p_asset->indices.norm[i]);
+    printf("ind_c: %ld\n", p_asset->indices.n);
+    for(size_t i = 0; i < p_asset->indices.n; i += 3) {
+        memset(buf, 0, 512);
+        sprintf(buf, "f %d/%d/%d %d/%d/%d %d/%d/%d", p_asset->indices.pos[i] + 1, 
+            p_asset->indices.tex[i] + 1, p_asset->indices.norm[i] + 1, p_asset->indices.pos[i + 1] + 1,
+            p_asset->indices.tex[i + 1] + 1, p_asset->indices.norm[i + 1] + 1, p_asset->indices.pos[i + 2] + 1,
+            p_asset->indices.tex[i + 2] + 1, p_asset->indices.norm[i + 2] + 1);
 
         cm_LogWrite(buf);
     }
@@ -213,7 +216,6 @@ void __das_DataRead(void *buf, size_t chunk_size, size_t n, char *file_name) {
 void __das_ReadINFO_HDR(das_INFO_HDR *out_hdr, char *file_name) {
     // INFO_HDR is always the first header in .das file
     __das_DataRead(out_hdr, sizeof(das_INFO_HDR), 1, file_name);
-    printf("asset mode: %d\n", out_hdr->asset_type);
 
     // Copy header name into larger array for verification purposes
     char pad_name[9] = {0};

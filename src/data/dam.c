@@ -60,12 +60,6 @@
  */ 
 
 
-/*
- * This code was originally written is C but had to be put into C++ 
- * for the purpose of viewing asset file previews
- */
-
-
 #define __DAM_C
 #include <data/dam.h>
 
@@ -117,13 +111,11 @@ void __dam_ListAsset(dam_ListInfo li) {
         break;
 
     case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-        printf("Starting to read texture header\n");
         // Read texture vertex header
         __das_ReadGenVertHdr(&vtex_hdr, (char*) __DAS_TEX_POSITION_HEADER_NAME, li.file_name);
         __das_IncrementOffset(vtex_hdr.vert_c * sizeof(das_ObjTextureData));
 
         // Read vertex normals header
-        printf("Starting to vertex normal header\n");
         __das_ReadGenVertHdr(&vnor_hdr, (char*) __DAS_NORM_POSITION_HEADER_NAME, li.file_name);
         __das_IncrementOffset(vnor_hdr.vert_c * sizeof(das_ObjNormalData));
         break;
@@ -153,8 +145,7 @@ void __dam_ListAsset(dam_ListInfo li) {
     printf("UUID: %s\n", pad_uuid);
     printf("Date and time of creation: %s %s(UTC)\n", date, time);
 
-    switch(inf_hdr.asset_type)
-    {
+    switch(inf_hdr.asset_type) {
     case DAS_ASSET_MODE_3D_UNMAPPED:
         printf("Vertex type: unmapped vertices\n");
         printf("Unique position vertices count: %d\n", vpos_hdr.vert_c);
@@ -181,6 +172,8 @@ void __dam_ListAsset(dam_ListInfo li) {
     default:
         break;
     }
+
+    printf("Total vertices count: %d\n", indx_hdr.ind_c);
 
     // Print metadata
     size_t meta_c = 0;

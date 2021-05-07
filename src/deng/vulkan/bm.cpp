@@ -365,6 +365,8 @@ namespace deng {
                 m_buffer_data.staging_buffer, m_buffer_data.main_buffer, 
                 m_buffer_data.main_buffer_size, 0, 0);
 
+            LOG("Buffer size " + std::to_string(m_buffer_data.main_buffer_size));
+
             // Perform staging buffer cleanup
             vkDestroyBuffer(device, m_buffer_data.staging_buffer, NULL);
             vkFreeMemory(device, m_buffer_data.staging_buffer_memory, NULL);
@@ -436,7 +438,7 @@ namespace deng {
             __vk_UniformTransformation ubo;
             ubo.transform = p_cam->getCameraMat();   
             ubo.view = p_cam->getViewMat();
-            ubo.no_perspective = p_cam->isPerspective();
+            ubo.no_perspective = !p_cam->isPerspective();
 
             __vk_BufferCreator::cpyToBufferMem(device, sizeof(__vk_UniformTransformation),
                 &ubo, m_buffer_data.uniform_buffer_mem, current_image * std::max<VkDeviceSize>

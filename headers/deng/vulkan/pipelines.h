@@ -94,8 +94,8 @@
     #define TEXTURE_MAPPED_VERT_SHADER_2D       "./shaders/bin/2d_tex_mapped.spv"
     #define UNMAPPED_VERT_SHADER_3D             "./shaders/bin/3d_unmapped.spv"
     #define TEXTURE_MAPPED_VERT_SHADER_3D       "./shaders/bin/3d_tex_mapped.spv"
-    #define TEXTURE_MAPPED_FRAG_SHADER          "./shaders/bin/tex_mapped_frag.spv"
-    #define UNMAPPED_FRAG_SHADER                "./shaders/bin/unmapped_frag.spv"
+    #define TEXTURE_MAPPED_FRAG_SHADER          "./shaders/bin/tex_mapped.spv"
+    #define UNMAPPED_FRAG_SHADER                "./shaders/bin/unmapped.spv"
 #endif
 
 #ifdef _WIN32
@@ -104,8 +104,8 @@
     #define TEXTURE_MAPPED_VERT_SHADER_2D       ".\\shaders\\bin\\2d_tex_mapped.spv"
     #define UNMAPPED_VERT_SHADER_3D             ".\\shaders\\bin\\3d_unmapped.spv"
     #define TEXTURE_MAPPED_VERT_SHADER_3D       ".\\shaders\\bin\\3d_tex_mapped.spv"
-    #define TEXTURE_MAPPED_FRAG_SHADER          ".\\shaders\\bin\\tex_mapped_frag.spv"
-    #define UNMAPPED_FRAG_SHADER                ".\\shaders\\bin\\unmapped_frag.spv"
+    #define TEXTURE_MAPPED_FRAG_SHADER          ".\\shaders\\bin\\tex_mapped.spv"
+    #define UNMAPPED_FRAG_SHADER                ".\\shaders\\bin\\unmapped.spv"
 #endif
 
 namespace deng {
