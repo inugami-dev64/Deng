@@ -121,7 +121,7 @@ deng_ui64_t cm_ToPow2I64(deng_ui64_t n) {
     n |= n >> 16;
     n |= n >> 32;
 
-    return n;
+    return n + 1;
 }
 
 
@@ -132,7 +132,7 @@ deng_ui32_t cm_ToPow2I32(deng_ui32_t n) {
     n |= n >> 8;
     n |= n >> 16;
 
-    return n;
+    return n + 1;
 }
 
 
@@ -142,7 +142,7 @@ deng_ui16_t cm_ToPow2I16(deng_ui16_t n) {
     n |= n >> 4;
     n |= n >> 8;
 
-    return n;
+    return n + 1;
 }
 
 
@@ -151,7 +151,7 @@ deng_ui8_t cm_ToPow2I8(deng_ui8_t n) {
     n |= n >> 2;
     n |= n >> 4;
 
-    return n;
+    return n + 1;
 }
 
 

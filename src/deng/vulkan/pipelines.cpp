@@ -68,6 +68,7 @@ namespace deng {
         /***************************************/
         /******** __vk_PipelineCreator *********/
         /***************************************/
+
         __vk_PipelineCreator::__vk_PipelineCreator (
             __vk_PipelineData *p_pipeline_data, 
             VkDevice device, 
@@ -107,30 +108,55 @@ namespace deng {
          * Type is std::vector for future usage
          */
         std::vector<VkVertexInputBindingDescription> __vk_PipelineCreator::__getBindingDesc() {
-            std::vector<VkVertexInputBindingDescription> input_binding_desc(1);
+            std::vector<VkVertexInputBindingDescription> input_binding_desc;
             deng_bool_t is_tex_mapped = false;
-            input_binding_desc[0].binding = 0;
-            input_binding_desc[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
             switch (m_p_pipeline_data->pipeline_type) { 
             case DENG_PIPELINE_TYPE_UNMAPPED_2D:
-                input_binding_desc[0].stride = sizeof(das_ObjPosData2D) + sizeof(das_ObjNormalData);
+                input_binding_desc.resize(1);
+                // Set the position vertex input bindings
+                input_binding_desc[0].binding = 0;
+                input_binding_desc[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+                input_binding_desc[0].stride = sizeof(das_ObjPosData2D);
                 break;
 
             case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D:
-                input_binding_desc[0].stride = sizeof(das_ObjPosData2D) + sizeof(das_ObjTextureData) + 
-                    sizeof(das_ObjNormalData);
+                input_binding_desc.resize(2);
+                input_binding_desc[0].binding = 0;
+                input_binding_desc[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+                input_binding_desc[0].stride = sizeof(das_ObjPosData2D);
+
+                input_binding_desc[1].binding = 1;
+                input_binding_desc[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+                input_binding_desc[1].stride = sizeof(das_ObjTextureData);
                 is_tex_mapped = true;
                 break;
 
             case DENG_PIPELINE_TYPE_UNMAPPED_3D:
-                input_binding_desc[0].stride = sizeof(das_ObjPosData) + sizeof(das_ObjNormalData);
+                input_binding_desc.resize(2);
+                input_binding_desc[0].binding = 0;
+                input_binding_desc[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+                input_binding_desc[0].stride = sizeof(das_ObjPosData);
+
+                input_binding_desc[1].binding = 1;
+                input_binding_desc[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+                input_binding_desc[1].stride = sizeof(das_ObjNormalData);
                 break;
 
             case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D:
-                input_binding_desc[0].stride = sizeof(das_ObjPosData) + sizeof(das_ObjTextureData) + 
-                    sizeof(das_ObjNormalData);
-                is_tex_mapped = true;
+                LOG("Using tex mapped 3d asset bindings");
+                input_binding_desc.resize(3);
+                input_binding_desc[0].binding = 0;
+                input_binding_desc[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+                input_binding_desc[0].stride = sizeof(das_ObjPosData);
+
+                input_binding_desc[1].binding = 1;
+                input_binding_desc[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+                input_binding_desc[1].stride = sizeof(das_ObjTextureData);
+
+                input_binding_desc[2].binding = 2;
+                input_binding_desc[2].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+                input_binding_desc[2].stride = sizeof(das_ObjNormalData);
                 break;
                 
             default:
@@ -150,34 +176,24 @@ namespace deng {
 
             switch (m_p_pipeline_data->pipeline_type) {
             case DENG_PIPELINE_TYPE_UNMAPPED_2D:
+                input_attr_desc.resize(1);
+                input_attr_desc[0].binding = 0;
+                input_attr_desc[0].location = 0;
+                input_attr_desc[0].format = VK_FORMAT_R32G32_SFLOAT;
+                input_attr_desc[0].offset = 0;
+                break;
+
+            case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D:
                 input_attr_desc.resize(2);
                 input_attr_desc[0].binding = 0;
                 input_attr_desc[0].location = 0;
                 input_attr_desc[0].format = VK_FORMAT_R32G32_SFLOAT;
                 input_attr_desc[0].offset = 0;
 
-                input_attr_desc[1].binding = 0;
-                input_attr_desc[1].location = 1;
-                input_attr_desc[1].format = VK_FORMAT_R32_UINT;
-                input_attr_desc[1].offset = sizeof(das_ObjPosData2D);
-                break;
-
-            case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D:
-                input_attr_desc.resize(3);
-                input_attr_desc[0].binding = 0;
-                input_attr_desc[0].location = 0;
-                input_attr_desc[0].format = VK_FORMAT_R32G32_SFLOAT;
-                input_attr_desc[0].offset = 0;
-
-                input_attr_desc[1].binding = 0;
+                input_attr_desc[1].binding = 1;
                 input_attr_desc[1].location = 1;
                 input_attr_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
-                input_attr_desc[1].offset = sizeof(das_ObjPosData2D);
-
-                input_attr_desc[2].binding = 0;
-                input_attr_desc[2].location = 2;
-                input_attr_desc[2].format = VK_FORMAT_R32_UINT;
-                input_attr_desc[2].offset = sizeof(das_ObjPosData2D) + sizeof(das_ObjTextureData);
+                input_attr_desc[1].offset = 0;
                 break;
 
             case DENG_PIPELINE_TYPE_UNMAPPED_3D:
@@ -187,10 +203,10 @@ namespace deng {
                 input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
                 input_attr_desc[0].offset = 0;
 
-                input_attr_desc[1].binding = 0;
+                input_attr_desc[1].binding = 1;
                 input_attr_desc[1].location = 1;
                 input_attr_desc[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-                input_attr_desc[1].offset = sizeof(das_ObjPosData);
+                input_attr_desc[1].offset = 0;
                 break;
 
             case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D:
@@ -200,15 +216,15 @@ namespace deng {
                 input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
                 input_attr_desc[0].offset = 0;
 
-                input_attr_desc[1].binding = 0;
+                input_attr_desc[1].binding = 1;
                 input_attr_desc[1].location = 1;
                 input_attr_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
-                input_attr_desc[1].offset = sizeof(das_ObjPosData);
+                input_attr_desc[1].offset = 0;
 
-                input_attr_desc[2].binding = 0;
+                input_attr_desc[2].binding = 2;
                 input_attr_desc[2].location = 2;
                 input_attr_desc[2].format = VK_FORMAT_R32G32B32_SFLOAT;
-                input_attr_desc[2].offset = sizeof(das_ObjPosData) + sizeof(das_ObjTextureData);
+                input_attr_desc[2].offset = 0;
                 break;
 
             default:
@@ -307,7 +323,7 @@ namespace deng {
             
             m_shader_stage_createinfos = {vertex_shader_stage_createinfo, frag_shader_stage_createinfo};
 
-            /* Get descriptions */
+            // Bind get binding descriptors and attribute descriptors for the current pipeline type
             m_input_binding_desc = __getBindingDesc();
             m_input_attr_descs = __getAttributeDescs();
 

@@ -60,43 +60,49 @@
  */ 
 
 
-#version 450
-#extension GL_ARB_separate_shader_objects : enable
-
-const uint orthographic_camera_mode3D = 0x00000001u;
-const uint perspective_camera_mode3D = 0x00000002u;
-
-layout(binding = 0) uniform UniformData {
-    mat4 transform;
-    mat4 view;
-    uint no_perspective;
-} ubo;
+#define __STACK_C
+#include <common/stack.h>
 
 
 /*
- * Store color information about asset when it is not texture mapped
+ * Create a new stack instance with capacity of cap
  */
-layout(binding = 1) uniform ColorData {
-    vec4 color;
-    int is_unmapped;
-} cl;
+void newStack(Stack *p_st, size_t cap) {
+    p_st->cap = cm_ToPow2I64(cap);
+    p_st->item_c = 0;
+    p_st->items = (void**) calloc(cap, sizeof(void*));
+}
 
-layout(location = 0) in vec3 in_pos;
-layout(location = 1) in vec2 in_tex_pos;
-layout(location = 2) in vec3 in_norm_pos;
 
-layout(location = 0) out vec4 out_color;
-layout(location = 1) out vec2 out_tex_pos;
-layout(location = 2) out int out_is_unmapped;
+/*
+ * Push a new pointer to stack and if needed reallocate memory
+ * for stack items
+ */
+void pushToStack(Stack *p_st, void *item) {
+    // Check if memory needs to be reallocated
+    if(p_st->item_c + 1 > p_st->cap) {
+        p_st->cap <<= 1;
+        void **tmp = (void**) realloc(p_st->items, p_st->cap * sizeof(void*));
 
-void main() {
-    if(ubo.no_perspective == 1)
-        gl_Position = ubo.view * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
-    
-    else 
-        gl_Position = ubo.transform * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
+        if(!tmp) MEM_ERR("stack items");
+        p_st->items = tmp;
+    }
 
-    out_color = cl.color;
-    out_tex_pos = in_tex_pos;   
-    out_is_unmapped = cl.is_unmapped;
+    p_st->items[p_st->item_c] = item;
+    p_st->item_c++;
+}
+
+
+/*
+ * Pop the last element from stack
+ */
+void *popFromStack(Stack *p_st) {
+    // If not items are held in stack return NULL
+    if(!p_st->item_c) return NULL;
+
+    p_st->item_c--;
+    void *item = p_st->items[p_st->item_c];
+    p_st->items[p_st->item_c] = NULL;
+
+    return item;
 }

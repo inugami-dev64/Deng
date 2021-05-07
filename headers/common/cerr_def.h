@@ -88,7 +88,7 @@
 #endif
 
 // Runtime errors
-#define MEM_ERR(purpose)        fprintf(stderr, "Failed to allocate memory: %s\n", purpose), \
+#define MEM_ERR(purpose)        fprintf(stderr, "Failed to allocate memory for %s\n", purpose), \
                                 exit(EXIT_FAILURE)
 
 #define FILE_ERR(file)          fprintf(stderr, "Failed to read file: %s\n", file), \

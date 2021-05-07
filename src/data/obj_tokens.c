@@ -60,43 +60,38 @@
  */ 
 
 
-#version 450
-#extension GL_ARB_separate_shader_objects : enable
-
-const uint orthographic_camera_mode3D = 0x00000001u;
-const uint perspective_camera_mode3D = 0x00000002u;
-
-layout(binding = 0) uniform UniformData {
-    mat4 transform;
-    mat4 view;
-    uint no_perspective;
-} ubo;
+#define __OBJ_TOKENS_C
+#include <data/obj_tokens.h>
 
 
 /*
- * Store color information about asset when it is not texture mapped
+ * Create a hashmap out of all statements that can be accessed with
+ * keyword keys
  */
-layout(binding = 1) uniform ColorData {
-    vec4 color;
-    int is_unmapped;
-} cl;
+void das_WavefrontObjTokenise() {
+    // Create a new hashmap
+    newHashmap(&__statement_map, cm_ToPow2I64(C_ARR_SIZE(__statements) << 1));
 
-layout(location = 0) in vec3 in_pos;
-layout(location = 1) in vec2 in_tex_pos;
-layout(location = 2) in vec3 in_norm_pos;
+    // For each statement push the entry to the hashmap keyword key
+    for(size_t i = 0; i < C_ARR_SIZE(__statements); i++) {
+        pushToHashmap(&__statement_map, __statements[i].keyword, 
+            strlen(__statements[i].keyword), &__statements[i]);
+    }
+}
 
-layout(location = 0) out vec4 out_color;
-layout(location = 1) out vec2 out_tex_pos;
-layout(location = 2) out int out_is_unmapped;
 
-void main() {
-    if(ubo.no_perspective == 1)
-        gl_Position = ubo.view * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
-    
-    else 
-        gl_Position = ubo.transform * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
+/*
+ * Free all memory that was used by tokens
+ */
+void das_WavefrontObjUntokenise() {
+    destroyHashmap(&__statement_map);
+}
 
-    out_color = cl.color;
-    out_tex_pos = in_tex_pos;   
-    out_is_unmapped = cl.is_unmapped;
+
+/*
+ * Retrieve token statement info from the hashmap using the 
+ * keyword's value
+ */
+__das_WavefrontObjStatement *das_GetTokenInfo(char *id) {
+    return (__das_WavefrontObjStatement*) findValue(&__statement_map, id, strlen(id));
 }

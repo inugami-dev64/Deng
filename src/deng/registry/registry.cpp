@@ -79,7 +79,6 @@ namespace deng {
             switch(m_entries[i].type) {
             case DENG_SUPPORTED_REG_TYPE_ASSET:
                 // Initially clean the position indices and uuid
-                free(m_entries[i].element.asset.indices.pos);
                 free(m_entries[i].element.asset.uuid);
                 switch(m_entries[i].element.asset.asset_mode) {
                 case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:

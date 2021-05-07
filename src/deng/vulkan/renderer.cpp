@@ -655,15 +655,9 @@ namespace deng {
                 &m_p_dc->flight_fences[m_p_dc->current_frame]
             );
 
-            if
-            (
-                vkQueueSubmit (
-                    m_p_ic->getQFF().graphics_queue, 
-                    1, 
-                    &submitinfo, 
-                    m_p_dc->flight_fences[m_p_dc->current_frame]
-                ) != VK_SUCCESS
-            ) VK_FRAME_ERR("failed to submit draw command"); 
+            if(vkQueueSubmit(m_p_ic->getQFF().graphics_queue, 1, &submitinfo, 
+               m_p_dc->flight_fences[m_p_dc->current_frame]) != VK_SUCCESS) 
+                VK_FRAME_ERR("failed to submit draw command"); 
 
             VkPresentInfoKHR present_info{};
             present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;

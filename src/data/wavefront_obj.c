@@ -63,32 +63,58 @@
 #define __WAVEFRONT_OBJ_C
 #include <data/wavefront_obj.h>
 
+
 /*
- * Read all filedata from stream to heap allocated memory
+ * Read all file data from stream to heap allocated buffer
  */
 void __das_ReadToBuffer(char *file_name) {
-    FILE *file;
-    file = fopen(file_name, "rb");
-
+    // Start reading the file
+    FILE *file = fopen(file_name, "rb");
     if(!file) FILE_ERR(file_name);
-    
+
+    // Find the size of the file
     fseek(file, 0, SEEK_END);
-    long file_c = ftell(file);
+    __buf_len = (deng_ui64_t) ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    __buffer = (char*) calloc (
-        file_c + 1,
-        sizeof(char)
-    );
+    // Allocate memory for char buffer
+    __buffer = (char*) calloc(__buf_len + 1, sizeof(char));
 
-    size_t res = fread (
-        __buffer,
-        file_c,
-        sizeof(char),
-        file
-    );
+    // Read from file to buffer
+    size_t res = fread(__buffer, sizeof(char), __buf_len, file);
 
-    if(!res) FILE_ERR(file_name);
+    // Check if the file reading was successful
+    if(!res)
+        FILE_ERR(file_name);
+
+    // Allocate memory for storing all comment identifier instances
+    size_t cid_cap = 64;
+    size_t cid_c = 0;
+    char **cids = calloc(cid_cap, sizeof(char*));
+
+    // Find all comment identifiers
+    char *cur = __buffer;
+    char *next = NULL;
+    while(cur < __buffer + __buf_len && (next = strchr(cur, '#'))) {
+        // Check if reallocation of comment identifiers are needed
+        __das_ReallocCheck((void**) &cids, &cid_cap, cid_c + 1, sizeof(char*), 
+            "comment identifier array");
+
+        cids[cid_c] = next;
+        cur = next + 1;
+        cid_c++;
+    }
+
+    // For each comment identifier uncomment until newline or eof
+    for(size_t i = 0; i < cid_c; i++) {
+        char *end = strchr(cids[i], 0x0A);
+        end = !end ? __buffer + __buf_len : end;
+
+        // Set the commented line as 0x20
+        memset(cids[i], 0x20, end - cids[i]);
+    }
+
+    fclose(file);
 }
 
 
@@ -97,25 +123,37 @@ void __das_ReadToBuffer(char *file_name) {
  */
 void __das_FreeBuffer() {
     free(__buffer);
+    __buf_len = 0;
 }
 
 
 /*
- * Remove all comments declared with hash character '#'
+ * Parse one line statement
  */
-void __das_Uncomment() {
-    char *ptr = __buffer;
-    char *max = __buffer + strlen(__buffer);
-    while(ptr < max && (ptr = strchr(ptr, (int) '#'))) {
-        // Loop until newline and replace all characters in comments
-        // with whitespaces ' '
-        while(ptr < max && *ptr != 0x0a) {
-            *ptr = 0x20;
-            ptr++;
-        }
+__das_WavefrontObjSpecType __das_ParseStatement(char **words, size_t word_c, deng_ui64_t line) {
+    // If no words are present then return
+    if(!word_c) 
+        return DAS_WAVEFRONT_OBJ_SPEC_TYPE_NONE;
 
-        ptr++;
+    // Find the keyword statement specifier
+    __das_WavefrontObjStatement *statement = das_GetTokenInfo(words[0]);
+
+    // Check if statement is valid and not NULL otherwise throw syntax error
+    if(!statement) {
+        char buf[__DAS_MAX_WORD_SIZE] = { 0 }; 
+        sprintf(buf, "invalid keyword \"%s\"\n", words[0]);
+        __DAS_WAVEFRONT_SYNTAX_ERROR(line, buf);
     }
+
+    // Check if statement has enough arguments
+    if((deng_i32_t) (word_c - 1) < statement->min_obj_c)
+        __DAS_NOT_ENOUGH_ARGS(line);
+
+    // Check if statement has too many arguments
+    else if((deng_i32_t) (word_c - 1) > statement->max_obj_c)
+        __DAS_TOO_MANY_ARGS(line);
+
+    return statement->spec_type;
 }
 
 
@@ -129,11 +167,14 @@ void __das_ReallocCheck (
     size_t size,
     char *err_msg
 ) {
-    if(n >= (*p_cap) / size) {
-        (*p_cap) = (*p_cap) << 1;
+    // Reallocate if the capacity is smaller than the required amount of elements
+    if(n >= (*p_cap)) {
+        size_t old_cap = (*p_cap);
+        (*p_cap) = cm_ToPow2I64(n * 2);
+        (*p_cap) = (*p_cap) < (old_cap << 1) ? old_cap << 1 : (*p_cap);
         void *tmp = realloc (
             (*p_data),
-            (*p_cap)
+            (*p_cap) * size
         );
 
         if(!tmp) MEM_ERR(err_msg);
@@ -144,320 +185,365 @@ void __das_ReallocCheck (
 
 
 /*
- * Start reading from beg until trailing characters are found
- * and set end to the end of reading point
+ * Analyse the given line statement and perform action accordingly
  */
-deng_vec_t __das_ReadFloatValue (
+void __das_AnalyseStatement (
+    char **line_words, 
+    size_t word_c, 
+    das_WavefrontObjEntity **p_entities, 
+    size_t *p_ent_cap, 
+    size_t *p_ent_c,
+    deng_ui64_t lc
+) { 
+    // Parse the line statement
+    __das_WavefrontObjSpecType obj_spec_type = __das_ParseStatement(line_words, word_c, lc);
+
+    // Check for new action 
+    switch(obj_spec_type) {
+    case DAS_WAVEFRONT_OBJ_SPEC_TYPE_OBJ_DECL: {
+        // Set a name variable if it exists
+        char *name = NULL;
+        if(word_c >= 2) 
+            name = line_words[1];
+        
+        // Create a new object entity
+        __das_NewEntity(p_entities, p_ent_cap, p_ent_c, DAS_ENTITY_TYPE_OBJECT, name);
+        break;
+    }
+
+    case DAS_WAVEFRONT_OBJ_SPEC_TYPE_GROUP_DECL: {
+        // Set a name variable if it exists
+        char *name = NULL;
+        if(word_c >= 2) 
+            name = line_words[1];
+        
+        // Create a new group entity
+        __das_NewEntity(p_entities, p_ent_cap, p_ent_c, DAS_ENTITY_TYPE_GROUP, name);
+        break;
+    }
+
+    case DAS_WAVEFRONT_OBJ_SPEC_TYPE_VERT_DECL:
+        // Check if vertex reallocation is needed
+        __das_ReallocCheck((void**) &(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.pos, 
+            (void*) &(*p_entities)[(*p_ent_c) - 1].data.v_cap, (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.pn + 1, 
+            sizeof(das_ObjPosData), "vertices array");
+            
+        // Set the entity vertices
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.pos[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.pn].vert_x = 
+        (deng_vec_t) atof(line_words[1]);
+
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.pos[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.pn].vert_y = 
+        (deng_vec_t) atof(line_words[2]);
+
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.pos[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.pn].vert_z = 
+        (deng_vec_t) atof(line_words[3]);
+
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.pn++;
+        break;
+
+    case DAS_WAVEFRONT_OBJ_SPEC_TYPE_VERT_TEX_DECL:
+        // Check if vertex reallocation is needed
+        __das_ReallocCheck((void**) &(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.tex, 
+            (void*) &(*p_entities)[(*p_ent_c) - 1].data.vt_cap, (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.tn + 1,
+            sizeof(das_ObjTextureData), "texture vertices array");
+            
+        // Set the entity texture vertices
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.tex[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.tn].tex_x = 
+        (deng_vec_t) atof(line_words[1]);
+
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.tex[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.tn].tex_y = 
+        (deng_vec_t) atof(line_words[2]);
+
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.tn++;
+        break;
+
+    case DAS_WAVEFRONT_OBJ_SPEC_TYPE_VERT_NORM_DECL:
+        /*// Check if vertex normal reallocation is needed*/
+        __das_ReallocCheck((void**) &(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.norm, 
+            (void*) &(*p_entities)[(*p_ent_c) - 1].data.vn_cap, (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.nn + 1,
+            sizeof(das_ObjNormalData), "vertex normals array");
+            
+        // Set the entity vertex normals
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.norm[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.nn].nor_x = 
+        (deng_vec_t) atof(line_words[1]);
+
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.norm[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.nn].nor_y = 
+        (deng_vec_t) atof(line_words[2]);
+
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.norm[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.nn].nor_z = 
+        (deng_vec_t) atof(line_words[3]);
+
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.nn++;
+        break;
+
+    case DAS_WAVEFRONT_OBJ_SPEC_TYPE_FACE_DECL:
+        __das_CopyFaceIndices(((*p_entities) + (*p_ent_c) - 1), line_words, word_c);
+        break;
+
+    default:
+        break;
+    }
+}
+
+
+/*
+ * Find all text blocks used between beg and beg + len
+ */
+void __das_ExtractBlocks (
     char *beg, 
-    char *max, 
-    char **p_end
+    size_t len, 
+    char ***p_words, 
+    size_t *p_word_c, 
+    size_t *p_word_cap,
+    deng_ui64_t max_word_len
 ) {
-    char *ptr = beg;
-    *p_end = beg + 1;
-    if((*p_end) >= max) 
-        return FLT_MAX;
+    char *cur = beg;
+    while(cur < beg + len) {
+        // Skip all whitespaces, tabs and newlines
+        while(cur < beg + len && (*cur == 0x20 || *cur == 0x09 || *cur == 0x0A || *cur == 0x0D))
+            cur++;
 
-    char data_buf[32] = {0};
-    // Skip whitespaces and tabs
-    while(ptr < max && !((*ptr <= '9' && *ptr >= '0') || *ptr == '.' || *ptr == '-')) 
-        ptr++;
-    
-    // Find the end of x axis coordinate
-    *p_end = ptr;
-    while(*p_end < max && ((**p_end <= '9' && **p_end >= '0') || **p_end == '.' || **p_end == '-'))
-        (*p_end)++;
+        // Quit the loop if the maximum reading length is reached
+        if(cur >= beg + len) break;
+        
+        // Check if block needs to be reallocated
+        size_t old_cap = *p_word_cap;
+        __das_ReallocCheck((void**) p_words, p_word_cap, (*p_word_c) + 1, sizeof(char*), 
+            "wavefront statements");
 
-    strncpy(data_buf, ptr, (*p_end) - ptr);
+        // For each allocated pointer location allocate memory for each character
+        for(size_t i = old_cap; i < (*p_word_cap); i++)
+            (*p_words)[i] = (char*) calloc(max_word_len, sizeof(char));
 
-    // Try to convert string into floating point integer
-    return (deng_vec_t) atof(data_buf);
-}
-
-
-/*
- * Start reading from beg until training characters are found
- * and set end to the end of reading point. Read integer will be 
- * unsigned
- */
-deng_ui32_t __das_ReadIntValue (
-    char *beg,
-    char *max,
-    char **p_end
-) {
-    char *ptr;
-    deng_ui32_t out = 0;
-    ptr = beg;
-
-    if(ptr + 1 < max) {
-        // Skip until numbers
-        while(ptr < max && (*ptr < '0' || *ptr > '9'))
-            ptr++;
-
-        // Find the end of numerical chars
-        *p_end = ptr;
-        while((*p_end) < max && ((**p_end) <= '9' && (**p_end) >= '0'))
-            (*p_end)++;
-
-        if((*p_end) - ptr) {
-            char buf[64] = {0};
-            strncpy (
-                buf,
-                ptr,
-                (*p_end) - ptr
-            );
-
-            out = atoi(buf);
-        }
-    }
-
-    return out;
-}
-
-
-/*
- * Parse one face block and return found indices
- * p_end is the pointer to the end of the block
- */
-__das_IndexBlock __das_ParseIndBlock(char *beg, char *nl, char **p_end) {
-    __das_IndexBlock is = {0};
-
-    // Skip whitespaces from the beginning
-    while(beg < nl) {
-        if(*beg <= '9' && *beg >= '0')
-            break;
-        beg++;
-    }
-
-    // Find the end of the index block
-    deng_bool_t found_end = false;
-    *p_end = beg;
-    while((*p_end) < nl) {
-        if(**p_end == 0x20 || **p_end == 0x09) {
-            found_end = true;
-            break;
-        }
-
-        (*p_end)++;
-    }
-
-    if(!found_end)
-        *p_end = nl;
-
-    char *ptr = beg;
-    char *end = ptr;
-
-    // Find separating slashes
-    char *sl1 = strchr(ptr, '/');
-    char *sl2 = sl1 ? strchr(sl1 + 1, '/') : NULL;
-
-    // Find model vertex index
-    is.pos = __das_ReadIntValue(ptr, nl, &end);
-    if(!sl1 || sl1 + 1 >= *p_end)
-        return is;
-
-    // Find texture index
-    if(sl2 - sl1 != 1) {
-        ptr = sl1;
-        is.tex = __das_ReadIntValue(ptr, nl, &end);
-    }
-
-    // Return if no second slash was found
-    if(!sl2) return is;
-
-    // Find vertex normal index
-    ptr = sl2;
-    is.norm = __das_ReadIntValue(ptr, nl, &end);
-    return is;
-}
-
-
-
-
-/*
- * Parse all data about vertices to their appropriate structures
- */
-void __das_ParseVertices(das_VertDynamic *p_vert) {
-    // Initialise asset vertex type capacities and allocate memory accordingly
-    size_t vd_cap = BUFFER_CAP(das_ObjPosData);
-    size_t td_cap = BUFFER_CAP(das_ObjTextureData);
-    size_t nd_cap = BUFFER_CAP(das_ObjNormalData);
-
-    p_vert->v3d.pos = (das_ObjPosData*) malloc(vd_cap);
-    p_vert->v3d.tex = (das_ObjTextureData*) malloc(td_cap);
-    p_vert->v3d.norm = (das_ObjNormalData*) malloc(nd_cap);
-
-    p_vert->v3d.pn = 0;
-    p_vert->v3d.tn = 0;
-    p_vert->v3d.nn = 0;
-
-    char *ptr = __buffer;
-    char *end = __buffer;
-    char *nl = __buffer;
-    char *max = __buffer + strlen(__buffer);
-    size_t li = 0;
-    size_t pdi = 0, tdi = 0, ndi = 0;
-
-
-    // Start searching for vertices marked as 'v', 'vt' or 'vn'
-    while(ptr && ptr < max && (ptr = strchr(ptr, (int) 'v'))) {
-        // Verify vertex line correctness
-        nl = strchr(ptr, 0x0a);
-        nl = !nl ? max : nl;
-        li++;
-        char *cptr = ptr + 2 > nl ? nl : ptr + 2;
-
-        // Skip the whitespaces for the cptr
-        while(cptr < nl && (*cptr == 0x20 || *cptr == 0x09))
-            cptr++;
-
-        // Check if all conditions for vertex data declaration are satisfied
-        while(cptr < nl) {
-            deng_bool_t is_num = *cptr <= '9' && *cptr >= '0';
-
-            // Basically this means that the sign cannot be the last element. Also this check verifies 
-            // if that the previous character is either space or a tab and the next character some number.
-            deng_bool_t is_sign = cptr != nl - 1 && (*cptr == '-' || *cptr == '+') && (*(cptr - 1) == 0x20 || 
-                *(cptr - 1) == 0x09) && (*(cptr + 1) <= '9' && *(cptr + 1) >= '0');
-
-            // Period cannot be the last element before newline, also previous and next characters 
-            // have to be ASCII numbers
-            deng_bool_t is_period = cptr != nl - 1 && *cptr == '.' && *(cptr - 1) <= '9' && *(cptr + 1) >= '0';
-
-            // If not a single check was successful then the vertex declaration syntax is invalid
-            if(!is_num && !is_sign && !is_period && *cptr != 0x20 && *cptr != 0x09) {
-                deng_ui32_t line = cm_FindLineCount(__buffer, cptr - __buffer);
-                char msg_buf[128] = { 0 };
-                sprintf(msg_buf, "Invalid symbol '%c' on vertex declaration", *cptr);
-                __DAS_WAVEFRONT_SYNTAX_ERROR(line, msg_buf);
-                break;
+        // For each character until whitespace or newline set the block's value
+        for(size_t i = 0; cur < beg + len && *cur != 0x20 && *cur != 0x09 && *cur != 0x0A && *cur != 0x0D; i++, cur++) {
+            // Check if the block size is larger than allowed
+            if(i >= max_word_len) {
+                deng_ui64_t lc = cm_FindLineCount(__buffer, cur - __buffer);
+                __DAS_TOO_LONG_WORD(lc);
             }
-
-            cptr++;
+            (*p_words)[(*p_word_c)][i] = *cur;
         }
-
-        // Check if the vertex block is a position vertex
-        if(ptr + 1 < max && (*(ptr + 1) == 0x20 || *(ptr + 1) == 0x09)) {
-            // Skip whitespaces and tabs
-            ptr++;
-            // Check if memory needs to be reallocated
-            __das_ReallocCheck((void**) &p_vert->v3d.pos, &vd_cap, pdi + 1, 
-                sizeof(das_ObjPosData), "vertex data buffer");
-
-            p_vert->v3d.pos[p_vert->v3d.pn].vert_x = __das_ReadFloatValue(ptr, max, &end);
-            ptr = end;
-            p_vert->v3d.pos[p_vert->v3d.pn].vert_y = __das_ReadFloatValue(ptr, max, &end);
-            ptr = end;
-            p_vert->v3d.pos[p_vert->v3d.pn].vert_z = __das_ReadFloatValue(ptr, max, &end);
-            ptr = end;
-            pdi++;
-        }
-
-        else if(ptr + 2 < max && *(ptr + 1) == 't' && *(ptr + 2) == 0x20) {
-            // Skip whitespaces and tabs
-            ptr++;
-            // Check if memory needs to be reallocated
-            __das_ReallocCheck((void**) &p_vert->v3d.tex, &td_cap, tdi + 1, 
-                sizeof(das_ObjTextureData), "texture vertex data buffer");
-
-            p_vert->v3d.tex[p_vert->v3d.tn].tex_x = __das_ReadFloatValue(ptr, max, &end);
-            ptr = end;
-            p_vert->v3d.tex[p_vert->v3d.tn].tex_y = __das_ReadFloatValue(ptr, max, &end);
-            ptr = end;
-            tdi++;
-        }
-
-        else if(ptr + 2 < max && *(ptr + 1) == 'n' && *(ptr + 2) == 0x20) {
-            // Skip whitespaces and tabs
-            ptr++;
-            // Check if memory needs to be reallocated
-            __das_ReallocCheck((void**) &p_vert->v3d.norm, &nd_cap, ndi + 1, 
-                sizeof(das_ObjNormalData), "vertex normals data buffer");
-
-            p_vert->v3d.norm[p_vert->v3d.nn].nor_x = __das_ReadFloatValue(ptr, max, &end);
-            ptr = end;
-            p_vert->v3d.norm[p_vert->v3d.nn].nor_y = __das_ReadFloatValue(ptr, max, &end);
-            ptr = end;
-            p_vert->v3d.norm[p_vert->v3d.nn].nor_z = __das_ReadFloatValue(ptr, max, &end);
-            ptr = end;
-            ndi++;
-        }
-
-        else ptr++;
+        
+        (*p_word_c)++;
+        cur++;
     }
-
-    p_vert->v3d.pn = pdi;
-    p_vert->v3d.tn = tdi;
-    p_vert->v3d.nn = ndi;
 }
 
 
 /*
- * Parse all data about indices to their appropriate structures
+ * Create a new object or group instance for entity type
  */
-void __das_ParseFaces (
-    das_IndicesDynamic *p_ind,
-    deng_bool_t read_tex_ind,
-    deng_bool_t read_norm_ind
+void __das_NewEntity (
+    das_WavefrontObjEntity **p_entities, 
+    size_t *p_entity_cap, 
+    size_t *p_entity_c,
+    das_WavefrontObjEntityType ent_type,
+    char *name
 ) {
-    // In wavefront obj format faces are stored like this:
-    // f v1/vt1/vn1 v2/vt2/vt2 v3/vt3/vn3
-    // Or like this:
-    // f v1//vn1 v2//vn2 v3//vn3
-    // Or like this:
-    // f v1/vt1 v2/vt2 v3/vt3
-    char *ptr = __buffer;
-    char *nl = __buffer;
-    char *max = __buffer + strlen(__buffer);
-    char *end;
+    // Check if memory needs to be reallocated for entity array
+    size_t old_cap = *p_entity_cap;
+    __das_ReallocCheck((void**) p_entities, p_entity_cap, (*p_entity_c) + 1, sizeof(das_WavefrontObjEntity), 
+        "statement entities");
 
-    // Allocate memory for indices
-    size_t pos_ind_cap = BUFFER_CAP(deng_ui32_t);
-    size_t tex_ind_cap = BUFFER_CAP(deng_ui32_t);
-    size_t nor_ind_cap = BUFFER_CAP(deng_ui32_t);
+    // If reallocation happened set the values of the newly allocated memory area to NULL
+    for(size_t i = old_cap; i < (*p_entity_cap); i++)
+        memset((void*) ((*p_entities) + i), 0, sizeof(das_WavefrontObjEntity));
 
-    p_ind->n = 0;
-    p_ind->pos = (deng_ui32_t*) calloc(pos_ind_cap, sizeof(deng_ui32_t)); 
-    p_ind->tex = (deng_ui32_t*) calloc(tex_ind_cap, sizeof(deng_ui32_t)); 
-    p_ind->norm = (deng_ui32_t*) calloc(nor_ind_cap, sizeof(deng_ui32_t)); 
-    __das_IndexBlock ib = { 0 };
+    // Copy the name if available
+    if(name) 
+        strcpy((*p_entities)[*p_entity_c].data.name, name);
 
-    // For each face parse it
-    while(ptr && ptr < max && (ptr = strchr(ptr, (int) 'f'))) {
-        if(ptr + 1 >= max || *(ptr + 1) != 0x20) {
-            ptr++;
-            continue;
+    (*p_entities)[(*p_entity_c)].type = ent_type;
+    (*p_entity_c)++;
+
+    // Allocate initial amount of memory for indices 
+    (*p_entities)[(*p_entity_c) - 1].data.ind_cap = __DAS_DEFAULT_MEM_CAP;
+    (*p_entities)[(*p_entity_c) - 1].data.ind_data.pos = (deng_ui32_t*) calloc(__DAS_DEFAULT_MEM_CAP, 
+        sizeof(deng_ui32_t));
+
+    (*p_entities)[(*p_entity_c) - 1].data.ind_data.tex = (deng_ui32_t*) calloc(__DAS_DEFAULT_MEM_CAP, 
+        sizeof(deng_ui32_t));
+
+    (*p_entities)[(*p_entity_c) - 1].data.ind_data.norm = (deng_ui32_t*) calloc(__DAS_DEFAULT_MEM_CAP, 
+        sizeof(deng_ui32_t));
+
+
+    // Allocate initial amount of memory for vertices 
+    (*p_entities)[(*p_entity_c) - 1].data.v_cap = __DAS_DEFAULT_MEM_CAP;
+    (*p_entities)[(*p_entity_c) - 1].data.vert_data.v3d.pos = (das_ObjPosData*) calloc (
+        __DAS_DEFAULT_MEM_CAP, sizeof(das_ObjPosData));
+
+    (*p_entities)[(*p_entity_c) - 1].data.vt_cap = __DAS_DEFAULT_MEM_CAP;
+    (*p_entities)[(*p_entity_c) - 1].data.vert_data.v3d.tex = (das_ObjTextureData*) calloc (
+        __DAS_DEFAULT_MEM_CAP, sizeof(das_ObjTextureData));
+
+    (*p_entities)[(*p_entity_c) - 1].data.vn_cap = __DAS_DEFAULT_MEM_CAP;
+    (*p_entities)[(*p_entity_c) - 1].data.vert_data.v3d.norm = (das_ObjNormalData*) calloc (
+        __DAS_DEFAULT_MEM_CAP, sizeof(das_ObjNormalData));
+}
+
+        
+/*
+ * Copy all face indices to entity structure
+ */
+void __das_CopyFaceIndices(das_WavefrontObjEntity *p_ent, char **words, size_t word_c) {
+    // Check if indices need reallocation
+    size_t cap = p_ent->data.ind_cap;
+    __das_ReallocCheck((void**) &p_ent->data.ind_data.pos, 
+        &cap, p_ent->data.ind_data.n + 1, sizeof(deng_ui32_t), 
+        "position indices");
+
+    cap = p_ent->data.ind_cap;
+    __das_ReallocCheck((void**) &p_ent->data.ind_data.tex, 
+        &cap, p_ent->data.ind_data.n + 1, sizeof(deng_ui32_t), 
+        "texture indices");
+
+    cap = p_ent->data.ind_cap;
+    __das_ReallocCheck((void**) &p_ent->data.ind_data.norm, 
+        &cap, p_ent->data.ind_data.n + 1, sizeof(deng_ui32_t), 
+        "vertex normal indices");
+
+    p_ent->data.ind_cap = cap;
+
+    // For each face block parse it and save its data
+    for(size_t i = 1; i < word_c; i++) {
+        __das_IndexBlock block = __das_ParseFace(words[i]);
+        
+        // Check if parsed vertices index is UINT32_MAX
+        p_ent->data.ind_data.n++;
+        p_ent->data.ind_data.pos[p_ent->data.ind_data.n - 1] = block.pos - 1;
+        p_ent->data.ind_data.tex[p_ent->data.ind_data.n - 1] = block.tex - 1;
+        p_ent->data.ind_data.norm[p_ent->data.ind_data.n - 1] = block.norm - 1;
+    }
+}
+
+
+/*
+ * Parse a single face block
+ */
+__das_IndexBlock __das_ParseFace(char *face) {
+    // UINT32_MAX basically means that this index is going to be ignored
+    __das_IndexBlock ind_block = { UINT32_MAX };
+    size_t face_len = strlen(face);
+    
+    // Separator and number buffer declaration
+    char buf[32] = { 0 };
+    char *sep[2] = { 0 };
+    
+    // Find all separators
+    for(size_t i = 1, j = 0; i < face_len && j < 3; i++) {
+        if(face[i] == '/') {
+            sep[j] = face + i;
+            j++;
         }
-        
-        nl = strchr(ptr, 0x0a);
-        nl = nl ? nl : max;
-        
-        // Parse every single face block
-        while(ptr < nl) {
-            // Parse the current index 
-            ib = __das_ParseIndBlock(ptr, nl, &end);
+    }
 
-            // Check if reallocation is needed for any indices elements
-            __das_ReallocCheck((void**) &p_ind->pos, &pos_ind_cap, p_ind->n + 1, 
-                sizeof(deng_ui32_t), "position indices buffer");
+    // Check if the first separator exists and if it does then copy value till separator
+    if(sep[0]) {
+        strncpy(buf, face, sep[0] - face);
+        ind_block.pos = (deng_ui32_t) atoi(buf);
+        memset(buf, 0, 32);
+    }
+    else {
+        ind_block.pos = (deng_ui32_t) atoi(face);
+        return ind_block;
+    }
+    
+    // Check if the texture index exists
+    char *end = !sep[1] ? face + face_len : sep[1];
+    if(end - sep[0] > 1) {
+        strncpy(buf, sep[0] + 1, end - sep[0]);
+        ind_block.tex = (deng_ui32_t) atoi(buf);
+        memset(buf, 0, 32);
+    }
 
-            __das_ReallocCheck((void**) &p_ind->tex, &tex_ind_cap, p_ind->n + 1, 
-                sizeof(deng_ui32_t), "texture indices buffer");
+    // Check if second separator exists and has space between the third one
+    end = face + face_len;
+    if(sep[1] && end - sep[1] > 1) {
+        strncpy(buf, sep[1] + 1, end - sep[1]);
+        ind_block.norm = (deng_ui32_t) atoi(buf);
+        memset(buf, 0, 32);
+    }
 
-            __das_ReallocCheck((void**) &p_ind->norm, &nor_ind_cap, p_ind->n + 1, 
-                sizeof(deng_ui32_t), "vertex normal indices buffer");
+    return ind_block;
+} 
 
 
-            // Verify that normals and texture indices are not read if not needed
-            ib.pos = 0;
-            ib.tex = 0;
-            ib.norm = 0;
+/*
+ * Find the use specified object instance if needed
+ */
+size_t __das_PromptObjectIndex (
+    size_t *obj_inds, 
+    size_t obj_c, 
+    das_WavefrontObjEntity *entities, 
+    size_t ent_c,
+    char *file_name
+) {
+    // Check if there are multiple objects to choose from
+    size_t oid = 0;
+    if(obj_c > 1) {
+        printf("The file \'%s\' contains %ld object instances\n", file_name, obj_c);
 
-            p_ind->n++;
-            p_ind->pos[p_ind->n - 1] = ib.pos;
-            p_ind->tex[p_ind->n - 1] = ib.tex;
-            p_ind->norm[p_ind->n - 1] = ib.norm;
-            ptr = end;
+        // For each object name in the array print out the name
+        for(size_t i = 0; i < obj_c; i++) {
+            if(entities[obj_inds[i]].data.name[0])
+                printf("[%c] %s\n", 'a' + (char) i, entities[obj_inds[i]].data.name);
+            else printf("[%c] ((unknown))\n", 'a' + (char) i);
+        }
 
+        printf("\nSelect the preferred object to use: \n> ");
+
+
+        // Keep reading the input until input is correct
+        while(1) {
+            // Read the user input about the object to use
+            char ch = 0;
+            int res = scanf("%c", &ch);
+            if(!res) RUN_ERR("__das_PromptObjectIndex()", "Failed to read user input from stdin");
+            oid = ch - 'a';
+
+            // Check if the specified character is not out of bounds
+            if(oid < obj_c) break;
+
+            printf("Unspecified identifier '%c'\n", ch);
+        }
+    }
+
+    return obj_inds[oid];
+}
+
+
+/*
+ * Temporary function for printing out all entity data
+ */
+void __das_PrintEntityData(das_WavefrontObjEntity *entities, size_t ent_c) {
+    // For each entity print out its contents
+    for(size_t i = 0; i < ent_c; i++) {
+        printf("o %s\n", entities[i].data.name);
+
+        // Print all position vertices data
+        for(size_t j = 0; j < entities[i].data.vert_data.v3d.pn; j++) {
+            printf("v %f %f %f\n", entities[i].data.vert_data.v3d.pos[j].vert_x,
+                entities[i].data.vert_data.v3d.pos[j].vert_y, entities[i].data.vert_data.v3d.pos[j].vert_z);
+        }
+
+        // Print all texture vertices data
+        for(size_t j = 0; j < entities[i].data.vert_data.v3d.tn; j++) {
+            printf("vt %f %f\n", entities[i].data.vert_data.v3d.tex[j].tex_x,
+                entities[i].data.vert_data.v3d.tex[j].tex_y);
+        }
+
+        // Print all vertex normals data
+        for(size_t j = 0; j < entities[i].data.vert_data.v3d.nn; j++) {
+            printf("vn %f %f %f\n", entities[i].data.vert_data.v3d.norm[j].nor_x,
+                entities[i].data.vert_data.v3d.norm[j].nor_y, entities[i].data.vert_data.v3d.norm[j].nor_z);
+        }
+
+        // Print all indices
+        for(size_t j = 0; j < entities[i].data.ind_data.n; j++) {
+            printf("f %d/%d/%d\n", entities[i].data.ind_data.pos[j], entities[i].data.ind_data.tex[j],
+                entities[i].data.ind_data.norm[j]);
         }
     }
 }
@@ -468,53 +554,202 @@ void __das_ParseFaces (
  * all information about vertices and indices to p_asset
  */
 void das_ParseWavefrontOBJ (
-    das_Asset *p_asset,
-    das_AssetMode am,
+    das_WavefrontObjEntity **p_ents, 
+    size_t *p_ent_c, 
     char *file_name
 ) {
+    das_WavefrontObjTokenise();
     __das_ReadToBuffer(file_name);
-    __das_Uncomment();
-    p_asset->asset_mode = am;
+    size_t entity_cap = 8;
+    *p_ent_c = 0;
+    (*p_ents) = (das_WavefrontObjEntity*) calloc(entity_cap, sizeof(das_WavefrontObjEntity));
 
-    // Parse all vertices in OBJ file
-    __das_ParseVertices(&p_asset->vertices);
+    // Set up the initial global entity
+    __das_NewEntity(p_ents, &entity_cap, p_ent_c, DAS_ENTITY_TYPE_OBJECT, "Default");
 
-    // Parse faces and recieve indices
-    switch(am) {
-    case __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR:
-        __das_ParseFaces(&p_asset->indices, true, false);
-        break;
-    
-    case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-        __das_ParseFaces(&p_asset->indices, true, true);
-        break;
+    // Allocate memory for line words
+    size_t word_cap = 8;
+    size_t word_c = 0;
 
-    case __DAS_ASSET_MODE_3D_UNMAPPED_UNOR:
-        __das_ParseFaces(&p_asset->indices, false, false);
-        break;
+    // Allocate memory for line words
+    char **line_words = (char**) calloc(word_cap, sizeof(char*));
+    for(size_t i = 0; i < word_cap; i++) 
+        line_words[i] = (char*) calloc(__DAS_MAX_WORD_SIZE, sizeof(char));
 
-    case DAS_ASSET_MODE_3D_UNMAPPED:
-        __das_ParseFaces(&p_asset->indices, false, true);
-        break;
+    // Read the buffer line by line
+    char *cur = __buffer;
+    char *end = NULL;
+    deng_ui64_t lc = 1;
+    while(cur < __buffer + __buf_len) {
+        // Find the newline and if it does not exist set the end as eof
+        end = strchr(cur, 0x0a);
+        end = !end ? __buffer + __buf_len : end;
 
-    default:
-        break;
+        // Find all the statements in the line
+        __das_ExtractBlocks(cur, end - cur, &line_words, &word_c, &word_cap, __DAS_MAX_WORD_SIZE);
+        
+        // If no blocks were found skip the iteration
+        if(!word_c) {
+            lc++;
+            cur = end + 1;
+            continue;
+        }
+
+        // Analyse the retrieved line
+        __das_AnalyseStatement(line_words, word_c, p_ents, 
+            &entity_cap, p_ent_c, lc);
+
+        cur = end + 1;
+
+        // Reset all the words that were read
+        for(size_t i = 0; i < word_c; i++)
+            memset(line_words[i], 0, __DAS_MAX_WORD_SIZE * sizeof(char));
+        
+        lc++;
+        word_c = 0;
     }
 
-    
-    // Check if vertex normals need to be generated
-    if(!p_asset->vertices.v3d.nn) 
-        das_MkAssetNormals(p_asset);
+    // Clear all memory that was allocated for tokens
+    das_WavefrontObjUntokenise();
 
-    // Write all vertices into log file 
-    cm_OpenLogger("vert.log");
-    char buf[256] = {0};
-    for(size_t i = 0; i < p_asset->vertices.v3d.pn; i++) {
-        memset(buf, 0, 256);
-        sprintf(buf, "v %f %f %f", p_asset->vertices.v3d.pos[i].vert_x, 
-            p_asset->vertices.v3d.pos[i].vert_y, p_asset->vertices.v3d.pos[i].vert_z);
-        cm_LogWrite(buf);
-    }
-    cm_CloseLogger();
+    // Clean all the memory that was for line words
+    for(size_t i = 0; i < word_cap; i++)
+        free(line_words[i]);
+    free(line_words);
+
     __das_FreeBuffer();
+}
+
+
+/*
+ * Write entity data to a asset and if needed prompt to ask for the correct group
+ * that will be used in the asset
+ */
+void das_WavefrontObjEntityWritePrompt (
+    das_Asset *p_asset, 
+    das_WavefrontObjEntity *entities, 
+    size_t ent_c,
+    char *file_name
+) {
+    printf("Checking for groups and objects\n");
+    
+    // Allocate memory for each type
+    size_t obj_c = 0;
+    size_t *obj_inds = (size_t*) calloc(ent_c, sizeof(size_t));
+
+    // Check for each entity type
+    for(size_t i = 0; i < ent_c; i++) {
+        // If the type is object then add it to the object array
+        if(entities[i].type == DAS_ENTITY_TYPE_OBJECT) {
+            // Check if the object is not a global object and that it has vertices
+            if(entities[i].data.name[0] && entities[i].data.vert_data.v3d.pn) {
+                obj_inds[obj_c] = i;
+                obj_c++;
+            }
+        }
+    }
+
+
+    // Find the object index
+    size_t oid = __das_PromptObjectIndex(obj_inds, obj_c, entities, ent_c, file_name);
+
+    // Allocate initial amount of memory for vertices 
+    size_t pcap = cm_ToPow2I64(entities[oid].data.vert_data.v3d.pn + 128);
+    size_t tcap = cm_ToPow2I64(entities[oid].data.vert_data.v3d.tn + 128);
+    size_t ncap = cm_ToPow2I64(entities[oid].data.vert_data.v3d.nn + 128);
+
+    p_asset->uuid = uuid_Generate();
+    p_asset->asset_mode = DAS_ASSET_MODE_3D_TEXTURE_MAPPED;
+    p_asset->vertices.v3d.pn = 0;
+    p_asset->vertices.v3d.tn = 0;
+    p_asset->vertices.v3d.nn = 0;
+
+    p_asset->vertices.v3d.pos = (das_ObjPosData*) calloc(pcap, sizeof(das_ObjPosData));
+    p_asset->vertices.v3d.tex = (das_ObjTextureData*) calloc(tcap, sizeof(das_ObjTextureData));
+    p_asset->vertices.v3d.norm = (das_ObjNormalData*) calloc(ncap, sizeof(das_ObjNormalData));
+
+    // Allocate initial amount of memory for indices 
+    size_t ind_cap = cm_ToPow2I64(entities[oid].data.ind_data.n + 128);
+
+    p_asset->indices.n = 0;
+    p_asset->indices.pos = (deng_ui32_t*) calloc(ind_cap, sizeof(deng_ui32_t));
+    p_asset->indices.tex = (deng_ui32_t*) calloc(ind_cap, sizeof(deng_ui32_t));
+    p_asset->indices.norm = (deng_ui32_t*) calloc(ind_cap, sizeof(deng_ui32_t));
+
+    // For each entity starting from the current object id copy the indices and vertices to asset
+    deng_bool_t read_next_obj = false;
+    for(size_t i = oid; i < ent_c; i++) {
+        // If the type is object and index is not the oid then quit the loop
+        if(!read_next_obj && i != oid && entities[i].data.ind_data.n && entities[i].type == DAS_ENTITY_TYPE_OBJECT) 
+            break;
+        else if(read_next_obj) read_next_obj = false;
+
+        // Check if vertices data can be read
+        if(entities[i].data.vert_data.v3d.pn) {
+            // Check if any additional memory is needed for vertices
+            __das_ReallocCheck((void**) &p_asset->vertices.v3d.pos, &pcap, p_asset->vertices.v3d.pn + 
+                entities[i].data.vert_data.v3d.pn, sizeof(das_ObjPosData), "position vertices");
+            __das_ReallocCheck((void**) &p_asset->vertices.v3d.tex, &tcap, p_asset->vertices.v3d.tn +
+                entities[i].data.vert_data.v3d.tn, sizeof(das_ObjTextureData), "texture vertices");
+            __das_ReallocCheck((void**) &p_asset->vertices.v3d.norm, &ncap, p_asset->vertices.v3d.nn +
+                entities[i].data.vert_data.v3d.nn, sizeof(das_ObjNormalData), "vertex normals");
+
+            // Copy all vertices to the asset
+            memcpy(p_asset->vertices.v3d.pos + p_asset->vertices.v3d.pn, entities[i].data.vert_data.v3d.pos, 
+                entities[i].data.vert_data.v3d.pn * sizeof(das_ObjPosData));
+            memcpy(p_asset->vertices.v3d.tex + p_asset->vertices.v3d.tn, entities[i].data.vert_data.v3d.tex, 
+                entities[i].data.vert_data.v3d.tn * sizeof(das_ObjTextureData));
+            memcpy(p_asset->vertices.v3d.norm + p_asset->vertices.v3d.nn, entities[i].data.vert_data.v3d.norm, 
+                entities[i].data.vert_data.v3d.nn * sizeof(das_ObjNormalData));
+        } else read_next_obj = true;
+
+        if(entities[i].data.ind_data.n) {
+            // Check if any additional memory is needed for indices
+            printf("cap, count: %ld %ld\n", ind_cap, entities[i].data.ind_data.n);
+            size_t old_cap = ind_cap;
+            __das_ReallocCheck((void**) &p_asset->indices.pos, &ind_cap, p_asset->indices.n +  
+                entities[i].data.ind_data.n, sizeof(deng_ui32_t), "position indices");
+            ind_cap = old_cap;
+            __das_ReallocCheck((void**) &p_asset->indices.tex, &ind_cap, p_asset->indices.n +  
+                entities[i].data.ind_data.n, sizeof(deng_ui32_t), "texture indices");
+            ind_cap = old_cap;
+            __das_ReallocCheck((void**) &p_asset->indices.norm, &ind_cap, p_asset->indices.n +  
+                entities[i].data.ind_data.n, sizeof(deng_ui32_t), "vertex normal indices");
+
+            printf("2 cap, count: %ld %ld\n", ind_cap, entities[i].data.ind_data.n);
+
+            // Copy all indices to the asset
+            memcpy(p_asset->indices.pos + p_asset->indices.n, entities[i].data.ind_data.pos, 
+                entities[i].data.ind_data.n * sizeof(deng_ui32_t));
+            memcpy(p_asset->indices.tex + p_asset->indices.n, entities[i].data.ind_data.tex, 
+                entities[i].data.ind_data.n * sizeof(deng_ui32_t));
+            memcpy(p_asset->indices.norm + p_asset->indices.n, entities[i].data.ind_data.norm, 
+                entities[i].data.ind_data.n * sizeof(deng_ui32_t));
+
+            p_asset->vertices.v3d.pn += entities[i].data.vert_data.v3d.pn;
+            p_asset->vertices.v3d.tn += entities[i].data.vert_data.v3d.tn;
+            p_asset->vertices.v3d.nn += entities[i].data.vert_data.v3d.nn;
+
+            p_asset->indices.n += entities[i].data.ind_data.n;
+        } else read_next_obj = true;
+    }
+}
+
+
+/*
+ * Perform cleanup operation for all the memory allocated for entities
+ */
+void das_WavefrontObjDestroyEntities(das_WavefrontObjEntity *entities, size_t ent_c) {
+    // For each entity free its vertices and indices
+    for(size_t i = 0; i < ent_c; i++) {
+        free(entities[i].data.vert_data.v3d.pos);
+        free(entities[i].data.vert_data.v3d.tex);
+        free(entities[i].data.vert_data.v3d.norm);
+
+        free(entities[i].data.ind_data.pos);
+        free(entities[i].data.ind_data.tex);
+        free(entities[i].data.ind_data.norm);
+    }
+
+    free(entities);
 }

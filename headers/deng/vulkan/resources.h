@@ -216,7 +216,7 @@ namespace deng {
             // n * m * sizeof(__vk_UniformColorData) bytes -- All asset specific color ubo data
             VkBuffer uniform_buffer;
             VkDeviceMemory uniform_buffer_mem;
-            VkDeviceSize ubo_offset = 0;
+            VkDeviceSize ubo_size = 0;
             VkDeviceSize ubo_cap = 0;
             VkDeviceSize ubo_asset_cap = 0;
         };

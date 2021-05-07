@@ -76,7 +76,7 @@ static void __das_AssembleINFO_HDR(das_AssetMode dst_mode) {
     char *uuid = uuid_Generate();
     das_INFO_HDR inf_hdr = { 
         .magic_number = __DAS_STATIC_MAGIC_NUMBER,
-        .hdr_name = __DAS_INFO_HEADER_NAME, 
+        .hdr_name = __DAS_INFO_HEADER_NAME_NN, 
         .hdr_size = __DAS_INFO_HEADER_SIZE,
         .uuid = { 0 },
         .time_st = (deng_ui64_t) time(NULL),
@@ -99,7 +99,7 @@ static void __das_AssembleINFO_HDR(das_AssetMode dst_mode) {
  */
 static void __das_AssembleVERT_HDR(das_VertDynamic vert, das_AssetMode dst_mode) {
     das_VERT_HDR vert_hdr = {
-        .hdr_name = __DAS_INFO_HEADER_NAME_NN
+        .hdr_name = __DAS_VERTICES_HEADER_NAME_NN
     };
 
     // Check the vertices' destination mode for calculating the header size

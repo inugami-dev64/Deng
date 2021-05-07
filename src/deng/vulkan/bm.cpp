@@ -172,7 +172,7 @@ namespace deng {
                 asset.offsets.tex_offset = UINT64_MAX;
                 asset.offsets.nor_offset = UINT64_MAX;
 
-                m_buffer_data.main_buffer_size += asset.vertices.v2d.tn * 
+                m_buffer_data.main_buffer_size += asset.vertices.v2d.pn * 
                     sizeof(das_ObjPosData2D);
 
                 asset.offsets.ind_offset = m_buffer_data.main_buffer_size;
@@ -187,9 +187,8 @@ namespace deng {
                     asset.vertices.v2d.pn * sizeof(das_ObjPosData2D);
                 asset.offsets.nor_offset = UINT64_MAX;
 
-                m_buffer_data.main_buffer_size += asset.vertices.v2d.pn * 
-                    sizeof(das_ObjPosData2D) + asset.vertices.v2d.tn * 
-                    sizeof(das_ObjTextureData);
+                m_buffer_data.main_buffer_size += asset.vertices.v2d.pn * sizeof(das_ObjPosData2D) + 
+                    asset.vertices.v2d.tn * sizeof(das_ObjTextureData);
 
                 asset.offsets.ind_offset = m_buffer_data.main_buffer_size;
                 m_buffer_data.main_buffer_size += 2 * asset.indices.n * sizeof(deng_ui32_t);
@@ -215,8 +214,10 @@ namespace deng {
                 // UINT64_MAX
                 asset.offsets.pos_offset = m_buffer_data.main_buffer_size;
                 asset.offsets.tex_offset = m_buffer_data.main_buffer_size +
-                    asset.vertices.v2d.pn * sizeof(das_ObjPosData2D);
-                asset.offsets.nor_offset = UINT64_MAX;
+                    asset.vertices.v3d.pn * sizeof(das_ObjPosData);
+                asset.offsets.nor_offset = m_buffer_data.main_buffer_size +
+                    asset.vertices.v3d.pn * sizeof(das_ObjPosData) + 
+                    asset.vertices.v3d.tn * sizeof(das_ObjTextureData);
 
                 m_buffer_data.main_buffer_size += asset.vertices.v3d.pn * sizeof(das_ObjPosData) +
                     asset.vertices.v3d.tn * sizeof(das_ObjTextureData) + 
@@ -228,7 +229,7 @@ namespace deng {
             
             default:
                 RUN_ERR("deng::vulkan::__vk_ResourceManager::mkBuffers()", 
-                    "Invalid asset vertices format for asset" + std::string(asset.uuid));
+                    "Invalid asset vertices format for asset " + std::string(asset.uuid));
                 break;
             }
         }
@@ -342,7 +343,7 @@ namespace deng {
                 __AssetCpy asset_cpy;
                 asset_cpy.cpyToBuffer(device, reg_asset.asset, m_buffer_data.staging_buffer_memory);
                 
-                // Additionally copy asset uniform data to ubo buffer
+                // Copy asset uniform data to ubo buffer
                 cpyAssetUniform(device, gpu, cmd_pool, g_queue, reg_vk_asset.vk_asset);
             }
 
@@ -352,14 +353,8 @@ namespace deng {
                 VK_BUFFER_USAGE_TRANSFER_DST_BIT, m_buffer_data.main_buffer);
 
             // Allocate memory for main buffer
-            __vk_BufferCreator::allocateMemory (
-                device, 
-                gpu, 
-                mem_req.size, 
-                m_buffer_data.main_buffer_memory, 
-                mem_req.memoryTypeBits, 
-                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-            );
+            __vk_BufferCreator::allocateMemory(device, gpu, mem_req.size, m_buffer_data.main_buffer_memory, 
+                mem_req.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
             // Bind the main buffer with its memory
             vkBindBufferMemory(device, m_buffer_data.main_buffer, 
@@ -388,7 +383,7 @@ namespace deng {
         ) {
             // Retrieve the base asset and set its ubo offset
             RegType &reg_asset = m_reg.retrieve(asset.base_id, DENG_SUPPORTED_REG_TYPE_ASSET);
-            reg_asset.asset.offsets.ubo_offset = m_buffer_data.ubo_offset;
+            reg_asset.asset.offsets.ubo_offset = m_buffer_data.ubo_size;
 
             // Set the ubo color according to the color data
             __vk_UniformColorData ubo;
@@ -406,12 +401,16 @@ namespace deng {
                !reg_asset.asset.tex_uuid) ubo.is_unmapped = true;
             else ubo.is_unmapped = reg_asset.asset.force_unmap; 
 
+            // Increment the ubo buffer size
+            size_t old_size = m_buffer_data.ubo_size;
+            m_buffer_data.ubo_size += __max_frame_c * std::max(m_gpu_limits.minUniformBufferOffsetAlignment,
+                sizeof(__vk_UniformColorData));
+
             // Check if buffer reallocation is needed 
-            if(m_buffer_data.ubo_offset + __max_frame_c * std::max(m_gpu_limits.minUniformBufferOffsetAlignment, 
-               sizeof(__vk_UniformColorData)) > m_buffer_data.ubo_cap) {
+            if(m_buffer_data.ubo_size > m_buffer_data.ubo_cap) {
                 // Require at least twice the capacity for assets
                 __reallocUniformBufferMemory(device, gpu, cmd_pool, g_queue, 
-                    m_buffer_data.ubo_asset_cap << 1);
+                    std::max(m_buffer_data.ubo_asset_cap << 1, cm_ToPow2I64(m_buffer_data.ubo_size << 1)));
             }
 
             
@@ -419,8 +418,8 @@ namespace deng {
             for(size_t i = 0; i < __max_frame_c; i++) {
                 // Copy all uniform data to buffer
                 __vk_BufferCreator::cpyToBufferMem(device, sizeof(__vk_UniformColorData), 
-                    (void*) &ubo, m_buffer_data.uniform_buffer_mem, i * std::max(sizeof(__vk_UniformColorData),
-                    m_gpu_limits.minUniformBufferOffsetAlignment));
+                    (void*) &ubo, m_buffer_data.uniform_buffer_mem, old_size + i * std::max(sizeof(
+                    __vk_UniformColorData), m_gpu_limits.minUniformBufferOffsetAlignment));
             }
         }
 
@@ -439,13 +438,9 @@ namespace deng {
             ubo.view = p_cam->getViewMat();
             ubo.no_perspective = p_cam->isPerspective();
 
-            __vk_BufferCreator::cpyToBufferMem (
-                device,
-                sizeof(__vk_UniformTransformation),
-                &ubo,
-                m_buffer_data.uniform_buffer_mem,
-                current_image * std::max<VkDeviceSize>(sizeof(__vk_UniformTransformation), m_gpu_limits.minUniformBufferOffsetAlignment)
-            );
+            __vk_BufferCreator::cpyToBufferMem(device, sizeof(__vk_UniformTransformation),
+                &ubo, m_buffer_data.uniform_buffer_mem, current_image * std::max<VkDeviceSize>
+                (sizeof(__vk_UniformTransformation), m_gpu_limits.minUniformBufferOffsetAlignment));
         }
 
         

@@ -166,7 +166,6 @@ extern "C" {
      */
     static void __das_CopyVertices (
         das_Asset *p_asset,
-        das_AssetMode asset_mode,
         char *file_name
     );
 
@@ -176,7 +175,6 @@ extern "C" {
      */
     static void __das_CopyIndices (
         das_Asset *p_asset,
-        das_AssetMode dst_mode,
         deng_ui32_t ind_c,
         char *file_name
     );

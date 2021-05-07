@@ -90,11 +90,8 @@ void __dam_ListAsset(dam_ListInfo li) {
     das_VNOR_HDR vnor_hdr = {};
 
     __das_ReadAssetFile(li.file_name);
-    __das_ReadINFO_HDR (
-        &inf_hdr, 
-        li.file_name
-    );
-
+    __das_ReadINFO_HDR(&inf_hdr, li.file_name);
+ 
     char *date; char *time;
     cm_FormatTimeFromEpoch(DATE_FORMAT_YMD_SP_HYPHEN, TIME_FORMAT_24_HOUR_SP_COLON,
         inf_hdr.time_st, &date, &time);
@@ -120,12 +117,14 @@ void __dam_ListAsset(dam_ListInfo li) {
         break;
 
     case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
+        printf("Starting to read texture header\n");
         // Read texture vertex header
         __das_ReadGenVertHdr(&vtex_hdr, (char*) __DAS_TEX_POSITION_HEADER_NAME, li.file_name);
         __das_IncrementOffset(vtex_hdr.vert_c * sizeof(das_ObjTextureData));
 
         // Read vertex normals header
-        __das_ReadGenVertHdr(&vnor_hdr, (char*) __DAS_TEX_POSITION_HEADER_NAME, li.file_name);
+        printf("Starting to vertex normal header\n");
+        __das_ReadGenVertHdr(&vnor_hdr, (char*) __DAS_NORM_POSITION_HEADER_NAME, li.file_name);
         __das_IncrementOffset(vnor_hdr.vert_c * sizeof(das_ObjNormalData));
         break;
 
@@ -139,10 +138,8 @@ void __dam_ListAsset(dam_ListInfo li) {
         break;
     }
 
-    __das_ReadINDX_HDR (
-        &indx_hdr,
-        li.file_name
-    );
+    // Read indices
+    __das_ReadINDX_HDR(&indx_hdr, li.file_name);
 
     cm_FormatTimeFromEpoch (
         DATE_FORMAT_YMD_SP_HYPHEN,
@@ -236,24 +233,28 @@ void __dam_AssembleAsset(dam_AssemblyInfo *p_info) {
     char ext_file[128] = {0};
     
     // Check if file extension needs to be added
-    if(!dst_ext || (dst_ext && strcmp(dst_ext, "das"))) {
+    if(!dst_ext || (dst_ext && strcmp(dst_ext, "das")))
         sprintf(ext_file, "%s.das", p_info->dst_file);
-    }
-
-    else {
+    else
         sprintf(ext_file, "%s", p_info->dst_file);
-    }
 
 
     das_Asset asset = {0};
     asset.asset_mode = p_info->vert_mode;
     // Check for supported 3D model formats and parse them
     if(model_ext && !strcmp(model_ext, "obj")) {
-        das_ParseWavefrontOBJ (
-            &asset, 
-            asset.asset_mode,
-            p_info->src_file
-        );
+        size_t entity_c = 0;
+        das_WavefrontObjEntity *entities;
+        
+        // Parse the Wavefront OBJ file into entities
+        das_ParseWavefrontOBJ(&entities, &entity_c, p_info->src_file);
+
+        // Prompt the user about the object he would like to use
+        das_WavefrontObjEntityWritePrompt(&asset, entities,
+            entity_c, p_info->src_file);
+
+        // Perform final cleanup of the entities
+        das_WavefrontObjDestroyEntities(entities, entity_c);
     }
 
     else __DAM_INVALID_MODEL_FORMAT(model_ext);
@@ -263,19 +264,8 @@ void __dam_AssembleAsset(dam_AssemblyInfo *p_info) {
     if(p_info->meta_c) {
         char **meta = NULL;
         size_t meta_c = 0;
-        __dam_ReadMetaData (
-            &meta,
-            &meta_c,
-            p_info->meta_files,
-            p_info->meta_c
-        );
-
-        das_StaticAssemble (
-            &asset,
-            ext_file,
-            meta,
-            meta_c
-        );
+        __dam_ReadMetaData(&meta, &meta_c, p_info->meta_files, p_info->meta_c); 
+        das_StaticAssemble(&asset, ext_file, meta, meta_c);
 
         // Perform metadata cleanup
         for(size_t i = 0; i < meta_c; i++)
@@ -283,14 +273,7 @@ void __dam_AssembleAsset(dam_AssemblyInfo *p_info) {
         free(meta);
     }
 
-    else {
-        das_StaticAssemble (
-            &asset,
-            ext_file,
-            NULL,
-            0
-        );
-    }
+    else das_StaticAssemble(&asset, ext_file, NULL, 0);
 
     // Free position vertices and indices
     free(asset.vertices.v3d.pos);

@@ -57,6 +57,10 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: wavefront_obj - Wavefront Object format parser
+ *  Purpose: Provide functions for parsing Wavefront OBJ format
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
@@ -67,6 +71,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+    #define __DAS_MAX_WORD_SIZE                            512
     #ifdef __WAVEFRONT_OBJ_C
         #include <stdlib.h>
         #include <stdio.h>
@@ -75,20 +80,82 @@ extern "C" {
         #include <float.h>
         #include <limits.h>
 
-        #define BUFFER_CAP(T) 512 * sizeof(T) 
+        #define BUFFER_CAP(N, T) N * sizeof(T) 
         #include <common/base_types.h>
         #include <common/cerr_def.h>
         #include <common/common.h>
+        #include <data/assets.h>
         #include <common/hashmap.h>
+        #include <common/uuid.h>
 
         #include <data/assets.h>
         #include <data/das_runtime.h>
+        #include <data/obj_tokens.h>
 
         /// Error handling macros
-        #define __DAS_WAVEFRONT_SYNTAX_ERROR(line, desc)        fprintf(stderr, "Wavefront OBJ syntax error on line %d: %s\n", line, desc), \
+        #define __DAS_WAVEFRONT_SYNTAX_ERROR(line, desc)        fprintf(stderr, "Wavefront OBJ syntax error on line %ld: %s\n", line, desc), \
                                                                 exit(EXIT_FAILURE)
 
+        #define __DAS_WAVEFRONT_EMPTY_OBJECT(line)              fprintf(stderr, "Wavefront OBJ error, empty object on line %ld\n", line), \
+                                                                exit(EXIT_FAILURE)
+
+        #define __DAS_WAVEFRONT_EMPTY_GROUP(line)               fprintf(stderr, "Wavefront OBJ error, empty group specified on line %ld\n", line), \
+                                                                exit(EXIT_FAILURE)
+
+
+        #define __DAS_TOO_MANY_ARGS(line)                       fprintf(stderr, "Wavefront OBJ error, too many arguments line %ld\n", line), \
+                                                                exit(EXIT_FAILURE)
+        
+        #define __DAS_NOT_ENOUGH_ARGS(line)                     fprintf(stderr, "Wavefront OBJ error, not enough arguments on line %ld\n", line), \
+                                                                exit(EXIT_FAILURE)
+
+        #define __DAS_TOO_LONG_WORD(line)                       fprintf(stderr, "Wavefront OBJ error, too long word %ld\n", line), \
+                                                                exit(EXIT_FAILURE)
+
+
+        #define __DAS_DEFAULT_MEM_CAP                           128
+    #endif
+
+
+    /*
+     * Type specifier for entities used in OBJ files
+     */
+    typedef enum das_WavefrontObjEntityType {
+        DAS_ENTITY_TYPE_GROUP       = 0,
+        DAS_ENTITY_TYPE_OBJECT      = 1,
+        DAS_ENTITY_TYPE_FIRST       = DAS_ENTITY_TYPE_GROUP,
+        DAS_ENTITY_TYPE_LAST        = DAS_ENTITY_TYPE_OBJECT,
+    } das_WavefrontObjEntityType;
+
+    
+    /*
+     * Struct for entity(groups and objects) positions and names that are 
+     * used in Wavefront OBJ files
+     */
+    typedef struct das_WavefrontObjEntityData {
+        char name[__DAS_MAX_WORD_SIZE];
+        char *start_ptr;
+        das_IndicesDynamic ind_data;
+        size_t ind_cap;
+
+        das_VertDynamic vert_data;
+        size_t v_cap;
+        size_t vt_cap;
+        size_t vn_cap;
+    } das_WavefrontObjEntityData;
+
+    
+    /*
+     * Main entity structure for Wavefront obj entities
+     */
+    typedef struct das_WavefrontObjEntity {
+        das_WavefrontObjEntityData data;
+        das_WavefrontObjEntityType type;
+    } das_WavefrontObjEntity;
+
+    #ifdef __WAVEFRONT_OBJ_C
         static char *__buffer = NULL;
+        static deng_ui64_t __buf_len = 0;
 
         
         /*
@@ -101,28 +168,29 @@ extern "C" {
         } __das_IndexBlock;
 
         
+        
         /*
-         * Read all filedata from stream to heap allocated buffer
+         * Read all file data from stream to heap allocated buffer
          */
-        void __das_ReadToBuffer(char *file_name);
+        static void __das_ReadToBuffer(char *file_name);
 
 
         /*
          * Free the allocated buffer used in data reading
          */
-        void __das_FreeBuffer();
+        static void __das_FreeBuffer();
 
 
         /*
-         * Remove all comments declared with hash character '#'
+         * Parse one line statement
          */
-        void __das_Uncomment();
+        static __das_WavefrontObjSpecType __das_ParseStatement(char **words, size_t word_c, deng_ui64_t line);
 
 
         /*
          * Check if memory reallocations need to be done
          */
-        void __das_ReallocCheck (
+        static void __das_ReallocCheck (
             void **p_data, 
             size_t *p_cap, 
             size_t n,
@@ -130,77 +198,79 @@ extern "C" {
             char *err_msg
         );
 
+
+        /*
+         * Analyse the given line statement and perform action accordingly
+         */
+        static void __das_AnalyseStatement (
+            char **line_words,
+            size_t word_c,
+            das_WavefrontObjEntity **p_entities,
+            size_t *p_ent_cap,
+            size_t *p_ent_c,
+            deng_ui64_t lc
+        );
+
+
+        /*
+         * Find all text blocks used between beg and beg + len
+         */
+        static void __das_ExtractBlocks(char *beg, size_t len, char ***p_words, size_t *p_word_c, 
+            size_t *p_word_cap, deng_ui64_t max_word_len);
+
         
         /*
-         * Start reading from beg until trailing characters are found
-         * and set end to the end of reading point
+         * Create a new object or group instance for entity type
          */
-        deng_vec_t __das_ReadFloatValue (
-            char *beg, 
-            char *max, 
-            char **p_end
-        );
+        static void __das_NewEntity(das_WavefrontObjEntity **p_entities, size_t *p_entity_cap, size_t *p_entity_c, 
+            das_WavefrontObjEntityType ent_type, char *name);
 
-
-        /*
-         * Start reading from beg until training characters are found
-         * and set end to the reading point
-         */
-        deng_ui32_t __das_ReadIntValue (
-            char *beg,
-            char *max,
-            char **p_end
-        );
-
-
-        /*
-         * Parse one face block and return found indices
-         * p_end is the pointer to the end of the block
-        */
-        __das_IndexBlock __das_ParseIndBlock (
-            char *beg,
-            char *nl,
-            char **p_end
-        );
-
-
-        /*
-         * Verify the data correctness
-         */
-        deng_bool_t __das_VerifyLine (
-            char *ptr, 
-            char *max, 
-            size_t *p_li,
-            deng_bool_t face_line
-        );
-
-
-        /*
-         * Parse all data about vertices to their appropriate structures
-         */
-        void __das_ParseVertices(das_VertDynamic *p_vert);
         
+        /*
+         * Copy all face indices to entity structure
+         */
+        static void __das_CopyFaceIndices(das_WavefrontObjEntity *p_ent, char **words, size_t word_c);
+
+        
+        /*
+         * Parse a single face block
+         */
+        static __das_IndexBlock __das_ParseFace(char *face);
+
 
         /*
-         * Parse all data about indices to their appropriate structures
+         * Ask the user for specified object instance if needed
          */
-        void __das_ParseFaces (
-            das_IndicesDynamic *p_ind,
-            deng_bool_t read_tex_ind,
-            deng_bool_t read_norm_ind
-        );
+        static size_t __das_PromptObjectIndex(size_t *obj_inds, size_t obj_c, 
+            das_WavefrontObjEntity *entities, size_t ent_c, char *file_name);
+
     #endif 
+
 
 
     /*
      * Parse all data in Wavefront OBJ file and write
      * all information about vertices and indices to p_asset
      */
-    void das_ParseWavefrontOBJ (
-        das_Asset *p_asset,
-        das_AssetMode am,
+    void das_ParseWavefrontOBJ(das_WavefrontObjEntity **p_ents, size_t *p_ent_c, char *file_name);
+
+
+    /*
+     * Write entity data to a asset and if needed prompt to ask for the correct group
+     * that will be used in the asset
+     */
+    void das_WavefrontObjEntityWritePrompt (
+        das_Asset *p_asset, 
+        das_WavefrontObjEntity *entities, 
+        size_t ent_c,
         char *file_name
     );
+
+
+    /*
+     * Perform cleanup operation for all the memory allocated for entities
+     */
+    void das_WavefrontObjDestroyEntities(das_WavefrontObjEntity *entities, size_t ent_c);
 
 #ifdef __cplusplus
 }

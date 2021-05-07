@@ -60,43 +60,86 @@
  */ 
 
 
-#version 450
-#extension GL_ARB_separate_shader_objects : enable
+#ifndef __OBJ_TOKENS_H
+#define __OBJ_TOKENS_H
 
-const uint orthographic_camera_mode3D = 0x00000001u;
-const uint perspective_camera_mode3D = 0x00000002u;
 
-layout(binding = 0) uniform UniformData {
-    mat4 transform;
-    mat4 view;
-    uint no_perspective;
-} ubo;
+#ifdef __OBJ_TOKENS_C
+    #include <stdlib.h>
+    #include <string.h>   
+
+    #include <common/base_types.h>   
+    #include <common/common.h>
+    #include <common/hashmap.h>
+#endif
+
+
+typedef enum __das_WavefrontObjSpecType {
+    DAS_WAVEFRONT_OBJ_SPEC_TYPE_NONE            = -1,
+    DAS_WAVEFRONT_OBJ_SPEC_TYPE_OBJ_DECL        = 0,
+    DAS_WAVEFRONT_OBJ_SPEC_TYPE_GROUP_DECL      = 1,
+    DAS_WAVEFRONT_OBJ_SPEC_TYPE_VERT_DECL       = 2,
+    DAS_WAVEFRONT_OBJ_SPEC_TYPE_VERT_TEX_DECL   = 3,
+    DAS_WAVEFRONT_OBJ_SPEC_TYPE_VERT_NORM_DECL  = 4,
+    DAS_WAVEFRONT_OBJ_SPEC_TYPE_VERT_PARAM_DECL = 5,
+    DAS_WAVEFRONT_OBJ_SPEC_TYPE_FACE_DECL       = 6,
+    DAS_WAVEFRONT_OBJ_SPEC_TYPE_POL_LINE_DECL   = 7,
+    DAS_WAVEFRONT_OBJ_SPEC_TYPE_MTL_INCL        = 8,
+    DAS_WAVEFRONT_OBJ_SPEC_TYPE_MTL_USE         = 9,
+    DAS_WAVEFRONT_OBJ_SPEC_TYPE_SHADING_SPEC    = 10
+} __das_WavefrontObjSpecType;
 
 
 /*
- * Store color information about asset when it is not texture mapped
+ * Structure for defining all statements with their keywords and valid
+ * object types that could be used
  */
-layout(binding = 1) uniform ColorData {
-    vec4 color;
-    int is_unmapped;
-} cl;
+typedef struct __das_WavefrontObjStatement {
+    char *keyword;
+    deng_i32_t min_obj_c;
+    deng_i32_t max_obj_c;
+    __das_WavefrontObjSpecType spec_type;
+} __das_WavefrontObjStatement;
 
-layout(location = 0) in vec3 in_pos;
-layout(location = 1) in vec2 in_tex_pos;
-layout(location = 2) in vec3 in_norm_pos;
 
-layout(location = 0) out vec4 out_color;
-layout(location = 1) out vec2 out_tex_pos;
-layout(location = 2) out int out_is_unmapped;
+#ifdef __OBJ_TOKENS_C
+    /// Map for containing data about all possible statements
+    static Hashmap __statement_map;
 
-void main() {
-    if(ubo.no_perspective == 1)
-        gl_Position = ubo.view * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
-    
-    else 
-        gl_Position = ubo.transform * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
+    /// Array with all statement specifications
+    static __das_WavefrontObjStatement __statements[] = {
+        { "o", 0, 1, DAS_WAVEFRONT_OBJ_SPEC_TYPE_OBJ_DECL },
+        { "g", 0, 1, DAS_WAVEFRONT_OBJ_SPEC_TYPE_GROUP_DECL },
+        { "v", 3, 4, DAS_WAVEFRONT_OBJ_SPEC_TYPE_VERT_DECL },
+        { "vt", 1, 3, DAS_WAVEFRONT_OBJ_SPEC_TYPE_VERT_TEX_DECL },
+        { "vn", 3, 3, DAS_WAVEFRONT_OBJ_SPEC_TYPE_VERT_NORM_DECL },
+        { "vp", 1, 3, DAS_WAVEFRONT_OBJ_SPEC_TYPE_VERT_PARAM_DECL },
+        { "f", 3, 4, DAS_WAVEFRONT_OBJ_SPEC_TYPE_FACE_DECL },
+        { "l", 1, UINT32_MAX, DAS_WAVEFRONT_OBJ_SPEC_TYPE_POL_LINE_DECL },
+        { "mtllib", 1, 1, DAS_WAVEFRONT_OBJ_SPEC_TYPE_MTL_INCL },
+        { "usemtl", 1, 1, DAS_WAVEFRONT_OBJ_SPEC_TYPE_MTL_USE },
+        { "s", 1, 1, DAS_WAVEFRONT_OBJ_SPEC_TYPE_SHADING_SPEC }
+    };
+#endif
 
-    out_color = cl.color;
-    out_tex_pos = in_tex_pos;   
-    out_is_unmapped = cl.is_unmapped;
-}
+
+/*
+ * Create a hashmap out of all statements that can be accessed with
+ * keywords
+ */
+void das_WavefrontObjTokenise();
+
+
+/*
+ * Free all memory that was used by tokens
+ */
+void das_WavefrontObjUntokenise();
+
+
+/*
+ * Retrieve token statement info from the hashmap using the 
+ * keyword's value
+ */
+__das_WavefrontObjStatement *das_GetTokenInfo(char *id);
+
+#endif

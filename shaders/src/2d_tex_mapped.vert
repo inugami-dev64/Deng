@@ -84,7 +84,6 @@ layout(binding = 1) uniform ColorData {
 
 layout(location = 0) in vec2 in_pos;
 layout(location = 1) in vec2 in_tex_pos;
-layout(location = 2) in uint in_hier;
 
 layout(location = 0) out vec4 out_color;
 layout(location = 1) out vec2 out_tex_pos;

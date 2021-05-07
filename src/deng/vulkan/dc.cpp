@@ -131,6 +131,10 @@ namespace deng {
             VkCommandBuffer cur_buf,
             __vk_BufferData &bd
         ) {
+            deng_ui32_t nor_bind_nr = 1;
+            LOG("offsets: " + std::to_string(asset.offsets.pos_offset) + " " + std::to_string(
+                asset.offsets.tex_offset) + " " + std::to_string(asset.offsets.nor_offset) + " " +
+                std::to_string(asset.offsets.ind_offset));
             // Bind the position vertex location in buffer
             vkCmdBindVertexBuffers(cur_buf, 0, 1, &bd.main_buffer, 
                 &asset.offsets.pos_offset);
@@ -142,7 +146,6 @@ namespace deng {
             // Check if texture vertices should be bound
             if(asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED ||
                asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED) {
-
                 // Bind texture vertex location in buffer
                 vkCmdBindVertexBuffers(cur_buf, 1, 1, &bd.main_buffer, 
                     &asset.offsets.tex_offset);
@@ -151,22 +154,18 @@ namespace deng {
                     asset.offsets.ind_offset + asset.indices.n * sizeof(deng_ui32_t),
                     VK_INDEX_TYPE_UINT32);
 
-                // Bind vertex normals location in buffer
-                vkCmdBindVertexBuffers(cur_buf, 2, 1, &bd.main_buffer,
-                    &asset.offsets.nor_offset);
-
-                vkCmdBindIndexBuffer(cur_buf, bd.main_buffer, 
-                    asset.offsets.ind_offset + 2 * asset.indices.n * sizeof(deng_ui32_t), 
-                    VK_INDEX_TYPE_UINT32);
+                nor_bind_nr = 2;
             }
 
-            // Bind vertex normals only
-            else {
-                vkCmdBindVertexBuffers(cur_buf, 2, 1, &bd.main_buffer,
+            // Check if vertex normals should be bound
+            if(asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED ||
+               asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED) {
+                // Bind vertex normals location in buffer
+                vkCmdBindVertexBuffers(cur_buf, nor_bind_nr, 1, &bd.main_buffer,
                     &asset.offsets.nor_offset);
 
                 vkCmdBindIndexBuffer(cur_buf, bd.main_buffer, 
-                    asset.offsets.ind_offset + asset.indices.n * sizeof(deng_ui32_t), 
+                    asset.offsets.ind_offset + nor_bind_nr * asset.indices.n * sizeof(deng_ui32_t), 
                     VK_INDEX_TYPE_UINT32);
             }
         }

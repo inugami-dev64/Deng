@@ -583,19 +583,10 @@ namespace deng {
 
             // Create new VkImage instance
             VkMemoryRequirements mem_req = __vk_ImageCreator::makeImage (
-                device,
-                gpu,
-                tex.image,
-                (deng_ui32_t) base_tex.tex.pixel_data.width,
-                (deng_ui32_t) base_tex.tex.pixel_data.height, 
-                mip_levels,
-                VK_FORMAT_B8G8R8A8_SRGB,
-                VK_IMAGE_TILING_OPTIMAL,
-                VK_IMAGE_USAGE_SAMPLED_BIT |
-                VK_IMAGE_USAGE_TRANSFER_DST_BIT |
-                VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
-                VK_SAMPLE_COUNT_1_BIT
-            );
+                device, gpu, tex.image, (deng_ui32_t) base_tex.tex.pixel_data.width,
+                (deng_ui32_t) base_tex.tex.pixel_data.height, mip_levels, VK_FORMAT_B8G8R8A8_SRGB,
+                VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+                VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_SAMPLE_COUNT_1_BIT);
 
             if(set_default_mem_req) 
                 m_tex_mem_bits = mem_req.memoryTypeBits;
@@ -605,48 +596,23 @@ namespace deng {
                 VkDeviceSize req_size = 0;
                 if(!m_bd.img_memory_cap) {
                     req_size = 4194304 > mem_req.size ? 4194304 : mem_req.size;
-                    __allocateTexMemory (
-                        device,
-                        gpu,
-                        cmd_pool,
-                        g_queue,
-                        req_size
-                    );
+                    __allocateTexMemory(device, gpu, cmd_pool, g_queue, req_size);
                 }
                 else {
-                    __reallocTexMemory (
-                        device, 
-                        gpu, 
-                        cmd_pool, 
-                        g_queue, 
-                        req_size,
-                        is_lf,
-                        mip_levels
-                    );
+                    __reallocTexMemory(device, gpu, cmd_pool, g_queue, 
+                        req_size, is_lf, mip_levels);
                 }
             }
 
             // Copy bitmap data over to image buffer
-            __cpyBitmap (
-                device,
-                gpu,
-                cmd_pool,
-                g_queue,
-                mip_levels,
-                tex
-            );
+            __cpyBitmap(device, gpu, cmd_pool,
+                g_queue, mip_levels, tex);
 
             tex.is_buffered = true;
             
             // Create mipmaps if required
-            __mipmapTransition (
-                device,
-                cmd_pool,
-                g_queue,
-                is_lf,
-                mip_levels,
-                tex
-            );
+            __mipmapTransition( device, cmd_pool, g_queue,
+                is_lf, mip_levels, tex);
 
             // Create VkImageView for the texture instance
             __mkImageView(device, tex, mip_levels);

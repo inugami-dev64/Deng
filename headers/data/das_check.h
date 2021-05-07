@@ -120,11 +120,13 @@ typedef enum das_Error {
  * Check if the requested memory size is available for reading otherwise
  * throw a runtime error
  */
-void das_ErrBufferReadCheck (
-    size_t req_size, 
-    size_t max_size,
-    char *file_name
-);
+void das_ErrBufferReadCheck(size_t req_size, size_t max_size, char *file_name);
+
+
+/*
+ * Check if the given header specifier is valid
+ */
+void das_CheckHdrName(char *name, char *exp_name, char *file_name);
 
 
 /*

@@ -57,46 +57,59 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: stack - Stack like data structure for C
+ *  Purpose: Provide a stack like data structure for C language that 
+ *  dynamically reallocates when needed
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
-#version 450
-#extension GL_ARB_separate_shader_objects : enable
+#ifndef __STACK_H
+#define __STACK_H
 
-const uint orthographic_camera_mode3D = 0x00000001u;
-const uint perspective_camera_mode3D = 0x00000002u;
 
-layout(binding = 0) uniform UniformData {
-    mat4 transform;
-    mat4 view;
-    uint no_perspective;
-} ubo;
+#ifdef __STACK_C
+    #include <stdlib.h>
+    #include <stdio.h>
+    
+    #include <common/base_types.h>
+    #include <common/cerr_def.h>
+    #include <common/common.h>
+#endif
+
+/*
+ * Main stack like data structure
+ */
+typedef struct Stack {
+    size_t cap;
+    size_t item_c;
+    void **items;
+} Stack;
 
 
 /*
- * Store color information about asset when it is not texture mapped
+ * Create a new stack instance with capacity of cap
  */
-layout(binding = 1) uniform ColorData {
-    vec4 color;
-    int is_unmapped;
-} cl;
+void newStack(Stack *p_st, size_t cap);
 
-layout(location = 0) in vec3 in_pos;
-layout(location = 1) in vec2 in_tex_pos;
-layout(location = 2) in vec3 in_norm_pos;
 
-layout(location = 0) out vec4 out_color;
-layout(location = 1) out vec2 out_tex_pos;
-layout(location = 2) out int out_is_unmapped;
+/*
+ * Push a new pointer to stack and if needed reallocate memory
+ * for stack items
+ */
+void pushToStack(Stack *p_st, void *item);
 
-void main() {
-    if(ubo.no_perspective == 1)
-        gl_Position = ubo.view * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
-    
-    else 
-        gl_Position = ubo.transform * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
 
-    out_color = cl.color;
-    out_tex_pos = in_tex_pos;   
-    out_is_unmapped = cl.is_unmapped;
-}
+/*
+ * Pop the last element from stack
+ */
+void *popFromStack(Stack *p_st);
+
+
+/*
+ * Free all memory used for the stack data structure
+ */
+void *destroyStack(Stack *p_st);
+
+#endif

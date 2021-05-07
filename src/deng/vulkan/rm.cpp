@@ -93,25 +93,9 @@ namespace deng {
         {
             m_sample_c = sample_c;
             __mkUniformBuffer(device, gpu, cmd_pool, g_queue, __DEFAULT_ASSET_CAP);
-            __mkColorResources (
-                device, 
-                gpu, 
-                extent, 
-                sc_color_format
-            );
-            
-            __mkDepthResources (
-                device, 
-                gpu, 
-                extent
-            );
-
-            __mkFrameBuffers (
-                device, 
-                renderpass, 
-                extent, 
-                sc_img_views
-            );
+            __mkColorResources(device, gpu, extent, sc_color_format);
+            __mkDepthResources(device, gpu, extent); 
+            __mkFrameBuffers(device, renderpass, extent, sc_img_views);
         }
 
 

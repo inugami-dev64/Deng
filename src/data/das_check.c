@@ -81,6 +81,20 @@ void das_ErrBufferReadCheck (
 
 
 /*
+ * Check if the given header specifier is valid
+ */
+void das_CheckHdrName(char *name, char *exp_name, char *file_name) {
+    // Copy the non null terminated name to bigger string
+    char nname[9] = { 0 };
+    strncpy(nname, name, 8);
+
+    // Check if the name does not match the expected name
+    if(strcmp(nname, exp_name))
+        __DAS_READ_CORRUPT_ERROR(file_name);
+}
+
+
+/*
  * Check if provided uuid is valid
  */
 das_Error das_UuidCheck(char *uuid) {

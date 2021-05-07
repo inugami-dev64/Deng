@@ -233,7 +233,7 @@ namespace deng {
             // Copy texture vertices
             __vk_BufferCreator::cpyToBufferMem (
                 device, 
-                asset.vertices.v3d.tn * sizeof(das_ObjNormalData),
+                asset.vertices.v3d.tn * sizeof(das_ObjTextureData),
                 asset.vertices.v3d.tex, 
                 mem, 
                 asset.offsets.tex_offset
