@@ -126,12 +126,9 @@ namespace deng {
                     m_unmapped_asset_c++;
             }
 
-            __checkDescPoolCapacity (
-                device,
-                bd, 
-                dummy_tex_uuid,
-                min_ubo_align
-            );
+            // Check if descriptor pools need to be reallocated
+            __checkDescPoolCapacity(device, bd, 
+                dummy_tex_uuid, min_ubo_align);
 
             // Create new descriptor sets for all assets that are between given bounds
             for(size_t i = asset_bounds.first; i < asset_bounds.second; i++) {
@@ -145,25 +142,18 @@ namespace deng {
                     DENG_SUPPORTED_REG_TYPE_ASSET
                 );
 
+                // Create texture mapped descriptor sets
                 if(reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED ||
                    reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED) {
-                    __mkTexMappedDS (
-                        device,
-                        reg_vk_asset.vk_asset,
-                        bd,
-                        dummy_tex_uuid,
-                        min_ubo_align
-                    );
+                    __mkTexMappedDS(device, reg_vk_asset.vk_asset,
+                        bd, dummy_tex_uuid, min_ubo_align);
                 }
 
+                // Create non-texture mapped descriptor sets
                 else if(reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
                         reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED) {
-                    __mkUnmappedDS (
-                        device,
-                        reg_vk_asset.vk_asset,
-                        bd,
-                        min_ubo_align
-                    );
+                    __mkUnmappedDS(device, reg_vk_asset.vk_asset,
+                        bd, min_ubo_align);
                 }
             }
         }
@@ -477,15 +467,13 @@ namespace deng {
             // Allocate memory for descriptor sets
             asset.desc_c = __max_frame_c;
             asset.desc_sets = (VkDescriptorSet*) calloc (
-                asset.desc_c,
-                sizeof(VkDescriptorSet)
-            );
+                asset.desc_c, sizeof(VkDescriptorSet));
 
             for(i = 0; i < tmp_descriptor_set_layouts.size(); i++) 
                 tmp_descriptor_set_layouts[i] = m_unmapped_desc_set_layout;
             
             allocinfo.descriptorPool = m_unmapped_desc_pool;
-            allocinfo.descriptorSetCount = (deng_ui32_t) tmp_descriptor_set_layouts.size();
+            allocinfo.descriptorSetCount = static_cast<deng_ui32_t>(tmp_descriptor_set_layouts.size());
             allocinfo.pSetLayouts = tmp_descriptor_set_layouts.data();
 
             /* Allocate descriptor sets for unmapped 3D vertices */
@@ -498,12 +486,13 @@ namespace deng {
                 RegType &reg_asset = m_reg.retrieve(asset.base_id, DENG_SUPPORTED_REG_TYPE_ASSET);
 
                 // Set up descriptor buffer info struct
+                LOG("Min align: " + std::to_string(min_align));
                 bufferinfos[0].buffer = bd.uniform_buffer;
-                bufferinfos[0].offset = i * std::max<deng_ui64_t>(sizeof(__vk_UniformColorData), min_align);
+                bufferinfos[0].offset = i * cm_FindChunkSize(min_align, sizeof(__vk_UniformTransformation));
                 bufferinfos[0].range = sizeof(__vk_UniformTransformation);
 
                 bufferinfos[1].buffer = bd.uniform_buffer;
-                bufferinfos[1].offset = reg_asset.asset.offsets.ubo_offset + i * std::max<deng_ui64_t>(sizeof(__vk_UniformColorData), min_align);
+                bufferinfos[1].offset = reg_asset.asset.offsets.ubo_offset + i * cm_FindChunkSize(min_align, sizeof(__vk_UniformColorData));
                 bufferinfos[1].range = sizeof(__vk_UniformColorData);
 
                 // Set up descriptor set write
@@ -607,16 +596,14 @@ namespace deng {
 
                 // Set up uniform transformation data buffer
                 bufferinfo[0].buffer = bd.uniform_buffer;
-                bufferinfo[0].offset = i * std::max<VkDeviceSize>(sizeof(__vk_UniformTransformation), min_align);
+                bufferinfo[0].offset = i * cm_FindChunkSize(min_align, sizeof(__vk_UniformTransformation));
                 bufferinfo[0].range = sizeof(__vk_UniformTransformation);
 
                 // Set up uniform color data buffer for each frame in flight
                 bufferinfo[1].buffer = bd.uniform_buffer;
-                bufferinfo[1].offset = reg_asset.asset.offsets.ubo_offset + i * std::max<VkDeviceSize>(sizeof(__vk_UniformColorData), min_align);
+                bufferinfo[1].offset = reg_asset.asset.offsets.ubo_offset + i * cm_FindChunkSize(min_align, sizeof(__vk_UniformColorData));
                 bufferinfo[1].range = sizeof(__vk_UniformColorData);
 
-
-                LOG("Binded texture base id: " + std::string(p_reg_tex->vk_tex.uuid));
                 desc_imageinfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 desc_imageinfo.imageView = p_reg_tex->vk_tex.image_view;
                 desc_imageinfo.sampler = p_reg_tex->vk_tex.sampler;
@@ -686,17 +673,20 @@ namespace deng {
             else if(m_unmapped_asset_c > m_unmapped_dc_pool_cap) {
                 m_unmapped_dc_pool_cap = m_unmapped_asset_c * 2;
                 const std::vector<size_t> &inds = __cleanUnmappedDescSets(device);
+                // Destroy previous unmapped descriptor pool
                 vkDestroyDescriptorPool (
                     device,
                     m_unmapped_desc_pool,
                     NULL
                 );
 
+                // Create new descriptor pool for unmapped assets
                 __mkUnmappedDescPool (
                     device,
                     m_unmapped_dc_pool_cap
                 );
-
+                
+                // For each cleaned 
                 for(size_t i = 0; i < inds.size(); i++) {
                     RegType &reg_asset = m_reg.retrieve (
                         m_assets[inds[i]], 
@@ -727,31 +717,16 @@ namespace deng {
             else if(m_mapped_asset_c > m_mapped_dc_pool_cap) {
                 m_mapped_dc_pool_cap = m_mapped_asset_c * 2;
                 const std::vector<size_t> &inds =__cleanUnmappedDescSets(device);
-                vkDestroyDescriptorPool (
-                    device,
-                    m_tex_mapped_desc_pool,
-                    NULL
-                );
-
-                __mkTexMappedDescPool (
-                    device,
-                    m_mapped_dc_pool_cap
-                );
+                vkDestroyDescriptorPool(device, m_tex_mapped_desc_pool, NULL);
+                __mkTexMappedDescPool(device, m_mapped_dc_pool_cap);
 
                 // Create new descriptor sets for destroyed ones
                 for(size_t i = 0; i < inds.size(); i++) {
-                    RegType &vk_reg_asset = m_reg.retrieve (
-                        m_assets[inds[i]], 
-                        DENG_SUPPORTED_REG_TYPE_VK_ASSET
-                    );
+                    RegType &vk_reg_asset = m_reg.retrieve(
+                        m_assets[inds[i]], DENG_SUPPORTED_REG_TYPE_VK_ASSET);
 
-                    __mkTexMappedDS (
-                        device,
-                        vk_reg_asset.vk_asset,
-                        bd,
-                        dummy_tex_uuid,
-                        min_ubo_align
-                    );
+                    __mkTexMappedDS(device, vk_reg_asset.vk_asset,
+                        bd, dummy_tex_uuid, min_ubo_align);
                 }
             }
         }

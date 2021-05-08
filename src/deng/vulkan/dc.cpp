@@ -298,7 +298,6 @@ namespace deng {
                     VK_SUBPASS_CONTENTS_INLINE
                 );
                     // Iterate through every asset, bind resources and issue an index draw to commandbuffer
-                    LOG("Draw caller asset count: " + std::to_string(m_assets.size()));
                     for(j = 0; j < m_assets.size(); j++) {
                         RegType reg_vk_asset = m_reg.retrieve (
                             m_assets[j], 

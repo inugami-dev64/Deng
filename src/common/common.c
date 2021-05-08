@@ -292,6 +292,14 @@ void cm_ConvertTime (
 
 
 /*
+ * This function calculates the total chuck size from the required memory size
+ */
+deng_ui64_t cm_FindChunkSize(deng_ui64_t chunk, deng_ui64_t req_mem) {
+    return req_mem + (req_mem % chunk > 0 ? chunk - (req_mem % chunk) : 0);
+}
+
+
+/*
  * Substring finder algorithm core function
  */
 void __cm_SubstrAl (

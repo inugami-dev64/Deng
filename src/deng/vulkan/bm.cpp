@@ -88,31 +88,21 @@ namespace deng {
             deng_ui64_t asset_cap
         ) {
             m_buffer_data.ubo_asset_cap = asset_cap;
-            m_buffer_data.ubo_cap = __max_frame_c * (asset_cap * std::max<VkDeviceSize> (
-                sizeof(__vk_UniformColorData), m_gpu_limits.minUniformBufferOffsetAlignment) +
-                std::max<VkDeviceSize>(sizeof(__vk_UniformTransformation), 
-                m_gpu_limits.minUniformBufferOffsetAlignment)
-            );
+            
+            // Calculate the initial uniform buffer capacity
+            m_buffer_data.ubo_cap = __max_frame_c * (cm_FindChunkSize(m_gpu_limits.minUniformBufferOffsetAlignment, 
+                sizeof(__vk_UniformTransformation)) + asset_cap * cm_FindChunkSize(m_gpu_limits.minUniformBufferOffsetAlignment, 
+                sizeof(__vk_UniformColorData)));
             
             // Create a new uniform buffer instance
-            VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer (
-                device,
-                gpu,
-                m_buffer_data.ubo_cap,
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                m_buffer_data.uniform_buffer
-            );
+            VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer(device, gpu, 
+                m_buffer_data.ubo_cap, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                m_buffer_data.uniform_buffer);
 
             // Allocate memory for uniform buffer
-            __vk_BufferCreator::allocateMemory (
-                device,
-                gpu,
-                mem_req.size,
-                m_buffer_data.uniform_buffer_mem,
-                mem_req.memoryTypeBits,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-            );
+            __vk_BufferCreator::allocateMemory(device, gpu, mem_req.size,
+                m_buffer_data.uniform_buffer_mem, mem_req.memoryTypeBits,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
             // Bind the newly created buffer with newly allocated buffer memory
             vkBindBufferMemory(device, m_buffer_data.uniform_buffer, m_buffer_data.uniform_buffer_mem, 0);
@@ -405,7 +395,7 @@ namespace deng {
 
             // Increment the ubo buffer size
             size_t old_size = m_buffer_data.ubo_size;
-            m_buffer_data.ubo_size += __max_frame_c * std::max(m_gpu_limits.minUniformBufferOffsetAlignment,
+            m_buffer_data.ubo_size += __max_frame_c * cm_FindChunkSize(m_gpu_limits.minUniformBufferOffsetAlignment,
                 sizeof(__vk_UniformColorData));
 
             // Check if buffer reallocation is needed 
@@ -420,15 +410,15 @@ namespace deng {
             for(size_t i = 0; i < __max_frame_c; i++) {
                 // Copy all uniform data to buffer
                 __vk_BufferCreator::cpyToBufferMem(device, sizeof(__vk_UniformColorData), 
-                    (void*) &ubo, m_buffer_data.uniform_buffer_mem, old_size + i * std::max(sizeof(
-                    __vk_UniformColorData), m_gpu_limits.minUniformBufferOffsetAlignment));
+                    (void*) &ubo, m_buffer_data.uniform_buffer_mem, old_size + i * cm_FindChunkSize(
+                    m_gpu_limits.minUniformBufferOffsetAlignment, sizeof(__vk_UniformColorData)));
             }
         }
 
 
         /*
-         * Reallocate memory for uniform buffer and copy previous data to
-         * newly allocated buffer instance
+         * Update transfrom uniform data in the frame according to updated camera
+         * and view matrix
          */
         void __vk_BufferManager::updateUboTransform (
             VkDevice device, 
@@ -441,14 +431,13 @@ namespace deng {
             ubo.no_perspective = !p_cam->isPerspective();
 
             __vk_BufferCreator::cpyToBufferMem(device, sizeof(__vk_UniformTransformation),
-                &ubo, m_buffer_data.uniform_buffer_mem, current_image * std::max<VkDeviceSize>
-                (sizeof(__vk_UniformTransformation), m_gpu_limits.minUniformBufferOffsetAlignment));
+                &ubo, m_buffer_data.uniform_buffer_mem, current_image * cm_FindChunkSize(
+                m_gpu_limits.minUniformBufferOffsetAlignment, sizeof(__vk_UniformTransformation)));
         }
 
         
         /*
-         * Replace data in main buffer with newer data from given nclude <deng/surface/key_definitions.h>
-         * asset vertices
+         * Replace data in main buffer with newer data from given asset vertices
          */
         void __vk_BufferManager::remapAssetVerts (
             VkDevice device,

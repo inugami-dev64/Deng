@@ -236,6 +236,12 @@ void cm_ConvertTime (
 
 
 /*
+ * This function calculates the total chuck size from the required memory size
+ */
+deng_ui64_t cm_FindChunkSize(deng_ui64_t chunk, deng_ui64_t req_mem);
+
+
+/*
  * The following functions are used to get nearest number which has power of 2
  */
 deng_ui64_t cm_ToPow2I64(deng_ui64_t n);

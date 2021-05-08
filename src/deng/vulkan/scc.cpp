@@ -224,20 +224,12 @@ namespace deng {
 
             else {
                 deng_ui32_t image_count;
-                vkGetSwapchainImagesKHR (
-                    m_device, 
-                    m_swapchain, 
-                    &image_count, 
-                    NULL
-                );
+                vkGetSwapchainImagesKHR(m_device, m_swapchain, 
+                    &image_count, NULL);
                 m_swapchain_images.resize(image_count);
                 __max_frame_c = image_count;
-                vkGetSwapchainImagesKHR (
-                    m_device, 
-                    m_swapchain, 
-                    &image_count, 
-                    m_swapchain_images.data()
-                );
+                vkGetSwapchainImagesKHR(m_device, m_swapchain, 
+                    &image_count, m_swapchain_images.data());
             }
         }
 
