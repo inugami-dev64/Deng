@@ -9,7 +9,7 @@
 normalising.txt
 x64/
 website/
-Makefile
+./Makefile
 *.make
 init.sh
 init.bat

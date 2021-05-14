@@ -96,11 +96,17 @@
     #include <deng/vulkan/rend_infos.h>
     #include <deng/vulkan/ic.h>
     #include <deng/vulkan/scc.h>
-    #include <deng/vulkan/desc_c.h>
+    #include <deng/vulkan/pipeline_data.h>
+    #include <deng/vulkan/pipelines.h>
+    #include <deng/vulkan/desc_pool.h>
+    #include <deng/vulkan/desc_set_layout.h>
+    #include <deng/vulkan/desc_sets.h>
     #include <deng/vulkan/dc.h>
     #include <deng/vulkan/tm.h>
     #include <deng/vulkan/bm.h>
     #include <deng/vulkan/rm.h>
+    #include <deng/vulkan/rend_init.h>
+    #include <deng/vulkan/runtime_updater.h>
     #include <deng/vulkan/renderer.h>
     #include <deng/window.h>
     

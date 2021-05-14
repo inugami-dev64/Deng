@@ -60,36 +60,42 @@
  */ 
 
 
+/*
+ * This is just a basic fragment shaders that outputs the fragment color
+ * it gets as input
+ */
+
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-const uint ortho_cam_mode = 0x00000004u;
+struct Light {
+    float intensity;
+    vec3 pos;
+};
 
-layout(binding = 0) uniform UniformData {
-    mat4 transform;
-    mat4 view;
-    uint ubo_flag_bits;
-} ubo;
-
-
-/*
- * Store color information about asset when it is not texture mapped
- */
-layout(binding = 1) uniform ColorData {
-    vec4 color;
-    int is_unmapped;
-} cl;
+layout(binding = 2) uniform UboLightData {
+    Light light_srcs[ 32 ];
+    vec4 ambient;
+    uint light_src_c;
+} ld;
 
 
-layout(location = 0) in vec2 in_position;
+// All the data that is passed to the fragment shader
+layout(location = 0) in vec4 in_color;
+layout(location = 1) in vec3 in_pos;
+layout(location = 2) in vec3 in_normal;
+
 layout(location = 0) out vec4 out_color;
 
 void main() {
-    // Check how to handle vertex
-    if((ubo.ubo_flag_bits & ortho_cam_mode) == ortho_cam_mode)
-        gl_Position = ubo.view * vec4(in_position, 0.0f, 1.0f);
+    // Set the ambient lighting
+    vec4 dif_color = ld.ambient * in_color;
+    out_color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
-    else gl_Position = vec4(in_position, 0.0f, 1.0f);
-    
-    out_color = cl.color;
+    // For each light source apply lambertian shading
+    for(uint i = 0; i < ld.light_src_c; i++) {
+        float cos_theta = dot(normalize(ld.light_srcs[i].pos - in_pos), 
+            in_normal);
+        out_color += dif_color * ld.light_srcs[i].intensity * max(0, cos_theta);
+    }
 }

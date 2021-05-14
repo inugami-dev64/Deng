@@ -57,20 +57,62 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: runtime_updater - Runtime buffer data updater
+ *  Purpose: Provide a class interface for manipulating data during runtime
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
-/*
- * This is just a basic fragment shaders that outputs the fragment color
- * it gets as input
- */
+#define __RUNTIME_UPDATE_CPP
+#include <deng/vulkan/runtime_updater.h>
 
-#version 450
-#extension GL_ARB_separate_shader_objects : enable
 
-layout(location = 0) in vec4 in_color;
-layout(location = 0) out vec4 out_color;
+namespace deng {
+    namespace vulkan {
 
-void main() {
-    out_color = in_color;
+
+        __vk_RuntimeUpdater::__vk_RuntimeUpdater (
+            __vk_InstanceCreator *p_ic,
+            __vk_SwapChainCreator *p_scc,
+            __vk_DrawCaller *p_dc,
+            __vk_ResourceManager *p_rm,
+            std::vector<deng_Id> &assets, 
+            std::vector<deng_Id> &tex
+        ) : m_ref_assets(assets), m_ref_tex(tex) {
+            m_p_ic = p_ic;
+            m_p_scc = p_scc;
+            m_p_dc = p_dc;
+            m_p_rm = p_rm;
+        }
+
+
+        /*
+         * This method updates the vertices buffer that is allocated by
+         * given assets
+         */
+        void __vk_RuntimeUpdater::__updateAssetVerts(const dengMath::vec2<deng_ui32_t> &asset_bounds) {
+            m_p_rm->remapAssetVerts (
+                m_p_ic->getDev(),
+                m_p_ic->getGpu(),
+                m_p_dc->getComPool(),
+                m_p_ic->getQFF().graphics_queue,
+                asset_bounds
+            );
+        }
+
+        
+        /*
+         * Free and reallocate new commandbuffers 
+         */
+        void __vk_RuntimeUpdater::__updateCmdBuffers(const dengMath::vec4<deng_vec_t> &background) {
+            m_p_dc->recordMainCmdBuffers (
+                m_p_scc->getRp(),
+                m_p_scc->getExt(),
+                background,
+                m_p_rm->getBD()
+            );
+        }
+
+    }
 }

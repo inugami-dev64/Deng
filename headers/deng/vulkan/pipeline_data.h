@@ -60,19 +60,40 @@
  */ 
 
 
-#version 450
-#extension GL_ARB_separate_shader_objects : enable
+#ifndef __PIPELINE_DATA_H
+#define __PIPELINE_DATA_H
 
-layout(binding = 2) uniform sampler2D tex_sampler;
+namespace deng {
+    namespace vulkan {
 
-layout(location = 0) in vec4 in_color;
-layout(location = 1) in vec2 in_tex_pos;
-layout(location = 2) in flat int in_is_unmapped;
+        /// Structure for all pipeline related data required by Vulkan renderer
+        struct __vk_PipelineData {
+            VkPipeline pipeline;
+            deng_PipelineType pipeline_type;
+            VkPipelineLayout *p_pipeline_layout;
+        };
 
-layout(location = 0) out vec4 out_color;
 
-void main() {
-    if(in_is_unmapped == 0)
-        out_color = texture(tex_sampler, in_tex_pos);
-    else out_color = in_color;
+        /// Parent structure for pipeline createinfo generation class
+        struct __vk_PipelineCreateInfoSpecifiers {
+            std::array<VkPipelineShaderStageCreateInfo, 2> m_shader_stage_createinfos{};
+            std::array<VkShaderModule, 2> m_shader_modules{};
+            std::vector<VkVertexInputBindingDescription> m_input_binding_desc{};
+            std::vector<VkVertexInputAttributeDescription> m_input_attr_descs{};
+
+            VkViewport m_viewport{};
+            VkRect2D m_scissor{};
+
+            VkPipelineVertexInputStateCreateInfo    m_vert_input_create_info{};
+            VkPipelineInputAssemblyStateCreateInfo  m_input_asm_createinfo{};
+            VkPipelineViewportStateCreateInfo       m_viewport_state_createinfo{};
+            VkPipelineRasterizationStateCreateInfo  m_rasterization_createinfo{};
+            VkPipelineMultisampleStateCreateInfo    m_multisample_createinfo{};
+            VkPipelineColorBlendAttachmentState     m_colorblend_attachment{};
+            VkPipelineDepthStencilStateCreateInfo   m_depth_stencil{};
+            VkPipelineColorBlendStateCreateInfo     m_colorblend_state_createinfo{};
+        };
+    }
 }
+
+#endif

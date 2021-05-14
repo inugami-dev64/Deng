@@ -208,9 +208,7 @@ namespace deng {
         void updateTextures();
 
 
-        /* 
-         * Begin the rendering loop
-         */
+        /// Begin the rendering loop
         void run();        
     };
 }

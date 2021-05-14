@@ -102,7 +102,7 @@ namespace deng {
 
     
     /*
-     * Main data structure for keeping information about hashmapped
+     * Main data structure for keeping information about hash mapped
      * registry entry
      */
     struct __RegEntry {

@@ -60,66 +60,48 @@
  */ 
 
 
-#ifndef __LIGHT_SRCS_H
-#define __LIGHT_SRCS_H
+#version 450
+#extension GL_ARB_separate_shader_objects : enable
 
 
-#define __DENG_MAX_LIGHT_SRC_COUNT      32
+struct Light {
+    float intensity;
+    vec3 pos;
+};
+
+layout(binding = 2) uniform UboLightData {
+    Light light_srcs[ 32 ];
+    vec4 ambient;
+    uint light_src_c;
+} ld;
+
+layout(binding = 3) uniform sampler2D tex_sampler;
 
 
-namespace deng {
+// Fragment input data
+layout(location = 0) in vec4 in_color;
+layout(location = 1) in vec2 in_tex;
+layout(location = 2) in vec3 in_pos;
+layout(location = 3) in vec3 in_normal;
+layout(location = 4) in flat uint in_is_unmapped;
 
-    /// Structure for point light source information keeping
-    struct __PtLightSrc {
-        deng_Id uuid;
-        deng_vec_t intensity;
-        dengMath::vec3<deng_vec_t> pos;
-    };
+// Output fragment
+layout(location = 0) out vec4 out_color;
 
-    
-    /// Structure for keeping information about global light source
-    /// that has specific normalised ray vector position
-    struct __SunLightSrc {
-        deng_Id uuid;
-        deng_vec_t intensity;
-        dengMath::vec3<deng_vec_t> ray_vec;
-    };
+void main() {
+    vec4 dif_color;;
 
-    
-    /// Structure for keeping information about direction light source
-    struct __DirectionLightSrc {
-        deng_Id uuid;
-        deng_vec_t intensity;
-        deng_vec_t radius;
-        dengMath::vec3<deng_vec_t> direction;
-        dengMath::vec3<deng_vec_t> pos;
-    };
+    // Check if color or texture mapping should be used
+    if(in_is_unmapped == 1)
+        dif_color = ld.ambient * in_color;
+    else dif_color = ld.ambient * texture(tex_sampler, in_tex);
 
+    out_color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
-    /// Universal light source union
-    union __UniLightSrc {
-        __PtLightSrc pt;
-        __SunLightSrc sun;
-        __DirectionLightSrc dir;
-    };
-
-    
-    /// Light source type specifier
-    enum __LightSrcType {
-        DENG_LIGHT_SRC_TYPE_NONE    = 0,
-        DENG_LIGHT_SRC_TYPE_PT      = 1,
-        DENG_LIGHT_SRC_TYPE_SUN     = 2,
-        DENG_LIGHT_SRC_TYPE_DIR     = 3,
-        DENG_LIGHT_SRC_TYPE_FIRST   = DENG_LIGHT_SRC_TYPE_NONE,
-        DENG_LIGHT_SRC_TYPE_LAST    = DENG_LIGHT_SRC_TYPE_DIR
-    };
-
-    
-    /// Main light source specifier structure
-    struct LightSource {
-        __LightSrcType type;
-        __UniLightSrc light;
-    };
+    // For each light source apply lambertian shading
+    for(uint i = 0; i < ld.light_src_c; i++) {
+        float cos_theta = dot(normalize(ld.light_srcs[i].pos - in_pos), 
+            in_normal);
+        out_color += dif_color * ld.light_srcs[i].intensity * max(0, cos_theta);
+    }
 }
-
-#endif

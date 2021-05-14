@@ -91,9 +91,7 @@ typedef float deng_vec_t;
 #define false 0
 
 
-/*
- * Universal DENG identifier type
- */
+/// Universal DENG identifier type
 typedef char* deng_Id;
 typedef enum deng_SupportedRegType {
     DENG_SUPPORTED_REG_TYPE_ASSET       = 0,
@@ -111,9 +109,7 @@ typedef enum deng_SupportedRegType {
 } deng_SupportedRegTypes;
 
 
-/*
- * Uniform flags mainly reserved for future use
- */
+/// Uniform flags mainly reserved for future use
 typedef deng_ui32_t deng_CameraUniformFlagBits;
 #define DENG_CAMERA_UNIFORM_ORTHOGRAPHIC_CAMERA_MODE_3D 0x01u
 #define DENG_CAMERA_UNIFORM_PERSPECTIVE_CAMERA_MODE_3D  0x02u
@@ -130,9 +126,7 @@ typedef deng_ui32_t deng_WindowHintBits;
 #define DENG_WINDOW_HINT_NO_MOUSE_LOCK                  0x04u
 #define DENG_WINDOW_HINT_NO_CURSOR_HIDE                 0x08u
 
-/* 
- * Hints for controlling renderer features 
- */
+/// Hints for controlling renderer features 
 typedef deng_ui16_t deng_RendererHintBits;
 #define DENG_RENDERER_HINT_API_VULKAN                       0x0001u
 #define DENG_RENDERER_HINT_API_OPENGL                       0x0002u
@@ -152,9 +146,7 @@ typedef deng_ui16_t deng_RendererHintBits;
 #define DENG_RENDERER_HINT_CUSTOM_LOOP                      0x8000u
 
 
-/* 
- * Coordinate axis specifier 
- */
+/// Coordinate axis specifier 
 typedef enum deng_CoordinateAxisType {
     DENG_COORD_AXIS_UNDEFINED   = -1,
     DENG_COORD_AXIS_X           = 0,
@@ -165,9 +157,7 @@ typedef enum deng_CoordinateAxisType {
 } deng_CoordinateAxisType;
 
 
-/* 
- * Movement mode specifier 
- */
+/// Movement mode specifier 
 typedef enum deng_MovementEvent {
     DENG_MOVEMENT_NONE          = -1,
     DENG_MOVEMENT_FORWARD       = 0,
@@ -181,9 +171,7 @@ typedef enum deng_MovementEvent {
 } deng_MovementEvent;
 
 
-/* 
- * Pipeline type specifier 
- */
+/// Pipeline type specifier 
 typedef enum deng_PipelineType {
     DENG_PIPELINE_TYPE_UNMAPPED_3D              = 0,
     DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D        = 1,
@@ -194,9 +182,7 @@ typedef enum deng_PipelineType {
 } deng_PipelineType;
 
 
-/* 
- * Renderer usage mode 
- */
+/// Renderer usage mode 
 typedef enum deng_RendererUsageMode {
     DENG_RENDERER_USAGE_ASSET_EDITOR    = 0,
     DENG_RENDERER_USAGE_MAP_EDITOR      = 1,
@@ -206,9 +192,7 @@ typedef enum deng_RendererUsageMode {
 } deng_RendererUsageMode;
 
 
-/* 
- * Camera type specifier 
- */
+/// Camera type specifier 
 typedef enum deng_CameraType {
     DENG_CAMERA_TYPE_FPP        = 0,
     DENG_CAMERA_TYPE_EDITOR     = 1,
@@ -217,9 +201,7 @@ typedef enum deng_CameraType {
 } deng_CameraType;
 
 
-/* 
- * Editor camera event specifier 
- */
+/// Editor camera event specifier 
 typedef enum deng_EditorCameraEvent {
     DENG_EDITOR_CAMERA_EVENT_NONE               = -1,
     DENG_EDITOR_CAMERA_EVENT_Z_MOV_IN           = 0,
@@ -230,9 +212,7 @@ typedef enum deng_EditorCameraEvent {
 } deng_EditorCameraEvent;
 
 
-/* 
- * Specify input device type for action lookup
- */
+/// Specify input device type for action lookup
 typedef enum deng_InputType {
     DENG_INPUT_TYPE_MOUSE   = 0,
     DENG_INPUT_TYPE_KB      = 1,
@@ -242,9 +222,7 @@ typedef enum deng_InputType {
 } deng_InputType;
 
 
-/*
- * Light source type specifier enum
- */
+/// Light source type specifier enum
 typedef enum deng_LightSrcType {
     DENG_LIGHT_SRC_TYPE_PT      = 0,
     DENG_LIGHT_SRC_TYPE_SUN     = 1,
@@ -255,9 +233,7 @@ typedef enum deng_LightSrcType {
 } deng_LightSrcType;
 
 
-/*
- * Specify input event type for lookup
- */
+/// Specify input event type for lookup
 typedef enum deng_InputEventType {
     DENG_INPUT_EVENT_TYPE_ACTIVE    = 0,
     DENG_INPUT_EVENT_TYPE_RELEASED  = 1,
@@ -267,7 +243,7 @@ typedef enum deng_InputEventType {
 
 
 /*
- * Specify what should happen if virtual cursor achives 
+ * Specify what should happen if virtual cursor achieves 
  * its maximum or minimum position 
  */
 typedef enum deng_VCPOverflowAction {

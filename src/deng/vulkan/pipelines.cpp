@@ -63,390 +63,119 @@
 #define __PIPELINES_CPP
 #include <deng/vulkan/pipelines.h>
 
+
 namespace deng {
     namespace vulkan {
 
-        /***************************************/
-        /******** __vk_PipelineCreator *********/
-        /***************************************/
-
         __vk_PipelineCreator::__vk_PipelineCreator (
-            __vk_PipelineData *p_pipeline_data, 
+            VkDescriptorSetLayout &vu2d, VkDescriptorSetLayout &vm2d,
+            VkDescriptorSetLayout &vu3d, VkDescriptorSetLayout &vm3d
+        ) : m_vu2d_ds_layout(vu2d), m_vm2d_ds_layout(vm2d), 
+            m_vu3d_ds_layout(vu3d), m_vm3d_ds_layout(vm3d) {}
+
+
+        /// Create a single pipeline layout
+        void __vk_PipelineCreator::__mkPipelineLayout (
             VkDevice device, 
-            VkExtent2D extent, 
-            VkRenderPass renderpass
+            VkDescriptorSetLayout &ds_layout,
+            VkPipelineLayout &pl_layout
         ) {
-            m_p_pipeline_data = p_pipeline_data;
-            m_device = device;
-            m_extent = extent;
-            m_renderpass = renderpass;
+            VkPipelineLayoutCreateInfo pl_layout_info{};       
+            pl_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+            pl_layout_info.pushConstantRangeCount = 0;
+            pl_layout_info.setLayoutCount = 1;
+            pl_layout_info.pSetLayouts = &ds_layout;
+
+            if(vkCreatePipelineLayout(device, &pl_layout_info, NULL,
+               &pl_layout) != VK_SUCCESS)
+                VK_DESC_ERR("failed to create a pipeline layout");
         }
 
 
-        /*
-         * Create new shader module from SPIR-V binaries
-         * This method is used to create new shader module from shader binaries 
-         * provided as a parameter
-         */
-        VkShaderModule __vk_PipelineCreator::__mkShaderModule(std::vector<char> &shader_bins) {
-            VkShaderModuleCreateInfo createinfo{};
-            createinfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-            createinfo.codeSize = static_cast<deng_ui32_t>(shader_bins.size());
-            createinfo.pCode = reinterpret_cast<const deng_ui32_t*>(shader_bins.data());
-            VkShaderModule shader_module;
-
-            if(vkCreateShaderModule(m_device, &createinfo, nullptr, &shader_module) != VK_SUCCESS)
-                VK_PIPELINEC_ERR("failed to create shader module!");
-
-            return shader_module;
+        /// Create new pipeline layouts for all compatible pipelines
+        void __vk_PipelineCreator::__mkPipelineLayouts(VkDevice device) {
+            __mkPipelineLayout(device, m_vu2d_ds_layout, m_vu2d_layout);
+            __mkPipelineLayout(device, m_vm2d_ds_layout, m_vm2d_layout);
+            __mkPipelineLayout(device, m_vu3d_ds_layout, m_vu3d_layout);
+            __mkPipelineLayout(device, m_vm3d_ds_layout, m_vm3d_layout);
         }
 
         
-        /*
-         * Get binding description info in VkVertexInputBindingDescription instance
-         * This method checks for pipeline usage and returns VkVertexInputBindingDescription
-         * instance according to usage
-         * Type is std::vector for future usage
-         */
-        std::vector<VkVertexInputBindingDescription> __vk_PipelineCreator::__getBindingDesc() {
-            std::vector<VkVertexInputBindingDescription> input_binding_desc;
-            deng_bool_t is_tex_mapped = false;
-
-            switch (m_p_pipeline_data->pipeline_type) { 
-            case DENG_PIPELINE_TYPE_UNMAPPED_2D:
-                input_binding_desc.resize(1);
-                // Set the position vertex input bindings
-                input_binding_desc[0].binding = 0;
-                input_binding_desc[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-                input_binding_desc[0].stride = sizeof(das_ObjPosData2D);
-                break;
-
-            case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D:
-                input_binding_desc.resize(2);
-                input_binding_desc[0].binding = 0;
-                input_binding_desc[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-                input_binding_desc[0].stride = sizeof(das_ObjPosData2D);
-
-                input_binding_desc[1].binding = 1;
-                input_binding_desc[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-                input_binding_desc[1].stride = sizeof(das_ObjTextureData);
-                is_tex_mapped = true;
-                break;
-
-            case DENG_PIPELINE_TYPE_UNMAPPED_3D:
-                input_binding_desc.resize(2);
-                input_binding_desc[0].binding = 0;
-                input_binding_desc[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-                input_binding_desc[0].stride = sizeof(das_ObjPosData);
-
-                input_binding_desc[1].binding = 1;
-                input_binding_desc[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-                input_binding_desc[1].stride = sizeof(das_ObjNormalData);
-                break;
-
-            case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D:
-                LOG("Using tex mapped 3d asset bindings");
-                input_binding_desc.resize(3);
-                input_binding_desc[0].binding = 0;
-                input_binding_desc[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-                input_binding_desc[0].stride = sizeof(das_ObjPosData);
-
-                input_binding_desc[1].binding = 1;
-                input_binding_desc[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-                input_binding_desc[1].stride = sizeof(das_ObjTextureData);
-
-                input_binding_desc[2].binding = 2;
-                input_binding_desc[2].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-                input_binding_desc[2].stride = sizeof(das_ObjNormalData);
-                break;
-                
-            default:
-                break;
-            }
-
-            return input_binding_desc;
-        } 
-
-
-        /*
-         * Get attribute description info in VkVertexInputAttributeDescription instances
-         * This method is used to recieve all input descriptions required by shaders
-         */
-        std::vector<VkVertexInputAttributeDescription> __vk_PipelineCreator::__getAttributeDescs() {
-            std::vector<VkVertexInputAttributeDescription> input_attr_desc{};
-
-            switch (m_p_pipeline_data->pipeline_type) {
-            case DENG_PIPELINE_TYPE_UNMAPPED_2D:
-                input_attr_desc.resize(1);
-                input_attr_desc[0].binding = 0;
-                input_attr_desc[0].location = 0;
-                input_attr_desc[0].format = VK_FORMAT_R32G32_SFLOAT;
-                input_attr_desc[0].offset = 0;
-                break;
-
-            case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D:
-                input_attr_desc.resize(2);
-                input_attr_desc[0].binding = 0;
-                input_attr_desc[0].location = 0;
-                input_attr_desc[0].format = VK_FORMAT_R32G32_SFLOAT;
-                input_attr_desc[0].offset = 0;
-
-                input_attr_desc[1].binding = 1;
-                input_attr_desc[1].location = 1;
-                input_attr_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
-                input_attr_desc[1].offset = 0;
-                break;
-
-            case DENG_PIPELINE_TYPE_UNMAPPED_3D:
-                input_attr_desc.resize(2);
-                input_attr_desc[0].binding = 0;
-                input_attr_desc[0].location = 0;
-                input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-                input_attr_desc[0].offset = 0;
-
-                input_attr_desc[1].binding = 1;
-                input_attr_desc[1].location = 1;
-                input_attr_desc[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-                input_attr_desc[1].offset = 0;
-                break;
-
-            case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D:
-                input_attr_desc.resize(3);
-                input_attr_desc[0].binding = 0;
-                input_attr_desc[0].location = 0;
-                input_attr_desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-                input_attr_desc[0].offset = 0;
-
-                input_attr_desc[1].binding = 1;
-                input_attr_desc[1].location = 1;
-                input_attr_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
-                input_attr_desc[1].offset = 0;
-
-                input_attr_desc[2].binding = 2;
-                input_attr_desc[2].location = 2;
-                input_attr_desc[2].format = VK_FORMAT_R32G32B32_SFLOAT;
-                input_attr_desc[2].offset = 0;
-                break;
-
-            default:
-                break;
-            }
-
-            return input_attr_desc;
-        }
-
-
-        /* 
-         * Make createinfo instance for graphics pipeline
-         * This method is used to set up VkGraphicsPipelineCreateInfo, while defaulting
-         * some options that are not needed to be customised by different DENG pipelines
-         */
-        VkGraphicsPipelineCreateInfo __vk_PipelineCreator::mkGraphicsPipelineInfo (
-            std::string vert_shader, 
-            std::string frag_shader, 
-            char *shader_module_name,
-            VkPolygonMode polygon_mode, 
-            VkCullModeFlagBits cull_mode, 
-            VkFrontFace front_face, 
-            VkPrimitiveTopology primitive_topology, 
-            deng_bool_t add_depth_stencil, 
-            deng_bool_t add_color_blend, 
-            VkSampleCountFlagBits sample_c,
-            deng_ui32_t subpass_index
+        /// Create new pipelines 
+        void __vk_PipelineCreator::mkPipelines (
+            VkDevice device, 
+            VkExtent2D ext,
+            VkRenderPass rp, 
+            VkSampleCountFlagBits sample_c
         ) {
-            FILE *file;
-            size_t res = 0;
-            long file_size;
+            // Create new pipeline layouts
+            __mkPipelineLayouts(device);
 
-            /* Get vertex shader binary data */
-            std::vector<char> vert_shader_binary_vector;        
-            file = fopen(vert_shader.c_str(), "rb");
-            
-            if(!file) 
-                VK_PIPELINEC_ERR("incorrect vertex shader '" + vert_shader + "'!");
-            
-            fseek(file, 0, SEEK_END);
-            file_size = ftell(file);
-            fseek(file, 0, SEEK_SET);
-            vert_shader_binary_vector.resize(file_size);
-            res = fread (
-                vert_shader_binary_vector.data(), 
-                sizeof(char), 
-                file_size, 
-                file
-            );
+            // Specify the pipiline type and layout
+            m_pipelines[UM2D_I].pipeline_type = DENG_PIPELINE_TYPE_UNMAPPED_2D;
+            m_pipelines[TM2D_I].pipeline_type = DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D;
+            m_pipelines[UM3D_I].pipeline_type = DENG_PIPELINE_TYPE_UNMAPPED_3D;
+            m_pipelines[TM3D_I].pipeline_type = DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D;
 
-            if(res != (size_t) file_size)
-                MEM_ERR("Failed to read " + std::to_string(file_size) + "members");
+            m_pipelines[UM2D_I].p_pipeline_layout = &m_vu2d_layout;
+            m_pipelines[TM2D_I].p_pipeline_layout = &m_vm2d_layout;
+            m_pipelines[UM3D_I].p_pipeline_layout = &m_vu3d_layout;
+            m_pipelines[TM3D_I].p_pipeline_layout = &m_vm3d_layout;
 
-            fclose(file);
+            // Create pipeline creator instances
+            __vk_PipelineCreateInfoGenerator vu2d_ci_gen(device, ext, 
+                rp, m_pipelines[UM2D_I]);
 
-            /* Get frag shader binary data */
-            std::vector<char> frag_shader_binary_vector;
-            file = fopen(frag_shader.c_str(), "rb");
-            
-            if(!file) 
-                VK_PIPELINEC_ERR("incorrect fragment shader '" + frag_shader + "'!");
+            __vk_PipelineCreateInfoGenerator vm2d_ci_gen(device, ext, 
+                rp, m_pipelines[TM2D_I]);
 
-            fseek(file, 0, SEEK_END);
-            file_size = ftell(file);
-            fseek(file, 0, SEEK_SET);
-            frag_shader_binary_vector.resize(file_size);
-            res = fread (
-                frag_shader_binary_vector.data(), 
-                sizeof(char), 
-                file_size, 
-                file
-            );
+            __vk_PipelineCreateInfoGenerator vu3d_ci_gen(device, ext, 
+                rp, m_pipelines[UM3D_I]);
 
-            if(res != (size_t) file_size)
-                MEM_ERR("Failed to read " + std::to_string(file_size) + " members");
-
-            fclose(file);
-
-            /* Call shader module handler */
-            m_shader_modules[0] = __mkShaderModule(vert_shader_binary_vector);
-            m_shader_modules[1] = __mkShaderModule(frag_shader_binary_vector);
-
-            /* Create vertex shader stage createinfo */
-            VkPipelineShaderStageCreateInfo vertex_shader_stage_createinfo{};
-            vertex_shader_stage_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-            vertex_shader_stage_createinfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-            vertex_shader_stage_createinfo.module = m_shader_modules[0];
-            vertex_shader_stage_createinfo.pName = shader_module_name;
-
-            /* Create fragment shader stage createinfo */
-            VkPipelineShaderStageCreateInfo frag_shader_stage_createinfo{};
-            frag_shader_stage_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-            frag_shader_stage_createinfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-            frag_shader_stage_createinfo.module = m_shader_modules[1];
-            frag_shader_stage_createinfo.pName = shader_module_name;
-            
-            m_shader_stage_createinfos = {vertex_shader_stage_createinfo, frag_shader_stage_createinfo};
-
-            // Bind get binding descriptors and attribute descriptors for the current pipeline type
-            m_input_binding_desc = __getBindingDesc();
-            m_input_attr_descs = __getAttributeDescs();
-
-            /* Set up vertex input createinfo object */ 
-            m_vert_input_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-            m_vert_input_create_info.vertexBindingDescriptionCount = (deng_ui32_t) m_input_binding_desc.size();
-            m_vert_input_create_info.vertexAttributeDescriptionCount = (deng_ui32_t) m_input_attr_descs.size();
-            m_vert_input_create_info.pVertexBindingDescriptions = m_input_binding_desc.data();
-            m_vert_input_create_info.pVertexAttributeDescriptions = m_input_attr_descs.data();
-
-            /* Set up input assembly createinfo object */
-            m_input_asm_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-            m_input_asm_createinfo.topology = primitive_topology;
-            m_input_asm_createinfo.primitiveRestartEnable = VK_FALSE;
-
-            /* Set viewport values */
-            m_viewport.x = 0.0f;
-            m_viewport.y = 0.0f;
-            m_viewport.width = static_cast<float>(m_extent.width);
-            m_viewport.height = static_cast<float>(m_extent.height);
-            m_viewport.minDepth = 0.0f;
-            m_viewport.maxDepth = 1.0f;
-
-            /* Set scissor values */
-            m_scissor.offset = {0, 0};
-            m_scissor.extent = m_extent;
-
-            /* Set up viewport state createinfo object */
-            m_viewport_state_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-            m_viewport_state_createinfo.viewportCount = 1;
-            m_viewport_state_createinfo.pViewports = &m_viewport;
-            m_viewport_state_createinfo.scissorCount = 1;
-            m_viewport_state_createinfo.pScissors = &m_scissor;
-
-            /* Set up rasterization create info */
-            m_rasterization_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-            m_rasterization_createinfo.depthClampEnable = VK_FALSE;
-            m_rasterization_createinfo.rasterizerDiscardEnable = VK_FALSE;
-            m_rasterization_createinfo.polygonMode = polygon_mode;
-            m_rasterization_createinfo.lineWidth = 1.0f;
-            m_rasterization_createinfo.cullMode = cull_mode;
-
-            if(cull_mode != VK_CULL_MODE_NONE) {
-                m_rasterization_createinfo.frontFace = front_face;
-                m_rasterization_createinfo.depthBiasEnable = VK_TRUE;
-            }
+            __vk_PipelineCreateInfoGenerator vm3d_ci_gen(device, ext, 
+                rp, m_pipelines[TM3D_I]);
 
 
-            /* Set up multisampling createinfo */
-            m_multisample_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-            m_multisample_createinfo.sampleShadingEnable = VK_FALSE;
-            m_multisample_createinfo.rasterizationSamples = sample_c;
+            // Generate all graphics pipeline createinfos
+            // As of now no culling will be done
+            std::array<VkGraphicsPipelineCreateInfo, PIPELINE_C> pipeline_infos{};
+            pipeline_infos[UM2D_I] = vu2d_ci_gen.mkGraphicsPipelineInfo(DENG_PIPELINE_TYPE_UNMAPPED_2D, 
+                VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, 
+                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);
 
-            /* Set colorblend options */
-            m_colorblend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-            if(add_color_blend) m_colorblend_attachment.blendEnable = VK_TRUE;
-            else m_colorblend_attachment.blendEnable = VK_FALSE;
-            m_colorblend_attachment.alphaBlendOp = VK_BLEND_OP_SUBTRACT;
-            m_colorblend_attachment.blendEnable = VK_TRUE;
-            m_colorblend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-            m_colorblend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-            m_colorblend_attachment.colorBlendOp = VK_BLEND_OP_ADD;
-            m_colorblend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-            m_colorblend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-            m_colorblend_attachment.alphaBlendOp = VK_BLEND_OP_SUBTRACT;
-            
-            /* Set depth stencil */
-            m_depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-            if(add_depth_stencil) {
-                m_depth_stencil.depthTestEnable = VK_TRUE;
-                m_depth_stencil.depthWriteEnable = VK_TRUE;
-                m_depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS;
-                m_depth_stencil.depthBoundsTestEnable = VK_FALSE;
-                m_depth_stencil.stencilTestEnable = VK_FALSE;
-            }
+            pipeline_infos[TM2D_I] = vm2d_ci_gen.mkGraphicsPipelineInfo(DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D, 
+                VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, 
+                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);
+
+            pipeline_infos[UM3D_I] = vu3d_ci_gen.mkGraphicsPipelineInfo(DENG_PIPELINE_TYPE_UNMAPPED_3D, 
+                VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, 
+                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);
+
+            pipeline_infos[TM3D_I] = vm3d_ci_gen.mkGraphicsPipelineInfo(DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D, 
+                VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, 
+                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);
+
+            // Create all vulkan pipelines
+            std::array<VkPipeline, PIPELINE_C> pipelines;
+            if(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, static_cast<deng_ui32_t>(pipeline_infos.size()), 
+               pipeline_infos.data(), NULL, pipelines.data()) != VK_SUCCESS) 
+                VK_DESC_ERR("failed to create graphics pipelines!");
+
             else {
-                m_depth_stencil.depthTestEnable = VK_FALSE;
-                m_depth_stencil.depthWriteEnable = VK_FALSE;
-                m_depth_stencil.depthBoundsTestEnable = VK_FALSE;
-                m_depth_stencil.stencilTestEnable = VK_FALSE;
+                // Copy all the newly created pipelines to class pipeline instance
+                for(size_t i = 0; i < pipelines.size(); i++)
+                    m_pipelines[i].pipeline = pipelines[i];
             }
-            
-            /* Set up colorblend state createinfo */
-            m_colorblend_state_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-            m_colorblend_state_createinfo.logicOpEnable = VK_FALSE;
-            m_colorblend_state_createinfo.attachmentCount = 1;
-            m_colorblend_state_createinfo.pAttachments = &m_colorblend_attachment;
-
-            /* Set up graphics pipeline createinfo */
-            VkGraphicsPipelineCreateInfo graphics_pipeline_createinfo{};
-            graphics_pipeline_createinfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-            graphics_pipeline_createinfo.stageCount = (deng_ui32_t) m_shader_stage_createinfos.size();
-            graphics_pipeline_createinfo.pStages = m_shader_stage_createinfos.data();
-            graphics_pipeline_createinfo.pVertexInputState = &m_vert_input_create_info;
-            graphics_pipeline_createinfo.pInputAssemblyState = &m_input_asm_createinfo;
-            graphics_pipeline_createinfo.pViewportState = &m_viewport_state_createinfo;
-            graphics_pipeline_createinfo.pColorBlendState = &m_colorblend_state_createinfo;
-            graphics_pipeline_createinfo.pRasterizationState = &m_rasterization_createinfo;
-            graphics_pipeline_createinfo.pMultisampleState = &m_multisample_createinfo;
-            graphics_pipeline_createinfo.pDepthStencilState = &m_depth_stencil;
-            graphics_pipeline_createinfo.layout = *m_p_pipeline_data->p_pipeline_layout;
-
-            graphics_pipeline_createinfo.renderPass = m_renderpass;
-            graphics_pipeline_createinfo.subpass = subpass_index;
-            graphics_pipeline_createinfo.basePipelineHandle = VK_NULL_HANDLE;
-
-            return graphics_pipeline_createinfo;
         }
 
 
-        __vk_PipelineCreator::~__vk_PipelineCreator() {
-            vkDestroyShaderModule (
-                m_device, 
-                m_shader_modules[0],
-                nullptr
-            );
-            
-            vkDestroyShaderModule (
-                m_device, 
-                m_shader_modules[1], 
-                nullptr
-            );
+        // Getters / Setters
+        std::array<__vk_PipelineData, PIPELINE_C> &__vk_PipelineCreator::getPipelines() { 
+            return m_pipelines; 
+        }
+
+        __vk_PipelineData &__vk_PipelineCreator::getPipeline(deng_ui32_t id) {
+            return m_pipelines[id];
         }
     }
 }

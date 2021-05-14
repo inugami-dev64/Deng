@@ -57,69 +57,50 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: ubo - Uniform buffer objects
+ *  Purpose: Provide structures for uniform buffer data to align them for
+ *  shaders
+ *  Author: Karl-Mihkel Ott
  */ 
 
-
-#ifndef __LIGHT_SRCS_H
-#define __LIGHT_SRCS_H
-
-
-#define __DENG_MAX_LIGHT_SRC_COUNT      32
-
-
 namespace deng {
-
-    /// Structure for point light source information keeping
-    struct __PtLightSrc {
-        deng_Id uuid;
-        deng_vec_t intensity;
-        dengMath::vec3<deng_vec_t> pos;
-    };
-
-    
-    /// Structure for keeping information about global light source
-    /// that has specific normalised ray vector position
-    struct __SunLightSrc {
-        deng_Id uuid;
-        deng_vec_t intensity;
-        dengMath::vec3<deng_vec_t> ray_vec;
-    };
-
-    
-    /// Structure for keeping information about direction light source
-    struct __DirectionLightSrc {
-        deng_Id uuid;
-        deng_vec_t intensity;
-        deng_vec_t radius;
-        dengMath::vec3<deng_vec_t> direction;
-        dengMath::vec3<deng_vec_t> pos;
-    };
+    namespace vulkan {
+        
+        /// Structure for passing uniform lighting data right to the shader
+        struct __vk_UniformLightSource {
+            deng_vec_t intensity;
+            dengMath::vec3<deng_vec_t> pos;
+        };
 
 
-    /// Universal light source union
-    union __UniLightSrc {
-        __PtLightSrc pt;
-        __SunLightSrc sun;
-        __DirectionLightSrc dir;
-    };
+        /// Structure for containing information about 3D transformations
+        struct __vk_UniformObjectTransform {
+            dengMath::mat4<deng_vec_t> transform;
+            dengMath::mat4<deng_vec_t> view;
+        };
+ 
 
-    
-    /// Light source type specifier
-    enum __LightSrcType {
-        DENG_LIGHT_SRC_TYPE_NONE    = 0,
-        DENG_LIGHT_SRC_TYPE_PT      = 1,
-        DENG_LIGHT_SRC_TYPE_SUN     = 2,
-        DENG_LIGHT_SRC_TYPE_DIR     = 3,
-        DENG_LIGHT_SRC_TYPE_FIRST   = DENG_LIGHT_SRC_TYPE_NONE,
-        DENG_LIGHT_SRC_TYPE_LAST    = DENG_LIGHT_SRC_TYPE_DIR
-    };
+        /// Structure for containing information about 2D transformations
+        struct __vk_UniformObjectTransform2D {
+            dengMath::mat3<deng_vec_t> view;
+        };
 
-    
-    /// Main light source specifier structure
-    struct LightSource {
-        __LightSrcType type;
-        __UniLightSrc light;
-    };
+
+        /// Structure for storing uniform color data per each asset
+        struct __vk_UniformColorData {
+            dengMath::vec4<deng_vec_t> color;
+            deng_ui32_t ignore_transform;
+            deng_ui32_t is_unmapped;
+        };
+
+
+        /// Light data uniform structure
+        struct __vk_UniformLightData {
+            __vk_UniformLightSource light_srcs[ 32 ];
+            dengMath::vec4<deng_vec_t> ambient;
+            deng_ui32_t light_src_c;
+        };
+
+    }
 }
-
-#endif

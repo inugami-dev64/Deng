@@ -57,116 +57,85 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: runtime_updater - Runtime buffer data updater
+ *  Purpose: Provide a class interface for manipulating data during runtime
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __DC_H
-#define __DC_H
+#ifndef __RUNTIME_UPDATER_H
+#define __RUNTIME_UPDATER_H
 
-
-#ifdef __DC_CPP
+#ifdef __RUNTIME_UPDATE_CPP
     #include <vector>
     #include <array>
-	#include <string>
-    
+    #include <mutex>
     #include <vulkan/vulkan.h>
+
     #include <common/base_types.h>
     #include <common/hashmap.h>
-    #include <common/err_def.h>
     #include <data/assets.h>
-
     #include <math/deng_math.h>
+
     #include <deng/window.h>
-    #include <deng/vulkan/sd.h>
+    #include <utils/timer.h>
+    #include <deng/camera.h>
+
     #include <deng/vulkan/qm.h>
+    #include <deng/vulkan/sd.h>
     #include <deng/vulkan/resources.h>
-    
-    #include <deng/vulkan/rend_infos.h>
-    #include <deng/vulkan/pipeline_data.h>
-    #include <deng/vulkan/pipelines.h>
+
     #include <deng/lighting/light_srcs.h>
     #include <deng/registry/registry.h>
 
+    #include <deng/vulkan/rend_infos.h>
+    #include <deng/vulkan/ic.h>
+    #include <deng/vulkan/scc.h>
+    #include <deng/vulkan/pipeline_data.h>
+    #include <deng/vulkan/pipelines.h>
+    #include <deng/vulkan/dc.h>
+    #include <deng/vulkan/tm.h>
+    #include <deng/vulkan/bm.h>
+    #include <deng/vulkan/rm.h>
 #endif
 
 
 namespace deng {
     namespace vulkan {
 
-        /* 
-         * Class for making drawcalls and setting up proper synchronisation 
-         */
-        class __vk_DrawCaller {
+        class __vk_RuntimeUpdater {
         private:
-            std::vector<deng_Id> &m_assets;
-            std::vector<deng_Id> &m_textures;
-            deng::__GlobalRegistry &m_reg;
-            std::vector<VkFramebuffer> m_framebuffers;
-            std::array<__vk_PipelineData, PIPELINE_C> m_pl_data;
-            __vk_QueueManager m_qff;
+            __vk_InstanceCreator *m_p_ic;
+            __vk_SwapChainCreator *m_p_scc;
+            __vk_DrawCaller *m_p_dc;
+            __vk_ResourceManager *m_p_rm;
+            std::vector<deng_Id> &m_ref_assets;
+            std::vector<deng_Id> &m_ref_tex;
 
-            // Commandpools and commandbuffers
-            VkCommandPool m_cmd_pool;
-            std::vector<VkCommandBuffer> m_cmd_bufs;
-
-        private:
-            void __mkSynchronisation(VkDevice &device);
-
-            /// Asset commandbuffer binder methods
-            void __bindVertexResourceBuffers (
-                das_Asset &asset, 
-                VkCommandBuffer cur_buf,
-                __vk_BufferData &bd
+        protected:
+            
+            __vk_RuntimeUpdater (
+                __vk_InstanceCreator *p_ic,
+                __vk_SwapChainCreator *p_scc,
+                __vk_DrawCaller *p_dc,
+                __vk_ResourceManager *p_rm,
+                std::vector<deng_Id> &assets, 
+                std::vector<deng_Id> &tex
             );
 
-            
+
             /*
-             * Bind asset pipeline and return its pipeline layout
+             * This method updates vertices buffer that is allocated by
+             * given assets
              */
-            VkPipelineLayout *__bindPipeline(das_Asset &asset, VkCommandBuffer cmd_buf);
+            void __updateAssetVerts(const dengMath::vec2<deng_ui32_t> &asset_bounds);
 
-        public:
-            // Needed for synchronising frames
-            deng_ui32_t current_frame = 0;
-            std::vector<VkFence> flight_fences;
-            std::vector<VkSemaphore> image_available_semaphore_set;
-            std::vector<VkSemaphore> render_finished_semaphore_set;
 
-        public:
-            __vk_DrawCaller (
-                VkDevice device,
-                __vk_QueueManager qff,
-                std::vector<deng_Id> &assets,
-                std::vector<deng_Id> &textures,
-                deng::__GlobalRegistry &reg
-            );
-            
-            void setMiscData (
-                const std::array<__vk_PipelineData, PIPELINE_C> &pl_data, 
-                const std::vector<VkFramebuffer> &fb
-            );
-
-            void mkCommandPool(VkDevice device);
-
-            void allocateMainCmdBuffers (
-                VkDevice device, 
-                VkQueue g_queue, 
-                VkRenderPass renderpass, 
-                VkExtent2D ext,
-                dengMath::vec4<deng_vec_t> background,
-                __vk_BufferData &bd
-            );
-
-            void recordMainCmdBuffers (
-                VkRenderPass renderpass,
-                VkExtent2D ext,
-                const dengMath::vec4<deng_vec_t> &background,
-                __vk_BufferData &bd
-            );
-        
-        public:
-            VkCommandPool getComPool();
-            const std::vector<VkCommandBuffer> &getComBufs();
+            /*
+             * Rerecord existing commandbuffers 
+             */
+            void __updateCmdBuffers(const dengMath::vec4<deng_vec_t> &background);
         };
     }
 }

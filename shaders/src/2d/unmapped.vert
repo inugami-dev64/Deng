@@ -63,41 +63,34 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-const uint orthographic_camera_mode2D = 0x00000004u;
-const uint no_camera_mode2D = 0x00000008u;
-
 layout(binding = 0) uniform UniformData {
-    mat4 transform;
-    mat4 view;
-    uint ubo_flag_bits;
+    mat3 view;
 } ubo;
 
 
-/*
- * Store color information about asset when it is not texture mapped
- */
+// Store color information about asset when it is not texture mapped
 layout(binding = 1) uniform ColorData {
     vec4 color;
-    int is_unmapped;
+    uint ignore_transform;
+    uint is_unmapped;
 } cl;
 
 
 layout(location = 0) in vec2 in_pos;
-layout(location = 1) in vec2 in_tex_pos;
-
 layout(location = 0) out vec4 out_color;
-layout(location = 1) out vec2 out_tex_pos;
-layout(location = 2) out int out_is_unmapped;
 
 void main() {
-    // Pardon me
-    if((ubo.ubo_flag_bits & orthographic_camera_mode2D) == orthographic_camera_mode2D)
-        gl_Position = ubo.view * vec4(in_pos, 0.0f, 1.0f);
+    if(cl.ignore_transform == 1)
+        gl_Position = vec4(in_pos, 0.0f, 0.0f);
+    else {
+        mat4 view_mat;
+        view_mat[0] = vec4(ubo.view[0], 0.0f);
+        view_mat[1] = vec4(ubo.view[1], 0.0f);
+        view_mat[2] = vec4(ubo.view[2], 0.0f);
+        view_mat[3] = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        gl_Position = view_mat * vec4(in_pos, 0.0f, 1.0f);
+    }
     
-    else gl_Position = vec4(in_pos, 0.0f, 1.0f);
-
-
-    out_tex_pos = in_tex_pos;
+    // Fill the fragment shader data struct
     out_color = cl.color;
-    out_is_unmapped = cl.is_unmapped;
 }

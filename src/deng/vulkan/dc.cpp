@@ -85,7 +85,7 @@ namespace deng {
         }
 
 
-        /* Create command pool */
+        /// Create command pool
         void __vk_DrawCaller::mkCommandPool(VkDevice device) {
             VkCommandPoolCreateInfo cmd_pool_createinfo{};
             cmd_pool_createinfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -98,9 +98,7 @@ namespace deng {
         }
 
 
-        /* 
-         * Create semaphores and fences for synchronising frames 
-         */
+        /// Create semaphores and fences for synchronising frames 
         void __vk_DrawCaller::__mkSynchronisation(VkDevice &device) {
             // Resize semaphores 
             image_available_semaphore_set.resize(__max_frame_c);
@@ -164,15 +162,12 @@ namespace deng {
         }
 
 
-        /*
-         * Bind asset pipeline and return its pipeline layout
-         */
+        /// Bind asset pipeline and return its pipeline layout
         VkPipelineLayout *__vk_DrawCaller::__bindPipeline(das_Asset &asset, VkCommandBuffer cmd_buf) {
             VkPipeline *p_pl = NULL;
             VkPipelineLayout *p_pl_layout = NULL;
             // Find correct pipelines and their layouts according to the asset mode
-            switch(asset.asset_mode) 
-            {
+            switch(asset.asset_mode) {
             case DAS_ASSET_MODE_2D_UNMAPPED:
                 p_pl = &m_pl_data[UM2D_I].pipeline;
                 p_pl_layout = m_pl_data[UM2D_I].p_pipeline_layout;
@@ -210,7 +205,7 @@ namespace deng {
          * Set miscellanious data arrays 
          */
         void __vk_DrawCaller::setMiscData (
-            const std::array<__vk_PipelineData, DENG_PIPELINE_COUNT> &pl_data, 
+            const std::array<__vk_PipelineData, PIPELINE_C> &pl_data, 
             const std::vector<VkFramebuffer> &fb
         ) {
             m_pl_data = pl_data;
@@ -331,7 +326,7 @@ namespace deng {
         }
 
 
-        /* __vk_DrawCaller getter methods */
+        /// __vk_DrawCaller getter methods
         VkCommandPool __vk_DrawCaller::getComPool() { return m_cmd_pool; }
         const std::vector<VkCommandBuffer> &__vk_DrawCaller::getComBufs() { return m_cmd_bufs; }
     }

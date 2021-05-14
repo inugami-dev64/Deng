@@ -63,7 +63,6 @@
 #ifndef __REND_INFOS_H
 #define __REND_INFOS_H
 
-#define DENG_PIPELINE_COUNT 4
 
 namespace deng {
     namespace vulkan {
@@ -103,30 +102,6 @@ namespace deng {
             std::vector<VkImage> m_swapchain_images;
             std::vector<VkImageView> m_swapchain_image_views;
             __vk_SwapChainDetails *m_p_sc_details;
-        };
-
-
-        /* 
-         * Contains information about certain pipeline used in DENG 
-         */
-        struct __vk_PipelineData {
-            VkPipeline pipeline;
-            deng_PipelineType pipeline_type;
-            VkPipelineLayout *p_pipeline_layout;
-        };
-
-
-        /* 
-         * Struct for storing all vk_ descriptor related objects 
-         */
-        struct __vk_DescriptorInfo {
-            std::array<__vk_PipelineData, DENG_PIPELINE_COUNT> m_pipelines;
-            VkPipelineLayout m_unmapped_pl;
-            VkPipelineLayout m_tex_mapped_pl;
-            VkDescriptorPool m_unmapped_desc_pool;
-            VkDescriptorPool m_tex_mapped_desc_pool;
-            VkDescriptorSetLayout m_unmapped_desc_set_layout;
-            VkDescriptorSetLayout m_tex_mapped_desc_set_layout;
         };
 
 

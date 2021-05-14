@@ -57,116 +57,107 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: desc_pool_c - Descriptor pool creator for Vulkan renderer
+ *  Purpose: Provide parent class for creating descriptor pools
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __DC_H
-#define __DC_H
+#ifndef __DESC_POOL_C_H
+#define __DESC_POOL_C_H
 
 
-#ifdef __DC_CPP
-    #include <vector>
+#ifdef __DESC_POOL_C_CPP
     #include <array>
-	#include <string>
-    
+    #include <vector>
     #include <vulkan/vulkan.h>
+    
     #include <common/base_types.h>
+    #include <common/common.h>
     #include <common/hashmap.h>
     #include <common/err_def.h>
     #include <data/assets.h>
-
-    #include <math/deng_math.h>
-    #include <deng/window.h>
-    #include <deng/vulkan/sd.h>
-    #include <deng/vulkan/qm.h>
-    #include <deng/vulkan/resources.h>
-    
-    #include <deng/vulkan/rend_infos.h>
-    #include <deng/vulkan/pipeline_data.h>
-    #include <deng/vulkan/pipelines.h>
+    #include <math/vec2.h>
+    #include <math/vec3.h>
+    #include <math/vec4.h>
+    #include <math/mat3.h>
+    #include <math/mat4.h>
     #include <deng/lighting/light_srcs.h>
+    #include <deng/vulkan/resources.h>
     #include <deng/registry/registry.h>
-
 #endif
 
 
 namespace deng {
     namespace vulkan {
 
-        /* 
-         * Class for making drawcalls and setting up proper synchronisation 
-         */
-        class __vk_DrawCaller {
-        private:
-            std::vector<deng_Id> &m_assets;
-            std::vector<deng_Id> &m_textures;
-            deng::__GlobalRegistry &m_reg;
-            std::vector<VkFramebuffer> m_framebuffers;
-            std::array<__vk_PipelineData, PIPELINE_C> m_pl_data;
-            __vk_QueueManager m_qff;
-
-            // Commandpools and commandbuffers
-            VkCommandPool m_cmd_pool;
-            std::vector<VkCommandBuffer> m_cmd_bufs;
-
-        private:
-            void __mkSynchronisation(VkDevice &device);
-
-            /// Asset commandbuffer binder methods
-            void __bindVertexResourceBuffers (
-                das_Asset &asset, 
-                VkCommandBuffer cur_buf,
-                __vk_BufferData &bd
-            );
-
-            
-            /*
-             * Bind asset pipeline and return its pipeline layout
-             */
-            VkPipelineLayout *__bindPipeline(das_Asset &asset, VkCommandBuffer cmd_buf);
-
-        public:
-            // Needed for synchronising frames
-            deng_ui32_t current_frame = 0;
-            std::vector<VkFence> flight_fences;
-            std::vector<VkSemaphore> image_available_semaphore_set;
-            std::vector<VkSemaphore> render_finished_semaphore_set;
-
-        public:
-            __vk_DrawCaller (
-                VkDevice device,
-                __vk_QueueManager qff,
-                std::vector<deng_Id> &assets,
-                std::vector<deng_Id> &textures,
-                deng::__GlobalRegistry &reg
-            );
-            
-            void setMiscData (
-                const std::array<__vk_PipelineData, PIPELINE_C> &pl_data, 
-                const std::vector<VkFramebuffer> &fb
-            );
-
-            void mkCommandPool(VkDevice device);
-
-            void allocateMainCmdBuffers (
-                VkDevice device, 
-                VkQueue g_queue, 
-                VkRenderPass renderpass, 
-                VkExtent2D ext,
-                dengMath::vec4<deng_vec_t> background,
-                __vk_BufferData &bd
-            );
-
-            void recordMainCmdBuffers (
-                VkRenderPass renderpass,
-                VkExtent2D ext,
-                const dengMath::vec4<deng_vec_t> &background,
-                __vk_BufferData &bd
-            );
+        /// Descriptor pool reallocation result enum
+        enum __vk_DescriptorPoolReallocResult {
+            DENG_VK_DESCRIPTOR_POOL_REALLOC_RESULT_NO_REALLOC   = 0x00,
+            DENG_VK_DESCRIPTOR_POOL_REALLOC_RESULT_REALLOC_VU2D = 0x01,
+            DENG_VK_DESCRIPTOR_POOL_REALLOC_RESULT_REALLOC_VM2D = 0x02,
+            DENG_VK_DESCRIPTOR_POOL_REALLOC_RESULT_REALLOC_VU3D = 0x04,
+            DENG_VK_DESCRIPTOR_POOL_REALLOC_RESULT_REALLOC_VM3D = 0x08
+        };
+        typedef uint8_t __vk_DescriptorPoolReallocBits;
         
+
+        class __vk_DescriptorPoolCreator {
+        private:
+            // Needed for descriptor pool reallocations
+            std::vector<deng_Id> &m_assets;
+            deng::__GlobalRegistry &m_reg;
+
+            // Unmapped 2D asset pool
+            VkDescriptorPool m_vu2d_pool = { 0 };
+            deng_ui32_t m_vu2d_cap = 0;
+
+            // Texture mapped 2D asset pool
+            VkDescriptorPool m_vm2d_pool = { 0 };
+            deng_ui32_t m_vm2d_cap = 0;
+
+            // Unmapped 3D asset pool
+            VkDescriptorPool m_vu3d_pool = { 0 };
+            deng_ui32_t m_vu3d_cap = 0;
+
+            // Texture mapped 3D asset pool
+            VkDescriptorPool m_vm3d_pool = { 0 };
+            deng_ui32_t m_vm3d_cap = 0;
+
+        private:
+            void __mk2DUnmappedDescPool(VkDevice device);
+            void __mk2DTexMappedDescPool(VkDevice device);
+            void __mk3DUnmappedDescPool(VkDevice device);
+            void __mk3DTexMappedDescPool(VkDevice device);
+
+            /// Destroy assets with specific asset mode
+            void __destroyAssetDescriptorSets(VkDevice device, 
+                std::vector<deng_Id> &destroyed, das_AssetMode mode);
+
+            /// Reallocate specific descriptor pool for specific asset type
+            void __reallocDescPool(VkDevice device, std::vector<deng_Id> &destroyed_assets, 
+                das_AssetMode asset_mode, deng_ui32_t req_c);
+
+        protected:
+            __vk_DescriptorPoolCreator(std::vector<deng_Id> &assets, 
+                __GlobalRegistry &reg) : m_assets(assets), m_reg(reg) {}
+
+            /// Create a new descriptor pool based on the asset mode
+            void mkDescPool(VkDevice device, deng_ui32_t cap, das_AssetMode mode);
+
+            /// Create new descriptor pools for all asset types
+            void mkDescPools(VkDevice device, deng_ui32_t cap);
+
+            /// Check if the descriptor pools need to be reallocated and reallocate
+            /// the pool if needed
+            __vk_DescriptorPoolReallocBits checkPoolReallocation(VkDevice device,
+                std::vector<deng_Id> &destroyed_assets, deng_ui32_t vu2d_c, 
+                deng_ui32_t vm2d_c, deng_ui32_t vu3d_c, deng_ui32_t vm3d_c);
+
+        /// Getter / Setter methods
         public:
-            VkCommandPool getComPool();
-            const std::vector<VkCommandBuffer> &getComBufs();
+            VkDescriptorPool &getDescPool(das_AssetMode mode);
         };
     }
 }

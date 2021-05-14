@@ -78,9 +78,7 @@
 
 namespace deng {
     
-    /*
-     * Main light handling class
-     */
+    /// Main light handling class
     class LightManager {
     private:
         std::vector<__PtLightSrc> m_pt_src;

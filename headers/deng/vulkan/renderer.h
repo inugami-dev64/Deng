@@ -91,76 +91,31 @@
     #include <deng/vulkan/rend_infos.h>
     #include <deng/vulkan/ic.h>
     #include <deng/vulkan/scc.h>
-    #include <deng/vulkan/desc_c.h>
+    #include <deng/vulkan/pipeline_data.h>
+    #include <deng/vulkan/pipelines.h>
+    #include <deng/vulkan/desc_set_layout.h>
+    #include <deng/vulkan/desc_pool.h>
+    #include <deng/vulkan/desc_sets.h>
     #include <deng/vulkan/dc.h>
     #include <deng/vulkan/tm.h>
     #include <deng/vulkan/bm.h>
     #include <deng/vulkan/rm.h>
+    
+    #include <deng/vulkan/runtime_updater.h>
+    #include <deng/vulkan/rend_init.h>
 #endif
 
 
 namespace deng {
     namespace vulkan {
 
-        /*
-         * Contains pointers to Vulkan renderer setup class instances
-         */
-        struct __vk_RendererInitialisers {
-            __vk_InstanceCreator *m_p_ic = NULL;
-            __vk_SwapChainCreator *m_p_scc = NULL;
-            __vk_DescriptorCreator *m_p_desc_c; 
-            __vk_ResourceManager *m_p_rm = NULL;
-            __vk_DrawCaller *m_p_dc = NULL;
-        };
-
-
-        /*
-         * This class is used for updating frame generation in
-         * renderer during runtime.
-         * It should be noted that calling any methods from runtime updater
-         * assumes that no device queue operations are active
-         */
-        class __vk_RuntimeUpdater : protected __vk_RendererInitialisers {
-        protected:
-            std::vector<deng_Id> m_assets;
-            std::vector<deng_Id> m_textures;
-
-        protected:
-
-            /*
-             * This method updates the vertices buffer that is allocated by
-             * given assets
-             */
-            void __updateAssetVerts(const dengMath::vec2<deng_ui32_t> &asset_bounds);
-
-
-            /*
-             * Rerecord existing commandbuffers 
-             */
-            void __updateCmdBuffers(const dengMath::vec4<deng_vec_t> &background);
-        };
-
-
-        /*
-         * Vulkan renderer config variables
-         */
-        struct __vk_ConfigVars {
-            VkSampleCountFlagBits msaa_sample_count = VK_SAMPLE_COUNT_1_BIT;
-            deng_bool_t enable_vsync = false;
-            deng_bool_t enable_validation_layers = false;
-            deng_bool_t gui_count_fps = false;
-            deng_bool_t cli_count_fps = false;
-            dengMath::vec4<deng_vec_t> background = {0.0f, 0.0f, 0.0f, 1.0f};
-            deng::Camera3D *p_cam;
-        };
-
-
         /* 
          * Main renderer class for vulkan API
          */
-        class __vk_Renderer : private __vk_RuntimeUpdater {
+        class __vk_Renderer : private __vk_RendererInitialiser,
+                              private __vk_RuntimeUpdater 
+        {
         private:
-            __GlobalRegistry &m_reg;
             deng::Window &m_win;
             __vk_ConfigVars m_config;
             deng_bool_t m_is_init = false;
@@ -168,18 +123,9 @@ namespace deng {
             // This is reserved for future use
             dengUtils::StringRasterizer *m_p_sr = NULL;
 
-            std::vector<deng_Id> m_assets;
-            std::vector<deng_Id> m_textures;
-
         private:
-            /*
-             * Create new renderer creator instances
-             */
-            void __initConstruct();
 
-            /*
-             * Free and destroy all active Vulkan API specific instances
-             */
+            /// Free and destroy all active Vulkan API specific instances
             void __cleanup();
 
 
@@ -189,7 +135,8 @@ namespace deng {
             void __cleanTextures();
             void __cleanAssets();
             void __cleanPipelines();
-            void __cleanDSL();
+            void __cleanDescPools();
+            void __cleanDescSetLayouts();
             void __freeBuffers();
             void __cleanSemaphores();
             void __cleanDevice();
@@ -206,44 +153,34 @@ namespace deng {
 
             ~__vk_Renderer();
 
-            /*
-             * Add new assets to renderer asset list.
-             * No descriptor sets are allocated since that
-             * will be done when renderer is being fully initialised.
-             */
+            /// Add new assets to renderer asset list.
+            /// No descriptor sets are allocated since that
+            /// will be done when renderer is being fully initialised.
             void submitAssets (
                 deng_Id *asset_ids,
                 deng_ui32_t asset_c
             );
 
 
-            /*
-             * Add new textures to renderer texture list.
-             */
+            /// Add new textures to renderer texture list.
             void submitTextures (
                 deng_Id *tex_ids,
                 deng_ui32_t tex_c
             );
 
 
-            /*
-             * Submit new draw call
-             */
+            /// Submit new draw call
             void makeFrame();
 
 
-            /*
-             * Setup the renderer, create descriptor sets, allocate buffers
-             * and record command buffers
-             */
+            /// Setup the renderer, create descriptor sets, allocate buffers
+            /// and record command buffers
             void setup();
 
 
-            /*
-             * Wait for any queue operation to finish
-             * This method needs to be called whenever any 
-             * command or data buffers need to be updated
-             */
+            /// Wait for any queue operation to finish
+            /// This method needs to be called whenever any 
+            /// command or data buffers need to be updated
             void idle();
         };
     }

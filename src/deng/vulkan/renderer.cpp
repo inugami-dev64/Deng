@@ -63,46 +63,12 @@
 #define __RENDERER_CPP
 #include <deng/vulkan/renderer.h>
 
+/// External mouse data variable declaration
 deng::__SharedMouseData __ext_md;
 
 namespace deng {
     namespace vulkan {
         extern deng_ui32_t __max_frame_c;
-
-        /**************************************************/
-        /**************************************************/
-        /**************************************************/
-        /*********** __vk_RuntimeUpdater Class ************/
-        /**************************************************/
-        /**************************************************/
-
-        /*
-         * This method updates the vertices buffer that is allocated by
-         * given assets
-         */
-        void __vk_RuntimeUpdater::__updateAssetVerts(const dengMath::vec2<deng_ui32_t> &asset_bounds) {
-            m_p_rm->remapAssetVerts (
-                m_p_ic->getDev(),
-                m_p_ic->getGpu(),
-                m_p_dc->getComPool(),
-                m_p_ic->getQFF().graphics_queue,
-                asset_bounds
-            );
-        }
-
-        
-        /*
-         * Free and reallocate new commandbuffers 
-         */
-        void __vk_RuntimeUpdater::__updateCmdBuffers(const dengMath::vec4<deng_vec_t> &background) {
-            m_p_dc->recordMainCmdBuffers (
-                m_p_scc->getRp(),
-                m_p_scc->getExt(),
-                background,
-                m_p_rm->getBD()
-            );
-        }
-
         
         /********************************************/
         /********************************************/
@@ -113,84 +79,17 @@ namespace deng {
             deng::Window &win,
             const __vk_ConfigVars &cnf,
             deng::__GlobalRegistry &reg
-        ) : m_reg(reg), m_win(win) { 
+        ) : __vk_RendererInitialiser(win, cnf, reg), 
+            __vk_RuntimeUpdater(getIC(), getSCC(), getDrawCaller(),
+                getResMan(), __vk_RendererInitialiser::m_assets, __vk_RendererInitialiser::m_textures),
+            m_win(win) { 
             m_config = cnf;
-            __initConstruct();
         }
 
 
         __vk_Renderer::~__vk_Renderer() {
             idle();
             __cleanup();
-            
-            delete m_p_desc_c;
-            delete m_p_dc;
-            delete m_p_rm;
-            delete m_p_scc;
-            delete m_p_ic;
-        }
-
-
-        /*
-         * Create new renderer creator instances
-         */
-        void __vk_Renderer::__initConstruct() {
-            // Create new VkInstace
-            m_p_ic = new __vk_InstanceCreator (
-                m_win,
-                m_config.enable_validation_layers
-            );
-            
-            // Create new swapchain 
-            m_p_scc = new __vk_SwapChainCreator (
-                m_p_ic->getDev(),
-                m_win,
-                m_p_ic->getGpu(), 
-                m_p_ic->getSu(), 
-                m_p_ic->getQFF(),
-                m_config.msaa_sample_count
-            );
-
-            // Create new draw caller instance and make command pool
-            m_p_dc = new __vk_DrawCaller (
-                m_p_ic->getDev(),
-                m_p_ic->getQFF(),
-                m_assets,
-                m_textures,
-                m_reg
-            );
-            
-            m_p_dc->mkCommandPool(m_p_ic->getDev());
-
-            __max_frame_c = static_cast<deng_ui32_t>(m_p_scc->getSCImg().size());
-
-            // Create new buffer resources allocator
-            m_p_rm = new __vk_ResourceManager (
-                m_p_ic->getDev(), 
-                m_p_ic->getGpu(),
-                m_p_scc->getExt(),
-                m_config.msaa_sample_count,
-                m_p_scc->getRp(),
-                m_p_dc->getComPool(),
-                m_p_ic->getQFF().graphics_queue,
-                m_p_scc->getSCImgViews(), 
-                m_reg, 
-                m_assets,
-                m_textures,
-                m_p_scc->getSF(),
-                m_p_ic->getGpuLimits()
-            ); 
-
-            // Create new vulkan descriptor creator
-            m_p_desc_c = new __vk_DescriptorCreator (
-                m_p_ic->getDev(),
-                m_p_scc->getExt(),
-                m_p_scc->getRp(),
-                m_reg,
-                m_assets,
-                m_textures,
-                m_config.msaa_sample_count
-            );
         }
 
 
@@ -200,40 +99,40 @@ namespace deng {
         void __vk_Renderer::__cleanRendImgResources() {
             // Clean depth image resources
             vkDestroyImageView (
-                m_p_ic->getDev(), 
-                m_p_rm->getDepImgView(), 
-                nullptr
+                __vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getResMan()->getDepImgView(), 
+                NULL
             );
 
             vkDestroyImage (
-                m_p_ic->getDev(), 
-                m_p_rm->getDepImg(), 
-                nullptr
+                __vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getResMan()->getDepImg(), 
+                NULL
             );
 
             vkFreeMemory (
-                m_p_ic->getDev(), 
-                m_p_rm->getDepImgMem(), 
-                nullptr
+                __vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getResMan()->getDepImgMem(), 
+                NULL
             );
 
             // Clean color image resources
             vkDestroyImageView (
-                m_p_ic->getDev(),
-                m_p_rm->getColorImgView(),
-                nullptr
+                __vk_RendererInitialiser::getIC()->getDev(),
+                __vk_RendererInitialiser::getResMan()->getColorImgView(),
+                NULL
             );
 
             vkDestroyImage (
-                m_p_ic->getDev(),
-                m_p_rm->getColorImg(),
-                nullptr
+                __vk_RendererInitialiser::getIC()->getDev(),
+                __vk_RendererInitialiser::getResMan()->getColorImg(),
+                NULL
             );
 
             vkFreeMemory (
-                m_p_ic->getDev(),
-                m_p_rm->getColorImgMem(),
-                nullptr
+                __vk_RendererInitialiser::getIC()->getDev(),
+                __vk_RendererInitialiser::getResMan()->getColorImgMem(),
+                NULL
             );
         }
 
@@ -241,21 +140,21 @@ namespace deng {
         void __vk_Renderer::__cleanDrawCommands() {
             // Clean framebuffers
             std::vector<VkFramebuffer> fb;
-            fb = m_p_rm->getFB();
+            fb = __vk_RendererInitialiser::getResMan()->getFB();
             for(size_t i = 0; i < fb.size(); i++) {
                 vkDestroyFramebuffer (
-                    m_p_ic->getDev(), 
+                    __vk_RendererInitialiser::getIC()->getDev(), 
                     fb[i], 
-                    nullptr
+                    NULL
                 );
             }
 
             // Clean commandbuffers and commandpools
             vkFreeCommandBuffers (
-                m_p_ic->getDev(), 
-                m_p_dc->getComPool(), 
-                static_cast<deng_ui32_t>(m_p_dc->getComBufs().size()), 
-                m_p_dc->getComBufs().data()
+                __vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getDrawCaller()->getComPool(), 
+                static_cast<deng_ui32_t>(__vk_RendererInitialiser::getDrawCaller()->getComBufs().size()), 
+                __vk_RendererInitialiser::getDrawCaller()->getComBufs().data()
             );
         }
 
@@ -271,21 +170,21 @@ namespace deng {
                 if(reg_vk_tex.vk_tex.is_buffered) {
                     // Destroy texture sampler
                     vkDestroySampler (
-                        m_p_ic->getDev(),
+                        __vk_RendererInitialiser::getIC()->getDev(),
                         reg_vk_tex.vk_tex.sampler,
                         NULL
                     );
 
                     // Destroy texture's image views
                     vkDestroyImageView (
-                        m_p_ic->getDev(),
+                        __vk_RendererInitialiser::getIC()->getDev(),
                         reg_vk_tex.vk_tex.image_view,
                         NULL
                     );
 
                     // Destroy texture image 
                     vkDestroyImage (
-                        m_p_ic->getDev(),
+                        __vk_RendererInitialiser::getIC()->getDev(),
                         reg_vk_tex.vk_tex.image,
                         NULL
                     );
@@ -294,8 +193,8 @@ namespace deng {
 
             // Free all memory allocated for texture images
             vkFreeMemory (
-                m_p_ic->getDev(),
-                m_p_rm->getBD().img_memory,
+                __vk_RendererInitialiser::getIC()->getDev(),
+                __vk_RendererInitialiser::getResMan()->getBD().img_memory,
                 NULL
             );
         }
@@ -310,30 +209,15 @@ namespace deng {
 
                 // Check if asset has descriptor sets allocated and if it does then destroy them
                 if(reg_vk_asset.vk_asset.is_desc) {
+                    // Retrieve the base asset
                     RegType &reg_asset = m_reg.retrieve (
                         reg_vk_asset.vk_asset.base_id,
                         DENG_SUPPORTED_REG_TYPE_ASSET
                     );
 
-                    if(reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
-                       reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
-                       reg_asset.asset.force_unmap) {
-                        vkFreeDescriptorSets (
-                            m_p_ic->getDev(),
-                            m_p_desc_c->getUnmappedDP(),
-                            static_cast<deng_ui32_t>(reg_vk_asset.vk_asset.desc_c),
-                            reg_vk_asset.vk_asset.desc_sets
-                        );
-                    }
-
-                    else {
-                        vkFreeDescriptorSets (
-                            m_p_ic->getDev(),
-                            m_p_desc_c->getTexMappedDP(),
-                            static_cast<deng_ui32_t>(reg_vk_asset.vk_asset.desc_c),
-                            reg_vk_asset.vk_asset.desc_sets
-                        );
-                    }
+                    // Free descriptor sets
+                    vkFreeDescriptorSets(__vk_RendererInitialiser::getIC()->getDev(), __vk_RendererInitialiser::getDescC()->getDescPool(reg_asset.asset.asset_mode),
+                        static_cast<deng_ui32_t>(reg_vk_asset.vk_asset.desc_c), reg_vk_asset.vk_asset.desc_sets);
                 }
             }
         }
@@ -341,93 +225,108 @@ namespace deng {
         
         void __vk_Renderer::__cleanPipelines() {
             // Clean pipeline related data
-            std::array<__vk_PipelineData, DENG_PIPELINE_COUNT> pd = m_p_desc_c->getPipelines();
-            for(size_t i = 0; i < pd.size(); i++) { 
-                vkDestroyPipeline (
-                    m_p_ic->getDev(), 
-                    pd[i].pipeline, 
-                    nullptr
-                );
-            }
+            std::array<__vk_PipelineData, PIPELINE_C> &pd = 
+                __vk_RendererInitialiser::getPipelineC()->getPipelines();
 
-            // Clean pipeline layout data 
-            vkDestroyPipelineLayout (
-                m_p_ic->getDev(), 
-                m_p_desc_c->getUnmappedPL(), 
-                nullptr
-            );
-            
-            vkDestroyPipelineLayout (
-                m_p_ic->getDev(), 
-                m_p_desc_c->getTexMappedPL(), 
-                nullptr
-            );
+            // For each pipeline data instance destroy its pipeline and layout
+            for(size_t i = 0; i < pd.size(); i++) { 
+                // Destroy pipeline
+                vkDestroyPipeline(__vk_RendererInitialiser::getIC()->getDev(), 
+                    pd[i].pipeline, NULL);
+
+                // Destroy pipeline layout
+                vkDestroyPipelineLayout(__vk_RendererInitialiser::getIC()->getDev(), 
+                    *__vk_RendererInitialiser::getPipelineC()->getPipeline(i).p_pipeline_layout, 
+                    NULL);
+            }
 
             // Destroy renderpass
             vkDestroyRenderPass (
-                m_p_ic->getDev(), 
-                m_p_scc->getRp(), 
-                nullptr
+                __vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getSCC()->getRp(), 
+                NULL
             );
         }
 
+
+        void __vk_Renderer::__cleanDescPools() {
+            // Destroy 2D unmapped asset descriptor pool 
+            vkDestroyDescriptorPool(__vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getDescC()->getDescPool(
+                    DAS_ASSET_MODE_2D_UNMAPPED), 
+                NULL);
+
+            // Destroy 2D texture mapped asset descriptor pool
+            vkDestroyDescriptorPool(__vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getDescC()->getDescPool(
+                    DAS_ASSET_MODE_2D_TEXTURE_MAPPED), 
+                NULL);
+
+            // Destroy 3D unmapped asset descriptor pool 
+            vkDestroyDescriptorPool(__vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getDescC()->getDescPool(
+                    DAS_ASSET_MODE_3D_UNMAPPED), 
+                NULL);
+
+            // Destroy 3D texture mapped asset descriptor pool
+            vkDestroyDescriptorPool(__vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getDescC()->getDescPool(
+                    DAS_ASSET_MODE_3D_TEXTURE_MAPPED), 
+                NULL);
+        }
+
         
-        void __vk_Renderer::__cleanDSL() {
-            // Destroy descriptor pools 
-            vkDestroyDescriptorPool (
-                m_p_ic->getDev(), 
-                m_p_desc_c->getUnmappedDP(), 
-                nullptr
-            );
+        void __vk_Renderer::__cleanDescSetLayouts() {
+            // Destroy 2D unmapped descriptor set layout
+            vkDestroyDescriptorSetLayout(__vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getDescC()->getLayout(DAS_ASSET_MODE_2D_UNMAPPED), 
+                NULL);
 
-            vkDestroyDescriptorPool (
-                m_p_ic->getDev(), 
-                m_p_desc_c->getTexMappedDP(), 
-                nullptr
-            );
+            // Destroy 2D texture mapped descriptor set layout
+            vkDestroyDescriptorSetLayout(__vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getDescC()->getLayout(
+                    DAS_ASSET_MODE_2D_TEXTURE_MAPPED), 
+                NULL);
 
-            // Clean descriptor set layouts
-            vkDestroyDescriptorSetLayout (
-                m_p_ic->getDev(), 
-                m_p_desc_c->getUnmappedDSL(), 
-                nullptr
-            );
+            // Destroy 3D unmapped descriptor set layout
+            vkDestroyDescriptorSetLayout(__vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getDescC()->getLayout(DAS_ASSET_MODE_3D_UNMAPPED), 
+                NULL);
 
-            vkDestroyDescriptorSetLayout (
-                m_p_ic->getDev(), 
-                m_p_desc_c->getTexMappedDSL(), 
-                nullptr
-            );
-
+            // Destroy 3D texture mapped descriptor set layout
+            vkDestroyDescriptorSetLayout(__vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getDescC()->getLayout(
+                    DAS_ASSET_MODE_3D_TEXTURE_MAPPED), 
+                NULL);
         }
 
 
         void __vk_Renderer::__freeBuffers() {
             // Clean ubo buffer data 
             vkDestroyBuffer (
-                m_p_ic->getDev(), 
-                m_p_rm->getBD().uniform_buffer, 
-                nullptr
+                __vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getResMan()->getBD().uniform_buffer, 
+                NULL
             );
 
             vkFreeMemory (
-                m_p_ic->getDev(), 
-                m_p_rm->getBD().uniform_buffer_mem, 
-                nullptr
+                __vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getResMan()->getBD().uniform_buffer_mem, 
+                NULL
             );
 
 
             // Clean main buffer data
             vkDestroyBuffer (
-                m_p_ic->getDev(), 
-                m_p_rm->getBD().main_buffer, 
-                nullptr
+                __vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getResMan()->getBD().main_buffer, 
+                NULL
             );
 
             vkFreeMemory (
-                m_p_ic->getDev(), 
-                m_p_rm->getBD().main_buffer_memory, 
-                nullptr
+                __vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getResMan()->getBD().main_buffer_memory, 
+                NULL
             );
         }
 
@@ -436,19 +335,19 @@ namespace deng {
             // Clean semaphores and fences
             for(size_t i = 0; i < __max_frame_c; i++) {
                 vkDestroySemaphore (
-                    m_p_ic->getDev(), 
-                    m_p_dc->image_available_semaphore_set[i], 
-                    nullptr
+                    __vk_RendererInitialiser::getIC()->getDev(), 
+                    __vk_RendererInitialiser::getDrawCaller()->image_available_semaphore_set[i], 
+                    NULL
                 );
                 vkDestroySemaphore (
-                    m_p_ic->getDev(), 
-                    m_p_dc->render_finished_semaphore_set[i], 
-                    nullptr
+                    __vk_RendererInitialiser::getIC()->getDev(), 
+                    __vk_RendererInitialiser::getDrawCaller()->render_finished_semaphore_set[i], 
+                    NULL
                 );
                 vkDestroyFence (
-                    m_p_ic->getDev(), 
-                    m_p_dc->flight_fences[i], 
-                    nullptr
+                    __vk_RendererInitialiser::getIC()->getDev(), 
+                    __vk_RendererInitialiser::getDrawCaller()->flight_fences[i], 
+                    NULL
                 );
             }
         }
@@ -456,34 +355,34 @@ namespace deng {
         
         void __vk_Renderer::__cleanDevice() {
             vkDestroyCommandPool (
-                m_p_ic->getDev(), 
-                m_p_dc->getComPool(), 
-                nullptr
+                __vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getDrawCaller()->getComPool(), 
+                NULL
             );
 
             // Clean instance and devices
             vkDestroyDevice (
-                m_p_ic->getDev(), 
-                nullptr
+                __vk_RendererInitialiser::getIC()->getDev(), 
+                NULL
             );
 
             if(m_config.enable_validation_layers) {
                 __vk_InstanceCreator::destroyDebugUtils (
-                    m_p_ic->getIns(), 
-                    m_p_ic->getDMEXT()
+                    __vk_RendererInitialiser::getIC()->getIns(), 
+                    __vk_RendererInitialiser::getIC()->getDMEXT()
                 );
             }
 
             vkDestroySurfaceKHR (
-                m_p_ic->getIns(), 
-                m_p_ic->getSu(), 
-                nullptr
+                __vk_RendererInitialiser::getIC()->getIns(), 
+                __vk_RendererInitialiser::getIC()->getSu(), 
+                NULL
             );
 
             
             vkDestroyInstance (
-                m_p_ic->getIns(), 
-                nullptr
+                __vk_RendererInitialiser::getIC()->getIns(), 
+                NULL
             );
         }
 
@@ -497,8 +396,9 @@ namespace deng {
             __cleanTextures();
             __cleanAssets();
             __cleanPipelines();
-            m_p_scc->SCCleanup();
-            __cleanDSL();
+            __vk_RendererInitialiser::getSCC()->SCCleanup();
+            __cleanDescPools();
+            __cleanDescSetLayouts();
             __cleanSemaphores();
             __freeBuffers();
             __cleanDevice();
@@ -533,11 +433,11 @@ namespace deng {
 
                 // Allocate uniform buffer memory for uniform color data
                 if(m_is_init) {
-                    m_p_rm->cpyAssetUniform (
-                        m_p_ic->getDev(), 
-                        m_p_ic->getGpu(),
-                        m_p_dc->getComPool(),
-                        m_p_ic->getQFF().graphics_queue,
+                    __vk_RendererInitialiser::getResMan()->cpyAssetUniform (
+                        __vk_RendererInitialiser::getIC()->getDev(), 
+                        __vk_RendererInitialiser::getIC()->getGpu(),
+                        __vk_RendererInitialiser::getDrawCaller()->getComPool(),
+                        __vk_RendererInitialiser::getIC()->getQFF().graphics_queue,
                         reg_vk_asset.vk_asset
                     );
                 }
@@ -585,13 +485,13 @@ namespace deng {
             }
 
             // Create vulkan image resources
-            m_p_rm->mkTextures (
-                m_p_ic->getDev(), 
-                m_p_ic->getGpu(),
-                m_p_dc->getComPool(),
+            __vk_RendererInitialiser::getResMan()->mkTextures (
+                __vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getIC()->getGpu(),
+                __vk_RendererInitialiser::getDrawCaller()->getComPool(),
                 false,
                 {old_size, static_cast<deng_ui32_t>(m_textures.size())},
-                m_p_ic->getQFF().graphics_queue
+                __vk_RendererInitialiser::getIC()->getQFF().graphics_queue
             );
         }
 
@@ -602,9 +502,9 @@ namespace deng {
         void __vk_Renderer::makeFrame() {
             // Call Vulkan fence waiter function
             vkWaitForFences (
-                m_p_ic->getDev(), 
+                __vk_RendererInitialiser::getIC()->getDev(), 
                 1, 
-                &m_p_dc->flight_fences[m_p_dc->current_frame], 
+                &__vk_RendererInitialiser::getDrawCaller()->flight_fences[__vk_RendererInitialiser::getDrawCaller()->current_frame], 
                 VK_TRUE, 
                 UINT64_MAX
             );
@@ -612,10 +512,10 @@ namespace deng {
             // Call Vulkan next image acquire method
             deng_ui32_t image_index;
             VkResult result = vkAcquireNextImageKHR (
-                m_p_ic->getDev(), 
-                m_p_scc->getSC(), 
+                __vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getSCC()->getSC(), 
                 UINT64_MAX, 
-                m_p_dc->image_available_semaphore_set[m_p_dc->current_frame], 
+                __vk_RendererInitialiser::getDrawCaller()->image_available_semaphore_set[__vk_RendererInitialiser::getDrawCaller()->current_frame], 
                 VK_NULL_HANDLE, 
                 &image_index
             );
@@ -629,13 +529,15 @@ namespace deng {
                 VK_FRAME_ERR("failed to acquire swap chain image");
 
             // Update uniform data buffer
-            m_p_rm->updateUboTransform(m_p_ic->getDev(), m_p_dc->current_frame, m_config.p_cam);
+            __vk_RendererInitialiser::getResMan()->updateUboTransform3D(
+                __vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getDrawCaller()->current_frame, m_config.p_cam);
 
             VkSemaphore wait_semaphores[] = 
-            {m_p_dc->image_available_semaphore_set[m_p_dc->current_frame]};
+            {__vk_RendererInitialiser::getDrawCaller()->image_available_semaphore_set[__vk_RendererInitialiser::getDrawCaller()->current_frame]};
 
             VkSemaphore signal_semaphores[] = 
-            {m_p_dc->render_finished_semaphore_set[m_p_dc->current_frame]};
+            {__vk_RendererInitialiser::getDrawCaller()->render_finished_semaphore_set[__vk_RendererInitialiser::getDrawCaller()->current_frame]};
 
             VkSubmitInfo submitinfo{};
             submitinfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -645,18 +547,17 @@ namespace deng {
             submitinfo.pWaitSemaphores = wait_semaphores;
             submitinfo.pWaitDstStageMask = wait_stages;
             submitinfo.commandBufferCount = 1;
-            submitinfo.pCommandBuffers = &m_p_dc->getComBufs()[image_index];
+            submitinfo.pCommandBuffers = &__vk_RendererInitialiser::getDrawCaller()->getComBufs()[image_index];
             submitinfo.signalSemaphoreCount = 1;
             submitinfo.pSignalSemaphores = signal_semaphores;
 
-            vkResetFences (
-                m_p_ic->getDev(), 
+            vkResetFences(__vk_RendererInitialiser::getIC()->getDev(), 
                 1, 
-                &m_p_dc->flight_fences[m_p_dc->current_frame]
+                &__vk_RendererInitialiser::getDrawCaller()->flight_fences[__vk_RendererInitialiser::getDrawCaller()->current_frame]
             );
 
-            if(vkQueueSubmit(m_p_ic->getQFF().graphics_queue, 1, &submitinfo, 
-               m_p_dc->flight_fences[m_p_dc->current_frame]) != VK_SUCCESS) 
+            if(vkQueueSubmit(__vk_RendererInitialiser::getIC()->getQFF().graphics_queue, 1, &submitinfo, 
+               __vk_RendererInitialiser::getDrawCaller()->flight_fences[__vk_RendererInitialiser::getDrawCaller()->current_frame]) != VK_SUCCESS) 
                 VK_FRAME_ERR("failed to submit draw command"); 
 
             VkPresentInfoKHR present_info{};
@@ -665,16 +566,16 @@ namespace deng {
             present_info.pWaitSemaphores = signal_semaphores;
             present_info.pImageIndices = &image_index;
             
-            VkSwapchainKHR swapchains[] = {m_p_scc->getSC()};
+            VkSwapchainKHR swapchains[] = {__vk_RendererInitialiser::getSCC()->getSC()};
             present_info.swapchainCount = 1;
             present_info.pSwapchains = swapchains;
 
             vkQueuePresentKHR (
-                m_p_ic->getQFF().present_queue, 
+                __vk_RendererInitialiser::getIC()->getQFF().present_queue, 
                 &present_info
             );
 
-            m_p_dc->current_frame = (m_p_dc->current_frame + 1) % __max_frame_c;
+            __vk_RendererInitialiser::getDrawCaller()->current_frame = (__vk_RendererInitialiser::getDrawCaller()->current_frame + 1) % __max_frame_c;
         }
 
 
@@ -683,36 +584,45 @@ namespace deng {
          * and record command buffers
          */
         void __vk_Renderer::setup() {
+            // Create graphics pipelines
+            __vk_RendererInitialiser::getPipelineC()->mkPipelines (
+                __vk_RendererInitialiser::getIC()->getDev(),
+                __vk_RendererInitialiser::getSCC()->getExt(),
+                __vk_RendererInitialiser::getSCC()->getRp(),
+                m_config.msaa_sample_count
+            );
+
             // Make and allocate memory for main buffer 
-            m_p_rm->mkAssetBuffers (
-                m_p_ic->getDev(),
-                m_p_ic->getGpu(),
-                m_p_dc->getComPool(),
-                m_p_ic->getQFF().graphics_queue
+            __vk_RendererInitialiser::getResMan()->mkAssetBuffers (
+                __vk_RendererInitialiser::getIC()->getDev(),
+                __vk_RendererInitialiser::getIC()->getGpu(),
+                __vk_RendererInitialiser::getDrawCaller()->getComPool(),
+                __vk_RendererInitialiser::getIC()->getQFF().graphics_queue
             );
 
             // Create descriptor sets for all currently available assets
-            m_p_desc_c->mkDS (
-                m_p_ic->getDev(), 
-                m_p_rm->getBD(),
-                m_p_rm->getMissingTextureUUID(),
+            __vk_RendererInitialiser::getDescC()->mkDS (
+                __vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getResMan()->getBD(),
+                __vk_RendererInitialiser::getResMan()->getMissingTextureUUID(),
                 { 0, (deng_ui32_t) m_assets.size() },
-                m_p_ic->getGpuLimits().minUniformBufferOffsetAlignment
+                __vk_RendererInitialiser::getIC()->getGpuLimits().minUniformBufferOffsetAlignment,
+                __vk_RendererInitialiser::getResMan()->getUboChunkSize()
             );
 
             // Start recording command buffers
-            m_p_dc->setMiscData (
-                m_p_desc_c->getPipelines(),
-                m_p_rm->getFB()
+            __vk_RendererInitialiser::getDrawCaller()->setMiscData (
+                __vk_RendererInitialiser::getPipelineC()->getPipelines(),
+                __vk_RendererInitialiser::getResMan()->getFB()
             );
             
-            m_p_dc->allocateMainCmdBuffers (
-                m_p_ic->getDev(), 
-                m_p_ic->getQFF().graphics_queue, 
-                m_p_scc->getRp(),
-                m_p_scc->getExt(),
+            __vk_RendererInitialiser::getDrawCaller()->allocateMainCmdBuffers (
+                __vk_RendererInitialiser::getIC()->getDev(), 
+                __vk_RendererInitialiser::getIC()->getQFF().graphics_queue, 
+                __vk_RendererInitialiser::getSCC()->getRp(),
+                __vk_RendererInitialiser::getSCC()->getExt(),
                 m_config.background,
-                m_p_rm->getBD()
+                __vk_RendererInitialiser::getResMan()->getBD()
             );
         }
 
@@ -723,7 +633,7 @@ namespace deng {
          * command or data buffers need to be updated
          */
         void __vk_Renderer::idle() {
-            vkDeviceWaitIdle(m_p_ic->getDev());
+            vkDeviceWaitIdle(__vk_RendererInitialiser::getIC()->getDev());
         }
     }
 }

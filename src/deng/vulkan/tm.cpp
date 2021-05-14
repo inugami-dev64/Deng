@@ -77,17 +77,12 @@ namespace deng {
         ) : m_textures(textures), m_bd(bd), m_reg(reg) {
 
             // Create missing texture instance
-            __mkMissingTex (
-                device,
-                gpu,
-                cmd_pool,
-                g_queue
-            );
+            __mkMissingTex(device, gpu, cmd_pool, g_queue);
         }
 
 
         /*
-         * Create dummy texture in case any texture mapped asset
+         * Create missing texture in case any texture mapped asset
          * has invalid texture uuid
          */
         void __vk_TextureManager::__mkMissingTex (
@@ -96,45 +91,36 @@ namespace deng {
             VkCommandPool cmd_pool,
             VkQueue g_queue
         ) {
-            deng::RegType dummy_base_tex = { { 0 } };
-            dummy_base_tex.tex.name = (char*) "dummy_base_tex";
-            dummy_base_tex.tex.uuid = uuid_Generate();
-            dummy_base_tex.tex.pixel_data.width = __DEFAULT_TEX_WIDTH;
-            dummy_base_tex.tex.pixel_data.height = __DEFAULT_TEX_HEIGHT;
-            dummy_base_tex.tex.pixel_data.size = __DEFAULT_TEX_SIZE;
-            dummy_base_tex.tex.pixel_data.p_pixel_data = (deng_ui8_t*) malloc(__DEFAULT_TEX_SIZE);
-            memset(dummy_base_tex.tex.pixel_data.p_pixel_data, 255, __DEFAULT_TEX_SIZE);
-            m_reg.push (
-                dummy_base_tex.tex.uuid, 
-                DENG_SUPPORTED_REG_TYPE_TEXTURE, 
-                dummy_base_tex
-            );
+            deng::RegType missing_base_tex = { { 0 } };
+            missing_base_tex.tex.name = (char*) "missing_base_tex";
+            missing_base_tex.tex.uuid = uuid_Generate();
+            missing_base_tex.tex.pixel_data.width = __DEFAULT_TEX_WIDTH;
+            missing_base_tex.tex.pixel_data.height = __DEFAULT_TEX_HEIGHT;
+            missing_base_tex.tex.pixel_data.size = __DEFAULT_TEX_SIZE;
+            missing_base_tex.tex.pixel_data.p_pixel_data = (deng_ui8_t*) malloc(__DEFAULT_TEX_SIZE);
+            memset(missing_base_tex.tex.pixel_data.p_pixel_data, 255, __DEFAULT_TEX_SIZE);
+            
+            // Push the texture uuid to registry
+            m_reg.push(missing_base_tex.tex.uuid, 
+                DENG_SUPPORTED_REG_TYPE_TEXTURE, missing_base_tex);
 
+            deng::RegType missing_vk_tex = { { 0 } };
+            missing_vk_tex.vk_tex.base_id = missing_base_tex.tex.uuid;
+            missing_vk_tex.vk_tex.uuid = uuid_Generate();
+            m_missing_tex_uuid = missing_vk_tex.vk_tex.uuid;
 
-            deng::RegType dummy_vk_tex = { { 0 } };
-            dummy_vk_tex.vk_tex.base_id = dummy_base_tex.tex.uuid;
-            dummy_vk_tex.vk_tex.uuid = uuid_Generate();
-            m_dummy_tex_uuid = dummy_vk_tex.vk_tex.uuid;
-
-            __newVkTexture (
-                device,
-                gpu,
-                cmd_pool,
-                g_queue,
-                1,
-                false,
-                false,
-                true,
-                dummy_vk_tex.vk_tex
-            );
+            // Create new Vulkan texture
+            __newVkTexture(device, gpu, cmd_pool, g_queue, 1, false,
+                false, true, missing_vk_tex.vk_tex);
 
             m_reg.push (
-                dummy_vk_tex.vk_tex.uuid, 
+                missing_vk_tex.vk_tex.uuid, 
                 DENG_SUPPORTED_REG_TYPE_VK_TEXTURE, 
-                dummy_vk_tex
+                missing_vk_tex
             );
 
-            m_textures.push_back(dummy_vk_tex.vk_tex.uuid);
+            LOG("texture capacity: " + std::to_string(m_textures.capacity()));
+            m_textures.push_back(missing_vk_tex.vk_tex.uuid);
         }
 
 
@@ -645,7 +631,7 @@ namespace deng {
             for(index = tex_bounds.first; index < tex_bounds.second; index++) {
                 // Retrieve Vulkan texture from the registry
                 RegType &vk_tex_reg = m_reg.retrieve (
-                    m_textures[index], 
+                   m_textures[index], 
                     DENG_SUPPORTED_REG_TYPE_VK_TEXTURE
                 );
 
@@ -673,6 +659,6 @@ namespace deng {
         }
 
 
-        deng_Id __vk_TextureManager::getMissingTextureUUID() { return m_dummy_tex_uuid; }
+        deng_Id __vk_TextureManager::getMissingTextureUUID() { return m_missing_tex_uuid; }
     }
 }

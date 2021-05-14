@@ -179,15 +179,9 @@ namespace Sandbox {
      */
     void VulkanApp::__loadAssets(const std::vector<const char*> &files) {
         for(size_t i = 0; i < files.size(); i++) {
-            deng::RegType reg_elem = {{0}};
-            das_LoadAsset (
-                &reg_elem.asset,
-                DAS_ASSET_MODE_UNDEFINED,
-                {0.0f, 0.0f, 1.0f},
-                false,
-                NULL,
-                (char*) files[i]
-            );
+            deng::RegType reg_elem = { { 0 } };
+            das_LoadAsset(&reg_elem.asset, DAS_ASSET_MODE_UNDEFINED,
+                {0.0f, 0.0f, 1.0f}, false, NULL, (char*) files[i]);
 
             m_reg.push (
                 reg_elem.asset.uuid, 
@@ -200,22 +194,14 @@ namespace Sandbox {
     }
 
     
-    /*
-     * Load test textures into the register 
-     */
+    /// Load test textures into the register 
     void VulkanApp::__loadTextures(const std::vector<const char*> &files) {
         for(size_t i = 0; i < files.size(); i++) {
             deng::RegType reg_elem = {{0}};
-            das_LoadTexture (
-                &reg_elem.tex, 
-                files[i]
-            );
+            das_LoadTexture(&reg_elem.tex, files[i]);
 
-            m_reg.push (
-                reg_elem.tex.uuid,
-                DENG_SUPPORTED_REG_TYPE_TEXTURE,
-                reg_elem
-            );
+            m_reg.push(reg_elem.tex.uuid, DENG_SUPPORTED_REG_TYPE_TEXTURE,
+                reg_elem);
 
             m_tex_uuids.push_back(reg_elem.tex.uuid);
         }

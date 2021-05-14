@@ -171,25 +171,6 @@ namespace deng {
         };
 
 
-        /*
-         * Structure for storing uniform transformation related data
-         */
-        struct __vk_UniformTransformation {
-            dengMath::mat4<deng_vec_t> transform;
-            dengMath::mat4<deng_vec_t> view;
-            deng_ui32_t no_perspective;
-        };
-
-
-        /*
-         * Structure for storing uniform color data per each asset
-         */
-        struct __vk_UniformColorData {
-            dengMath::vec4<deng_vec_t> color;
-            deng_i32_t is_unmapped;
-        };
-
-
         /* 
          * Struct for storing buffers This struct __vk_contains all buffers and their memory objects for
          * vulkan renderer
@@ -212,7 +193,8 @@ namespace deng {
 
             // Memory alignment for uniform data looks like that 
             // where n is swapchain image count and m is the amount of texture images
-            // n * sizeof(UniformTransformation) bytes -- All transformation ubo data
+            // n * (sizeof(UniformTransformation) + sizeof(UniformTransformation2D) + sizeof(LightingUniform)) bytes -- 
+            // -- All transformation and lighting ubo data
             // n * m * sizeof(__vk_UniformColorData) bytes -- All asset specific color ubo data
             VkBuffer uniform_buffer;
             VkDeviceMemory uniform_buffer_mem;

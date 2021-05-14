@@ -92,9 +92,15 @@ namespace deng {
                 textures, reg, m_buffer_data) 
         {
             m_sample_c = sample_c;
+            // Allocate memory for new uniform buffers
             __mkUniformBuffer(device, gpu, cmd_pool, g_queue, __DEFAULT_ASSET_CAP);
+            __resetUboBufferSize();
+
+            // Create new color and depth resources
             __mkColorResources(device, gpu, extent, sc_color_format);
             __mkDepthResources(device, gpu, extent); 
+
+            // Allocate frame buffers
             __mkFrameBuffers(device, renderpass, extent, sc_img_views);
         }
 
@@ -185,56 +191,38 @@ namespace deng {
         }
 
 
-        /* 
-         * Create depth resources for depth buffering 
-         */
+        /// Create depth image buffers for depth buffering 
         void __vk_ResourceManager::__mkDepthResources (
             VkDevice &device, 
             VkPhysicalDevice &gpu, 
             VkExtent2D &extent
         ) {
+            // Create an VkImage instance for depth buffers
             VkMemoryRequirements mem_req = __vk_ImageCreator::makeImage (
-                device, 
-                gpu, 
-                m_depth_image, 
-                extent.width, 
-                extent.height, 
-                1,
-                VK_FORMAT_D32_SFLOAT, 
-                VK_IMAGE_TILING_OPTIMAL, 
-                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-                m_sample_c
-            );
+                device, gpu, m_depth_image, extent.width, extent.height, 
+                1, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, 
+                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, m_sample_c);
             
-            __vk_BufferCreator::allocateMemory (
-                device, 
-                gpu, 
-                mem_req.size,
-                m_depth_image_mem,  
-                mem_req.memoryTypeBits, 
-                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-            );
+            // Allocate memory for image buffer
+            __vk_BufferCreator::allocateMemory(device, gpu, 
+                mem_req.size, m_depth_image_mem, mem_req.memoryTypeBits, 
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-            vkBindImageMemory (
-                device, 
-                m_depth_image, 
-                m_depth_image_mem, 
-                0
-            );
+            // Bind the image buffer with its memory
+            vkBindImageMemory(device, m_depth_image, 
+                m_depth_image_mem, 0);
 
+            // Create image view createinfo
             VkImageViewCreateInfo image_view_createinfo = __vk_ImageCreator::getImageViewInfo (
-                m_depth_image, 
-                VK_FORMAT_D32_SFLOAT, 
-                VK_IMAGE_ASPECT_DEPTH_BIT,
-                1
-            );
+                m_depth_image, VK_FORMAT_D32_SFLOAT, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
 
+            // Create new image view
             if(vkCreateImageView(device, &image_view_createinfo, NULL, &m_depth_image_view) != VK_SUCCESS)
                 VK_RES_ERR("failed to create depth image view!");
         }
 
 
-        /* __vk_ResourceManager class getters */
+        /// __vk_ResourceManager class getters
         __vk_BufferData &__vk_ResourceManager::getBD() { return m_buffer_data; }
         std::vector<VkFramebuffer> __vk_ResourceManager::getFB() { return m_framebuffers; }
         VkImage __vk_ResourceManager::getDepImg() { return m_depth_image; }

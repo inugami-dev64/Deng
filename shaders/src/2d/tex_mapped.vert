@@ -60,66 +60,44 @@
  */ 
 
 
-#ifndef __LIGHT_SRCS_H
-#define __LIGHT_SRCS_H
+#version 450
+#extension GL_ARB_separate_shader_objects : enable
+
+layout(binding = 0) uniform UniformData {
+    mat3 view;
+} ubo;
 
 
-#define __DENG_MAX_LIGHT_SRC_COUNT      32
+// Store color information about asset when it is not texture mapped
+layout(binding = 1) uniform ColorData {
+    vec4 color;
+    uint ignore_transform;
+    uint is_unmapped;
+} cl;
 
 
-namespace deng {
+layout(location = 0) in vec2 in_pos;
+layout(location = 1) in vec2 in_tex_pos;
 
-    /// Structure for point light source information keeping
-    struct __PtLightSrc {
-        deng_Id uuid;
-        deng_vec_t intensity;
-        dengMath::vec3<deng_vec_t> pos;
-    };
+layout(location = 0) out vec4 out_color;
+layout(location = 1) out vec2 out_tex_pos;
+layout(location = 2) out uint out_is_unmapped;
 
+void main() {
+    if(cl.ignore_transform == 1)
+        gl_Position = vec4(in_pos, 0.0f, 1.0f);
     
-    /// Structure for keeping information about global light source
-    /// that has specific normalised ray vector position
-    struct __SunLightSrc {
-        deng_Id uuid;
-        deng_vec_t intensity;
-        dengMath::vec3<deng_vec_t> ray_vec;
-    };
-
-    
-    /// Structure for keeping information about direction light source
-    struct __DirectionLightSrc {
-        deng_Id uuid;
-        deng_vec_t intensity;
-        deng_vec_t radius;
-        dengMath::vec3<deng_vec_t> direction;
-        dengMath::vec3<deng_vec_t> pos;
-    };
+    else {
+        mat4 view_mat;
+        view_mat[0] = vec4(ubo.view[0], 0.0f);
+        view_mat[1] = vec4(ubo.view[1], 0.0f);
+        view_mat[2] = vec4(ubo.view[2], 0.0f);
+        view_mat[3] = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        gl_Position = view_mat * vec4(in_pos, 0.0f, 1.0f);
+    }
 
 
-    /// Universal light source union
-    union __UniLightSrc {
-        __PtLightSrc pt;
-        __SunLightSrc sun;
-        __DirectionLightSrc dir;
-    };
-
-    
-    /// Light source type specifier
-    enum __LightSrcType {
-        DENG_LIGHT_SRC_TYPE_NONE    = 0,
-        DENG_LIGHT_SRC_TYPE_PT      = 1,
-        DENG_LIGHT_SRC_TYPE_SUN     = 2,
-        DENG_LIGHT_SRC_TYPE_DIR     = 3,
-        DENG_LIGHT_SRC_TYPE_FIRST   = DENG_LIGHT_SRC_TYPE_NONE,
-        DENG_LIGHT_SRC_TYPE_LAST    = DENG_LIGHT_SRC_TYPE_DIR
-    };
-
-    
-    /// Main light source specifier structure
-    struct LightSource {
-        __LightSrcType type;
-        __UniLightSrc light;
-    };
+    out_tex_pos = in_tex_pos;
+    out_color = cl.color;
+    out_is_unmapped = cl.is_unmapped;
 }
-
-#endif

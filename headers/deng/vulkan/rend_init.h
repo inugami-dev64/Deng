@@ -60,41 +60,97 @@
  */ 
 
 
-#version 450
-#extension GL_ARB_separate_shader_objects : enable
-
-const uint orthographic_camera_mode3D = 0x00000001u;
-const uint perspective_camera_mode3D = 0x00000002u;
-
-layout(binding = 0) uniform UniformBufferObj {
-    mat4 transform;
-    mat4 view;
-    uint ubo_flag_bits;
-} ubo;
+#ifndef __REND_INIT_H
+#define __REND_INIT_H
 
 
-/*
- * Store color information about asset when it is not texture mapped
- */
-layout(binding = 1) uniform ColorData {
-    vec4 color;
-    int is_unmapped;
-} cl;
+#ifdef __REND_INIT_CPP
+    #include <mutex>
+    #include <vector>
+    #include <array>
+    #include <vulkan/vulkan.h>
 
+    #include <common/base_types.h>
+    #include <common/hashmap.h>
+    #include <common/err_def.h>
+    #include <data/assets.h>
 
-layout(location = 0) in vec3 in_pos;
-layout(location = 1) in vec3 in_norm_pos;
+    #include <math/deng_math.h>
+    #include <deng/window.h>
+    #include <utils/timer.h>
+    #include <deng/camera.h>
 
-layout(location = 0) out vec4 out_color;
+    #include <deng/vulkan/qm.h>
+    #include <deng/vulkan/sd.h>
+    #include <deng/vulkan/resources.h>
 
-void main() {
-    if((ubo.ubo_flag_bits & orthographic_camera_mode3D) == orthographic_camera_mode3D)
-        gl_Position = ubo.view * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
+    #include <deng/lighting/light_srcs.h>
+    #include <deng/registry/registry.h>
     
-    else if((ubo.ubo_flag_bits & perspective_camera_mode3D) == perspective_camera_mode3D)
-        gl_Position = ubo.transform * vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
+    #include <deng/vulkan/rend_infos.h>
+    #include <deng/vulkan/ic.h>
+    #include <deng/vulkan/scc.h>
+    #include <deng/vulkan/pipeline_data.h>
+    #include <deng/vulkan/pipelines.h>
+    #include <deng/vulkan/desc_set_layout.h>
+    #include <deng/vulkan/desc_pool.h>
+    #include <deng/vulkan/desc_sets.h>
+    #include <deng/vulkan/dc.h>
+    #include <deng/vulkan/tm.h>
+    #include <deng/vulkan/bm.h>
+    #include <deng/vulkan/rm.h>
+#endif
 
-    else gl_Position = vec4(-in_pos[0], -in_pos[1], in_pos[2], 1.0f);
 
-    out_color = cl.color;   
+namespace deng {
+    namespace vulkan {
+
+        /// Vulkan renderer config variables
+        struct __vk_ConfigVars {
+            VkSampleCountFlagBits msaa_sample_count = VK_SAMPLE_COUNT_1_BIT;
+            deng_bool_t enable_vsync = false;
+            deng_bool_t enable_validation_layers = false;
+            deng_bool_t gui_count_fps = false;
+            deng_bool_t cli_count_fps = false;
+            dengMath::vec4<deng_vec_t> background = {0.0f, 0.0f, 0.0f, 1.0f};
+            deng::Camera3D *p_cam;
+        };
+
+
+        class __vk_RendererInitialiser {
+        private:
+            // All renderer initialisers
+            __vk_InstanceCreator *m_p_ic;
+            __vk_SwapChainCreator *m_p_scc;
+            __vk_DescriptorCreator *m_p_desc_c; 
+            __vk_PipelineCreator *m_p_pl_c;
+            __vk_ResourceManager *m_p_rm;
+            __vk_DrawCaller *m_p_dc;
+
+        public:
+            __GlobalRegistry &m_reg;
+            std::vector<deng_Id> m_assets = {};
+            std::vector<deng_Id> m_textures = {};
+
+        public:
+            __vk_RendererInitialiser (
+                deng::Window &win, 
+                const __vk_ConfigVars &conf,
+                deng::__GlobalRegistry &reg
+            );
+
+            ~__vk_RendererInitialiser();
+
+        /// Getters
+        public:
+            __vk_InstanceCreator *getIC();
+            __vk_SwapChainCreator *getSCC();
+            __vk_DescriptorCreator *getDescC();
+            __vk_PipelineCreator *getPipelineC();
+            __vk_ResourceManager *getResMan();
+            __vk_DrawCaller *getDrawCaller();
+        };
+    }
 }
+
+#endif

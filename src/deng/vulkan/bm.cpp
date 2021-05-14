@@ -75,11 +75,9 @@ namespace deng {
         ) : m_assets(assets), m_gpu_limits(gpu_limits), m_reg(reg) {}
 
         
-        /*
-         * Create new uniform buffer instance and allocate memory for it.
-         * WARNING: This method call expects that uniform buffer and its memory
-         * have been freed or are not initialised previously
-         */
+        /// Create new uniform buffer instance and allocate memory for it.
+        /// WARNING: This method call expects that uniform buffer and its memory
+        /// have been freed or are not initialised previously
         void __vk_BufferManager::__mkUniformBuffer (
             VkDevice device, 
             VkPhysicalDevice gpu,
@@ -88,11 +86,17 @@ namespace deng {
             deng_ui64_t asset_cap
         ) {
             m_buffer_data.ubo_asset_cap = asset_cap;
+
+            // Calculate the chunk size for uniform data
+            m_ubo_chunk_size = cm_FindChunkSize(m_gpu_limits.minUniformBufferOffsetAlignment,
+                sizeof(__vk_UniformObjectTransform)) + cm_FindChunkSize(
+                m_gpu_limits.minUniformBufferOffsetAlignment, sizeof(__vk_UniformObjectTransform2D)) +
+                cm_FindChunkSize(m_gpu_limits.minUniformBufferOffsetAlignment, sizeof(__vk_UniformLightData));
             
-            // Calculate the initial uniform buffer capacity
-            m_buffer_data.ubo_cap = __max_frame_c * (cm_FindChunkSize(m_gpu_limits.minUniformBufferOffsetAlignment, 
-                sizeof(__vk_UniformTransformation)) + asset_cap * cm_FindChunkSize(m_gpu_limits.minUniformBufferOffsetAlignment, 
-                sizeof(__vk_UniformColorData)));
+            // Calculate the initial uniform buffer capacity 
+            // Data is stored like this: fc * (Transform + Transform2D + LightData) + n * ColorData
+            m_buffer_data.ubo_cap = __max_frame_c * m_ubo_chunk_size + asset_cap * 
+                cm_FindChunkSize(m_gpu_limits.minUniformBufferOffsetAlignment, sizeof(__vk_UniformColorData));
             
             // Create a new uniform buffer instance
             VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer(device, gpu, 
@@ -224,6 +228,12 @@ namespace deng {
             }
         }
 
+
+        /// Reset uniform buffer size to first asset color data instance
+        void __vk_BufferManager::__resetUboBufferSize() {
+            m_buffer_data.ubo_size = __max_frame_c * m_ubo_chunk_size;
+        }
+
         
         deng_ui64_t __vk_BufferManager::__findMaxAssetSize(const dengMath::vec2<deng_ui32_t> &bounds) {
             VkDeviceSize max_size = 0;
@@ -278,9 +288,7 @@ namespace deng {
         }
 
 
-        /*
-         * Create main asset buffer and copy all assets data to it
-         */
+        /// Create main asset buffer and copy all assets data to it
         void __vk_BufferManager::mkAssetBuffers (
             VkDevice device, 
             VkPhysicalDevice gpu, 
@@ -330,7 +338,7 @@ namespace deng {
                 );
 
                 // Populate staging buffer memory with vertices data
-                __AssetCpy asset_cpy;
+                __AssetCpy asset_cpy = {};
                 asset_cpy.cpyToBuffer(device, reg_asset.asset, m_buffer_data.staging_buffer_memory);
                 
                 // Copy asset uniform data to ubo buffer
@@ -363,9 +371,7 @@ namespace deng {
         }
 
 
-        /*
-         * Copy asset color data to uniform buffer memory
-         */
+        /// Copy asset color data to uniform buffer memory
         void __vk_BufferManager::cpyAssetUniform (
             VkDevice device,
             VkPhysicalDevice gpu,
@@ -376,6 +382,7 @@ namespace deng {
             // Retrieve the base asset and set its ubo offset
             RegType &reg_asset = m_reg.retrieve(asset.base_id, DENG_SUPPORTED_REG_TYPE_ASSET);
             reg_asset.asset.offsets.ubo_offset = m_buffer_data.ubo_size;
+            LOG("Ubo offset: " + std::to_string(reg_asset.asset.offsets.ubo_offset));
 
             // Set the ubo color according to the color data
             __vk_UniformColorData ubo;
@@ -388,7 +395,6 @@ namespace deng {
             
             // Check if reg type is unmapped or not and set the flag accordingly
             if(reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
-               reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
                reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
                !reg_asset.asset.tex_uuid) ubo.is_unmapped = true;
             else ubo.is_unmapped = reg_asset.asset.force_unmap; 
@@ -416,29 +422,58 @@ namespace deng {
         }
 
 
-        /*
-         * Update transfrom uniform data in the frame according to updated camera
-         * and view matrix
-         */
-        void __vk_BufferManager::updateUboTransform (
+        /// Update transfrom uniform data in the frame according to updated camera
+        /// and view matrix
+        void __vk_BufferManager::updateUboTransform3D(
             VkDevice device, 
             deng_ui32_t current_image, 
             Camera3D *p_cam
         ) {
-            __vk_UniformTransformation ubo;
-            ubo.transform = p_cam->getCameraMat();   
+            __vk_UniformObjectTransform ubo;
+            ubo.transform = p_cam->getCameraMat();
             ubo.view = p_cam->getViewMat();
-            ubo.no_perspective = !p_cam->isPerspective();
 
-            __vk_BufferCreator::cpyToBufferMem(device, sizeof(__vk_UniformTransformation),
-                &ubo, m_buffer_data.uniform_buffer_mem, current_image * cm_FindChunkSize(
-                m_gpu_limits.minUniformBufferOffsetAlignment, sizeof(__vk_UniformTransformation)));
+            __vk_BufferCreator::cpyToBufferMem(device, sizeof(__vk_UniformObjectTransform),
+                &ubo, m_buffer_data.uniform_buffer_mem, current_image * m_ubo_chunk_size);
+        }
+
+
+        /// Update lighting uniform data
+        void __vk_BufferManager::updateUboLighting (
+            VkDevice device,
+            LightSource light_srcs[__DENG_MAX_LIGHT_SRC_COUNT],
+            dengMath::vec3<deng_vec_t> ambient,
+            deng_ui32_t current_image
+        ) {
+            __vk_UniformLightData data = {{{ 0 }}};
+
+            // For each light source create it own __vk_UniformLightSource instance
+            for(size_t i = 0; i < __DENG_MAX_LIGHT_SRC_COUNT; i++) {
+                // Check the light source type and populate light source structure accordingly
+                switch(light_srcs[i].type) {
+                case DENG_LIGHT_SRC_TYPE_PT:
+                    data.light_srcs[i].intensity = light_srcs[i].light.pt.intensity;
+                    data.light_srcs[i].pos = light_srcs[i].light.pt.pos;
+                    break;
+
+                case DENG_LIGHT_SRC_TYPE_NONE:
+                    data.light_src_c = i + 1;
+                    goto REMAP;
+                    break;
+
+                default: 
+                    break;
+                }
+            }
+
+            REMAP:
+            __vk_BufferCreator::cpyToBufferMem(device, sizeof(__vk_UniformLightData),
+                &data, m_buffer_data.uniform_buffer_mem, current_image * m_ubo_chunk_size +
+                sizeof(__vk_UniformObjectTransform) + sizeof(__vk_UniformObjectTransform2D));
         }
 
         
-        /*
-         * Replace data in main buffer with newer data from given asset vertices
-         */
+        /// Replace data in main buffer with newer data from given asset vertices
         void __vk_BufferManager::remapAssetVerts (
             VkDevice device,
             VkPhysicalDevice gpu,
@@ -504,5 +539,9 @@ namespace deng {
             vkDestroyBuffer(device, m_buffer_data.staging_buffer, NULL);
             vkFreeMemory(device, m_buffer_data.staging_buffer_memory, NULL);
         }
+
+
+        /// Getter methods
+        deng_ui64_t __vk_BufferManager::getUboChunkSize() { return m_ubo_chunk_size; }
     }
 }

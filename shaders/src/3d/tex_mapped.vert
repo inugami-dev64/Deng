@@ -60,66 +60,48 @@
  */ 
 
 
-#ifndef __LIGHT_SRCS_H
-#define __LIGHT_SRCS_H
+#version 450
+#extension GL_ARB_separate_shader_objects : enable
+
+// Uniform trasformation structure
+layout(binding = 0) uniform UboTransform {
+    mat4 transform;
+    mat4 view;
+} ubo;
 
 
-#define __DENG_MAX_LIGHT_SRC_COUNT      32
+// Asset color data uniform
+layout(binding = 1) uniform ColorData {
+    vec4 color;
+    uint ignore_transform;
+    int is_unmapped;
+} cl;
 
 
-namespace deng {
-
-    /// Structure for point light source information keeping
-    struct __PtLightSrc {
-        deng_Id uuid;
-        deng_vec_t intensity;
-        dengMath::vec3<deng_vec_t> pos;
-    };
-
-    
-    /// Structure for keeping information about global light source
-    /// that has specific normalised ray vector position
-    struct __SunLightSrc {
-        deng_Id uuid;
-        deng_vec_t intensity;
-        dengMath::vec3<deng_vec_t> ray_vec;
-    };
-
-    
-    /// Structure for keeping information about direction light source
-    struct __DirectionLightSrc {
-        deng_Id uuid;
-        deng_vec_t intensity;
-        deng_vec_t radius;
-        dengMath::vec3<deng_vec_t> direction;
-        dengMath::vec3<deng_vec_t> pos;
-    };
+// Input data
+layout(location = 0) in vec3 in_pos;
+layout(location = 1) in vec2 in_tex_pos;
+layout(location = 2) in vec3 in_norm_pos;
 
 
-    /// Universal light source union
-    union __UniLightSrc {
-        __PtLightSrc pt;
-        __SunLightSrc sun;
-        __DirectionLightSrc dir;
-    };
+// All the data that is passed to the fragment shader
+layout(location = 0) out vec4 out_color;
+layout(location = 1) out vec2 out_tex;
+layout(location = 2) out vec3 out_pos;
+layout(location = 3) out vec3 out_normal;
+layout(location = 4) out flat uint out_is_unmapped;
 
-    
-    /// Light source type specifier
-    enum __LightSrcType {
-        DENG_LIGHT_SRC_TYPE_NONE    = 0,
-        DENG_LIGHT_SRC_TYPE_PT      = 1,
-        DENG_LIGHT_SRC_TYPE_SUN     = 2,
-        DENG_LIGHT_SRC_TYPE_DIR     = 3,
-        DENG_LIGHT_SRC_TYPE_FIRST   = DENG_LIGHT_SRC_TYPE_NONE,
-        DENG_LIGHT_SRC_TYPE_LAST    = DENG_LIGHT_SRC_TYPE_DIR
-    };
+void main() {
+    // Check how the position should be transformed
+    if(cl.ignore_transform == 1)
+        gl_Position = ubo.view * vec4(in_pos, 1.0f);
 
-    
-    /// Main light source specifier structure
-    struct LightSource {
-        __LightSrcType type;
-        __UniLightSrc light;
-    };
+    else gl_Position = ubo.transform * vec4(in_pos, 1.0f);
+
+    // Set all the output variables
+    out_color = cl.color;
+    out_tex = in_tex_pos;
+    out_pos = in_pos;
+    out_normal = in_norm_pos;
+    out_is_unmapped = cl.is_unmapped;
 }
-
-#endif

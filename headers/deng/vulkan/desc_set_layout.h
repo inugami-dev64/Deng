@@ -57,116 +57,57 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: desc_set_layout - Descriptor set layout creator
+ *  Purpose: Provide a class for creating descriptor set layouts
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __DC_H
-#define __DC_H
+#ifndef __DESC_SET_LAYOUT_H
+#define __DESC_SET_LAYOUT_H
 
 
-#ifdef __DC_CPP
+#ifdef __DESC_SET_LAYOUT_CPP
     #include <vector>
-    #include <array>
-	#include <string>
-    
     #include <vulkan/vulkan.h>
+    
     #include <common/base_types.h>
-    #include <common/hashmap.h>
     #include <common/err_def.h>
     #include <data/assets.h>
-
-    #include <math/deng_math.h>
-    #include <deng/window.h>
-    #include <deng/vulkan/sd.h>
-    #include <deng/vulkan/qm.h>
-    #include <deng/vulkan/resources.h>
-    
-    #include <deng/vulkan/rend_infos.h>
-    #include <deng/vulkan/pipeline_data.h>
-    #include <deng/vulkan/pipelines.h>
-    #include <deng/lighting/light_srcs.h>
-    #include <deng/registry/registry.h>
-
 #endif
 
 
 namespace deng {
     namespace vulkan {
 
-        /* 
-         * Class for making drawcalls and setting up proper synchronisation 
-         */
-        class __vk_DrawCaller {
+        class __vk_DescriptorSetLayoutCreator {
         private:
-            std::vector<deng_Id> &m_assets;
-            std::vector<deng_Id> &m_textures;
-            deng::__GlobalRegistry &m_reg;
-            std::vector<VkFramebuffer> m_framebuffers;
-            std::array<__vk_PipelineData, PIPELINE_C> m_pl_data;
-            __vk_QueueManager m_qff;
-
-            // Commandpools and commandbuffers
-            VkCommandPool m_cmd_pool;
-            std::vector<VkCommandBuffer> m_cmd_bufs;
+            VkDescriptorSetLayout m_vu2d_layout;
+            VkDescriptorSetLayout m_vm2d_layout;
+            VkDescriptorSetLayout m_vu3d_layout;
+            VkDescriptorSetLayout m_vm3d_layout;
 
         private:
-            void __mkSynchronisation(VkDevice &device);
+            /// Find the binding data according to the asset mode
+            std::vector<VkDescriptorSetLayoutBinding> __findBindings(das_AssetMode asset_mode);
 
-            /// Asset commandbuffer binder methods
-            void __bindVertexResourceBuffers (
-                das_Asset &asset, 
-                VkCommandBuffer cur_buf,
-                __vk_BufferData &bd
-            );
-
+            /// Create new descriptor set layout
+            void __mkGenericDescSetLayout(VkDevice device, std::vector<VkDescriptorSetLayoutBinding> &bindings, 
+                VkDescriptorSetLayout *p_layout);
             
-            /*
-             * Bind asset pipeline and return its pipeline layout
-             */
-            VkPipelineLayout *__bindPipeline(das_Asset &asset, VkCommandBuffer cmd_buf);
+            /// Create descriptor set layouts for different asset types
+            void __mkVu2DLayout(VkDevice device);
+            void __mkVm2DLayout(VkDevice device);
+            void __mkVu3DLayout(VkDevice device);
+            void __mkVm3DLayout(VkDevice device);
 
         public:
-            // Needed for synchronising frames
-            deng_ui32_t current_frame = 0;
-            std::vector<VkFence> flight_fences;
-            std::vector<VkSemaphore> image_available_semaphore_set;
-            std::vector<VkSemaphore> render_finished_semaphore_set;
+            __vk_DescriptorSetLayoutCreator(VkDevice device);
 
+        /// Layout getter
         public:
-            __vk_DrawCaller (
-                VkDevice device,
-                __vk_QueueManager qff,
-                std::vector<deng_Id> &assets,
-                std::vector<deng_Id> &textures,
-                deng::__GlobalRegistry &reg
-            );
-            
-            void setMiscData (
-                const std::array<__vk_PipelineData, PIPELINE_C> &pl_data, 
-                const std::vector<VkFramebuffer> &fb
-            );
-
-            void mkCommandPool(VkDevice device);
-
-            void allocateMainCmdBuffers (
-                VkDevice device, 
-                VkQueue g_queue, 
-                VkRenderPass renderpass, 
-                VkExtent2D ext,
-                dengMath::vec4<deng_vec_t> background,
-                __vk_BufferData &bd
-            );
-
-            void recordMainCmdBuffers (
-                VkRenderPass renderpass,
-                VkExtent2D ext,
-                const dengMath::vec4<deng_vec_t> &background,
-                __vk_BufferData &bd
-            );
-        
-        public:
-            VkCommandPool getComPool();
-            const std::vector<VkCommandBuffer> &getComBufs();
+            VkDescriptorSetLayout &getLayout(das_AssetMode asset_mode);
         };
     }
 }

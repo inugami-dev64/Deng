@@ -109,9 +109,6 @@
 namespace deng {
     namespace vulkan {
 
-        /* 
-         * Class for allocating buffer and image resources 
-         */ 
         class __vk_ResourceManager : public __vk_BufferManager, public __vk_TextureManager {
         private:
             // Color image instances

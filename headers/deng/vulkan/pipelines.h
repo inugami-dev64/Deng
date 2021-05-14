@@ -57,142 +57,82 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: pipeline - Pipeline creator for Vulkan renderer
+ *  Purpose: Provide parent class for creating new pipelines in Vulkan
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
 #ifndef __PIPELINES_H
 #define __PIPELINES_H
 
-#ifdef __PIPELINES_CPP
-    #include <vector>
-    #include <array>
-    #include <string>
-    #include <stdexcept>
-    #include <vulkan/vulkan.h>
-
-    #include <deng/forward_dec.h>
-    #include <common/base_types.h>
-    #include <common/hashmap.h>
-    #include <common/err_def.h>
-    #include <data/assets.h>
-    #include <math/deng_math.h>
-    #include <deng/vulkan/qm.h>
-    #include <deng/vulkan/resources.h>
-    #include <deng/vulkan/rend_infos.h>
-    #include <deng/window.h>
-#endif
-
-
-/* Pipeline indices */
+// Pipeline indices
 #define UM3D_I          0
 #define TM3D_I          1
 #define UM2D_I          2
 #define TM2D_I          3
+#define PIPELINE_C      4
 
-#ifdef __linux__
-    #define UNMAPPED_VERT_SHADER_2D             "./shaders/bin/2d_unmapped.spv"
-    #define TEXTURE_MAPPED_VERT_SHADER_2D       "./shaders/bin/2d_tex_mapped.spv"
-    #define UNMAPPED_VERT_SHADER_3D             "./shaders/bin/3d_unmapped.spv"
-    #define TEXTURE_MAPPED_VERT_SHADER_3D       "./shaders/bin/3d_tex_mapped.spv"
-    #define TEXTURE_MAPPED_FRAG_SHADER          "./shaders/bin/tex_mapped.spv"
-    #define UNMAPPED_FRAG_SHADER                "./shaders/bin/unmapped.spv"
+
+#ifdef __PIPELINES_CPP
+    #include <array>
+    #include <vector>
+    #include <vulkan/vulkan.h>
+
+    #include <common/base_types.h>
+    #include <common/err_def.h>
+
+    #include <deng/vulkan/pipeline_data.h>
+    #include <deng/vulkan/pipeline_ci_gen.h>
 #endif
 
-#ifdef _WIN32
-    /* Shader binary file names */
-    #define UNMAPPED_VERT_SHADER_2D             ".\\shaders\\bin\\2d_unmapped.spv"
-    #define TEXTURE_MAPPED_VERT_SHADER_2D       ".\\shaders\\bin\\2d_tex_mapped.spv"
-    #define UNMAPPED_VERT_SHADER_3D             ".\\shaders\\bin\\3d_unmapped.spv"
-    #define TEXTURE_MAPPED_VERT_SHADER_3D       ".\\shaders\\bin\\3d_tex_mapped.spv"
-    #define TEXTURE_MAPPED_FRAG_SHADER          ".\\shaders\\bin\\tex_mapped.spv"
-    #define UNMAPPED_FRAG_SHADER                ".\\shaders\\bin\\unmapped.spv"
-#endif
 
 namespace deng {
     namespace vulkan {
-
-        /* 
-         * Struct for all pipeline createinfo specifier objects 
-         * This struct functions as a parent struct for class PipelineCreator
-         */
-        struct __vk_PipelineCreateinfoSpecifiers {
-            std::array<VkPipelineShaderStageCreateInfo, 2> m_shader_stage_createinfos{};
-            std::array<VkShaderModule, 2> m_shader_modules{};
-            std::vector<VkVertexInputBindingDescription> m_input_binding_desc{};
-            std::vector<VkVertexInputAttributeDescription> m_input_attr_descs{};
-
-            VkViewport m_viewport{};
-            VkRect2D m_scissor{};
-
-            VkPipelineVertexInputStateCreateInfo    m_vert_input_create_info{};
-            VkPipelineInputAssemblyStateCreateInfo  m_input_asm_createinfo{};
-            VkPipelineViewportStateCreateInfo       m_viewport_state_createinfo{};
-            VkPipelineRasterizationStateCreateInfo  m_rasterization_createinfo{};
-            VkPipelineMultisampleStateCreateInfo    m_multisample_createinfo{};
-            VkPipelineColorBlendAttachmentState     m_colorblend_attachment{};
-            VkPipelineDepthStencilStateCreateInfo   m_depth_stencil{};
-            VkPipelineColorBlendStateCreateInfo     m_colorblend_state_createinfo{};
-        };
-
-
-        /* 
-         * Handle pipeline creation 
-         * This class is used to simplify the process of creating pipelines
-         * in Vulkan
-         */
-        class __vk_PipelineCreator : private __vk_PipelineCreateinfoSpecifiers {
+        
+        class __vk_PipelineCreator {
         private:
-            VkDevice m_device;
-            __vk_PipelineData *m_p_pipeline_data;
-            VkRenderPass m_renderpass;
-            VkExtent2D m_extent;
+            // Pipeline layouts for all pipeline types
+            VkPipelineLayout m_vu2d_layout;
+            VkPipelineLayout m_vm2d_layout;
+            VkPipelineLayout m_vu3d_layout;
+            VkPipelineLayout m_vm3d_layout;
+
+            // Descriptor set layouts, which are needed for 
+            // pipeline layout creation
+            VkDescriptorSetLayout &m_vu2d_ds_layout;
+            VkDescriptorSetLayout &m_vm2d_ds_layout;
+            VkDescriptorSetLayout &m_vu3d_ds_layout;
+            VkDescriptorSetLayout &m_vm3d_ds_layout;
+        
+            std::array<__vk_PipelineData, PIPELINE_C> m_pipelines;
 
         private:
-            /*
-             * Create new shader module from SPIR-V binaries
-             * This method is used to create new shader module from shader binaries 
-             * provided as a parameter
-             */
-            VkShaderModule __mkShaderModule(std::vector<char> &shader_bins);
-            /*
-             * Get binding description info in VkVertexInputBindingDescription instance
-             * This method checks for pipeline usage and returns VkVertexInputBindingDescription
-             * instance according to usage
-             */
-            std::vector<VkVertexInputBindingDescription> __getBindingDesc();
-            /*
-             * Get attribute description info in VkVertexInputAttributeDescription instances
-             * This method is used to recieve all input descriptions required by shaders
-             */
-            std::vector<VkVertexInputAttributeDescription> __getAttributeDescs();
-            
+            /// Create a single pipeline layout
+            void __mkPipelineLayout (
+                VkDevice device, 
+                VkDescriptorSetLayout &ds_layout,
+                VkPipelineLayout &pl_layout
+            );
+
+            /// Create new pipeline layouts for all compatible pipelines
+            void __mkPipelineLayouts(VkDevice device);
+
         public:
             __vk_PipelineCreator (
-                __vk_PipelineData *p_pipeline_data, 
-                VkDevice device, 
-                VkExtent2D extent, 
-                VkRenderPass renderpass
+                VkDescriptorSetLayout &vu2d, VkDescriptorSetLayout &vm2d,
+                VkDescriptorSetLayout &vu3d, VkDescriptorSetLayout &vm3d
             );
-            ~__vk_PipelineCreator();
 
-            /* 
-             * Make createinfo instance for graphics pipeline
-             * This method is used to set up VkGraphicsPipelineCreateInfo, while defaulting
-             * some options that are not needed to be customised by different DENG pipelines
-             */
-            VkGraphicsPipelineCreateInfo mkGraphicsPipelineInfo (
-                std::string vert_shader, 
-                std::string frag_shader, 
-                char *shader_module_name,
-                VkPolygonMode polygon_mode, 
-                VkCullModeFlagBits cull_mode, 
-                VkFrontFace front_face, 
-                VkPrimitiveTopology primitive_topology, 
-                deng_bool_t add_depth_stencil, 
-                deng_bool_t add_color_blend, 
-                VkSampleCountFlagBits sample_c,
-                deng_ui32_t subpass_index
-            );
+            /// Create new pipelines 
+            void mkPipelines(VkDevice device, VkExtent2D ext, 
+                VkRenderPass rp, VkSampleCountFlagBits sample_c);
+
+        // Getters / Setters
+        public:
+            __vk_PipelineData &getPipeline(deng_ui32_t id);
+            std::array<__vk_PipelineData, PIPELINE_C> &getPipelines();
         };
     }
 }

@@ -109,7 +109,7 @@ namespace deng {
         private:
             std::vector<deng_Id> &m_textures;
             deng_ui32_t m_tex_mem_bits = 0;
-            deng_Id m_dummy_tex_uuid;
+            deng_Id m_missing_tex_uuid;
             __vk_BufferData &m_bd;
             deng::__GlobalRegistry &m_reg;
 
@@ -118,48 +118,24 @@ namespace deng {
              * Create missing texture in case any texture mapped asset
              * has invalid texture uuid
              */
-            void __mkMissingTex (
-                VkDevice device,
-                VkPhysicalDevice gpu,
-                VkCommandPool cmd_pool,
-                VkQueue g_queue
-            );
+            void __mkMissingTex(VkDevice device, VkPhysicalDevice gpu,
+                VkCommandPool cmd_pool, VkQueue g_queue);
 
             
-            /*
-             * Create mipmaps for a texture image
-             */
-            void __mkMipMaps (
-                VkDevice &device,
-                VkCommandPool &cmd_pool,
-                VkImage image,
-                VkQueue g_queue,
-                deng_i32_t width,
-                deng_i32_t height,
-                deng_ui32_t mip_levels
-            );
+            /// Create mipmaps for a texture image
+            void __mkMipMaps(VkDevice &device, VkCommandPool &cmd_pool,
+                VkImage image, VkQueue g_queue, deng_i32_t width, deng_i32_t height,
+                deng_ui32_t mip_levels);
 
 
-            /*
-             * Create texture sampler for texture image
-             */
-            void __mkTextureSampler (
-                VkDevice &device,
-                VkSampler &sampler,
-                deng_ui32_t mip_levels
-            );
+            /// Create texture sampler for texture image
+            void __mkTextureSampler(VkDevice &device, VkSampler &sampler,
+                deng_ui32_t mip_levels);
 
 
-            /*
-             * Allocate memory for VkImage instances
-             */
-            void __allocateTexMemory (
-                VkDevice device,
-                VkPhysicalDevice gpu,
-                VkCommandPool cmd_pool, 
-                VkQueue g_queue, 
-                VkDeviceSize size
-            );
+            /// Allocate memory for VkImage instances
+            void __allocateTexMemory(VkDevice device, VkPhysicalDevice gpu,
+                VkCommandPool cmd_pool, VkQueue g_queue, VkDeviceSize size);
 
             
             /*
@@ -194,9 +170,7 @@ namespace deng {
             );
 
             
-            /*
-             * Create VkImageViews for texture images
-             */
+            /// Create VkImageViews for texture images
             void __mkImageView (
                 VkDevice device,
                 __vk_Texture &tex,
@@ -220,9 +194,7 @@ namespace deng {
             );
 
 
-            /*
-             * Create new VkImage and VkImageView instances for a single texture
-             */
+            /// Create new VkImage and VkImageView instances for a single texture
             void __newVkTexture (
                 VkDevice device,
                 VkPhysicalDevice gpu,
@@ -248,9 +220,7 @@ namespace deng {
             );
 
 
-            /*
-             * Create new vulkan textures for textures specified between tex_bounds
-             */
+            /// Create new vulkan textures for textures specified between tex_bounds
             void mkTextures (
                 VkDevice device, 
                 VkPhysicalDevice gpu, 

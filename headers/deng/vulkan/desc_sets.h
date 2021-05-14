@@ -60,10 +60,10 @@
  */ 
 
 
-#ifndef __DESC_C_H
-#define __DESC_C_H
+#ifndef __DESC_SETS_H
+#define __DESC_SETS_H
 
-#ifdef __DESC_C_CPP
+#ifdef __DESC_SETS_CPP
     #include <vector>
     #include <array>
 
@@ -79,112 +79,85 @@
     #include <deng/vulkan/sd.h>
     #include <deng/vulkan/qm.h>
     #include <deng/vulkan/resources.h>
+    #include <deng/vulkan/ubo.h>
 
     #include <deng/lighting/light_srcs.h>
     #include <deng/registry/registry.h>
 
-    #include <deng/vulkan/rend_infos.h>
+    #include <deng/vulkan/pipeline_data.h>
     #include <deng/vulkan/pipelines.h>
+    #include <deng/vulkan/desc_set_layout.h>
+    #include <deng/vulkan/desc_pool.h>
 
 
-    // Default capacities for descriptor pools
-    static const deng_ui32_t __default_mapped_ds_cap = 32;
-    static const deng_ui32_t __default_unmapped_ds_cap = 32;
+    // Default capacity for descriptor pool
+    #define __DEFAULT_DESC_POOL_CAP         32
 #endif
 
 namespace deng {
     namespace vulkan {
 
-        /* 
-         * Class for creating descriptor set layouts, pipelines, descriptor sets 
-         */
-        class __vk_DescriptorCreator : private __vk_DescriptorInfo {
+        /// Abstract class for creating descriptor descriptor sets and pipelines
+        class __vk_DescriptorCreator : public __vk_DescriptorPoolCreator, 
+                                       public __vk_DescriptorSetLayoutCreator {   
         private:
             std::vector<deng_Id> &m_assets;
             std::vector<deng_Id> &m_textures;
-            deng::__GlobalRegistry &m_reg;
-            deng_ui32_t m_tex_cap = 0;
-            deng_ui32_t m_unmapped_dc_pool_cap = 0;
-            deng_ui32_t m_mapped_dc_pool_cap = 0;
+            
+            // Registered asset count
+            deng_ui64_t m_2d_unmapped_asset_c = 0;
+            deng_ui64_t m_2d_mapped_asset_c = 0;
+            deng_ui64_t m_3d_unmapped_asset_c = 0;
+            deng_ui64_t m_3d_mapped_asset_c = 0;
 
-            // These member variables store the total count of 
-            // assets that have descriptor sets made for
-            deng_ui32_t m_unmapped_asset_c = 0;
-            deng_ui32_t m_mapped_asset_c = 0;
+            deng::__GlobalRegistry &m_reg;
 
         private:
-            void __mkDescriptorSetLayouts(VkDevice &device);
-            void __mkPipelineLayouts(VkDevice &device);
-            void __mkGraphicsPipelines (
-                VkDevice &device, 
-                VkExtent2D &ext, 
-                VkRenderPass &renderpass,
-                VkSampleCountFlagBits sample_c
-            );
+            /// Check if the pool was reallocated and if it was reallocate 
+            /// descriptor sets for each asset that had them destroyed
+            void __reallocCheck(VkDevice device, __vk_BufferData &bd, deng_Id missing_tex_id,
+                deng_ui64_t min_ubo_align, deng_ui64_t ubo_chunk_size);
 
-            void __mkUnmappedDescPool (
-                VkDevice device, 
-                deng_ui32_t desc_c
-            );
-
-            void __mkTexMappedDescPool (
-                VkDevice device,
-                deng_ui32_t desc_c
-            );
+            /// Find the bufferinfos based on the asset mode used
+            std::vector<VkDescriptorBufferInfo> __findBufferInfos(das_Asset &asset,
+                __vk_BufferData &bd, deng_ui64_t cur_frame, deng_ui64_t frame_c, 
+                deng_ui64_t min_align, deng_ui64_t ubo_chunk_size);
 
 
-            /*
-             * Create descriptor sets for unmapped assets
-             */
+            /// Create write descriptors for texture mapped assets
+            std::vector<VkWriteDescriptorSet> __mkMappedWriteDescInfos(das_AssetMode asset_mode, 
+                std::vector<VkDescriptorBufferInfo> &buffer_infos, VkDescriptorSet &desc_set,
+                VkDescriptorImageInfo &img_info);
+
+
+            /// Create write descriptors for unmapped assets
+            std::vector<VkWriteDescriptorSet> __mkUnmappedWriteDescInfos(das_AssetMode asset_mode,
+                std::vector<VkDescriptorBufferInfo> &buffer_info, VkDescriptorSet &desc_set);
+
+
+            /// Create descriptor sets for unmapped assets
             void __mkUnmappedDS (
                 VkDevice device, 
                 __vk_Asset &asset,
                 __vk_BufferData &bd,
-                deng_ui64_t min_align
+                deng_ui64_t min_align,
+                deng_ui64_t ubo_chunk_size
             );
             
 
-            /*
-             * Create descriptor sets for texture mapped assets
-             */
+            /// Create descriptor sets for texture mapped assets
             void __mkTexMappedDS (
                 VkDevice device, 
                 __vk_Asset &asset,
                 __vk_BufferData &bd,
-                const char *dummy_tex_uuid,
-                deng_ui64_t min_align
+                deng_Id missing_tex_uuid,
+                deng_ui64_t min_align,
+                deng_ui64_t ubo_chunk_size
             );
-
-
-            /*
-             * Check if descriptor pools capacity is large enough
-             * to allocate more descriptor sets there.
-             * If descriptor pool is not large enough, all allocated descriptor
-             * sets will be destroyed and new ones allocated in the new descriptor
-             * pool
-             */
-            void __checkDescPoolCapacity (
-                VkDevice device,
-                __vk_BufferData &bd,
-                const char *dummy_tex_uuid,
-                deng_ui64_t min_ubo_align
-            );
-
-
-            /*
-             * Destroy all texture mapped descriptor sets from assets
-             * Return value is a vector with all indices to
-             * the texture mapped cleaned assets
-             */
-            const std::vector<size_t> &__cleanMappedDescSets(VkDevice device);
 
             
-            /*
-             * Destroy all unmapped descriptor sets from assets
-             * Return value is a vector with all indices to
-             * the unmapped cleaned assets
-             */
-            const std::vector<size_t> &__cleanUnmappedDescSets(VkDevice device);
+            /// Reallocate previously destroyed descriptor set instances
+            void __restoreDestroyedDescriptorSets();
 
         public:
             __vk_DescriptorCreator (
@@ -198,27 +171,16 @@ namespace deng {
             );
 
 
-            /*
-             * Abstracted function for creating descriptor sets
-             * for each asset
-             */
+            /// Abstracted method for creating descriptor sets
+            /// for each asset
             void mkDS (
                 VkDevice device,
                 __vk_BufferData &bd,
-                const char *dummy_tex_uuid,
+                deng_Id missing_tex_uuid,
                 const dengMath::vec2<deng_ui32_t> &asset_bounds,
+                deng_ui64_t ubo_chunk_size,
                 deng_ui64_t min_ubo_align
             );
-
-
-        public:
-            std::array<__vk_PipelineData, DENG_PIPELINE_COUNT> &getPipelines();
-            VkPipelineLayout getUnmappedPL();
-            VkPipelineLayout getTexMappedPL();
-            VkDescriptorSetLayout getUnmappedDSL();
-            VkDescriptorSetLayout getTexMappedDSL();
-            VkDescriptorPool getUnmappedDP();
-            VkDescriptorPool getTexMappedDP();
         };
     }
 }
