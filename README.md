@@ -11,17 +11,16 @@ features is following:
 * Game entity data registry system  
 * Asset texture mapping  
 * Custom asset format  
+* Wavefront OBJ parser
+* Point light
 
 Features that are not yet implemented but are coming soon are following:  
-* Collection of lighting components (point light, directional light and global light sources)  
+* Other lighting components (directional light and global light sources)  
 * OpenGL support for legacy graphics cards  
 * Lua scripting layer for game scripting  
 * libjpeg and libpng integration for supporting additional texture formats  
 * Custom mapdata format  
 * Map editor tool  
-
-Features that work but are messy and should be refactored:
-* Wavefront OBJ parser
 
 
 ## Getting started
