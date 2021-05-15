@@ -93,20 +93,24 @@ typedef float deng_vec_t;
 
 /// Universal DENG identifier type
 typedef char* deng_Id;
+
+
+/// Registry type bitmasks
 typedef enum deng_SupportedRegType {
-    DENG_SUPPORTED_REG_TYPE_ASSET       = 0,
-    DENG_SUPPORTED_REG_TYPE_VK_ASSET    = 1,
-    DENG_SUPPORTED_REG_TYPE_GL_ASSET    = 2,
-    DENG_SUPPORTED_REG_TYPE_TEXTURE     = 3,
-    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE  = 4,
-    DENG_SUPPORTED_REG_TYPE_GL_TEXTURE  = 5,
-    DENG_SUPPORTED_REG_TYPE_PT_LIGHT    = 6,
-    DENG_SUPPORTED_REG_TYPE_SUN_LIGHT   = 7,
-    DENG_SUPPORTED_REG_TYPE_DIR_LIGHT   = 8,
+    DENG_SUPPORTED_REG_TYPE_ASSET       = 0x00,
+    DENG_SUPPORTED_REG_TYPE_VK_ASSET    = 0x01,
+    DENG_SUPPORTED_REG_TYPE_GL_ASSET    = 0x02,
+    DENG_SUPPORTED_REG_TYPE_TEXTURE     = 0x04,
+    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE  = 0x08,
+    DENG_SUPPORTED_REG_TYPE_GL_TEXTURE  = 0x10,
+    DENG_SUPPORTED_REG_TYPE_PT_LIGHT    = 0x20,
+    DENG_SUPPORTED_REG_TYPE_SUN_LIGHT   = 0x40,
+    DENG_SUPPORTED_REG_TYPE_DIR_LIGHT   = 0x80,
 
     DENG_SUPPORTED_REG_TYPE_FIRST       = DENG_SUPPORTED_REG_TYPE_ASSET,
     DENG_SUPPORTED_REG_TYPE_LAST        = DENG_SUPPORTED_REG_TYPE_DIR_LIGHT
 } deng_SupportedRegTypes;
+typedef deng_ui32_t deng_SupportedRegTypeBitMask;
 
 
 /// Uniform flags mainly reserved for future use
@@ -117,9 +121,8 @@ typedef deng_ui32_t deng_CameraUniformFlagBits;
 #define DENG_CAMERA_UNIFORM_NO_CAMERA_MODE_2D           0x08u
 #define DENG_CAMERA_UNIFORM_NO_CAMERA_MODE_3D           0x10u
 
-/* 
- * Hints for controlling window with API calls 
- */
+
+/// Hints for controlling window with API calls 
 typedef deng_ui32_t deng_WindowHintBits;
 #define DENG_WINDOW_HINT_FULL_SCREEN                    0x01u
 #define DENG_WINDOW_HINT_WINDOWED                       0x02u
@@ -255,9 +258,7 @@ typedef enum deng_VCPOverflowAction {
 } deng_VCPOverflowAction;
 
 
-/*
- * Camera action specifier enum
- */
+/// Camera action specifier enum
 typedef enum deng_CameraAction {
     DENG_CAMERA_ACTION_MOV_U        = 0,
     DENG_CAMERA_ACTION_MOV_NU       = 1,

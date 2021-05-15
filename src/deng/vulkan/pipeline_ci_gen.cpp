@@ -285,11 +285,9 @@ namespace deng {
         }
 
 
-        /* 
-         * Make createinfo instance for graphics pipeline
-         * This method is used to set up VkGraphicsPipelineCreateInfo, while defaulting
-         * some options that are not needed to be customised by different DENG pipelines
-         */
+        /// Make createinfo instance for graphics pipeline
+        /// This method is used to set up VkGraphicsPipelineCreateInfo, while defaulting
+        /// some options that are not needed to be customised by different DENG pipelines
         VkGraphicsPipelineCreateInfo __vk_PipelineCreateInfoGenerator::mkGraphicsPipelineInfo (
             deng_PipelineType pt,
             VkPolygonMode polygon_mode, 

@@ -125,7 +125,9 @@ void das_LoadAsset (
 ) {
     p_asset->asset_mode = dst_mode;
     p_asset->tex_uuid = tex_uuid;
-    p_asset->color = color;
+    p_asset->diffuse = DAS_DEFAULT_DIFFUSE_COLOR;
+    p_asset->ambient = DAS_DEFAULT_AMBIENT_COLOR;
+    p_asset->specular = DAS_DEFAULT_SPECULAR_COLOR;
     p_asset->is_shown = true;
     p_asset->force_unmap = false;
 

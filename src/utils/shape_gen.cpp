@@ -192,7 +192,7 @@ namespace dengUtils {
         const dengMath::vec4<deng_vec_t> &color,
         deng_ui32_t hier
     ) {
-        das_Asset out_asset;
+        das_Asset out_asset = {};
         out_asset.asset_mode = DAS_ASSET_MODE_2D_UNMAPPED;
 
         // Generate new uuid and set the name and tex_uuid as NULL
@@ -202,7 +202,7 @@ namespace dengUtils {
 
         // Set the color and 2D hierarchy level
         out_asset.vertices.v2d.hier = hier;
-        out_asset.color = das_ObjColorData {
+        out_asset.diffuse = das_ObjColorData {
             color.first, 
             color.second,
             color.third, 
@@ -819,25 +819,12 @@ namespace dengUtils {
         std::vector<deng_ui32_t> indices;
         
         CircleGenerator::generateRelCircle (
-            vert,
-            indices,
-            pos,
-            radius,
-            color,
-            hier_level,
-            surround_rec
-        );
+            vert, indices, pos, radius,
+            color, hier_level, surround_rec);
 
         CircleGenerator::BorderGenerator::generateBorders (
-            vert,
-            false,
-            1,
-            indices,
-            border_color,
-            m_draw_bounds,
-            hier_level,
-            border_width
-        );
+            vert, false, 1, indices, border_color,
+            m_draw_bounds, hier_level, border_width);
 
         return CircleGenerator::AssetMaker2D::makeUnmappedAsset (
             vert,

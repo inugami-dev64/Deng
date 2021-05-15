@@ -128,9 +128,7 @@ namespace deng {
     }
 
 
-    /* 
-     * Move camera position in z direction 
-     */
+    /// Move camera position in z direction 
     void __EditorCameraEv::zoomOut(dengMath::CameraMatrix *p_vm) {
         p_vm->moveCamera (
             dengMath::vec3<deng_vec_t>{0.0f, 0.0f, -m_zoom_step},
@@ -141,9 +139,7 @@ namespace deng {
     }
 
 
-    /* 
-     * Update editor camera event polling 
-     */
+    /// Update editor camera event polling 
     void __EditorCameraEv::updateEv (
         dengMath::vec3<deng_vec_t> origin, 
         dengMath::CameraMatrix *p_vm
@@ -152,8 +148,7 @@ namespace deng {
             __EventBase::__updateMouseEvData();
         findEditorEvent();
 
-        switch(m_editor_cam_ev)
-        {
+        switch(m_editor_cam_ev) {
         case DENG_EDITOR_CAMERA_EVENT_Z_MOV_IN: {
             if(m_is_rot_cur) {
                 m_p_win->changeVCMode(false);
@@ -212,9 +207,7 @@ namespace deng {
     }
 
 
-    /*
-     * Set the editor camera bindings
-     */
+    /// Set the editor camera bindings
     void __EditorCameraEv::setBindings(const Camera3DBindings &bindings) {
         m_bindings = bindings;
     }
@@ -276,17 +269,13 @@ namespace deng {
     }
 
 
-    /*
-     * Set camera control bindings for editor camera system
-     */
+    /// Set camera control bindings for editor camera system
     void __EditorCamera::setBindings(const Camera3DBindings &bindings) {
         m_bindings = bindings;
     }
 
 
-    /*
-     * Wrapper method for updating camera events
-     */
+    /// Wrapper method for updating camera events
     void __EditorCamera::update() {
         updateEv (
             m_origin,

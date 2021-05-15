@@ -81,8 +81,9 @@ namespace deng {
     /// that has specific normalised ray vector position
     struct __SunLightSrc {
         deng_Id uuid;
+        deng_vec_t sky_height;
+        deng_vec_t angle;
         deng_vec_t intensity;
-        dengMath::vec3<deng_vec_t> ray_vec;
     };
 
     
@@ -91,7 +92,7 @@ namespace deng {
         deng_Id uuid;
         deng_vec_t intensity;
         deng_vec_t radius;
-        dengMath::vec3<deng_vec_t> direction;
+        dengMath::vec3<deng_vec_t> normal;
         dengMath::vec3<deng_vec_t> pos;
     };
 

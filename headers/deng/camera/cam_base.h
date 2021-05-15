@@ -203,8 +203,7 @@ namespace deng {
      * Base parent class for camera event classes
      * This class contains methods mainly for handling mouse positioning and its usage
      */
-    class __EventBase 
-    {
+    class __EventBase {
     protected:
         Window *m_p_win = NULL;
         dengMath::vec2<deng_px_t> m_mouse_pos = dengMath::vec2<deng_px_t>{0, 0};
@@ -223,15 +222,11 @@ namespace deng {
         void __updateMouseEvData();
 
 
-        /* 
-         * Find the current mouse control rotation 
-         */
+        /// Find the current mouse control rotation 
         dengMath::vec2<deng_f64_t> __getMouseRotation();
 
 
-        /*
-         * Check if input input conditions are satified for certain action
-         */
+        /// Check if input input conditions are satified for certain action
         deng_bool_t __checkInputAction(deng_CameraAction action);
 
     public:

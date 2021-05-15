@@ -92,6 +92,7 @@
 
     #include <deng/lighting/light_srcs.h>
     #include <deng/registry/registry.h>
+    #include <deng/lighting/light_man.h>
 
     #include <deng/vulkan/rend_infos.h>
     #include <deng/vulkan/ic.h>
@@ -115,42 +116,37 @@
 
 namespace Sandbox {
     
-    /*
-     * Vulkan sandbox application class
-     */
+    /// Vulkan sandbox application class
     class VulkanApp {
     private:
         deng::Window m_win;
         deng::Camera3D m_cam;
         deng::__GlobalRegistry m_reg;
         dengMath::Transformer3D m_transformer;
+        deng::LightManager m_light_man;
         deng::vulkan::__vk_Renderer *m_p_rend = NULL;
         std::vector<char*> m_asset_uuids;
         std::vector<char*> m_tex_uuids;
 
     private: 
-        /*
-         * Create first person camera control bindings
-         */
+        /// Create first person camera control bindings
         void __bindFPP();
 
 
-        /*
-         * Create editor camera control bindings
-         */
+        /// Create editor camera control bindings
         void __bindEditor();
 
 
-        /*
-         * Load test assets into the register
-         */
+        /// Load test assets into the register
         void __loadAssets(const std::vector<const char*> &files);
 
         
-        /*
-         * Load test textures into the register 
-         */
+        /// Load test textures into the register 
         void __loadTextures(const std::vector<const char*> &files);
+
+
+        /// Create new light sources
+        void __mkLightSources();
 
     public:
         VulkanApp();

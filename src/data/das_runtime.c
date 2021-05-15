@@ -148,7 +148,7 @@ void das_MkAssetNormals(das_Asset *p_asset) {
 
 /* 
  * Create a new 3D asset structure instance from given vertices' data
- * This function return a pointer to a stack allocated asset instance, which
+ * This function returns a pointer to a stack allocated asset instance, which
  * means that the return asset values are overwritten in each function call
  */
 das_Asset *das_CreateNewAsset (
@@ -182,7 +182,9 @@ das_Asset *das_CreateNewAsset (
 
     // Set all destination asset indices
     out_asset.indices = *idyn;
-    out_asset.color = (das_ObjColorData) {0.0f, 0.0f, 0.0f, 1.0f};
+    out_asset.diffuse = DAS_DEFAULT_DIFFUSE_COLOR;
+    out_asset.ambient = DAS_DEFAULT_AMBIENT_COLOR;
+    out_asset.specular = DAS_DEFAULT_SPECULAR_COLOR;
     out_asset.uuid = uuid_Generate();
 
     return &out_asset;

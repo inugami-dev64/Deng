@@ -87,17 +87,26 @@ namespace deng {
             bindings[0].pImmutableSamplers = NULL;
             bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-            // Color uniform data
-            bindings[1].binding = 1;
-            bindings[1].descriptorCount = 1;
-            bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            bindings[1].pImmutableSamplers = NULL;
-            bindings[1].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
             // Check if any other binding are needed according to the asset mode
             switch(asset_mode) {
+            case DAS_ASSET_MODE_2D_UNMAPPED:
+                // Asset uniform data
+                bindings[1].binding = 1;
+                bindings[1].descriptorCount = 1;
+                bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                bindings[1].pImmutableSamplers = NULL;
+                bindings[1].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+                break;
+
             case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
                 bindings.resize(3);
+
+                // Asset uniform data
+                bindings[1].binding = 1;
+                bindings[1].descriptorCount = 1;
+                bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                bindings[1].pImmutableSamplers = NULL;
+                bindings[1].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
                 // Texture image sampler
                 bindings[2].binding = 2;
@@ -109,6 +118,13 @@ namespace deng {
 
             case DAS_ASSET_MODE_3D_UNMAPPED:
                 bindings.resize(3);
+
+                // Asset uniform data
+                bindings[1].binding = 1;
+                bindings[1].descriptorCount = 1;
+                bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                bindings[1].pImmutableSamplers = NULL;
+                bindings[1].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
                 
                 // Lighting data
                 bindings[2].binding = 2;
@@ -120,6 +136,13 @@ namespace deng {
 
             case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
                 bindings.resize(4);
+
+                // Asset uniform data
+                bindings[1].binding = 1;
+                bindings[1].descriptorCount = 1;
+                bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                bindings[1].pImmutableSamplers = NULL;
+                bindings[1].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
                 
                 // Lighting data
                 bindings[2].binding = 2;

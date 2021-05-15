@@ -161,12 +161,14 @@ namespace deng {
                 // Retrieve assets from the registry
                 RegType &reg_vk_asset = m_reg.retrieve (
                     m_assets[i], 
-                    DENG_SUPPORTED_REG_TYPE_VK_ASSET
+                    DENG_SUPPORTED_REG_TYPE_VK_ASSET,
+                    NULL
                 );
 
                 RegType &reg_asset = m_reg.retrieve (
                     reg_vk_asset.vk_asset.base_id,
-                    DENG_SUPPORTED_REG_TYPE_ASSET
+                    DENG_SUPPORTED_REG_TYPE_ASSET,
+                    NULL
                 );
 
                 // Check how much memory the asset consumes by checking their mode, which
@@ -219,10 +221,10 @@ namespace deng {
             // Find the total required buffer size and set correct offsets
             for(i = 0; i < m_assets.size(); i++) {
                 RegType &reg_vk_asset = m_reg.retrieve(m_assets[i], 
-                    DENG_SUPPORTED_REG_TYPE_VK_ASSET);
+                    DENG_SUPPORTED_REG_TYPE_VK_ASSET, NULL);
 
                 RegType &reg_asset = m_reg.retrieve(reg_vk_asset.vk_asset.base_id, 
-                    DENG_SUPPORTED_REG_TYPE_ASSET);
+                    DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
                 
                 // Find buffer offsets for the asset
                 __findAssetOffsets(reg_asset.asset);
@@ -246,12 +248,14 @@ namespace deng {
             for(i = 0; i < m_assets.size(); i++) {
                 RegType &reg_vk_asset = m_reg.retrieve (
                     m_assets[i], 
-                    DENG_SUPPORTED_REG_TYPE_VK_ASSET
+                    DENG_SUPPORTED_REG_TYPE_VK_ASSET,
+                    NULL
                 );
 
                 RegType &reg_asset = m_reg.retrieve (
                     reg_vk_asset.vk_asset.base_id,
-                    DENG_SUPPORTED_REG_TYPE_ASSET
+                    DENG_SUPPORTED_REG_TYPE_ASSET,
+                    NULL
                 );
 
                 // Populate staging buffer memory with vertices data
@@ -259,7 +263,7 @@ namespace deng {
                 asset_cpy.cpyToBuffer(device, reg_asset.asset, m_buffer_data.staging_buffer_memory);
                 
                 // Copy asset uniform data to ubo buffer
-                cpyAssetUniform(device, gpu, cmd_pool, g_queue, reg_vk_asset.vk_asset);
+                cpyAssetUniformToBuffer(device, gpu, cmd_pool, g_queue, reg_vk_asset.vk_asset);
             }
 
             // Create new main buffer instance
@@ -320,12 +324,14 @@ namespace deng {
                 // Retrieve asset from the registry
                 RegType &reg_vk_asset = m_reg.retrieve (
                     m_assets[i],
-                    DENG_SUPPORTED_REG_TYPE_VK_ASSET
+                    DENG_SUPPORTED_REG_TYPE_VK_ASSET,
+                    NULL
                 );
 
                 RegType &reg_asset = m_reg.retrieve (
                     reg_vk_asset.vk_asset.base_id,
-                    DENG_SUPPORTED_REG_TYPE_ASSET
+                    DENG_SUPPORTED_REG_TYPE_ASSET,
+                    NULL
                 );
 
                 // Decrement all offsets by pos_offset so that the staging buffer's initial asset offset is 0

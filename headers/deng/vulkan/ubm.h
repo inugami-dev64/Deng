@@ -129,22 +129,26 @@ namespace deng {
                 __vk_BufferData &buf_data);
 
 
-            /// Copy asset color data to uniform buffer memory
-            void cpyAssetUniform(VkDevice device, VkPhysicalDevice gpu,
+            /// Copy asset uniform data to uniform buffer memory
+            void cpyAssetUniformToBuffer(VkDevice device, VkPhysicalDevice gpu,
                 VkCommandPool cmd_pool, VkQueue g_queue, __vk_Asset &asset);
             
 
             /// Update uniform transformation data for the frame according to 
             /// camera's view and projection matrix
-            void updateUboTransform3D (
-                VkDevice device, deng_ui32_t current_image, 
-                Camera3D *p_cam);
+            void updateUboTransform3D( VkDevice device, 
+                deng_ui32_t current_image, Camera3D *p_cam);
+
+            
+            /// Update asset uniform buffer data
+            void updateAssetUboData(VkDevice device, 
+                deng_ui32_t current_image, __vk_Asset &asset);
 
             
             /// Update lighting uniform data
             void updateUboLighting(VkDevice device,
-                LightSource light_srcs[__DENG_MAX_LIGHT_SRC_COUNT],
-                dengMath::vec4<deng_vec_t> ambient, deng_ui32_t current_image);
+                std::array<deng_Id, __DENG_MAX_LIGHT_SRC_COUNT> &light_srcs,
+                deng_ui32_t current_image);
 
 
             /// Basically set the ambient lighting to 100%

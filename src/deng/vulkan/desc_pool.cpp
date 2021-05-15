@@ -198,8 +198,8 @@ namespace deng {
             // descriptor sets freed
             for(size_t i = 0; i < m_assets.size(); i++) {
                 // Retrieve the asset from registry
-                RegType &vk_asset = m_reg.retrieve(m_assets[i], DENG_SUPPORTED_REG_TYPE_VK_ASSET);
-                RegType &reg_asset = m_reg.retrieve(vk_asset.vk_asset.base_id, DENG_SUPPORTED_REG_TYPE_VK_ASSET);
+                RegType &vk_asset = m_reg.retrieve(m_assets[i], DENG_SUPPORTED_REG_TYPE_VK_ASSET, NULL);
+                RegType &reg_asset = m_reg.retrieve(vk_asset.vk_asset.base_id, DENG_SUPPORTED_REG_TYPE_VK_ASSET, NULL);
 
                 // Check if the asset has descriptor sets allocated
                 if(vk_asset.vk_asset.is_desc && reg_asset.asset.asset_mode == asset_mode) {

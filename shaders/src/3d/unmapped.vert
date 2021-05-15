@@ -77,12 +77,18 @@ layout(binding = 0) uniform UniformData {
 } ubo;
 
 
-// Asset color data uniform
-layout(binding = 1) uniform ColorData {
-    vec4 color;
+/// Uniform object for containing data about the asset
+layout(std140, binding = 1) uniform AssetData {
+    vec4 kd;
+    vec4 ka;
+    vec4 ks;
+    float phong_exp;
     uint ignore_transform;
-    int is_unmapped;
-} cl;
+    uint is_unmapped;
+
+    // Padding
+    uint pad;
+} asset_data;
 
 
 // Shader input data
@@ -91,17 +97,17 @@ layout(location = 1) in vec3 in_norm_pos;
 
 
 // All the data that is passed to the fragment shader
-layout(location = 0) out vec4 out_color;
-layout(location = 1) out vec3 out_pos;
+layout(location = 0) out vec3 out_vert;
+layout(location = 1) out vec4 out_pos;
 layout(location = 2) out vec3 out_normal;
 
 void main() {
-    if(cl.ignore_transform == 1)
-        gl_Position = ubo.view * vec4(in_pos, 1.0f);
-    else gl_Position = ubo.transform * vec4(in_pos, 1.0f);
+    if(asset_data.ignore_transform == 1)
+        gl_Position = ubo.view * vec4(in_pos[0], -in_pos[1], in_pos[2], 1.0f);
+    else gl_Position = ubo.transform * vec4(in_pos[0], -in_pos[1], in_pos[2], 1.0f);
 
     // Set all the output variables
-    out_color = cl.color;
-    out_pos = in_pos;
-    out_normal = in_norm_pos;
+    out_vert = vec3(in_pos[0], -in_pos[1], in_pos[2]);
+    out_pos = gl_Position;
+    out_normal = vec3(in_norm_pos[0], -in_norm_pos[1], in_norm_pos[2]);
 }

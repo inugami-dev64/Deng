@@ -88,9 +88,7 @@
 
 namespace deng {
     
-    /*
-     * Event handler class for editor camera
-     */
+    /// Event handler class for editor camera
     class __EditorCameraEv : protected __EventBase {
     private:
         deng_EditorCameraEvent m_editor_cam_ev;
@@ -99,9 +97,7 @@ namespace deng {
         deng_bool_t m_is_rot_cur = false;
 
     protected:
-        /*
-         * Set the default camera rotation and position values
-         */
+        /// Set the default camera rotation and position values
         void __initCamera (
             dengMath::CameraMatrix *p_vm,
             const dengMath::vec4<deng_vec_t> &origin
@@ -116,55 +112,39 @@ namespace deng {
         );
 
         
-        /*
-         * Check if any camera events have occured
-         */
+        /// Check if any camera events have occured
         void findEditorEvent();
 
 
-        /*
-         * Zoom in the editor camera 
-         */
+        /// Zoom in the editor camera 
         void zoomIn(dengMath::CameraMatrix *p_vm);
 
 
-        /*
-         * Zoom out the editor camera
-         */
+        /// Zoom out the editor camera
         void zoomOut(dengMath::CameraMatrix *p_vm);
         
 
-        /*
-         * Main update method for editor camera system
-         */
+        /// Main update method for editor camera system
         void updateEv (
             dengMath::vec3<deng_vec_t> origin,
             dengMath::CameraMatrix *p_vm
         );
 
 
-        /*
-         * Set the editor camera bindings
-         */
+        /// Set the editor camera bindings
         void setBindings(const Camera3DBindings &bindings);
 
         
-        /*
-         * Get the pointer to the window instance
-         */
+        /// Get the pointer to the window instance
         Window *getWinPtr();
 
         
-        /*
-         * Set the window pointer
-         */
+        /// Set the window pointer
         void setWinPtr(Window *p_win);
     };
 
 
-    /*
-     * Main class for editor camera instance creation
-     */
+    /// Main class for editor camera instance creation
     class __EditorCamera : private __EditorCameraEv, public __CameraBase {
     private:
         dengMath::vec3<deng_vec_t> m_origin;
@@ -181,21 +161,15 @@ namespace deng {
         );
         
 
-        /*
-         * Move origin point in world coordinate system by delta_mov
-         */
+        /// Move origin point in world coordinate system by delta_mov
         void moveOrigin(const dengMath::vec3<deng_vec_t> &delta_mov); 
 
         
-        /*
-         * Set camera control bindings for editor camera system
-         */
+        /// Set camera control bindings for editor camera system
         void setBindings(const Camera3DBindings &bindings);
 
 
-        /*
-         * Wrapper method for updating camera events
-         */
+        /// Wrapper method for updating camera events
         void update();
     };
 }

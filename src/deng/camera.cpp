@@ -225,9 +225,7 @@ namespace deng {
     }
 
 
-    /*
-     * Rotate camera's position by rot in camera's coordinate system
-     */
+    /// Rotate camera's position by rot in camera's coordinate system
     void Camera3D::rotCameraPOVC(const dengMath::vec2<deng_vec_t> &rot) {
         switch(m_cam_type)
         {
@@ -247,9 +245,7 @@ namespace deng {
     }
 
 
-    /*
-     * Rotate camera's position by rot in world's coordinate system
-     */
+    /// Rotate camera's position by rot in world's coordinate system
     void Camera3D::rotCameraPOVW(const dengMath::vec2<deng_vec_t> &rot) {
         switch(m_cam_type)
         {
@@ -269,9 +265,7 @@ namespace deng {
     }
 
 
-    /*
-     * Main camera system update method
-     */
+    /// Main camera system update method
     void Camera3D::update() {
         switch(m_cam_type)
         {
@@ -289,17 +283,13 @@ namespace deng {
     }
 
 
-    /*
-     * Get the camera type of the current camera instance
-     */
+    /// Get the camera type of the current camera instance
     deng_CameraType Camera3D::getType() {
         return m_cam_type;
     }
 
 
-    /*
-     * Get the dot product of camera's view and projection matrix
-     */
+    /// Get the dot product of camera's view and projection matrix
     dengMath::mat4<deng_vec_t> Camera3D::getCameraMat() {
         switch(m_cam_type)
         {
@@ -315,9 +305,7 @@ namespace deng {
     }
 
 
-    /*
-     * Get the bare camera view matrix
-     */
+    /// Get the bare camera view matrix
     dengMath::mat4<deng_vec_t> Camera3D::getViewMat() {
         switch(m_cam_type)
         {

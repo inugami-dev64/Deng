@@ -128,10 +128,11 @@ namespace deng {
             __vk_ResourceManager *m_p_rm;
             __vk_DrawCaller *m_p_dc;
 
-        public:
+        protected:
             __GlobalRegistry &m_reg;
             std::vector<deng_Id> m_assets = {};
             std::vector<deng_Id> m_textures = {};
+            std::array<deng_Id, __DENG_MAX_LIGHT_SRC_COUNT> m_light_srcs = {};
 
         public:
             __vk_RendererInitialiser (

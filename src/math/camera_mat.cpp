@@ -180,9 +180,7 @@ namespace dengMath {
     }
 
 
-    /*
-     * Set new rotation for the camera relative to the its coordinate system
-     */
+    /// Set new rotation for the camera relative to the its coordinate system
     void CameraMatrix::setCameraRotation (
         deng_vec_t x_rot, 
         deng_vec_t y_rot

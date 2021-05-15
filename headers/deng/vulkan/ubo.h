@@ -69,8 +69,11 @@ namespace deng {
         
         /// Structure for passing uniform lighting data right to the shader
         struct __vk_UniformLightSource {
+            dengMath::vec4<deng_vec_t> pos;
             deng_vec_t intensity;
-            dengMath::vec3<deng_vec_t> pos;
+
+            // Padding
+            deng_ui32_t pad[3];
         };
 
 
@@ -83,25 +86,32 @@ namespace deng {
 
         /// Structure for containing information about 2D transformations
         struct __vk_UniformObjectTransform2D {
-            dengMath::mat3<deng_vec_t> view;
+            dengMath::mat4<deng_vec_t> view;
         };
 
 
-        /// Structure for storing uniform color data per each asset
-        struct __vk_UniformColorData {
-            dengMath::vec4<deng_vec_t> color;
+        /// Structure for storing material and transformation information 
+        /// about the asset
+        struct __vk_UniformAssetData {
+            dengMath::vec4<deng_vec_t> diffuse;
+            dengMath::vec4<deng_vec_t> ambient;
+            dengMath::vec4<deng_vec_t> specular;
+            deng_vec_t phong_exp;
             deng_ui32_t ignore_transform;
             deng_ui32_t is_unmapped;
+            
+            // Padding
+            deng_ui32_t pad;
         };
 
 
         /// Light data uniform structure
         struct __vk_UniformLightData {
-            dengMath::vec3<deng_vec_t> pos;
-            deng_vec_t intensity;
-
-            dengMath::vec4<deng_vec_t> ambient;
+            __vk_UniformLightSource light_srcs[__DENG_MAX_LIGHT_SRC_COUNT];
             deng_ui32_t light_src_c;
+
+            // Padding needed for glsl uniforms
+            deng_ui32_t pad[3];
         };
 
     }

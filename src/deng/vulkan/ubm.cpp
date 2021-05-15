@@ -112,7 +112,7 @@ namespace deng {
             // Calculate the initial uniform buffer capacity 
             // Data is stored like this: fc * (Transform + Transform2D + LightData) + n * ColorData
             m_buffer_data.ubo_cap = __max_frame_c * (m_ubo_chunk_size + asset_cap * 
-                cm_FindChunkSize(m_min_align, sizeof(__vk_UniformColorData)));
+                cm_FindChunkSize(m_min_align, sizeof(__vk_UniformAssetData)));
             
             // Create a new uniform buffer instance
             VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer(device, gpu, 
@@ -175,8 +175,8 @@ namespace deng {
         }
 
 
-        /// Copy asset color data to uniform buffer memory
-        void __vk_UniformBufferManager::cpyAssetUniform (
+        /// Copy asset uniform data to uniform buffer memory
+        void __vk_UniformBufferManager::cpyAssetUniformToBuffer (
             VkDevice device,
             VkPhysicalDevice gpu,
             VkCommandPool cmd_pool,
@@ -184,29 +184,14 @@ namespace deng {
             __vk_Asset &asset
         ) {
             // Retrieve the base asset and set its ubo offset
-            RegType &reg_asset = m_reg.retrieve(asset.base_id, DENG_SUPPORTED_REG_TYPE_ASSET);
+            RegType &reg_asset = m_reg.retrieve(asset.base_id, 
+                DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
             reg_asset.asset.offsets.ubo_offset = m_buffer_data.ubo_size;
             LOG("Asset ubo offset: " + std::to_string(reg_asset.asset.offsets.ubo_offset));
 
-            // Set the ubo color according to the color data
-            __vk_UniformColorData ubo;
-            ubo.color = dengMath::vec4<deng_vec_t>{
-                reg_asset.asset.color.col_r,
-                reg_asset.asset.color.col_g,
-                reg_asset.asset.color.col_b,
-                reg_asset.asset.color.col_a
-            };
-            
-            // Check if reg type is unmapped or not and set the flag accordingly
-            if(reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED ||
-               reg_asset.asset.asset_mode == DAS_ASSET_MODE_3D_UNMAPPED ||
-               !reg_asset.asset.tex_uuid) ubo.is_unmapped = true;
-            else ubo.is_unmapped = reg_asset.asset.force_unmap; 
-
             // Set the new size for ubo buffer
-            size_t old_size = m_buffer_data.ubo_size;
             m_buffer_data.ubo_size += __max_frame_c * cm_FindChunkSize(m_min_align,
-                sizeof(__vk_UniformColorData));
+                sizeof(__vk_UniformAssetData));
 
             // Check if buffer reallocation is needed 
             if(m_buffer_data.ubo_size > m_buffer_data.ubo_cap) {
@@ -215,14 +200,9 @@ namespace deng {
                     std::max(m_buffer_data.ubo_asset_cap << 1, cm_ToPow2I64(m_buffer_data.ubo_size << 1)));
             }
 
-            
-            // For each frame copy the asset uniform to buffer
-            for(size_t i = 0; i < __max_frame_c; i++) {
-                // Copy all uniform data to buffer
-                __vk_BufferCreator::cpyToBufferMem(device, sizeof(__vk_UniformColorData), 
-                    (void*) &ubo, m_buffer_data.uniform_buffer_mem, old_size + i * cm_FindChunkSize(
-                    m_min_align, sizeof(__vk_UniformColorData)));
-            }
+            // Copy the data to reserved memory area in the buffer
+            for(deng_ui32_t i = 0; i < __max_frame_c; i++)
+                updateAssetUboData(device, i, asset);
         }
 
 
@@ -242,38 +222,73 @@ namespace deng {
         }
 
 
+        /// Update asset uniform buffer data
+        void __vk_UniformBufferManager::updateAssetUboData (
+            VkDevice device,
+            deng_ui32_t current_image, 
+            __vk_Asset &asset
+        ) {
+            __vk_UniformAssetData ubo = {};
+
+            // Retrieve base asset from the registry
+            RegType &reg_asset = m_reg.retrieve(asset.base_id, 
+                DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
+
+            // Set all color / material properties
+            ubo.ambient = reg_asset.asset.ambient;
+            ubo.diffuse = reg_asset.asset.diffuse;
+            ubo.specular = reg_asset.asset.specular;
+            ubo.phong_exp = reg_asset.asset.phong_exp;
+
+            // Set additional asset properties
+            ubo.ignore_transform = static_cast<deng_ui32_t>(reg_asset.asset.is_transformed);
+            ubo.is_unmapped = static_cast<deng_ui32_t>(reg_asset.asset.force_unmap);
+
+            // Copy the constructed uniform buffer data to uniform buffer
+            __vk_BufferCreator::cpyToBufferMem(device, sizeof(__vk_UniformAssetData), 
+                &ubo, m_buffer_data.uniform_buffer_mem, reg_asset.asset.offsets.ubo_offset + 
+                current_image * cm_FindChunkSize(m_min_align, sizeof(__vk_UniformAssetData)));
+        }
+
+
         /// Update lighting uniform data
         void __vk_UniformBufferManager::updateUboLighting (
             VkDevice device,
-            LightSource light_srcs[__DENG_MAX_LIGHT_SRC_COUNT],
-            dengMath::vec4<deng_vec_t> ambient,
+            std::array<deng_Id, __DENG_MAX_LIGHT_SRC_COUNT> &light_srcs,
             deng_ui32_t current_image
         ) {
-            __vk_UniformLightData data = { { 0 } };
-            data.ambient = ambient;
-            data.light_src_c = 0;
-            data.intensity = 5.0f; 
-            data.pos = dengMath::vec3<deng_vec_t>{1.0f, 1.0f, 1.0f}; 
+            __vk_UniformLightData ubo = { { { { 0 } } } };
 
+            // For each possible light source copy the data to ubo structure
+            for(deng_ui64_t i = 0; i < light_srcs.size(); i++) {
+                // Quit if no light sources were found
+                if(!light_srcs[i]) break;
+
+                deng_SupportedRegType type = {};
+                // Retrieve the current light source
+                RegType reg_light = m_reg.retrieve(light_srcs[i],
+                    DENG_SUPPORTED_REG_TYPE_PT_LIGHT | DENG_SUPPORTED_REG_TYPE_SUN_LIGHT |
+                    DENG_SUPPORTED_REG_TYPE_DIR_LIGHT, &type);
+
+                // Check the current light source type and copy its data to ubo struct
+                switch(type) {
+                case DENG_SUPPORTED_REG_TYPE_PT_LIGHT:
+                    ubo.light_srcs[i].intensity = reg_light.pt_light.intensity;
+                    ubo.light_srcs[i].pos = reg_light.pt_light.pos;
+                    ubo.light_src_c++;
+                    break;
+
+                default:
+                    goto CPY;
+                }
+            }
+
+            CPY:
             __vk_BufferCreator::cpyToBufferMem(device, sizeof(__vk_UniformLightData),
-                &data, m_buffer_data.uniform_buffer_mem, current_image * m_ubo_chunk_size +
+                &ubo, m_buffer_data.uniform_buffer_mem, current_image * m_ubo_chunk_size +
                 cm_FindChunkSize(m_min_align, sizeof(__vk_UniformObjectTransform)) + 
                 cm_FindChunkSize(m_min_align, sizeof(__vk_UniformObjectTransform2D)));
 
-        }
-
-        
-        /// Basically set the ambient lighting to 100%
-        /// Call this method when no light sources are specified
-        void __vk_UniformBufferManager::mkStandardLight(VkDevice device) {
-            LightSource light_srcs[__DENG_MAX_LIGHT_SRC_COUNT] = {};
-
-            // For each frame in flight map the light data
-            for(deng_ui32_t i = 0; i < __max_frame_c; i++) {
-                // Map the light data with 100% ambient color
-                updateUboLighting(device, light_srcs, dengMath::vec4<deng_vec_t>{
-                 0.3f, 0.3f, 0.3f, 1.0f}, i);
-            }
         }
 
 

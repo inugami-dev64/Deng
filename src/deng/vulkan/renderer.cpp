@@ -163,7 +163,8 @@ namespace deng {
             for(size_t i = 0; i < m_textures.size(); i++) {
                 RegType &reg_vk_tex = m_reg.retrieve (
                     m_textures[i], 
-                    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE
+                    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE,
+                    NULL
                 );
 
                 // Check if image has been buffered and if it then has destroy all of its Vulkan related data
@@ -204,7 +205,8 @@ namespace deng {
             for(size_t i = 0; i < m_assets.size(); i++) {
                 RegType &reg_vk_asset = m_reg.retrieve (
                     m_assets[i],
-                    DENG_SUPPORTED_REG_TYPE_VK_ASSET
+                    DENG_SUPPORTED_REG_TYPE_VK_ASSET,
+                    NULL
                 );
 
                 // Check if asset has descriptor sets allocated and if it does then destroy them
@@ -212,7 +214,8 @@ namespace deng {
                     // Retrieve the base asset
                     RegType &reg_asset = m_reg.retrieve (
                         reg_vk_asset.vk_asset.base_id,
-                        DENG_SUPPORTED_REG_TYPE_ASSET
+                        DENG_SUPPORTED_REG_TYPE_ASSET,
+                        NULL
                     );
 
                     // Free descriptor sets
@@ -421,7 +424,8 @@ namespace deng {
             for(deng_ui32_t i = old_size; i < static_cast<deng_ui32_t>(m_assets.size()); i++) { 
                 RegType &reg_asset = m_reg.retrieve (
                     assets[i - old_size], 
-                    DENG_SUPPORTED_REG_TYPE_ASSET
+                    DENG_SUPPORTED_REG_TYPE_ASSET,
+                    NULL
                 );
 
                 RegType reg_vk_asset;
@@ -433,7 +437,7 @@ namespace deng {
 
                 // Allocate uniform buffer memory for uniform color data
                 if(m_is_init) {
-                    __vk_RendererInitialiser::getResMan()->cpyAssetUniform (
+                    __vk_RendererInitialiser::getResMan()->cpyAssetUniformToBuffer (
                         __vk_RendererInitialiser::getIC()->getDev(), 
                         __vk_RendererInitialiser::getIC()->getGpu(),
                         __vk_RendererInitialiser::getDrawCaller()->getComPool(),
@@ -476,7 +480,8 @@ namespace deng {
 
                 RegType &reg_tex = m_reg.retrieve (
                     reg_vk_tex.vk_asset.base_id, 
-                    DENG_SUPPORTED_REG_TYPE_TEXTURE
+                    DENG_SUPPORTED_REG_TYPE_TEXTURE,
+                    NULL
                 );
 
                 reg_tex.tex.vk_id = reg_vk_tex.vk_tex.uuid;
@@ -491,6 +496,30 @@ namespace deng {
                 {old_size, static_cast<deng_ui32_t>(m_textures.size())},
                 __vk_RendererInitialiser::getIC()->getQFF().graphics_queue
             );
+        }
+
+
+        /// Add new light sources to renderer list
+        void __vk_Renderer::updateLightSources(deng_Id *light_ids, deng_ui32_t src_c) {
+            // Empty the array with light sources
+            m_light_srcs.fill(NULL);
+
+            // Check if the provided light source count is correct
+            if(src_c > __DENG_MAX_LIGHT_SRC_COUNT) {
+                RUN_ERR("__vk_Renderer::updateLightSources()",
+                    "Too many light sources submitted " + std::to_string(src_c) + " / " +
+                    std::to_string(__DENG_MAX_LIGHT_SRC_COUNT));
+            }
+
+            // Iterate through the light source array and add new light sources
+            for(deng_ui32_t i = 0; i < src_c; i++)
+                m_light_srcs[i] = light_ids[i];
+            
+            // For each frame in flight update the light source uniform buffer data
+            for(deng_ui32_t i = 0; i < __max_frame_c; i++) {
+                __vk_RendererInitialiser::getResMan()->updateUboLighting(
+                    __vk_RendererInitialiser::getIC()->getDev(), m_light_srcs, i);
+            }
         }
 
 
@@ -569,10 +598,8 @@ namespace deng {
         }
 
 
-        /*
-         * Setup the renderer, create descriptor sets, allocate buffers
-         * and record command buffers
-         */
+        /// Setup the renderer, create descriptor sets, allocate buffers
+        /// and record command buffers
         void __vk_Renderer::setup() {
             // Create graphics pipelines
             __vk_RendererInitialiser::getPipelineC()->mkPipelines (
@@ -599,10 +626,6 @@ namespace deng {
                 __vk_RendererInitialiser::getResMan()->getUboChunkSize(),
                 __vk_RendererInitialiser::getIC()->getGpuLimits().minUniformBufferOffsetAlignment
             );
-
-            // For now create standard light with 100% ambient lighting
-            __vk_RendererInitialiser::getResMan()->mkStandardLight(
-                __vk_RendererInitialiser::getIC()->getDev());
 
             // Start recording command buffers
             __vk_RendererInitialiser::getDrawCaller()->setMiscData (

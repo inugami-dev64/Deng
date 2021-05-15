@@ -102,9 +102,7 @@ namespace deng {
         }
 
         
-        /*
-         * Free and reallocate new commandbuffers 
-         */
+        /// Free and reallocate new commandbuffers 
         void __vk_RuntimeUpdater::__updateCmdBuffers(const dengMath::vec4<deng_vec_t> &background) {
             m_p_dc->recordMainCmdBuffers (
                 m_p_scc->getRp(),

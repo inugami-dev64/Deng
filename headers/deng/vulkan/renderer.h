@@ -110,9 +110,7 @@
 namespace deng {
     namespace vulkan {
 
-        /* 
-         * Main renderer class for vulkan API
-         */
+        /// Main renderer class for vulkan API
         class __vk_Renderer : private __vk_RendererInitialiser,
                               private __vk_RuntimeUpdater 
         {
@@ -157,17 +155,15 @@ namespace deng {
             /// Add new assets to renderer asset list.
             /// No descriptor sets are allocated since that
             /// will be done when renderer is being fully initialised.
-            void submitAssets (
-                deng_Id *asset_ids,
-                deng_ui32_t asset_c
-            );
+            void submitAssets(deng_Id *asset_ids, deng_ui32_t asset_c);
 
 
             /// Add new textures to renderer texture list.
-            void submitTextures (
-                deng_Id *tex_ids,
-                deng_ui32_t tex_c
-            );
+            void submitTextures(deng_Id *tex_ids, deng_ui32_t tex_c);
+
+            
+            /// Add new light sources to renderer list
+            void updateLightSources(deng_Id *light_ids, deng_ui32_t src_c);
 
             
             /// Submit new draw call

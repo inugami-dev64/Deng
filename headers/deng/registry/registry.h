@@ -87,9 +87,7 @@
 
 namespace deng {
 
-    /*
-     * Data union for all suitable registry types that can be submitted
-     */
+    /// Data union for all suitable registry types that can be submitted
     union RegType {
         das_Asset asset;
         vulkan::__vk_Asset vk_asset;
@@ -101,10 +99,8 @@ namespace deng {
     };
 
     
-    /*
-     * Main data structure for keeping information about hash mapped
-     * registry entry
-     */
+    /// Main data structure for keeping information about hash mapped 
+    /// registry entry
     struct __RegEntry {
         RegType element;
         deng_SupportedRegType type;
@@ -112,16 +108,15 @@ namespace deng {
     };
     
 
-    /*
-     * Global registry entries' handler class
-     */
+    /// Global registry entries' handler class
     class __GlobalRegistry {
     private:
         std::vector<__RegEntry> m_entries;
         Hashmap m_map;
 
     private:
-        __RegEntry *__findElemPtr(deng_Id id, deng_SupportedRegType expected_type);
+        __RegEntry *__findElemPtr(deng_Id id, deng_SupportedRegTypeBitMask expected_type,
+            deng_SupportedRegType *p_type_feedback);
 
     public:
         __GlobalRegistry();
@@ -146,7 +141,8 @@ namespace deng {
          */
         RegType &retrieve (
             deng_Id id,
-            deng_SupportedRegType expected_type
+            deng_SupportedRegTypeBitMask expected_type_mask,
+            deng_SupportedRegType *p_type_feedback
         );
 
 
@@ -157,26 +153,21 @@ namespace deng {
          */
         RegType *retrievePtr (
             deng_Id id,
-            deng_SupportedRegType expected_type
+            deng_SupportedRegTypeBitMask expected_type_mask,
+            deng_SupportedRegType *p_type_feedback
         );
 
         
-        /*
-         * Pop an entry from from registry
-         * An runtime error is thrown if the id is invalid
-         */
+        /// Pop an entry from from registry 
+        /// An runtime error is thrown if the id is invalid
         RegType pop(deng_Id id);
 
 
-        /*
-         * Find the size of total registry elements
-         */
+        /// Find the size of total registry elements
         size_t size();
         
 
-        /*
-         * Find all elements in the registry
-         */
+        /// Find all elements in the registry
         const std::vector<__RegEntry> &all();
     };
 }

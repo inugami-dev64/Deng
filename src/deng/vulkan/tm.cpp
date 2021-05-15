@@ -337,7 +337,9 @@ namespace deng {
 
             // Iterate through every texture instance and destroy its VkImage and VkImageView instances
             for(size_t i = 0; i < m_textures.size(); i++) {
-                RegType &reg_vk_tex = m_reg.retrieve(m_textures[i], DENG_SUPPORTED_REG_TYPE_VK_TEXTURE);
+                RegType &reg_vk_tex = m_reg.retrieve(m_textures[i], 
+                    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE, NULL);
+
                 if(reg_vk_tex.vk_tex.is_buffered) {
                     vkDestroyImageView(device, reg_vk_tex.vk_tex.image_view, NULL);
                     vkDestroyImage(device, reg_vk_tex.vk_tex.image, NULL);
@@ -352,21 +354,15 @@ namespace deng {
             while(!realloc_queue.empty()) {
                 RegType &reg_vk_tex = m_reg.retrieve (
                     realloc_queue.front(), 
-                    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE
+                    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE,
+                    NULL
                 );
 
                 realloc_queue.pop();
-                __newVkTexture (
-                    device,
-                    gpu,
-                    cmd_pool,
-                    g_queue,
-                    mip_levels,
-                    is_lf,
-                    true,
-                    false,
-                    reg_vk_tex.vk_tex
-                );
+
+                // Create a new Vulkan texture instance
+                __newVkTexture(device, gpu, cmd_pool, g_queue,
+                    mip_levels, is_lf, true, false, reg_vk_tex.vk_tex);
             }
         }
 
@@ -382,7 +378,8 @@ namespace deng {
             deng_ui32_t mip_levels,
             __vk_Texture &tex
         ) {
-            RegType &reg_tex = m_reg.retrieve(tex.base_id, DENG_SUPPORTED_REG_TYPE_TEXTURE);
+            RegType &reg_tex = m_reg.retrieve(tex.base_id, 
+                DENG_SUPPORTED_REG_TYPE_TEXTURE, NULL);
 
             // Check if linear filtering is enabled and if mipmapping should be enabled
             if(is_lf) {
@@ -457,7 +454,8 @@ namespace deng {
         ) {
             RegType &reg_tex = m_reg.retrieve (
                 tex.base_id, 
-                DENG_SUPPORTED_REG_TYPE_TEXTURE
+                DENG_SUPPORTED_REG_TYPE_TEXTURE,
+                NULL
             );
 
             // Create staging buffer
@@ -564,7 +562,8 @@ namespace deng {
             // Retrieve the base texture uuid from registry
             deng::RegType &base_tex = m_reg.retrieve (
                 tex.base_id, 
-                DENG_SUPPORTED_REG_TYPE_TEXTURE
+                DENG_SUPPORTED_REG_TYPE_TEXTURE,
+                NULL
             );
 
             // Create new VkImage instance
@@ -631,14 +630,16 @@ namespace deng {
             for(index = tex_bounds.first; index < tex_bounds.second; index++) {
                 // Retrieve Vulkan texture from the registry
                 RegType &vk_tex_reg = m_reg.retrieve (
-                   m_textures[index], 
-                    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE
+                    m_textures[index], 
+                    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE,
+                    NULL
                 );
 
                 // Retrieve base texture from the registry
                 RegType &tex_reg = m_reg.retrieve (
                     vk_tex_reg.vk_tex.base_id,
-                    DENG_SUPPORTED_REG_TYPE_TEXTURE
+                    DENG_SUPPORTED_REG_TYPE_TEXTURE,
+                    NULL
                 );
 
 

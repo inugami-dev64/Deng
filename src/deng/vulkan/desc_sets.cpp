@@ -106,11 +106,11 @@ namespace deng {
             for(size_t i = asset_bounds.first; i < asset_bounds.second; i++) {
                 // Retrieve vulkan asset
                 RegType &reg_vk_asset = m_reg.retrieve (
-                    m_assets[i], DENG_SUPPORTED_REG_TYPE_VK_ASSET);
+                    m_assets[i], DENG_SUPPORTED_REG_TYPE_VK_ASSET, NULL);
 
                 // Retrieve base asset
                 RegType &reg_asset = m_reg.retrieve(
-                    reg_vk_asset.vk_asset.base_id, DENG_SUPPORTED_REG_TYPE_ASSET);
+                    reg_vk_asset.vk_asset.base_id, DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
 
                 switch(reg_asset.asset.asset_mode) {
                 case DAS_ASSET_MODE_2D_UNMAPPED:
@@ -148,12 +148,14 @@ namespace deng {
             for(size_t i = asset_bounds.first; i < asset_bounds.second; i++) {
                 RegType &reg_vk_asset = m_reg.retrieve (
                     m_assets[i],
-                    DENG_SUPPORTED_REG_TYPE_VK_ASSET
+                    DENG_SUPPORTED_REG_TYPE_VK_ASSET,
+                    NULL
                 );
 
                 RegType &reg_asset = m_reg.retrieve (
                     reg_vk_asset.vk_asset.base_id,
-                    DENG_SUPPORTED_REG_TYPE_ASSET
+                    DENG_SUPPORTED_REG_TYPE_ASSET,
+                    NULL
                 );
 
                 // Create texture mapped descriptor sets
@@ -194,11 +196,11 @@ namespace deng {
             for(size_t i = 0; i < destroyed_assets.size(); i++) {
                 // Retrieve the Vulkan asset
                 RegType &reg_vk_asset = m_reg.retrieve(destroyed_assets[i],
-                    DENG_SUPPORTED_REG_TYPE_VK_ASSET);
+                    DENG_SUPPORTED_REG_TYPE_VK_ASSET, NULL);
 
                 // Retrieve the base asset
                 RegType &reg_asset = m_reg.retrieve(reg_vk_asset.vk_asset.base_id,
-                    DENG_SUPPORTED_REG_TYPE_ASSET);
+                    DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
 
                 // Choose the descriptor set allocation method according to the asset mode
                 switch(reg_asset.asset.asset_mode) {
@@ -242,8 +244,8 @@ namespace deng {
                 buf_info[0].range = sizeof(__vk_UniformObjectTransform2D);
 
                 buf_info[1].buffer = bd.uniform_buffer;
-                buf_info[1].offset = asset.offsets.ubo_offset + cur_frame * cm_FindChunkSize(min_align, sizeof(__vk_UniformColorData));
-                buf_info[1].range = sizeof(__vk_UniformColorData);
+                buf_info[1].offset = asset.offsets.ubo_offset + cur_frame * cm_FindChunkSize(min_align, sizeof(__vk_UniformAssetData));
+                buf_info[1].range = sizeof(__vk_UniformAssetData);
                 break;
 
             case DAS_ASSET_MODE_3D_UNMAPPED:
@@ -254,8 +256,8 @@ namespace deng {
                 buf_info[0].range = sizeof(__vk_UniformObjectTransform);
 
                 buf_info[1].buffer = bd.uniform_buffer;
-                buf_info[1].offset = asset.offsets.ubo_offset + cur_frame * cm_FindChunkSize(min_align, sizeof(__vk_UniformColorData));
-                buf_info[1].range = sizeof(__vk_UniformColorData);
+                buf_info[1].offset = asset.offsets.ubo_offset + cur_frame * cm_FindChunkSize(min_align, sizeof(__vk_UniformAssetData));
+                buf_info[1].range = sizeof(__vk_UniformAssetData);
 
                 buf_info[2].buffer = bd.uniform_buffer;
                 buf_info[2].offset = cur_frame * ubo_chunk_size + cm_FindChunkSize(min_align, sizeof(__vk_UniformObjectTransform)) +
@@ -404,7 +406,7 @@ namespace deng {
 
             // Retrieve the base asset from registry
             RegType &reg_asset = m_reg.retrieve(asset.base_id, 
-                DENG_SUPPORTED_REG_TYPE_ASSET);
+                DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
 
             // Allocate memory for descriptor sets
             asset.desc_c = __max_frame_c;
@@ -457,7 +459,7 @@ namespace deng {
 
             // Retrieve the base asset
             RegType &reg_asset = m_reg.retrieve(asset.base_id,
-                DENG_SUPPORTED_REG_TYPE_ASSET);
+                DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
 
             // Texture entry pointer
             RegType *p_reg_vk_tex = NULL;
@@ -466,19 +468,19 @@ namespace deng {
             if(reg_asset.asset.tex_uuid) {
                 // Retrieve the base texture and then retrieve Vulkan texture
                 RegType reg_tex = m_reg.retrieve(reg_asset.asset.tex_uuid,
-                    DENG_SUPPORTED_REG_TYPE_TEXTURE);
+                    DENG_SUPPORTED_REG_TYPE_TEXTURE, NULL);
 
                 p_reg_vk_tex = m_reg.retrievePtr(reg_tex.tex.vk_id, 
-                    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE);
+                    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE, NULL);
             }
 
             else {
                 // Retrieve the base texture and then retrieve Vulkan texture
                 RegType reg_tex = m_reg.retrieve(missing_tex_uuid,
-                    DENG_SUPPORTED_REG_TYPE_TEXTURE);
+                    DENG_SUPPORTED_REG_TYPE_TEXTURE, NULL);
 
                 p_reg_vk_tex = m_reg.retrievePtr(reg_tex.tex.vk_id, 
-                    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE);
+                    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE, NULL);
             }
 
             // Set up image info structure for binding texture sampler

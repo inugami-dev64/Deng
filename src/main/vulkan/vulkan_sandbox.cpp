@@ -69,18 +69,11 @@ namespace Sandbox {
 
     VulkanApp::VulkanApp() : 
         m_win(1200, 1000, "DENG game"),
-        m_cam (
-            DENG_CAMERA_TYPE_FPP,
-            static_cast<deng_vec_t>(dengMath::Conversion::degToRad(65.0)),
-            {0.1f, -25.0f},
-            {0.7f, 0.7f, 0.7f},
-            {0.3f, 0.3f},
-            false,
-            &m_win
-    ) {
+        m_cam(DENG_CAMERA_TYPE_EDITOR, static_cast<deng_vec_t>(dengMath::Conversion::degToRad(65.0)),
+            {0.1f, -25.0f}, {0.7f, 0.7f, 0.7f}, {0.3f, 0.3f}, false, &m_win),
+        m_light_man(m_reg) {
         // Setup code that will be done in Lua when the scripting layer is added
-        switch(m_cam.getType())
-        {
+        switch(m_cam.getType()) {
         case DENG_CAMERA_TYPE_EDITOR:
             __bindEditor();
             break;
@@ -102,39 +95,42 @@ namespace Sandbox {
 
         m_asset_uuids.reserve(4);
         __loadAssets ({
-            "assets/statue.das",
             "assets/viking.das"
         });
 
+        // Create some demo light sources
+        __mkLightSources();
+
         deng::vulkan::__vk_ConfigVars cfg;
-        cfg.background = dengMath::vec4<deng_vec_t>{ 0.f, 0.f, 0.f, 1.f };
+        cfg.background = dengMath::vec4<deng_vec_t>{ 0.f, 0.0f, 0.0, 1.f };
         cfg.enable_validation_layers = true;
         cfg.enable_vsync = true;
         cfg.p_cam = &m_cam;
         cfg.msaa_sample_count = VK_SAMPLE_COUNT_4_BIT;
 
         m_p_rend = new deng::vulkan::__vk_Renderer (
-            m_win, 
-            cfg, 
-            m_reg
-        );
+            m_win, cfg, m_reg);
 
         deng::RegType *p_reg_asset;
-        p_reg_asset = m_reg.retrievePtr(m_asset_uuids[0], DENG_SUPPORTED_REG_TYPE_ASSET);
-        p_reg_asset->asset.tex_uuid = m_tex_uuids[2];
 
-        p_reg_asset = m_reg.retrievePtr(m_asset_uuids[1], DENG_SUPPORTED_REG_TYPE_ASSET);
+        // Set some lighting properties for viking room asset
+        p_reg_asset = m_reg.retrievePtr(m_asset_uuids[0], 
+            DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
+        p_reg_asset->asset.force_unmap = false;
+        p_reg_asset->asset.phong_exp = 100;
         p_reg_asset->asset.tex_uuid = m_tex_uuids[1];
 
-        m_p_rend->submitTextures (
-            m_tex_uuids.data(), 
-            static_cast<deng_ui32_t>(m_tex_uuids.size())
-        );
+        // Submit all loaded textures
+        m_p_rend->submitTextures(m_tex_uuids.data(), 
+            static_cast<deng_ui32_t>(m_tex_uuids.size()));
 
-        m_p_rend->submitAssets (
-            m_asset_uuids.data(), 
-            static_cast<deng_ui32_t>(m_asset_uuids.size())
-        );
+        // Submit all loaded assets
+        m_p_rend->submitAssets(m_asset_uuids.data(), 
+            static_cast<deng_ui32_t>(m_asset_uuids.size()));
+
+        // Submit all created light sources
+        std::vector<deng_Id> lights = m_light_man.getUniversalLightSources();
+        m_p_rend->updateLightSources(lights.data(), lights.size());
     }
 
     
@@ -143,9 +139,7 @@ namespace Sandbox {
     }
 
 
-    /*
-     * Create first person camera control bindings
-     */
+    /// Create first person camera control bindings
     void VulkanApp::__bindFPP() {
         deng::Camera3DBindings bindings;
         bindings.mov_u = deng_CreateInputMask(1, DENG_KEY_D);
@@ -165,9 +159,7 @@ namespace Sandbox {
     }
 
 
-    /*
-     * Create editor camera control bindings
-     */
+    /// Create editor camera control bindings
     void VulkanApp::__bindEditor() {
         deng::Camera3DBindings bindings;
         bindings.mov_w = deng_CreateInputMask(1, DENG_MOUSE_SCROLL_UP);
@@ -178,16 +170,12 @@ namespace Sandbox {
     }
 
 
-    /*
-     * Load test assets into the register
-     */
+    /// Load test assets into the register
     void VulkanApp::__loadAssets(const std::vector<const char*> &files) {
         for(size_t i = 0; i < files.size(); i++) {
             deng::RegType reg_elem = { { 0 } };
             das_LoadAsset(&reg_elem.asset, DAS_ASSET_MODE_UNDEFINED,
                 {0.0f, 0.0f, 1.0f}, false, NULL, (char*) files[i]);
-
-            reg_elem.asset.force_unmap = true;
 
             m_reg.push(reg_elem.asset.uuid, DENG_SUPPORTED_REG_TYPE_ASSET, 
                 reg_elem);
@@ -208,6 +196,13 @@ namespace Sandbox {
 
             m_tex_uuids.push_back(reg_elem.tex.uuid);
         }
+    }
+
+
+    /// Create new light sources
+    void VulkanApp::__mkLightSources() {
+        m_light_man.newPtLightSrc(5.0f, dengMath::vec3<deng_vec_t>{0.0f, -0.5f, 0.0f});
+        m_light_man.newPtLightSrc(10.0f, dengMath::vec3<deng_vec_t>{0.0f, 0.0f, -1.0f});
     }
 
 

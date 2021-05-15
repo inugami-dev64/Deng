@@ -63,6 +63,10 @@
 #ifndef ASSETS_H
 #define ASSETS_H
 
+#define DAS_DEFAULT_DIFFUSE_COLOR       (das_ObjColorData) {0.6f, 0.6f, 0.6f, 1.0f}   
+#define DAS_DEFAULT_AMBIENT_COLOR       (das_ObjColorData) {0.4f, 0.4f, 0.4f, 1.0f}   
+#define DAS_DEFAULT_SPECULAR_COLOR       (das_ObjColorData) {0.0f, 0.0f, 0.0f, 1.0f}   
+
 /*
  * Universal asset element offset container struct 
  */
@@ -196,19 +200,25 @@ typedef enum das_AssetMode {
 } das_AssetMode;
 
 
-/* 
- * Main asset struct 
- */
+/// Main asset struct 
 typedef struct das_Asset {
     deng_Id uuid;
     deng_Id tex_uuid;
     deng_Id vk_id;
     deng_Id gl_id;
     char *name;
+
+    // Temporary variables, since no material system is present
+    das_ObjColorData diffuse;
+    das_ObjColorData ambient;
+    das_ObjColorData specular;
+    deng_vec_t phong_exp;
+    
+
     das_AssetMode asset_mode;
-    deng_ui8_t is_shown;
+    deng_bool_t is_shown;
+    deng_bool_t is_transformed;
     deng_bool_t force_unmap;
-    das_ObjColorData color;
     das_VertDynamic vertices;
     das_IndicesDynamic indices;
     das_OffsetData offsets;

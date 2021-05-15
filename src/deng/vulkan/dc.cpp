@@ -291,12 +291,14 @@ namespace deng {
                     for(j = 0; j < m_assets.size(); j++) {
                         RegType reg_vk_asset = m_reg.retrieve (
                             m_assets[j], 
-                            DENG_SUPPORTED_REG_TYPE_VK_ASSET
+                            DENG_SUPPORTED_REG_TYPE_VK_ASSET,
+                            NULL
                         );
 
                         RegType reg_asset = m_reg.retrieve (
                             reg_vk_asset.vk_asset.base_id,
-                            DENG_SUPPORTED_REG_TYPE_ASSET
+                            DENG_SUPPORTED_REG_TYPE_ASSET,
+                            NULL
                         );
 
                         if(reg_asset.asset.is_shown) {

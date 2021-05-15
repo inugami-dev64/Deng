@@ -178,27 +178,32 @@ namespace deng {
 
     __RegEntry *__GlobalRegistry::__findElemPtr (
         deng_Id id,
-        deng_SupportedRegType expected_type
+        deng_SupportedRegTypeBitMask expected_type,
+        deng_SupportedRegType *p_type_feedback
     ) {
-        __RegEntry *p_entry = (__RegEntry*) findValue (
-            &m_map,
-            id,
-            strlen(id)
-        );
+        // Find the pointer value from the map
+        __RegEntry *p_entry = (__RegEntry*) findValue(&m_map,
+            id, strlen(id));
 
         if(!p_entry)
             RUN_ERR("__GlobalRegistry::retrieve()", "Invalid element id \"" + std::string(id) + "\"");
 
         // Entry type check
-        if(p_entry->type != expected_type)
-            RUN_ERR("__GlobalRegistry::retrieve()", "Expected and retrieved registry entry types do not match");
+        if((p_entry->type & expected_type) != p_entry->type) {
+            RUN_ERR("__GlobalRegistry::retrieve()", 
+                "Expected and retrieved registry entry types do not match");
+        }
+
+        // Check if the feedback value should be set
+        if(p_type_feedback)
+            *p_type_feedback = p_entry->type;
 
         return p_entry;
     }
 
     
     /*
-     * Register following data for usage
+     * Register given data for usage
      * An runtime error is thrown if the registry already has an element with the same id as specified one
      */
     void __GlobalRegistry::push (
@@ -218,12 +223,8 @@ namespace deng {
         // Push the element to entries and 
         std::vector<vulkan::__vk_Asset> asset;
         m_entries.push_back(__RegEntry{data, type, (deng_ui32_t) m_entries.size()});
-        pushToHashmap (
-            &m_map,
-            uuid,
-            strlen(uuid),
-            &m_entries.back()
-        );
+        pushToHashmap(&m_map, uuid, strlen(uuid),
+            &m_entries.back());
     }
 
 
@@ -234,8 +235,12 @@ namespace deng {
      */
     RegType &__GlobalRegistry::retrieve (
         deng_Id id,
-        deng_SupportedRegType expected_type
-    ) { return __findElemPtr(id, expected_type)->element; }
+        deng_SupportedRegTypeBitMask expected_type_mask,
+        deng_SupportedRegType *p_type_feedback
+    ) { 
+        // Check if feedback type variable should be set
+        return __findElemPtr(id, expected_type_mask, p_type_feedback)->element; 
+    }
 
 
     /*
@@ -245,8 +250,11 @@ namespace deng {
      */
     RegType *__GlobalRegistry::retrievePtr (
         deng_Id id,
-        deng_SupportedRegType expected_type
-    ) { return &__findElemPtr(id, expected_type)->element; } 
+        deng_SupportedRegTypeBitMask expected_type_mask,
+        deng_SupportedRegType *p_type_feedback
+    ) { 
+        return &__findElemPtr(id, expected_type_mask, p_type_feedback)->element; 
+    } 
 
 
     /*
@@ -267,17 +275,13 @@ namespace deng {
     }
 
 
-    /*
-     * Find the size of total registry elements
-     */
+    /// Find the size of total registry elements
     size_t __GlobalRegistry::size() {
         return m_entries.size();
     }
     
 
-    /*
-     * Get all elements in the registry
-     */
+    /// Get all elements in the registry
     const std::vector<__RegEntry> &__GlobalRegistry::all() {
         return m_entries;
     }
