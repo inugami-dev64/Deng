@@ -64,13 +64,13 @@
 #extension GL_ARB_separate_shader_objects : enable
 
 
-struct Light {
-    float intensity;
-    vec3 pos;
-};
+const int max_light_src = 8;
 
 layout(binding = 2) uniform UboLightData {
-    Light light_srcs[ 32 ];
+    // Data for simple point light
+    vec3 pos;
+    float intensity;
+
     vec4 ambient;
     uint light_src_c;
 } ld;
@@ -89,19 +89,23 @@ layout(location = 4) in flat uint in_is_unmapped;
 layout(location = 0) out vec4 out_color;
 
 void main() {
-    vec4 dif_color;;
+    vec4 dif_color;
 
     // Check if color or texture mapping should be used
-    if(in_is_unmapped == 1)
-        dif_color = ld.ambient * in_color;
-    else dif_color = ld.ambient * texture(tex_sampler, in_tex);
+    //if(in_is_unmapped == 1)
+        //dif_color = in_color;
+    dif_color = ld.ambient * texture(tex_sampler, in_tex);
 
-    out_color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    out_color = dif_color;
 
     // For each light source apply lambertian shading
-    for(uint i = 0; i < ld.light_src_c; i++) {
-        float cos_theta = dot(normalize(ld.light_srcs[i].pos - in_pos), 
-            in_normal);
-        out_color += dif_color * ld.light_srcs[i].intensity * max(0, cos_theta);
-    }
+    //for(uint i = 0; i < ld.light_src_c; i++) {
+        //float cos_theta = dot(normalize(vec3(ld.pos[i]) - in_pos), 
+            //in_normal);
+        //out_color += dif_color * ld.intensity[i / 4][i % 4] * max(0, cos_theta);
+    //}
+    
+    float cos_theta = dot(normalize(vec3(ld.pos) - in_pos), 
+        normalize(in_normal));
+    out_color += dif_color * ld.intensity * max(0, cos_theta);
 }

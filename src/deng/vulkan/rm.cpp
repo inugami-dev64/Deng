@@ -93,8 +93,7 @@ namespace deng {
         {
             m_sample_c = sample_c;
             // Allocate memory for new uniform buffers
-            __mkUniformBuffer(device, gpu, cmd_pool, g_queue, __DEFAULT_ASSET_CAP);
-            __resetUboBufferSize();
+            initUniformBuffer(device, gpu, cmd_pool, g_queue);
 
             // Create new color and depth resources
             __mkColorResources(device, gpu, extent, sc_color_format);

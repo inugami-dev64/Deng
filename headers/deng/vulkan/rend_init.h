@@ -97,6 +97,7 @@
     #include <deng/vulkan/desc_sets.h>
     #include <deng/vulkan/dc.h>
     #include <deng/vulkan/tm.h>
+    #include <deng/vulkan/ubm.h>
     #include <deng/vulkan/bm.h>
     #include <deng/vulkan/rm.h>
 #endif

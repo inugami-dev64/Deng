@@ -452,9 +452,7 @@ namespace deng {
         }
 
 
-        /*
-         * Add new textures to renderer texture list.
-         */
+        /// Add new textures to renderer texture list.
         void __vk_Renderer::submitTextures (
             deng_Id *textures,
             deng_ui32_t tex_c
@@ -496,18 +494,12 @@ namespace deng {
         }
 
 
-        /*
-         * Submit new draw calls and update uniform data
-         */
+        /// Submit new draw calls and update uniform data
         void __vk_Renderer::makeFrame() {
             // Call Vulkan fence waiter function
-            vkWaitForFences (
-                __vk_RendererInitialiser::getIC()->getDev(), 
-                1, 
+            vkWaitForFences(__vk_RendererInitialiser::getIC()->getDev(), 1, 
                 &__vk_RendererInitialiser::getDrawCaller()->flight_fences[__vk_RendererInitialiser::getDrawCaller()->current_frame], 
-                VK_TRUE, 
-                UINT64_MAX
-            );
+                VK_TRUE, UINT64_MAX);
 
             // Call Vulkan next image acquire method
             deng_ui32_t image_index;
@@ -551,10 +543,8 @@ namespace deng {
             submitinfo.signalSemaphoreCount = 1;
             submitinfo.pSignalSemaphores = signal_semaphores;
 
-            vkResetFences(__vk_RendererInitialiser::getIC()->getDev(), 
-                1, 
-                &__vk_RendererInitialiser::getDrawCaller()->flight_fences[__vk_RendererInitialiser::getDrawCaller()->current_frame]
-            );
+            vkResetFences(__vk_RendererInitialiser::getIC()->getDev(), 1, 
+                &__vk_RendererInitialiser::getDrawCaller()->flight_fences[__vk_RendererInitialiser::getDrawCaller()->current_frame]);
 
             if(vkQueueSubmit(__vk_RendererInitialiser::getIC()->getQFF().graphics_queue, 1, &submitinfo, 
                __vk_RendererInitialiser::getDrawCaller()->flight_fences[__vk_RendererInitialiser::getDrawCaller()->current_frame]) != VK_SUCCESS) 
@@ -606,9 +596,13 @@ namespace deng {
                 __vk_RendererInitialiser::getResMan()->getBD(),
                 __vk_RendererInitialiser::getResMan()->getMissingTextureUUID(),
                 { 0, (deng_ui32_t) m_assets.size() },
-                __vk_RendererInitialiser::getIC()->getGpuLimits().minUniformBufferOffsetAlignment,
-                __vk_RendererInitialiser::getResMan()->getUboChunkSize()
+                __vk_RendererInitialiser::getResMan()->getUboChunkSize(),
+                __vk_RendererInitialiser::getIC()->getGpuLimits().minUniformBufferOffsetAlignment
             );
+
+            // For now create standard light with 100% ambient lighting
+            __vk_RendererInitialiser::getResMan()->mkStandardLight(
+                __vk_RendererInitialiser::getIC()->getDev());
 
             // Start recording command buffers
             __vk_RendererInitialiser::getDrawCaller()->setMiscData (

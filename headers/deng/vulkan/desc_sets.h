@@ -79,9 +79,9 @@
     #include <deng/vulkan/sd.h>
     #include <deng/vulkan/qm.h>
     #include <deng/vulkan/resources.h>
-    #include <deng/vulkan/ubo.h>
 
     #include <deng/lighting/light_srcs.h>
+    #include <deng/vulkan/ubo.h>
     #include <deng/registry/registry.h>
 
     #include <deng/vulkan/pipeline_data.h>

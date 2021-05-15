@@ -144,9 +144,7 @@ namespace deng {
         }
 
 
-        /*
-         * Create new shader module from SPIR-V binaries
-         */
+        /// Create new shader module from SPIR-V binaries
         VkShaderModule __vk_PipelineCreateInfoGenerator::__mkShaderModule(char *bin, size_t bin_c) {
             VkShaderModuleCreateInfo createinfo{};
             createinfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -161,9 +159,7 @@ namespace deng {
         }
 
         
-        /*
-         * Get binding description info in VkVertexInputBindingDescription instance
-         */
+        /// Get binding description info in VkVertexInputBindingDescription instance
         std::vector<VkVertexInputBindingDescription> __vk_PipelineCreateInfoGenerator::__getBindingDesc() {
             std::vector<VkVertexInputBindingDescription> input_binding_desc;
             deng_bool_t is_tex_mapped = false;
@@ -224,9 +220,7 @@ namespace deng {
         } 
 
 
-        /*
-         * Get attribute description info in VkVertexInputAttributeDescription instances
-         */
+        /// Get attribute description info in VkVertexInputAttributeDescription instances
         std::vector<VkVertexInputAttributeDescription> __vk_PipelineCreateInfoGenerator::__getAttributeDescs() {
             std::vector<VkVertexInputAttributeDescription> input_attr_desc{};
 

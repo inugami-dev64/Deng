@@ -213,9 +213,7 @@ namespace deng {
         }
 
 
-        /* 
-         * Record draw command buffers for assets 
-         */ 
+        /// Allocate and record draw command buffers for assets 
         void __vk_DrawCaller::allocateMainCmdBuffers (
             VkDevice device, 
             VkQueue g_queue, 
@@ -237,12 +235,9 @@ namespace deng {
             if(vkAllocateCommandBuffers(device, &cmd_buf_alloc_info, m_cmd_bufs.data())) 
                 VK_DRAWCMD_ERR("failed to allocate command buffers");
             
-            recordMainCmdBuffers (
-                renderpass,
-                ext,
-                background,
-                bd
-            );
+            // Record all command buffer
+            recordMainCmdBuffers(renderpass, ext,
+                background, bd);
         }
 
 
@@ -283,7 +278,7 @@ namespace deng {
 
                 // Add clear values to renderpass begin info
                 renderpass_begininfo.clearValueCount = 
-                (deng_ui32_t) clear_values.size();
+                static_cast<deng_ui32_t>(clear_values.size());
                 renderpass_begininfo.pClearValues = clear_values.data();
                 
                 // Start a new render pass

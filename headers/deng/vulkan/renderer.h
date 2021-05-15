@@ -98,6 +98,7 @@
     #include <deng/vulkan/desc_sets.h>
     #include <deng/vulkan/dc.h>
     #include <deng/vulkan/tm.h>
+    #include <deng/vulkan/ubm.h>
     #include <deng/vulkan/bm.h>
     #include <deng/vulkan/rm.h>
     
@@ -168,7 +169,7 @@ namespace deng {
                 deng_ui32_t tex_c
             );
 
-
+            
             /// Submit new draw call
             void makeFrame();
 

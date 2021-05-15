@@ -96,6 +96,7 @@
     #include <deng/vulkan/pipelines.h>
     #include <deng/vulkan/dc.h>
     #include <deng/vulkan/tm.h>
+    #include <deng/vulkan/ubm.h>
     #include <deng/vulkan/bm.h>
     #include <deng/vulkan/rm.h>
 #endif

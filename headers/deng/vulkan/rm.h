@@ -98,12 +98,11 @@
     #include <deng/lighting/light_srcs.h>
     #include <deng/registry/registry.h>
 
+    #include <deng/vulkan/ubm.h>
     #include <deng/vulkan/bm.h>
     #include <deng/vulkan/tm.h>
 
 #endif
-
-#define __DEFAULT_ASSET_CAP     32
 
 
 namespace deng {

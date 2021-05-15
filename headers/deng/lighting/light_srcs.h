@@ -64,7 +64,7 @@
 #define __LIGHT_SRCS_H
 
 
-#define __DENG_MAX_LIGHT_SRC_COUNT      32
+#define __DENG_MAX_LIGHT_SRC_COUNT      8
 
 
 namespace deng {

@@ -87,15 +87,16 @@
     #include <deng/camera.h>
     #include <deng/lighting/light_srcs.h>
     #include <deng/vulkan/resources.h>
-    #include <deng/vulkan/ubo.h>
     #include <deng/registry/registry.h>
+    #include <deng/vulkan/ubo.h>
+    #include <deng/vulkan/ubm.h>
     #include <deng/vulkan/asset_cpy.h>
 #endif
 
 namespace deng {
     namespace vulkan {
 
-        class __vk_BufferManager {
+        class __vk_BufferManager : public __vk_UniformBufferManager {
         private:
             std::vector<deng_Id> &m_assets;
             const VkPhysicalDeviceLimits &m_gpu_limits;
@@ -112,32 +113,7 @@ namespace deng {
                 deng::__GlobalRegistry &reg
             );
 
-            
-            /// Create new uniform buffer instance and allocate memory for it.
-            /// WARNING: This method call expects that uniform buffer and its memory
-            /// have been freed or are not initialised previously
-            void __mkUniformBuffer (
-                VkDevice device, 
-                VkPhysicalDevice gpu,
-                VkCommandPool cmd_pool, 
-                VkQueue g_queue,
-                deng_ui64_t asset_cap
-            );
 
-
-            /// Reallocate memory for uniform buffer and copy previous data to
-            /// newly allocated buffer instance
-            void __reallocUniformBufferMemory (
-                VkDevice device,
-                VkPhysicalDevice gpu,
-                VkCommandPool cmd_pool,
-                VkQueue g_queue,
-                deng_ui64_t req_cap
-            );
-
-            
-            /// Reset uniform buffer size to first asset color data instance
-            void __resetUboBufferSize();
             void __findAssetOffsets(das_Asset &asset);
             deng_ui64_t __findMaxAssetSize(const dengMath::vec2<deng_ui32_t> &bounds);
 
@@ -148,34 +124,11 @@ namespace deng {
                 VkCommandPool cmd_pool, VkQueue g_queue);
 
 
-            /// Copy asset color data to uniform buffer memory
-            void cpyAssetUniform(VkDevice device, VkPhysicalDevice gpu,
-                VkCommandPool cmd_pool, VkQueue g_queue, __vk_Asset &asset);
-
-            
-            /// Update transfrom uniform data in the frame according to updated camera
-            /// and view matrix
-            void updateUboTransform3D (
-                VkDevice device, deng_ui32_t current_image, 
-                Camera3D *p_cam);
-
-            
-            /// Update lighting uniform data
-            void updateUboLighting(VkDevice device,
-                LightSource light_srcs[__DENG_MAX_LIGHT_SRC_COUNT],
-                dengMath::vec3<deng_vec_t> ambient, deng_ui32_t current_image);
-
-
             /// Replace data in main buffer with newer data from given asset vertices
             void remapAssetVerts(VkDevice device, VkPhysicalDevice gpu,
                 VkCommandPool cmd_pool, VkQueue g_queue,
                 const dengMath::vec2<deng_ui32_t> &asset_bounds);
-
-        /// Getter methods
-        public: 
-            deng_ui64_t getUboChunkSize();
         };
-
     }
 }
 

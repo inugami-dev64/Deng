@@ -97,7 +97,9 @@ namespace deng {
 
         /// Light data uniform structure
         struct __vk_UniformLightData {
-            __vk_UniformLightSource light_srcs[ 32 ];
+            dengMath::vec3<deng_vec_t> pos;
+            deng_vec_t intensity;
+
             dengMath::vec4<deng_vec_t> ambient;
             deng_ui32_t light_src_c;
         };

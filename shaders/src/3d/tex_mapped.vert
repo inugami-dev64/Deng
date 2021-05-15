@@ -74,7 +74,7 @@ layout(binding = 0) uniform UboTransform {
 layout(binding = 1) uniform ColorData {
     vec4 color;
     uint ignore_transform;
-    int is_unmapped;
+    uint is_unmapped;
 } cl;
 
 
@@ -96,12 +96,12 @@ void main() {
     if(cl.ignore_transform == 1)
         gl_Position = ubo.view * vec4(in_pos, 1.0f);
 
-    else gl_Position = ubo.transform * vec4(in_pos, 1.0f);
+    else gl_Position = ubo.transform * vec4(-in_pos, 1.0f);
 
     // Set all the output variables
     out_color = cl.color;
     out_tex = in_tex_pos;
-    out_pos = in_pos;
-    out_normal = in_norm_pos;
+    out_pos = -in_pos;
+    out_normal = -in_norm_pos;
     out_is_unmapped = cl.is_unmapped;
 }

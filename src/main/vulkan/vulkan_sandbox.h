@@ -103,6 +103,7 @@
     #include <deng/vulkan/desc_sets.h>
     #include <deng/vulkan/dc.h>
     #include <deng/vulkan/tm.h>
+    #include <deng/vulkan/ubm.h>
     #include <deng/vulkan/bm.h>
     #include <deng/vulkan/rm.h>
     #include <deng/vulkan/rend_init.h>

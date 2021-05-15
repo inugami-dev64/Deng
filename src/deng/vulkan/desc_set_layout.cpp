@@ -145,24 +145,6 @@ namespace deng {
 
 
         /// Create new descriptor set layout
-        void __mkGenericDescSetLayout (
-            VkDevice device, 
-            std::vector<VkDescriptorSetLayoutBinding> &bindings, 
-            VkDescriptorSetLayout *p_layout
-        ) {
-            // Create new createinfo instance
-            VkDescriptorSetLayoutCreateInfo createinfo{};
-            createinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            createinfo.bindingCount = static_cast<deng_ui32_t>(bindings.size());
-            createinfo.pBindings = bindings.data();
-
-            // Create new layout
-            if(vkCreateDescriptorSetLayout(device, &createinfo, NULL, p_layout) != VK_SUCCESS)
-                VK_DESC_ERR("failed to create descriptor set layout");
-        }
-
-
-        /// Create new descriptor set layout
         void __vk_DescriptorSetLayoutCreator::__mkGenericDescSetLayout (
             VkDevice device, 
             std::vector<VkDescriptorSetLayoutBinding> &bindings,

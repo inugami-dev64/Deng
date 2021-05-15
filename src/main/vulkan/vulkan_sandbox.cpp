@@ -102,6 +102,7 @@ namespace Sandbox {
 
         m_asset_uuids.reserve(4);
         __loadAssets ({
+            "assets/statue.das",
             "assets/viking.das"
         });
 
@@ -120,6 +121,9 @@ namespace Sandbox {
 
         deng::RegType *p_reg_asset;
         p_reg_asset = m_reg.retrievePtr(m_asset_uuids[0], DENG_SUPPORTED_REG_TYPE_ASSET);
+        p_reg_asset->asset.tex_uuid = m_tex_uuids[2];
+
+        p_reg_asset = m_reg.retrievePtr(m_asset_uuids[1], DENG_SUPPORTED_REG_TYPE_ASSET);
         p_reg_asset->asset.tex_uuid = m_tex_uuids[1];
 
         m_p_rend->submitTextures (
@@ -183,11 +187,10 @@ namespace Sandbox {
             das_LoadAsset(&reg_elem.asset, DAS_ASSET_MODE_UNDEFINED,
                 {0.0f, 0.0f, 1.0f}, false, NULL, (char*) files[i]);
 
-            m_reg.push (
-                reg_elem.asset.uuid, 
-                DENG_SUPPORTED_REG_TYPE_ASSET, 
-                reg_elem
-            );
+            reg_elem.asset.force_unmap = true;
+
+            m_reg.push(reg_elem.asset.uuid, DENG_SUPPORTED_REG_TYPE_ASSET, 
+                reg_elem);
 
             m_asset_uuids.push_back(reg_elem.asset.uuid);
         }
