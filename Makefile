@@ -74,4 +74,4 @@ help:
 	@echo "   dam"
 	@echo "   vk_sandbox"
 	@echo ""
-	@echo "For more information, see https://github.com/premake/premake-core/wiki"
+	@echo "For more information, see http://industriousone.com/premake/quick-start"
