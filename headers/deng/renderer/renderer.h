@@ -64,149 +64,80 @@
 #define __RENDERER_H
 
 #ifdef __RENDERER_CPP
-    #include <iostream>
     #include <vector>
-    #include <mutex>
     #include <thread>
+    #include <mutex>
+    #include <queue>
+    #include <memory>
     #include <array>
-    #include <string>
-    #include <chrono>
-    #include <vulkan/vulkan.h>
     
+    #include <vulkan/vulkan.h>
     #include <common/base_types.h>
+    #include <common/hashmap.h>
     #include <common/uuid.h>
     #include <common/err_def.h>
+    #include <data/assets.h>
 
-    #include <das/assets.h>
-    #include <das/tex_loader.h>
-
-    #include <deng/forward_dec.h>
     #include <math/deng_math.h>
-    #include <deng/surface_window.h>
     #include <deng/window.h>
-    #include <deng/vulkan/vulkan_qm.h>
-    #include <deng/vulkan/vulkan_sd.h>
-    #include <deng/vulkan/vulkan_resources.h>
-    #include <deng/vulkan/vulkan_rend_infos.h>
-    #include <deng/vulkan/vulkan_pipelines.h>
-    #include <deng/vulkan/vulkan_renderer.h>
-
     #include <utils/timer.h>
+    #include <deng/camera.h>
+
+    #include <deng/registry/registry.h>
     #include <utils/font.h>
 
-    #include <deng/camera.h>
-    #include <dengui/dengui_win_def.h>
-    #include <dengui/dengui_infos.h>
-    #include <dengui/dengui_child.h>
-    #include <dengui/map_editor_ui.h>
 #endif
+
+#include <deng/vulkan/renderer.h>
+#include <deng/renderer/asset_man.h>
 
 #define DENG_DEFAULT_NEAR_PLANE 0.1f
 #define DENG_DEFAULT_FAR_PLANE 25.0f
+#define DENG_FRAME_INTERVAL 50 // microseconds
 
 namespace deng {
 
-    /*
-     * Main renderer class
-     */
-    class Renderer {   
+    // Frame renderer type
+    class Renderer;
+    typedef void(*PCustomRunFunc)(Renderer&);
+
+    /// Main renderer class
+    class Renderer : public __AssetManager {   
+    private:
+        std::shared_ptr<vulkan::__vk_ConfigVars> m_vk_vars;
+        std::shared_ptr<vulkan::__vk_Renderer> m_vk_rend;   
+        dengMath::vec4<deng_vec_t> m_env_color;
+        deng_RendererHintBits m_hints;
+        deng_RendererHintBits m_api_bits;
+        deng_bool_t m_is_init;
+
+        Window *m_p_win;
+        Camera3D *m_p_cam;
+        PCustomRunFunc m_run_func = NULL;
+
+    private:
+        /// Check if the renderer is initialised for update methods and throw error if needed
+        void __initCheck(const std::string &func_name);
+
     public:
-        /*
-         * Set renderer usage hints for the renderer
-         */
-        void setHints(deng_RendererHintBits hints);
+        Renderer(deng_RendererHintBits hints, const dengMath::vec4<deng_vec_t> &env_color);
+
+        /// Setup graphics api specific renderer from the hints given in the constructor
+        void setup(Camera3D &main_cam, Window &main_win);
 
 
-        /*
-         * Setup graphics api specific renderer from the hints given
-         */
-        void setup();
+        /// Overwrite asset vertices to main buffer.
+        /// Note that this method expects that vertices count hasn't changed,
+        /// otherwise weird stuff can happen!
+        void updateVerts(const dengMath::vec2<deng_ui32_t> &bounds);
 
 
-        /*
-         * Submit all textures data before renderer initialisation.
-         * PS! Texture UUIDs have to be generated before submitting them
-         */
-        void submitTextures (
-            das_Texture *textures,
-            deng_ui32_t tex_c
-        );
+        /// Replace current light sources with new ones
+        void updateLighting(std::array<deng_Id, __DENG_MAX_LIGHT_SRC_COUNT> &light_srcs);
 
 
-        /*
-         * Submit all assets data before renderer initialisation.
-         * PS! Asset UUIDs have to be generated before submitting them
-         */
-        void submitAssets (
-            das_Asset *assets,
-            deng_ui32_t asset_c
-        );
-
-
-        /*
-         * Submit all rasterised text instances before renderer initialisation.
-         * PS! Text UUIDs have to be generated before submitting them. This is usually
-         * handled by the StringRasterizer class
-         */
-        void submitRasterisedText (
-            dengUtils::BitmapStr *text,
-            deng_ui32_t text_c
-        );
-
-        
-        /*
-         * Push assets to the renderer during renderer runtime.
-         * PS! Asset UUIDs have to be generated before pushing them
-         */
-        void pushAssets (
-            das_Asset *assets,
-            deng_ui32_t asset_c
-        );
-
-
-        /*
-         * Push textures to the renderer during renderer runtime.
-         * PS! Texture UUIDs have to be generated before pushing them
-         */
-        void pushTextures (
-            das_Texture *textures,
-            deng_ui32_t tex_c
-        );
-
-
-        /*
-         * Push rasterised text instances to the renderer during renderer runtime.
-         * PS! Text UUIDs have to be generated before submitting them. This is usually
-         * handled by the StringRasterizer class
-         */
-        void pushRasterisedText (
-            dengUtils::BitmapStr *text,
-            deng_ui32_t text_c
-        );
-
-
-        /*
-         * Overwrite asset vertices to main buffer.
-         * Note that this method expects that vertices count hasn't changed,
-         * otherwise weird stuff can happen!
-         */
-        void updateAssetVertices(const dengMath::vec2<deng_ui32_t> &region);
-
-        
-        /*
-         * This method frees all the asset data on the main buffer and reallocates
-         * it into new buffer.
-         */
-        void updateAssets();
-
-
-        /*
-         * This method frees all texture images data on the image buffer and
-         * reallocates it into new buffer. Also texture images and their samplers are
-         * remade.
-         */
-        void updateTextures();
-
+        /// Update data, before creating new frame
+        void update();
 
         /// Begin the rendering loop
         void run();        

@@ -129,8 +129,8 @@ namespace deng {
                 __vk_BufferData &buf_data);
 
 
-            /// Copy asset uniform data to uniform buffer memory
-            void cpyAssetUniformToBuffer(VkDevice device, VkPhysicalDevice gpu,
+            /// Reserve a uniform data memory location for Vulkan asset
+            void mapUniformBufferArea(VkDevice device, VkPhysicalDevice gpu,
                 VkCommandPool cmd_pool, VkQueue g_queue, __vk_Asset &asset);
             
 

@@ -75,6 +75,7 @@
 
     #include <common/base_types.h>
     #include <common/hashmap.h>
+    #include <common/err_def.h>
     #include <data/assets.h>
     #include <math/deng_math.h>
 
@@ -92,6 +93,9 @@
     #include <deng/vulkan/rend_infos.h>
     #include <deng/vulkan/ic.h>
     #include <deng/vulkan/scc.h>
+    #include <deng/vulkan/desc_set_layout.h>
+    #include <deng/vulkan/desc_pool.h>
+    #include <deng/vulkan/desc_sets.h>
     #include <deng/vulkan/pipeline_data.h>
     #include <deng/vulkan/pipelines.h>
     #include <deng/vulkan/dc.h>
@@ -107,36 +111,48 @@ namespace deng {
 
         class __vk_RuntimeUpdater {
         private:
-            __vk_InstanceCreator *m_p_ic;
-            __vk_SwapChainCreator *m_p_scc;
-            __vk_DrawCaller *m_p_dc;
-            __vk_ResourceManager *m_p_rm;
-            std::vector<deng_Id> &m_ref_assets;
-            std::vector<deng_Id> &m_ref_tex;
+            __vk_InstanceCreator &m_ic;
+            __vk_SwapChainCreator &m_scc;
+            __vk_DrawCaller &m_dc;
+            __vk_ResourceManager &m_rm;
+            __vk_DescriptorSetsCreator &m_desc_c;
+            __GlobalRegistry &m_reg;
+            std::vector<deng_Id> &m_assets;
+            std::vector<deng_Id> &m_tex;
 
-        protected:
-            
+        public:
             __vk_RuntimeUpdater (
-                __vk_InstanceCreator *p_ic,
-                __vk_SwapChainCreator *p_scc,
-                __vk_DrawCaller *p_dc,
-                __vk_ResourceManager *p_rm,
+                __vk_InstanceCreator &ic,
+                __vk_SwapChainCreator &scc,
+                __vk_DrawCaller &dc,
+                __vk_ResourceManager &rm,
+                __vk_DescriptorSetsCreator &desc_c,
+                __GlobalRegistry &reg,
                 std::vector<deng_Id> &assets, 
                 std::vector<deng_Id> &tex
             );
 
-
-            /*
-             * This method updates vertices buffer that is allocated by
-             * given assets
-             */
-            void __updateAssetVerts(const dengMath::vec2<deng_ui32_t> &asset_bounds);
+            /// This method updates the vertices buffer that is allocated by given assets
+            void updateAssetVerts(const dengMath::vec2<deng_ui32_t> &bounds);
 
 
-            /*
-             * Rerecord existing commandbuffers 
-             */
-            void __updateCmdBuffers(const dengMath::vec4<deng_vec_t> &background);
+            /// Rerecord existing commandbuffers 
+            void updateCmdBuffers(const dengMath::vec4<deng_vec_t> &background);
+
+            
+            /// Reallocate or allocate new descriptor sets for assets between given bounds
+            /// NOTE: Vulkan renderer must be idled
+            void updateDS(const dengMath::vec2<deng_ui32_t> &bounds);
+
+
+            /// Reallocate main buffer and copy all asset data to it
+            /// NOTE: Vulkan renderer must be idled
+            void reallocateMainBuffer();
+
+
+            /// Check if current main buffer is big enough for new asset data and if it isn't reallocate more memory
+            /// NOTE: Vulkan renderer must be idled
+            void assetToBufferPushBack(const dengMath::vec2<deng_ui32_t> &bounds);
         };
     }
 }

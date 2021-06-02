@@ -67,9 +67,7 @@
 namespace deng {
     namespace vulkan {
 
-        /* 
-         * Struct for storing all vulkan device related information 
-         */
+        /// Struct for storing all vulkan device related information 
         struct __vk_DeviceInfo {
             VkDevice m_device;
             deng::Window &m_win;
@@ -78,9 +76,7 @@ namespace deng {
         };
 
 
-        /* 
-         * Struct for storing all vk_ instance objects 
-         */
+        /// Struct for storing all vk_ instance objects 
         struct __vk_InstanceInfo {
             __vk_QueueManager m_qff;
             VkInstance m_instance;
@@ -89,9 +85,7 @@ namespace deng {
         };
 
 
-        /* 
-         * Struct for storing all vk_ swapchain related objects 
-         */
+        /// Struct for storing all vk_ swapchain related objects 
         struct __vk_SwapChainInfo {
             VkRenderPass m_renderpass;
             VkSwapchainKHR m_swapchain;
@@ -105,9 +99,7 @@ namespace deng {
         };
 
 
-        /* 
-         * Struct for storing all vk_ resource allocation related objects 
-         */
+        /// Struct for storing all vk_ resource allocation related objects 
         struct __vk_ResourceInfo {
             std::vector<VkFramebuffer> m_framebuffers;
             VkImage m_depth_image;

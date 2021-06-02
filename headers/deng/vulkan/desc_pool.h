@@ -110,19 +110,19 @@ namespace deng {
             deng::__GlobalRegistry &m_reg;
 
             // Unmapped 2D asset pool
-            VkDescriptorPool m_vu2d_pool = { 0 };
+            VkDescriptorPool m_vu2d_pool = {};
             deng_ui32_t m_vu2d_cap = 0;
 
             // Texture mapped 2D asset pool
-            VkDescriptorPool m_vm2d_pool = { 0 };
+            VkDescriptorPool m_vm2d_pool = {};
             deng_ui32_t m_vm2d_cap = 0;
 
             // Unmapped 3D asset pool
-            VkDescriptorPool m_vu3d_pool = { 0 };
+            VkDescriptorPool m_vu3d_pool = {};
             deng_ui32_t m_vu3d_cap = 0;
 
             // Texture mapped 3D asset pool
-            VkDescriptorPool m_vm3d_pool = { 0 };
+            VkDescriptorPool m_vm3d_pool = {};
             deng_ui32_t m_vm3d_cap = 0;
 
         private:

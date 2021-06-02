@@ -84,24 +84,13 @@ workspace "deng"
         symbols "On"
     filter {}
 
-
--- Define the clean action 
-if _ACTION == "clean" then
-	if(package.config:sub(1,1) == '/') then
-		os.execute("rm -rf *.make obj Makefile")
-		os.exit()
-	else
-		os.execute("del /s /q deng.sln obj *.vcxproj*")
-		os.exit()
-	end
-	print("Successfully cleaned generated project files")
-end
-
+--!!! Add new options to use !!!--
 -- Create an option to compile all submodule dependencies from source
 newoption {
     trigger = "use-modules",
     description = "Use submodule dependencies instead of searching them in system path"
 }
+
 
 -- Create an option to specify vulkan sdk library location (Windows only)
 newoption {
@@ -110,43 +99,11 @@ newoption {
 }
 
 
--- Check if Vulkan SDK path should and is specified
-if _OPTIONS["vk-sdk-path"] then
-	if package.config:sub(1,1) == '/' then
-		error("Vulkan SDK path is not supposed to be specified in GNU/Linux builds")
-	else
-		libdirs { _OPTIONS["vk-sdk-path"] .. "\\Lib" }
-		includedirs{ _OPTIONS["vk-sdk-path"] .. "\\Include" }
-	end
-elseif package.config:sub(1,1) == '\\' then
-	error("No Vulkan SDK path specified on Windows build")
-end
-
-
--- Check if all submodule build configs should be created
-if _OPTIONS["use-modules"] then
-	includedirs {
-		"modules/freetype/include",
-		"modules/freetype/include/freetype"
-	}
-    local ft = require("premake/ft")
-    ft.build()
-elseif package.config:sub(1,1) == '\\' then
-    error("Please use use-modules option on Windows builds!")
-else
-	includedirs { "/usr/include/freetype2", "/usr/include/freetype2/freetype" }
-end
-
-
 -- Create an option to build DENG as a static library instead of shared library (Windows only)
 newoption {
     trigger = "build-static",
     description = "Build libdeng as static library (Windows only)"
 }
-
-if _OPTIONS["build-static"] and package.config:sub(1,1) == '/' then
-	error("Building DENG as static library is unsupported in GNU/Linux systems")
-end
 
 
 -- Create an option to build DENG sandboxapp using specific sandbox configuration
@@ -162,34 +119,105 @@ newoption {
 }
 
 
--- Specify default sandboxapp configuration
-if not _OPTIONS["sandbox-mode"] then
-    _OPTIONS["sandbox-mode"] = "NONE"
-elseif _OPTIONS["sandbox-mode"] ~= "NONE" then
-    local sandbox_data = require("premake/sandbox_data")
-    sandbox_data.datacpy();
+-- Check if given operating system is even supported
+function oscheck() 
+    if(not os.istarget("linux") and not os.istarget("windows")) then
+        local host = os.target()
+        host = host:gsub("%a", string.upper, 1)
+        print(host .. " is not supported by DENG! :(")
+        os.exit();
+    end
 end
 
 
--- Libdeng build configuration
-local libdeng = require("premake/libdeng")
-if _OPTIONS["build-static"] then
-    libdeng.build(true)
-else 
-    libdeng.build(false)
+-- Check if given options are valid
+function optcheck()
+    -- Define the clean action 
+    if _ACTION == "clean" then
+        if(os.host() == "linux") then
+            os.execute("rm -rf *.make obj Makefile")
+            os.exit()
+        elseif(os.host() == "windows") then
+            os.execute("del /s /q deng.sln obj *.vcxproj*")
+            os.exit()
+        end
+        print("Successfully cleaned generated project files")
+    end
+
+
+    -- Check if Vulkan SDK path should and is specified
+    if _OPTIONS["vk-sdk-path"] then
+        if package.config:sub(1,1) == '/' then
+            error("Vulkan SDK path is not supposed to be specified in GNU/Linux builds")
+        else
+            libdirs { _OPTIONS["vk-sdk-path"] .. "\\Lib" }
+            includedirs{ _OPTIONS["vk-sdk-path"] .. "\\Include" }
+        end
+    elseif package.config:sub(1,1) == '\\' then
+        error("No Vulkan SDK path specified on Windows build")
+    end
+
+
+    -- Check if all submodule build configs should be created
+    if _OPTIONS["use-modules"] then
+        includedirs {
+            "modules/freetype/include",
+            "modules/freetype/include/freetype"
+        }
+        local ft = require("premake/ft")
+        ft.build()
+    elseif package.config:sub(1,1) == '\\' then
+        error("Please use use-modules option on Windows builds!")
+    else
+        includedirs { "/usr/include/freetype2", "/usr/include/freetype2/freetype" }
+    end
+
+
+    if _OPTIONS["build-static"] and not os.istarget("windows") then
+        error("Building DENG as static library is only supported on Windows")
+    end
 end
 
 
--- DENG asset manager build configuration
-local dam = require("premake/dam")
-dam.build()
+-- Setup build destinations
+function buildCfg()
+    -- Check if sandbox application should be made and copy files if needed
+    if not _OPTIONS["sandbox-mode"] then
+        _OPTIONS["sandbox-mode"] = "NONE"
+    elseif _OPTIONS["sandbox-mode"] ~= "NONE" then
+        local sandbox_data = require("premake/sandbox_data")
+        sandbox_data.datacpy();
+    end
 
 
--- Sandbox application build configuration
-if _OPTIONS["sandbox-mode"] == "VKR" then
-    local sandbox = require("premake/vk_sandbox")
-    sandbox.build()
-elseif _OPTIONS["sandbox-mode"] == "DEFAULT" then
-    local sandbox = require("premake/default_sandbox")
-    sandbox.build()
+    -- Check if static libdeng build should be made
+    local libdeng = require("premake/libdeng")
+    if _OPTIONS["build-static"] then
+        libdeng.build(true)
+    else 
+        libdeng.build(false)
+    end
+
+
+    -- DENG asset manager build configuration
+    local dam = require("premake/dam")
+    dam.build()
+
+
+    -- Sandbox application build configuration
+    if _OPTIONS["sandbox-mode"] == "VKR" then
+        local sandbox = require("premake/vk_sandbox")
+        sandbox.build()
+    elseif _OPTIONS["sandbox-mode"] == "DEFAULT" then
+        local sandbox = require("premake/default_sandbox")
+        sandbox.build()
+    end
+end
+
+
+-- Script entry point, check if not help
+if not _OPTIONS["help"] then
+    oscheck()
+    optcheck()
+    buildCfg()
 end

@@ -117,45 +117,33 @@ namespace dengMath {
         deng_bool_t operator==(const vec4<T> &vec) const; 
 
 
-        /*
-         * C vertices structure assignment operators
-         */
+        /// C vertices structure assignment operators
         void operator=(const das_ObjColorData &color); 
         void operator=(const das_ObjPosData &vert); 
         void operator=(const das_ObjNormalData &nor); 
 
 
-        /*
-         * Smaller vector struct assignment operators
-         */
+        /// Smaller vector struct assignment operators
         void operator=(const vec2<T> &vec);
         void operator=(const vec3<T> &vec);
 
 
-        /*
-         * C vertices structure comparison operators
-         */
+        /// C vertices structure comparison operators
         deng_bool_t operator==(const das_ObjColorData &color) const;
         deng_bool_t operator==(const das_ObjPosData &vert) const;
         deng_bool_t operator==(const das_ObjNormalData &norm) const;
 
 
-        /*
-         * Get the current length of the vector
-         */
+        /// Get the current length of the vector
         T length() const;
 
         
-        /*
-         * Normalise the vector to length 1
-         */
+        /// Normalise the vector to length 1
         void norm();
 
         
-        /*
-         * Find the crossproduct of two vectors
-         * PS! Only first three axes are used
-         */
+        /// Find the crossproduct of two vectors
+        /// PS! Only first three axes are used
         template<typename CT>
         static vec4<CT> cross(const vec4<CT> &vec1, const vec4<CT> &vec2); 
     };

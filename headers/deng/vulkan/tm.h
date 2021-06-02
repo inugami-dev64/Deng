@@ -114,10 +114,8 @@ namespace deng {
             deng::__GlobalRegistry &m_reg;
 
         private:
-            /*
-             * Create missing texture in case any texture mapped asset
-             * has invalid texture uuid
-             */
+            /// Create missing texture in case any texture mapped asset
+            /// has invalid texture uuid
             void __mkMissingTex(VkDevice device, VkPhysicalDevice gpu,
                 VkCommandPool cmd_pool, VkQueue g_queue);
 
@@ -157,9 +155,7 @@ namespace deng {
             );
 
             
-            /*
-             * Check if linear filtering is requested and if mipmaps should be created
-             */
+            /// Check if linear filtering is requested and if mipmaps should be created
             void __mipmapTransition (
                 VkDevice device,
                 VkCommandPool cmd_pool,
@@ -178,12 +174,10 @@ namespace deng {
             );
 
 
-            /*
-             * Copy all bitmap data to image bitmap buffer
-             * WARNING: This method performs no buffer bounds check and can cause errors!
-             * NOTE: Texture object must have a valid VkImage instance created before calling this 
-             * method
-             */
+            /// Copy all bitmap data to image bitmap buffer
+            /// WARNING: This method performs no buffer bounds check and can cause errors!
+            /// NOTE: Texture object must have a valid VkImage instance created before calling this 
+            /// method
             void __cpyBitmap (
                 VkDevice device,
                 VkPhysicalDevice gpu,
@@ -220,22 +214,19 @@ namespace deng {
             );
 
 
-            /// Create new vulkan textures for textures specified between tex_bounds
-            void mkTextures (
+            /// Create new Vulkan texture from texture specified via id
+            void mkTexture (
                 VkDevice device, 
                 VkPhysicalDevice gpu, 
                 VkCommandPool command_pool,
                 deng_bool_t is_lf_supported, 
-                const dengMath::vec2<deng_ui32_t> &tex_bounds,
+                deng_Id id,
                 VkQueue g_queue
             );
 
 
-            /*
-             * Get the id of a missing texture
-             */
+            /// Get the id of a missing texture
             deng_Id getMissingTextureUUID();
-
         };
     }
 }

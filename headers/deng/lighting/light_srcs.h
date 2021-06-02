@@ -62,8 +62,6 @@
 
 #ifndef __LIGHT_SRCS_H
 #define __LIGHT_SRCS_H
-
-
 #define __DENG_MAX_LIGHT_SRC_COUNT      8
 
 

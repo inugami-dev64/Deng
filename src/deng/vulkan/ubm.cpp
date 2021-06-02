@@ -176,7 +176,7 @@ namespace deng {
 
 
         /// Copy asset uniform data to uniform buffer memory
-        void __vk_UniformBufferManager::cpyAssetUniformToBuffer (
+        void __vk_UniformBufferManager::mapUniformBufferArea (
             VkDevice device,
             VkPhysicalDevice gpu,
             VkCommandPool cmd_pool,
@@ -187,7 +187,6 @@ namespace deng {
             RegType &reg_asset = m_reg.retrieve(asset.base_id, 
                 DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
             reg_asset.asset.offsets.ubo_offset = m_buffer_data.ubo_size;
-            LOG("Asset ubo offset: " + std::to_string(reg_asset.asset.offsets.ubo_offset));
 
             // Set the new size for ubo buffer
             m_buffer_data.ubo_size += __max_frame_c * cm_FindChunkSize(m_min_align,

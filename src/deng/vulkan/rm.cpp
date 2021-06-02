@@ -68,9 +68,7 @@ namespace deng {
         extern deng_ui32_t __max_frame_c;       
 
         /*********************************************************/
-        /*********************************************************/
         /********** __vk_ResourceManager class methods ***********/
-        /*********************************************************/
         /*********************************************************/
 
         __vk_ResourceManager::__vk_ResourceManager (
@@ -106,9 +104,7 @@ namespace deng {
 
 
 
-        /* 
-         * Create new framebuffers 
-         */
+        /// Create new framebuffers 
         void __vk_ResourceManager::__mkFrameBuffers (
             VkDevice &device, 
             VkRenderPass &renderpass, 
@@ -139,9 +135,7 @@ namespace deng {
         }
 
 
-        /* 
-         * Create color resources for multisampling 
-         */
+        /// Create color resources for multisampling 
         void __vk_ResourceManager::__mkColorResources (
             VkDevice &device,
             VkPhysicalDevice &gpu,

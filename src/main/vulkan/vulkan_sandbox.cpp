@@ -86,56 +86,29 @@ namespace Sandbox {
             break;
         }
 
-        m_tex_uuids.reserve(4);
         __loadTextures ({
             "textures/brick.tga",
-            "textures/viking_room.tga",
-            "textures/statue.tga"
+            "textures/statue.tga",
+            "textures/viking_room.tga"
         });
 
-        m_asset_uuids.reserve(4);
-        __loadAssets ({
-            "assets/viking.das"
-        });
+        __loadAssets ({ "assets/viking.das" });
 
         // Create some demo light sources
         __mkLightSources();
 
-        deng::vulkan::__vk_ConfigVars cfg;
-        cfg.background = dengMath::vec4<deng_vec_t>{ 0.f, 0.0f, 0.0, 1.f };
-        cfg.enable_validation_layers = true;
-        cfg.enable_vsync = true;
-        cfg.p_cam = &m_cam;
-        cfg.msaa_sample_count = VK_SAMPLE_COUNT_4_BIT;
+        m_assets.back().tex_uuid = m_textures[2].uuid;
 
-        m_p_rend = new deng::vulkan::__vk_Renderer (
-            m_win, cfg, m_reg);
+        m_rend.reset(new deng::Renderer(DENG_RENDERER_HINT_API_VULKAN | DENG_RENDERER_HINT_ENABLE_API_DEBUGGING | 
+            DENG_RENDERER_HINT_MIPMAP_ENABLE | DENG_RENDERER_HINT_MSAA_4,
+            dengMath::vec4<deng_vec_t>{ 0.0f, 0.0f, 0.0f, 1.0f }));
 
-        deng::RegType *p_reg_asset;
+        // Submit all assets and textures to renderer
+        for(size_t i = 0; i < m_assets.size(); i++)
+            m_rend->submitAsset(m_assets[i]);
 
-        // Set some lighting properties for viking room asset
-        p_reg_asset = m_reg.retrievePtr(m_asset_uuids[0], 
-            DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
-        p_reg_asset->asset.force_unmap = false;
-        p_reg_asset->asset.phong_exp = 100;
-        p_reg_asset->asset.tex_uuid = m_tex_uuids[1];
-
-        // Submit all loaded textures
-        m_p_rend->submitTextures(m_tex_uuids.data(), 
-            static_cast<deng_ui32_t>(m_tex_uuids.size()));
-
-        // Submit all loaded assets
-        m_p_rend->submitAssets(m_asset_uuids.data(), 
-            static_cast<deng_ui32_t>(m_asset_uuids.size()));
-
-        // Submit all created light sources
-        std::vector<deng_Id> lights = m_light_man.getUniversalLightSources();
-        m_p_rend->updateLightSources(lights.data(), lights.size());
-    }
-
-    
-    VulkanApp::~VulkanApp() {
-        delete m_p_rend;
+        for(size_t i = 0; i < m_textures.size(); i++)
+            m_rend->submitTexture(m_textures[i]);
     }
 
 
@@ -173,14 +146,12 @@ namespace Sandbox {
     /// Load test assets into the register
     void VulkanApp::__loadAssets(const std::vector<const char*> &files) {
         for(size_t i = 0; i < files.size(); i++) {
-            deng::RegType reg_elem = { { 0 } };
-            das_LoadAsset(&reg_elem.asset, DAS_ASSET_MODE_UNDEFINED,
+            das_Asset asset = {};
+            das_LoadAsset(&asset, DAS_ASSET_MODE_UNDEFINED,
                 {0.0f, 0.0f, 1.0f}, false, NULL, (char*) files[i]);
 
-            m_reg.push(reg_elem.asset.uuid, DENG_SUPPORTED_REG_TYPE_ASSET, 
-                reg_elem);
-
-            m_asset_uuids.push_back(reg_elem.asset.uuid);
+            // Push asset to the queue
+            m_assets.push_back(asset);
         }
     }
 
@@ -188,13 +159,10 @@ namespace Sandbox {
     /// Load test textures into the register 
     void VulkanApp::__loadTextures(const std::vector<const char*> &files) {
         for(size_t i = 0; i < files.size(); i++) {
-            deng::RegType reg_elem = {{0}};
-            das_LoadTexture(&reg_elem.tex, files[i]);
-
-            m_reg.push(reg_elem.tex.uuid, DENG_SUPPORTED_REG_TYPE_TEXTURE,
-                reg_elem);
-
-            m_tex_uuids.push_back(reg_elem.tex.uuid);
+            das_Texture tex = {};
+            das_LoadTexture(&tex, files[i]);
+            
+            m_textures.push_back(tex);
         }
     }
 
@@ -207,21 +175,12 @@ namespace Sandbox {
 
 
     void VulkanApp::setup() {
-        m_p_rend->setup();
+        m_rend->setup(m_cam, m_win);
     }
 
 
     void VulkanApp::run() {
-        while(deng_IsRunning()) {
-            __ext_md.mut.lock();
-            m_win.update();
-            __ext_md.mut.unlock();
-            m_cam.update(),
-            m_p_rend->makeFrame();
-            std::this_thread::sleep_for(std::chrono::microseconds(50));
-        }
-
-        m_p_rend->idle();
+        m_rend->run();
     }
 }
 

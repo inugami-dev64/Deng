@@ -74,13 +74,15 @@ namespace deng {
         __vk_RendererInitialiser::__vk_RendererInitialiser (
             deng::Window &win, 
             const __vk_ConfigVars &conf,
-            deng::__GlobalRegistry &reg
-        ) : m_reg(reg) {
+            deng::__GlobalRegistry &reg,
+            std::vector<deng_Id> &assets,
+            std::vector<deng_Id> &textures
+        ) : m_reg(reg), m_assets(assets), m_textures(textures) {
 
             // Create new VkInstace
             m_p_ic = new __vk_InstanceCreator(win, conf.enable_validation_layers);
             
-            // Create new swapchain 
+            // Create new swapchain creator
             m_p_scc = new __vk_SwapChainCreator(m_p_ic->getDev(),
                 win, m_p_ic->getGpu(), m_p_ic->getSu(), m_p_ic->getQFF(),
                 conf.msaa_sample_count);
@@ -101,7 +103,7 @@ namespace deng {
                 m_p_ic->getGpuLimits()); 
 
             // Create new vulkan descriptor creator
-            m_p_desc_c = new __vk_DescriptorCreator(m_p_ic->getDev(),
+            m_p_desc_c = new __vk_DescriptorSetsCreator(m_p_ic->getDev(),
                 m_p_scc->getExt(), m_p_scc->getRp(), m_reg, m_assets,
                 m_textures, conf.msaa_sample_count);
 
@@ -126,11 +128,11 @@ namespace deng {
 
 
         /// Renderer initialiser getter methods
-        __vk_InstanceCreator *__vk_RendererInitialiser::getIC() { return m_p_ic; }
-        __vk_SwapChainCreator *__vk_RendererInitialiser::getSCC() { return m_p_scc; } 
-        __vk_DescriptorCreator *__vk_RendererInitialiser::getDescC() { return m_p_desc_c; }
-        __vk_PipelineCreator *__vk_RendererInitialiser::getPipelineC() { return m_p_pl_c; }
-        __vk_ResourceManager *__vk_RendererInitialiser::getResMan() { return m_p_rm; }
-        __vk_DrawCaller *__vk_RendererInitialiser::getDrawCaller() { return m_p_dc; }
+        __vk_InstanceCreator &__vk_RendererInitialiser::getIC() { return *m_p_ic; }
+        __vk_SwapChainCreator &__vk_RendererInitialiser::getSCC() { return *m_p_scc; } 
+        __vk_DescriptorSetsCreator &__vk_RendererInitialiser::getDescC() { return *m_p_desc_c; }
+        __vk_PipelineCreator &__vk_RendererInitialiser::getPipelineC() { return *m_p_pl_c; }
+        __vk_ResourceManager &__vk_RendererInitialiser::getResMan() { return *m_p_rm; }
+        __vk_DrawCaller &__vk_RendererInitialiser::getDrawCaller() { return *m_p_dc; }
     }
 }

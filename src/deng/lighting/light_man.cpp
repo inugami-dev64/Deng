@@ -205,6 +205,7 @@ namespace deng {
     deng_ui32_t LightManager::getMaxLightSrcCount() { return __DENG_MAX_LIGHT_SRC_COUNT; }
 
 
+    /// Merge all light sources into one container
     std::vector<deng_Id> LightManager::getUniversalLightSources() {
         std::vector<deng_Id> light_srcs; 
         light_srcs.reserve(__DENG_MAX_LIGHT_SRC_COUNT);

@@ -69,11 +69,11 @@ namespace deng {
 
         /****************************************************/
         /****************************************************/
-        /********** __vk_DescriptorCreator class ************/
+        /********** __vk_DescriptorSetsCreator class ************/
         /****************************************************/
         /****************************************************/
 
-        __vk_DescriptorCreator::__vk_DescriptorCreator (
+        __vk_DescriptorSetsCreator::__vk_DescriptorSetsCreator (
             VkDevice device, 
             VkExtent2D extent, 
             VkRenderPass renderpass, 
@@ -90,11 +90,9 @@ namespace deng {
         }
 
         
-        /*
-         * Abstracted function for creating descriptor sets
-         * for assets between the asset bounds
-         */
-        void __vk_DescriptorCreator::mkDS (
+        /// Abstracted function for creating descriptor sets
+        /// for assets between the asset bounds
+        void __vk_DescriptorSetsCreator::mkDS (
             VkDevice device,
             __vk_BufferData &bd,
             deng_Id missing_tex_uuid,
@@ -104,13 +102,13 @@ namespace deng {
         ) {
             // Count new added assets by their type
             for(size_t i = asset_bounds.first; i < asset_bounds.second; i++) {
-                // Retrieve vulkan asset
-                RegType &reg_vk_asset = m_reg.retrieve (
-                    m_assets[i], DENG_SUPPORTED_REG_TYPE_VK_ASSET, NULL);
-
                 // Retrieve base asset
                 RegType &reg_asset = m_reg.retrieve(
-                    reg_vk_asset.vk_asset.base_id, DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
+                    m_assets[i], DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
+
+                // Retrieve vulkan asset
+                RegType &reg_vk_asset = m_reg.retrieve (
+                    reg_asset.asset.vk_id, DENG_SUPPORTED_REG_TYPE_VK_ASSET, NULL);
 
                 switch(reg_asset.asset.asset_mode) {
                 case DAS_ASSET_MODE_2D_UNMAPPED:
@@ -131,7 +129,7 @@ namespace deng {
 
                 default:
                     // Throw runtime error, because asset mode given was invalid
-                    RUN_ERR("__vk_DescriptorCreator::mkDS()", 
+                    RUN_ERR("__vk_DescriptorSetsCreator::mkDS()", 
                         "Invalid given asset mode");
                     break;
                 }
@@ -146,17 +144,11 @@ namespace deng {
 
             // Create new descriptor sets for all assets that are between given bounds
             for(size_t i = asset_bounds.first; i < asset_bounds.second; i++) {
-                RegType &reg_vk_asset = m_reg.retrieve (
-                    m_assets[i],
-                    DENG_SUPPORTED_REG_TYPE_VK_ASSET,
-                    NULL
-                );
+                RegType &reg_asset = m_reg.retrieve(m_assets[i],
+                    DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
 
-                RegType &reg_asset = m_reg.retrieve (
-                    reg_vk_asset.vk_asset.base_id,
-                    DENG_SUPPORTED_REG_TYPE_ASSET,
-                    NULL
-                );
+                RegType &reg_vk_asset = m_reg.retrieve(reg_asset.asset.vk_id,
+                    DENG_SUPPORTED_REG_TYPE_VK_ASSET, NULL);
 
                 // Create texture mapped descriptor sets
                 if(reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED ||
@@ -177,7 +169,7 @@ namespace deng {
 
         /// Check if the pool was reallocated and if it was reallocate 
         /// descriptor sets for each asset that had them destroyed
-        void __vk_DescriptorCreator::__reallocCheck (
+        void __vk_DescriptorSetsCreator::__reallocCheck (
             VkDevice device,
             __vk_BufferData &bd,
             deng_Id non_tex_id,
@@ -224,7 +216,7 @@ namespace deng {
 
 
         /// Find bufferinfos based on the asset mode used
-        std::vector<VkDescriptorBufferInfo> __vk_DescriptorCreator::__findBufferInfos(
+        std::vector<VkDescriptorBufferInfo> __vk_DescriptorSetsCreator::__findBufferInfos(
             das_Asset &asset,
             __vk_BufferData &bd,
             deng_ui64_t cur_frame,
@@ -266,7 +258,7 @@ namespace deng {
                 break;
 
             default:
-                RUN_ERR("__vk_DescriptorCreator::__findBufferInfo()", 
+                RUN_ERR("__vk_DescriptorSetsCreator::__findBufferInfo()", 
                     "Invalid asset mode for asset: " + std::string(asset.uuid));
                 break;
             }
@@ -276,7 +268,7 @@ namespace deng {
 
 
         /// Create write descriptors for texture mapped assets
-        std::vector<VkWriteDescriptorSet> __vk_DescriptorCreator::__mkMappedWriteDescInfos(
+        std::vector<VkWriteDescriptorSet> __vk_DescriptorSetsCreator::__mkMappedWriteDescInfos(
             das_AssetMode asset_mode, 
             std::vector<VkDescriptorBufferInfo> &buffer_info, 
             VkDescriptorSet &desc_set,
@@ -348,7 +340,7 @@ namespace deng {
 
 
         /// Create write descriptors for unmapped assets
-        std::vector<VkWriteDescriptorSet> __vk_DescriptorCreator::__mkUnmappedWriteDescInfos(
+        std::vector<VkWriteDescriptorSet> __vk_DescriptorSetsCreator::__mkUnmappedWriteDescInfos(
             das_AssetMode asset_mode,
             std::vector<VkDescriptorBufferInfo> &buffer_info,
             VkDescriptorSet &desc_set
@@ -392,7 +384,7 @@ namespace deng {
         /* 
          * Create unmapped descriptor sets for a single asset
          */
-        void __vk_DescriptorCreator::__mkUnmappedDS (
+        void __vk_DescriptorSetsCreator::__mkUnmappedDS (
             VkDevice device, 
             __vk_Asset &asset,
             __vk_BufferData &bd,
@@ -446,7 +438,7 @@ namespace deng {
         
 
         /// Create texture mapped descriptor sets for single asset
-        void __vk_DescriptorCreator::__mkTexMappedDS (
+        void __vk_DescriptorSetsCreator::__mkTexMappedDS (
             VkDevice device, 
             __vk_Asset &asset,
             __vk_BufferData &bd,
@@ -483,6 +475,7 @@ namespace deng {
                     DENG_SUPPORTED_REG_TYPE_VK_TEXTURE, NULL);
             }
 
+
             // Set up image info structure for binding texture sampler
             VkDescriptorImageInfo desc_imageinfo{};
             desc_imageinfo.sampler = p_reg_vk_tex->vk_tex.sampler;
@@ -495,6 +488,7 @@ namespace deng {
 
             // Allocate memory for descriptor set instances
             asset.desc_c = __max_frame_c;
+            LOG("Desc set count: " + std::to_string(asset.desc_c));
             asset.desc_sets = (VkDescriptorSet*) calloc(asset.desc_c,
                 sizeof(VkDescriptorSet));
 

@@ -98,7 +98,7 @@ namespace deng {
     namespace vulkan {
 
         /// Abstract class for creating descriptor descriptor sets and pipelines
-        class __vk_DescriptorCreator : public __vk_DescriptorPoolCreator, 
+        class __vk_DescriptorSetsCreator : public __vk_DescriptorPoolCreator, 
                                        public __vk_DescriptorSetLayoutCreator {   
         private:
             std::vector<deng_Id> &m_assets;
@@ -160,7 +160,7 @@ namespace deng {
             void __restoreDestroyedDescriptorSets();
 
         public:
-            __vk_DescriptorCreator (
+            __vk_DescriptorSetsCreator (
                 VkDevice device,
                 VkExtent2D ext,
                 VkRenderPass renderpass, 

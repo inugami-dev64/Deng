@@ -76,9 +76,58 @@ namespace deng {
                 reg, m_buffer_data),
             m_assets(assets), m_gpu_limits(gpu_limits), m_reg(reg) {}
 
+
+        /// Create staging buffers for all asset data between bounds
+        void __vk_BufferManager::stageAssets (
+            VkDevice device, 
+            VkPhysicalDevice gpu, 
+            VkCommandPool cmd_pool,
+            VkQueue g_queue,
+            const dengMath::vec2<deng_ui32_t> &bounds,
+            VkDeviceSize cpy_offset
+        ) {
+            // Create and allocate memory for staging buffer
+            VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer(device, gpu, m_buffer_data.main_buffer_cap, 
+                VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_buffer_data.staging_buffer);
+
+            __vk_BufferCreator::allocateMemory(device, gpu, mem_req.size,
+                m_buffer_data.staging_buffer_memory,  mem_req.memoryTypeBits, 
+                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+
+            // Bind staging buffer with its memory
+            vkBindBufferMemory(device, m_buffer_data.staging_buffer, m_buffer_data.staging_buffer_memory, 0);
+            
+            // For each given asset populate staging buffer with asset data
+            for(size_t i = bounds.first; i < bounds.second; i++) {
+                // Retrieve base and Vulkan specific asset instances
+                RegType &reg_asset = m_reg.retrieve(m_assets[i], DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
+                RegType &reg_vk_asset = m_reg.retrieve(reg_asset.asset.vk_id, DENG_SUPPORTED_REG_TYPE_VK_ASSET, NULL);
+                
+                // Adjust offsets to staging buffer
+                reg_asset.asset.offsets.pos_offset -= cpy_offset;
+                reg_asset.asset.offsets.tex_offset -= cpy_offset;
+                reg_asset.asset.offsets.nor_offset -= cpy_offset;
+                reg_asset.asset.offsets.ind_offset -= cpy_offset;
+
+                // Populate staging buffer memory with vertices data
+                __AssetCpy asset_cpy = {};
+                asset_cpy.cpyToBuffer(device, reg_asset.asset, m_buffer_data.staging_buffer_memory);
+
+                // Readjust offsets to main buffer
+                reg_asset.asset.offsets.pos_offset += cpy_offset;
+                reg_asset.asset.offsets.tex_offset += cpy_offset;
+                reg_asset.asset.offsets.nor_offset += cpy_offset;
+                reg_asset.asset.offsets.ind_offset += cpy_offset;
+                
+                // Check if new uniform data memory area needs to be mapped
+                if(!reg_vk_asset.vk_asset.is_desc)
+                    mapUniformBufferArea(device, gpu, cmd_pool, g_queue, reg_vk_asset.vk_asset);
+            }
+        }
         
         
-        void __vk_BufferManager::__findAssetOffsets(das_Asset &asset) {
+        /// Find the offset of the current asset
+        void __vk_BufferManager::findAssetOffsets(das_Asset &asset) {
             // In each case increment the buffer size and find correct and vertices and 
             // indices' offsets
             switch (asset.asset_mode) {
@@ -159,14 +208,8 @@ namespace deng {
             // For each asset in bounds check the size and find the largest one
             for(size_t i = bounds.first; i < bounds.second; i++) {
                 // Retrieve assets from the registry
-                RegType &reg_vk_asset = m_reg.retrieve (
-                    m_assets[i], 
-                    DENG_SUPPORTED_REG_TYPE_VK_ASSET,
-                    NULL
-                );
-
                 RegType &reg_asset = m_reg.retrieve (
-                    reg_vk_asset.vk_asset.base_id,
+                    m_assets[i],
                     DENG_SUPPORTED_REG_TYPE_ASSET,
                     NULL
                 );
@@ -214,60 +257,27 @@ namespace deng {
             VkCommandPool cmd_pool, 
             VkQueue g_queue
         ) {
-            size_t i;
             m_buffer_data.main_buffer_size = 0;
             VkMemoryRequirements mem_req;
 
             // Find the total required buffer size and set correct offsets
-            for(i = 0; i < m_assets.size(); i++) {
-                RegType &reg_vk_asset = m_reg.retrieve(m_assets[i], 
-                    DENG_SUPPORTED_REG_TYPE_VK_ASSET, NULL);
-
-                RegType &reg_asset = m_reg.retrieve(reg_vk_asset.vk_asset.base_id, 
+            for(size_t i = 0; i < m_assets.size(); i++) {
+                RegType &reg_asset = m_reg.retrieve(m_assets[i], 
                     DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
                 
                 // Find buffer offsets for the asset
-                __findAssetOffsets(reg_asset.asset);
+                findAssetOffsets(reg_asset.asset);
             }
 
-            // Round the buffer size to the nearest base2 exponant
-            m_buffer_data.main_buffer_size = cm_ToPow2I64(m_buffer_data.main_buffer_size);
-
-            // Create and allocate memory for staging buffer
-            mem_req = __vk_BufferCreator::makeBuffer(device, gpu, m_buffer_data.main_buffer_size, 
-                VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_buffer_data.staging_buffer);
-
-            __vk_BufferCreator::allocateMemory(device, gpu, mem_req.size,
-                m_buffer_data.staging_buffer_memory,  mem_req.memoryTypeBits, 
-                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-
-            // Bind staging buffer with its memory
-            vkBindBufferMemory(device, m_buffer_data.staging_buffer, m_buffer_data.staging_buffer_memory, 0);
+            // Set the capacity as scaled by factor 1.5
+            m_buffer_data.main_buffer_cap = cm_ToPow2I64(static_cast<VkDeviceSize>(
+                static_cast<deng_f32_t>(m_buffer_data.main_buffer_size) * 1.5f));
             
-            // For each given asset populate staging buffer with asset data
-            for(i = 0; i < m_assets.size(); i++) {
-                RegType &reg_vk_asset = m_reg.retrieve (
-                    m_assets[i], 
-                    DENG_SUPPORTED_REG_TYPE_VK_ASSET,
-                    NULL
-                );
-
-                RegType &reg_asset = m_reg.retrieve (
-                    reg_vk_asset.vk_asset.base_id,
-                    DENG_SUPPORTED_REG_TYPE_ASSET,
-                    NULL
-                );
-
-                // Populate staging buffer memory with vertices data
-                __AssetCpy asset_cpy = {};
-                asset_cpy.cpyToBuffer(device, reg_asset.asset, m_buffer_data.staging_buffer_memory);
-                
-                // Copy asset uniform data to ubo buffer
-                cpyAssetUniformToBuffer(device, gpu, cmd_pool, g_queue, reg_vk_asset.vk_asset);
-            }
+            LOG("Main buffer size: " + std::to_string(m_buffer_data.main_buffer_size));
+            stageAssets(device, gpu, cmd_pool, g_queue, { 0, static_cast<deng_ui32_t>(m_assets.size()) }, 0);
 
             // Create new main buffer instance
-            mem_req = __vk_BufferCreator::makeBuffer(device, gpu, m_buffer_data.main_buffer_size, 
+            mem_req = __vk_BufferCreator::makeBuffer(device, gpu, m_buffer_data.main_buffer_cap, 
                 VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | 
                 VK_BUFFER_USAGE_TRANSFER_DST_BIT, m_buffer_data.main_buffer);
 
@@ -282,9 +292,7 @@ namespace deng {
             // Copy data from staging buffer to main buffer
             __vk_BufferCreator::cpyBufferToBuffer(device, cmd_pool, g_queue, 
                 m_buffer_data.staging_buffer, m_buffer_data.main_buffer, 
-                m_buffer_data.main_buffer_size, 0, 0);
-
-            LOG("Buffer size " + std::to_string(m_buffer_data.main_buffer_size));
+                m_buffer_data.main_buffer_cap, 0, 0);
 
             // Perform staging buffer cleanup
             vkDestroyBuffer(device, m_buffer_data.staging_buffer, NULL);
@@ -322,14 +330,8 @@ namespace deng {
             VkDeviceSize size = 0;
             for(size_t i = asset_bounds.first; i < asset_bounds.second; i++) {
                 // Retrieve asset from the registry
-                RegType &reg_vk_asset = m_reg.retrieve (
-                    m_assets[i],
-                    DENG_SUPPORTED_REG_TYPE_VK_ASSET,
-                    NULL
-                );
-
                 RegType &reg_asset = m_reg.retrieve (
-                    reg_vk_asset.vk_asset.base_id,
+                    m_assets[i],
                     DENG_SUPPORTED_REG_TYPE_ASSET,
                     NULL
                 );

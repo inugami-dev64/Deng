@@ -113,11 +113,17 @@ namespace deng {
                 deng::__GlobalRegistry &reg
             );
 
-
-            void __findAssetOffsets(das_Asset &asset);
             deng_ui64_t __findMaxAssetSize(const dengMath::vec2<deng_ui32_t> &bounds);
 
         public:
+            /// Create staging buffers for all asset data between bounds
+            void stageAssets(VkDevice device, VkPhysicalDevice gpu, VkCommandPool cmd_pool, VkQueue g_queue, 
+                const dengMath::vec2<deng_ui32_t> &bounds, VkDeviceSize cpy_offset);
+
+
+            /// Find the offset of the current asset
+            void findAssetOffsets(das_Asset &asset);
+
 
             /// Create main asset buffer and copy all assets data to it
             void mkAssetBuffers(VkDevice device, VkPhysicalDevice gpu, 

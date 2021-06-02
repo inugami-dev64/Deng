@@ -93,9 +93,7 @@
 namespace deng {
     namespace vulkan {
 
-        /* 
-         * Class for making drawcalls and setting up proper synchronisation 
-         */
+        /// Class for making drawcalls and setting up proper synchronisation 
         class __vk_DrawCaller {
         private:
             std::vector<deng_Id> &m_assets;
@@ -120,9 +118,7 @@ namespace deng {
             );
 
             
-            /*
-             * Bind asset pipeline and return its pipeline layout
-             */
+            /// Bind asset pipeline and return its pipeline layout
             VkPipelineLayout *__bindPipeline(das_Asset &asset, VkCommandBuffer cmd_buf);
 
         public:

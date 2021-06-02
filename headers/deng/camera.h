@@ -119,78 +119,56 @@ namespace deng {
         );
 
 
-        /*
-         * Set the camera key bindings
-         * NOTE: These bindings are the ones that control camera movement and rotation actions
-         */
+        /// Set the camera key bindings
+        /// NOTE: These bindings are the ones that control camera movement and rotation actions
         void setBindings(const Camera3DBindings &bindings);
 
 
-        /*
-         * Move camera's origin in world space by delta_mov
-         * NOTE: This method only effects editor camera and third person perspective camera
-         * systems. If camera type is first person perspective then runtime exception is thrown
-         */
+        /// Move camera's origin in world space by delta_mov
+        /// NOTE: This method only effects editor camera and third person perspective camera
+        /// systems. If camera type is first person perspective then runtime exception is thrown
         void moveOrigin(const dengMath::vec3<deng_vec_t> &delta_mov);
 
 
-        /*
-         * Move camera's position by delta_mov in camera's coordinate system
-         */
+        /// Move camera's position by delta_mov in camera's coordinate system
         void moveCameraPOVC (
             const dengMath::vec3<deng_vec_t> &delta_mov,
             deng_bool_t ignore_pitch
         );
 
 
-        /*
-         * Move camera's position in world coordinate system
-         */
+        /// Move camera's position in world coordinate system
         void moveCameraPOVW (
             const dengMath::vec3<deng_vec_t> &delta_mov,
             deng_bool_t ignore_pitch
         );
 
 
-        /*
-         * Rotate camera's position by rot in camera's coordinate system
-         */
+        /// Rotate camera's position by rot in camera's coordinate system
         void rotCameraPOVC(const dengMath::vec2<deng_vec_t> &rot);
 
 
-        /*
-         * Rotate camera's position by rot in world's coordinate system
-         */
+        /// Rotate camera's position by rot in world's coordinate system
         void rotCameraPOVW(const dengMath::vec2<deng_vec_t> &rot);
 
 
-        /*
-         * Main camera system update method
-         */
+        /// Main camera system update method
         void update();
 
         
-        /*
-         * Get the camera type of the current camera instance
-         */
+        /// Get the camera type of the current camera instance
         deng_CameraType getType();
 
 
-        /*
-         * Get the dot product of camera's view and projection matrix
-         */
+        /// Get the dot product of camera's view and projection matrix
         dengMath::mat4<deng_vec_t> getCameraMat();
 
 
-        /*
-         * Get the bare camera view matrix
-         */
+        /// Get the bare camera view matrix
         dengMath::mat4<deng_vec_t> getViewMat();
 
         
-        /*
-         * Returns true if camera has perspective view
-         */
+        /// Returns true if camera has perspective view
         deng_bool_t isPerspective();
     };
 }

@@ -101,6 +101,7 @@ namespace dengMath {
         /******************************/
         /***** Operator overloads *****/
         /******************************/
+
         vec3<T> operator+(const vec3<T> &vec) const;
         vec3<T> operator+(const T &c) const;
         vec3<T> operator-(const vec3<T> &vec) const;
@@ -117,43 +118,31 @@ namespace dengMath {
         deng_bool_t operator==(const vec3<T> &vec) const;
 
 
-        /*
-         * C vertices structure assignment operators
-         */
+        /// C vertices structure assignment operators
         void operator=(const das_ObjPosData &vert);
         void operator=(const das_ObjNormalData &nor);
         void operator=(const das_ObjPosData2D &vert);
 
 
-        /*
-         * Smaller vector struct assignment operators
-         */
+        /// Smaller vector struct assignment operators
         void operator=(const vec2<T> &vec);
 
 
-        /*
-         * C vertices structure comparisson operators
-         */
+        /// C vertices structure comparisson operators
         deng_bool_t operator==(const das_ObjPosData &vert) const;
         deng_bool_t operator==(const das_ObjNormalData &nor) const;
         deng_bool_t operator==(const das_ObjPosData2D &vert) const;
 
 
-        /*
-         * Get the current length of the vector
-         */
+        /// Get the current length of the vector
         T length() const;
 
 
-        /*
-         * Normalise the vector to length 1
-         */
+        /// Normalise the vector to length 1
         void norm();
 
 
-        /*
-         * Find the crossproduct of two vectors
-         */
+        /// Find the crossproduct of two vectors
         template<typename CT>
         static vec3<CT> cross(const vec3<CT> &vec1, const vec3<CT> &vec2);
     };

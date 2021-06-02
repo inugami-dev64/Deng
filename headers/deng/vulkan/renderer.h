@@ -60,10 +60,10 @@
  */ 
 
 
-#ifndef __RENDERER_H
-#define __RENDERER_H
+#ifndef __VK_RENDERER_H
+#define __VK_RENDERER_H
 
-#ifdef __RENDERER_CPP
+#ifdef __VK_RENDERER_CPP
     #include <vector>
     #include <mutex>
     #include <array>
@@ -80,42 +80,42 @@
     #include <utils/timer.h>
     #include <deng/camera.h>
 
-    #include <deng/vulkan/qm.h>
-    #include <deng/vulkan/sd.h>
-    #include <deng/vulkan/resources.h>
-
     #include <deng/lighting/light_srcs.h>
     #include <deng/registry/registry.h>
     #include <utils/font.h>
-
-    #include <deng/vulkan/rend_infos.h>
-    #include <deng/vulkan/ic.h>
-    #include <deng/vulkan/scc.h>
-    #include <deng/vulkan/pipeline_data.h>
-    #include <deng/vulkan/pipelines.h>
-    #include <deng/vulkan/desc_set_layout.h>
-    #include <deng/vulkan/desc_pool.h>
-    #include <deng/vulkan/desc_sets.h>
-    #include <deng/vulkan/dc.h>
-    #include <deng/vulkan/tm.h>
-    #include <deng/vulkan/ubm.h>
-    #include <deng/vulkan/bm.h>
-    #include <deng/vulkan/rm.h>
-    
-    #include <deng/vulkan/runtime_updater.h>
-    #include <deng/vulkan/rend_init.h>
 #endif
+
+
+/// Include all vulkan headers
+#include <deng/vulkan/qm.h>
+#include <deng/vulkan/sd.h>
+#include <deng/vulkan/resources.h>
+#include <deng/vulkan/rend_infos.h>
+#include <deng/vulkan/ic.h>
+#include <deng/vulkan/scc.h>
+#include <deng/vulkan/pipeline_data.h>
+#include <deng/vulkan/pipelines.h>
+#include <deng/vulkan/desc_set_layout.h>
+#include <deng/vulkan/desc_pool.h>
+#include <deng/vulkan/desc_sets.h>
+#include <deng/vulkan/dc.h>
+#include <deng/vulkan/tm.h>
+#include <deng/vulkan/ubm.h>
+#include <deng/vulkan/bm.h>
+#include <deng/vulkan/rm.h>
+
+#include <deng/vulkan/runtime_updater.h>
+#include <deng/vulkan/rend_init.h>
 
 
 namespace deng {
     namespace vulkan {
 
-        /// Main renderer class for vulkan API
+        /// Main renderer class for Vulkan API
         class __vk_Renderer : private __vk_RendererInitialiser,
-                              private __vk_RuntimeUpdater 
+                              public __vk_RuntimeUpdater 
         {
         private:
-            deng::Window &m_win;
             __vk_ConfigVars m_config;
             deng_bool_t m_is_init = false;
 
@@ -143,27 +143,22 @@ namespace deng {
             void __makeFrame();
 
         public:
-            __vk_Renderer (
-                deng::Window &win,
-                const __vk_ConfigVars &cnf,
-                deng::__GlobalRegistry &reg
-            );
+            __vk_Renderer(__vk_ConfigVars &cnf, deng::__GlobalRegistry &reg,
+                std::vector<deng_Id> &assets, std::vector<deng_Id> &textures);
 
 
             ~__vk_Renderer();
 
-            /// Add new assets to renderer asset list.
-            /// No descriptor sets are allocated since that
-            /// will be done when renderer is being fully initialised.
-            void submitAssets(deng_Id *asset_ids, deng_ui32_t asset_c);
+            /// Prepare assets for rendering
+            void prepareAsset(deng_Id id);
 
 
-            /// Add new textures to renderer texture list.
-            void submitTextures(deng_Id *tex_ids, deng_ui32_t tex_c);
+            /// Prepare textures for binding them with assets
+            void prepareTexture(deng_Id id);
 
             
-            /// Add new light sources to renderer list
-            void updateLightSources(deng_Id *light_ids, deng_ui32_t src_c);
+            /// Update all currently available light sources
+            void setLighting(std::array<deng_Id, __DENG_MAX_LIGHT_SRC_COUNT> &light_srcs);
 
             
             /// Submit new draw call

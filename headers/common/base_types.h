@@ -136,7 +136,7 @@ typedef deng_ui16_t deng_RendererHintBits;
 #define DENG_RENDERER_HINT_ENABLE_VSYNC                     0x0004u
 #define DENG_RENDERER_HINT_SHOW_CMD_FPS_COUNTER             0x0008u
 #define DENG_RENDERER_HINT_SHOW_GUI_FPS_COUNTER             0x0010u
-#define DENG_RENDERER_HINT_ENABLE_VALIDATION_LAYERS         0x0020u
+#define DENG_RENDERER_HINT_ENABLE_API_DEBUGGING             0x0020u
 #define DENG_RENDERER_HINT_MSAA_MAX_HARDWARE_SUPPORTED      0x0040u
 #define DENG_RENDERER_HINT_MSAA_64                          0x0080u
 #define DENG_RENDERER_HINT_MSAA_32                          0x0100u

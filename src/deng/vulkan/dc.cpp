@@ -282,24 +282,16 @@ namespace deng {
                 renderpass_begininfo.pClearValues = clear_values.data();
                 
                 // Start a new render pass
-                vkCmdBeginRenderPass (
-                    m_cmd_bufs[i], 
-                    &renderpass_begininfo, 
-                    VK_SUBPASS_CONTENTS_INLINE
-                );
+                vkCmdBeginRenderPass(m_cmd_bufs[i], &renderpass_begininfo, 
+                    VK_SUBPASS_CONTENTS_INLINE);
+
                     // Iterate through every asset, bind resources and issue an index draw to commandbuffer
                     for(j = 0; j < m_assets.size(); j++) {
-                        RegType reg_vk_asset = m_reg.retrieve (
-                            m_assets[j], 
-                            DENG_SUPPORTED_REG_TYPE_VK_ASSET,
-                            NULL
-                        );
+                        RegType reg_asset = m_reg.retrieve(m_assets[j], 
+                            DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
 
-                        RegType reg_asset = m_reg.retrieve (
-                            reg_vk_asset.vk_asset.base_id,
-                            DENG_SUPPORTED_REG_TYPE_ASSET,
-                            NULL
-                        );
+                        RegType reg_vk_asset = m_reg.retrieve(reg_asset.asset.vk_id,
+                            DENG_SUPPORTED_REG_TYPE_VK_ASSET, NULL);
 
                         if(reg_asset.asset.is_shown) {
                             __bindVertexResourceBuffers(reg_asset.asset, m_cmd_bufs[i], bd);

@@ -83,41 +83,8 @@
 namespace deng {
     namespace vulkan {
 
-        /*
-         * Struct for assets in vulkan renderer
-         */
-        struct __vk_Asset {
-            deng_Id base_id;
-            deng_Id tex_uuid;
-            deng_Id uuid;
-
-            // Boolean flag for checking if descriptor sets have been created
-            deng_bool_t is_desc;
-            VkDescriptorSet *desc_sets;
-            deng_ui32_t desc_c;
-        };
-
-        
-        /* 
-         * Struct for texture images
-         * This struct contains textures and their Vulkan image buffers, views, samplers 
-         * and memory objects. Additionally each texture image instance in DENG contains 
-         * data to uniform color data in case texture mapping is disabled for certain assets
-         */
-        struct __vk_Texture {
-            deng_Id base_id;
-            deng_Id uuid;
-            deng_bool_t is_buffered;
-            VkImage image;
-            VkImageView image_view;
-            VkSampler sampler;
-        };
-        
-
-        /*
-         * Store information about graphics device
-         * This struct __vk_is used to store information about graphics device properties
-         */
+        /// Store information about graphics device
+        /// This struct __vk_is used to store information about graphics device properties
         struct __vk_HwInfo {
             deng_ui32_t driver_version;
             deng_ui32_t vk_api_version;
@@ -125,26 +92,20 @@ namespace deng {
         };
 
 
-        /*
-         * Get information about graphics hardware
-         * This struct __vk_contains methods to get information about graphics hardware
-         */
+        /// Get information about graphics hardware
+        /// This struct __vk_contains methods to get information about graphics hardware
         struct __vk_HardwareSpecs {
-            /*
-             * Check if requested extension is supported
-             * This method gets information about supported Vulkan extensions and checks  
-             * if requested extension is one of them
-             */
+            /// Check if requested extension is supported
+            /// This method gets information about supported Vulkan extensions and checks  
+            /// if requested extension is one of them
             static deng_bool_t getExtensionSupport (
                 const VkPhysicalDevice &gpu, 
                 char *ext_name
             );
 
 
-            /*
-             * Find device memory type
-             * This method finds appropriate memory type by VkMemoryPropertyFlags
-             */
+            /// Find device memory type
+            /// This method finds appropriate memory type by VkMemoryPropertyFlags
             static deng_ui32_t getMemoryType (
                 const VkPhysicalDevice &gpu, 
                 deng_ui32_t type_filter, 
@@ -152,29 +113,22 @@ namespace deng {
             );
 
 
-            /*
-             * Find device score
-             * Rate logical device based on its capabilities
-             */
+            /// Find device score Rate logical device based on its capabilities
             static deng_ui32_t getDeviceScore (
                 const VkPhysicalDevice &device, 
                 std::vector<const char*> &exts
             );
 
 
-            /*
-             * Find information about graphics device
-             * This method gets information about graphics device name, Vulkan api
-             * version and driver version
-             */
+            /// Find information about graphics device
+            /// This method gets information about graphics device name, Vulkan api
+            /// version and driver version
             static __vk_HwInfo getGpuInfo(const VkPhysicalDevice &gpu);
         };
 
 
-        /* 
-         * Struct for storing buffers This struct __vk_contains all buffers and their memory objects for
-         * vulkan renderer
-         */
+        /// Struct for storing buffers This struct __vk_contains all buffers and their memory objects for
+        /// vulkan renderer
         struct __vk_BufferData {
             VkBuffer staging_buffer;
             VkDeviceMemory staging_buffer_memory;
@@ -190,6 +144,7 @@ namespace deng {
             VkBuffer main_buffer;
             VkDeviceMemory main_buffer_memory;
             VkDeviceSize main_buffer_size = 0;
+            VkDeviceSize main_buffer_cap = 0;
 
             // Memory alignment for uniform data looks like that 
             // where n is swapchain image count and m is the amount of texture images
@@ -204,15 +159,11 @@ namespace deng {
         };
 
         
-        /* 
-         * Contains method for memory allocation 
-         * This struct __vk_is inherited to ImageCreator and BufferCreator structs
-         */
+        /// Contains method for memory allocation 
+        /// This struct __vk_is inherited to ImageCreator and BufferCreator structs
         struct __vk_MemoryAllocator {
-            /*
-             * Allocate graphics memory using Vulkan
-             * This method is used to allocate memory for VkBuffer and VkImage objects
-             */
+            /// Allocate graphics memory using Vulkan
+            /// This method is used to allocate memory for VkBuffer and VkImage objects
             static void allocateMemory (
                 const VkDevice &device, 
                 const VkPhysicalDevice &gpu,  
@@ -224,14 +175,10 @@ namespace deng {
         };
 
 
-        /* 
-         * Container for all VkImage handling methods
-         */
+        /// Container for all VkImage handling methods
         struct __vk_ImageCreator : __vk_MemoryAllocator {
-            /*
-             * Create new VkImageCreateInfo instance
-             * This method is used to simplify VkImageViewCreateInfo creation
-             */
+            /// Create new VkImageCreateInfo instance
+            /// This method is used to simplify VkImageViewCreateInfo creation
             static VkImageViewCreateInfo getImageViewInfo (
                 const VkImage &image, 
                 VkFormat format, 
@@ -240,11 +187,9 @@ namespace deng {
             );
 
                 
-            /*
-             * Create new VkImage instance
-             * This method creates new VkImage instance and returns 
-             * memory allocation requirements for this image
-             */
+            /// Create new VkImage instance
+            /// This method creates new VkImage instance and returns 
+            /// memory allocation requirements for this image
             static VkMemoryRequirements makeImage (
                 const VkDevice &device, 
                 const VkPhysicalDevice &gpu, 
@@ -258,10 +203,8 @@ namespace deng {
                 VkSampleCountFlagBits sample_c
             );
 
-            /*
-             * Transition VkImage from one layout to another
-             * This method uses VkImageMemoryBarrier to transition image layout to new_layout
-             */
+            /// Transition VkImage from one layout to another
+            /// This method uses VkImageMemoryBarrier to transition image layout to new_layout
             static void transitionImageLayout (
                 const VkDevice &device, 
                 const VkImage &image, 
@@ -273,10 +216,8 @@ namespace deng {
                 deng_ui32_t mip_levels
             ); 
 
-            /*
-             * Copy VkBuffer to VkImage instance
-             * This method copies data from src_buffer to dst_image
-             */
+            /// Copy VkBuffer to VkImage instance
+            /// This method copies data from src_buffer to dst_image
             static void cpyBufferToImage (
                 const VkDevice &device, 
                 const VkCommandPool &commandpool, 
@@ -289,15 +230,11 @@ namespace deng {
         };
 
         
-        /* 
-         * Container for buffer handling methods
-         */
+        /// Container for buffer handling methods
         struct __vk_BufferCreator : __vk_MemoryAllocator {
-            /*
-             * Create new VkBuffer instance
-             * This method creates new VkImage instance and returns 
-             * memory allocation requirements for this image
-             */
+            /// Create new VkBuffer instance
+            /// This method creates new VkImage instance and returns 
+            /// memory allocation requirements for this image
             static VkMemoryRequirements makeBuffer (
                 const VkDevice &device, 
                 const VkPhysicalDevice &gpu, 
@@ -306,10 +243,8 @@ namespace deng {
                 VkBuffer &buffer
             );
             
-            /*
-             * Copy data to graphics memory
-             * This method copies size bytes of data from src_data to buf_mem using vkMapMemory
-             */
+            /// Copy data to graphics memory
+            /// This method copies size bytes of data from src_data to buf_mem using vkMapMemory
             static void cpyToBufferMem (
                 const VkDevice &device, 
                 VkDeviceSize size, 
@@ -319,10 +254,8 @@ namespace deng {
             );
 
 
-            /*
-             * Copy buffer to other buffer
-             * This method copies data from src_buffer to dst_buffer
-             */
+            /// Copy buffer to other buffer
+            /// This method copies data from src_buffer to dst_buffer
             static void cpyBufferToBuffer (
                 const VkDevice &device, 
                 const VkCommandPool &commandpool, 
@@ -336,25 +269,19 @@ namespace deng {
         };
 
 
-        /* 
-         * Container for single use command buffers' allocation and deallocation
-         */
+        /// Container for single use command buffers' allocation and deallocation
         struct __vk_CommandBufferRecorder {
-            /*
-             * Start recording commandbuffer
-             * This method allocates and begins recording commandbuffers meant for single use
-             */
+            /// Start recording commandbuffer
+            /// This method allocates and begins recording commandbuffers meant for single use
             static void beginCommandBufferSingleCommand (
                 VkDevice device, 
                 VkCommandPool commandpool, 
                 VkCommandBuffer *p_commandbuffer
             );
 
-            /* 
-             * Finish recording commandbuffer
-             * This method end commandbuffer recording, submits it into graphics queue
-             * and frees commandbuffers
-             */
+            /// Finish recording commandbuffer
+            /// This method end commandbuffer recording, submits it into graphics queue
+            /// and frees commandbuffers
             static void endCommandBufferSingleCommand (
                 VkDevice device, 
                 VkQueue graphics_queue, 

@@ -120,22 +120,16 @@ namespace dengMath {
         deng_bool_t operator==(const mat2<T> &mat);
 
 
-        /* 
-         * Find the determinant of current matrix instance
-         */
+        /// Find the determinant of current matrix instance
         template<typename DT>
         static DT det(const mat2<DT> &mat);
 
         
-        /* 
-         * Find the inverse of the current matrix 
-         */
+        /// Find the inverse of the current matrix 
         mat2<T> inv(); 
 
 
-        /*
-         * Transpose the current matrix
-         */
+        /// Transpose the current matrix
         mat2<T> transpose();
     };
 }

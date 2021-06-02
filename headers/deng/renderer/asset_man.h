@@ -57,132 +57,97 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: asset_man - Asset manager parent for Renderer class
+ *  Purpose: Provide interface for interacting with assets and textures
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef HASHMAP_H
-#define HASHMAP_H
+#ifndef __ASSET_MAN_H
+#define __ASSET_MAN_H
 
-#ifdef __HASHMAP_C
+#ifdef __ASSET_MAN_CPP
     #include <stdlib.h>
-    #include <string.h>
-    #include <stdio.h>
-    #include <limits.h>
+    #include <vector>
+    #include <array>
+    #include <mutex>
+    #include <memory>
+    #include <queue>
+    #include <vulkan/vulkan.h>
 
     #include <common/base_types.h>
-    #include <common/cerr_def.h>
-    #include <common/common.h>
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct __HashData {
-    void *data;
-    void *key;
-    size_t key_len;
-} __HashData;
-
-typedef struct __Hashmap {
-    __HashData *map_data;
-    size_t *indices;
-    size_t map_size;
-    size_t used_size;
-} Hashmap;
-
-#ifdef __HASHMAP
-    /* 
-     * Hashing function for hashmapping that returns index
-     * This function is based on mostly Jenkins one at time hashing algorihm
-     * Steps to finding index are following:
-     * 1. Find crc32_key from key data
-     * 2. Perform Jenkins one at time bitwise operations
-     * 3. Perform three other Jenkins operations
-     * 4. Multiply bit-shifted out_key with constant 0x9E3779B1
-     * 5. Return hash % n
-     */
-    static size_t __hashfunc (
-        void *key, 
-        size_t n_key, 
-        size_t map_size
-    ); 
-
-
-    /* 
-     * Reallocate more memory for buckets in hashmap 
-     */
-    static void __reallocateHashmap(Hashmap *p_hm);
-
+    #include <common/err_def.h>
+    #include <common/hashmap.h>
+    #include <data/assets.h>
+    #include <math/deng_math.h>
     
-    /*
-     * Key comparisson method
-     * Returns 0 if keys are equal, 1 if key1 is longer than key2 and -1 if 
-     * key2 is longer than key1 then returns 1 and 2 if keys are the same length
-     * but their memory areas do not match
-     */
-    static int __keycmp(void *key1, size_t n1, void *key2, size_t n2);
+    #include <deng/window.h>
+    #include <utils/timer.h>
+    #include <deng/camera.h>
+    #include <deng/registry/registry.h>
 
-
-    /*
-     * Search for the bucket index of the key element
-     */
-    static size_t __findIndex(Hashmap *p_hm, void *key, size_t key_size);
+    #include <utils/font.h>
+    #include <deng/vulkan/renderer.h>
 #endif
 
-    /*
-     * Create a new hashmap instance
-     */
-    void newHashmap (
-        Hashmap *p_hashmap, 
-        size_t n_len
-    );
+
+namespace deng {
+
+    class __AssetManager {
+    private:
+        deng_RendererHintBits &m_api_bits;
+        std::shared_ptr<vulkan::__vk_ConfigVars> &m_vk_vars;
+        std::shared_ptr<vulkan::__vk_Renderer> &m_vk_rend;
+        std::queue<deng_Id> m_asset_queue;
+        std::queue<deng_Id> m_texture_queue;
+
+        // Bookkeeping variables for assets
+        deng_ui32_t m_vu2d_c = 0;
+        deng_ui32_t m_vm2d_c = 0;
+        deng_ui32_t m_vu3d_c = 0;
+        deng_ui32_t m_vm3d_c = 0;
+
+    private:
+        /// Increment asset type instance count
+        void __assetTypeIncr(das_Asset &asset);
+
+    protected:
+        __GlobalRegistry m_reg;
+        std::vector<deng_Id> m_assets;
+        std::vector<deng_Id> m_textures;
+        
+    public:
+        __AssetManager(std::shared_ptr<vulkan::__vk_Renderer> &vk_rend, 
+            std::shared_ptr<vulkan::__vk_ConfigVars> &vk_vars, deng_RendererHintBits &api);
+
+        /// Add texture id to submission queue
+        /// PS! Texture UUIDs have to be generated before submitting them
+        void submitTexture(das_Texture &texture);
 
 
-    /*
-     * Push value to the hashmap
-     */
-    void pushToHashmap (
-        Hashmap *p_hm,
-        void *key,
-        size_t key_size,
-        void *val
-    );
+        /// Add asset id to submission queue
+        /// PS! Asset UUIDs have to be generated before submitting them
+        void submitAsset(das_Asset &asset);
 
 
-    /*
-     * Pop the value from hashmap that is specified with the key
-     */
-    void *popFromHashmap (
-        Hashmap *p_hm,
-        void *key,
-        size_t key_size
-    );
+        /// Submit all assets to in submission queue to renderer
+        void submitAssetQueue(const dengMath::vec4<deng_vec_t> &background);
 
 
-    /*
-     * Find the list of all elements' pointers in hashmap
-     */
-    void **getHashmapList(Hashmap *p_hm);
+        /// Submit all textures in submission queue to renderer
+        void submitTextureQueue();
 
 
-    /*
-     * Find value from the map by specified key
-     */
-    void *findValue (
-        Hashmap *p_hm, 
-        void *key, 
-        size_t key_len
-    );
+        /// Push asset to renderer and initialise it, possibly reallocate vertices buffer if needed
+        /// PS! Asset UUIDs have to be generated before push and renderer must be setup
+        void pushAsset(das_Asset &asset);
 
-    
-    /*
-     * Destroy the given hashmap instance
-     */
-    void destroyHashmap(Hashmap *p_hm);
 
-#ifdef __cplusplus
+        /// Push texture to renderer and initialise it, possibly reallocate texture memory if needed,
+        /// PS! Texture UUIDs have to be generated before submitting them and renderer must be setup
+        void pushTexture(das_Texture &texture);
+    };
 }
-#endif
 
 #endif

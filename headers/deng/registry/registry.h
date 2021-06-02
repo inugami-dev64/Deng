@@ -57,6 +57,10 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: registry - Universal registry for entities
+ *  Purpose: Provide universal registry class for containing game data
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
@@ -81,9 +85,11 @@
     #include <math/vec4.h>
     #include <math/mat3.h>
     #include <math/mat4.h>
-    #include <deng/lighting/light_srcs.h>
-    #include <deng/vulkan/resources.h>
 #endif
+
+#include <deng/lighting/light_srcs.h>
+#include <deng/vulkan/assets.h>
+
 
 namespace deng {
 
@@ -123,39 +129,23 @@ namespace deng {
         ~__GlobalRegistry();
 
 
-        /*
-         * Register following data for usage
-         * An runtime error is thrown if the registry already has an element with the same id as specified one
-         */
-        void push (
-            deng_Id uuid, 
-            deng_SupportedRegType, 
-            const RegType &data
-        );
+        /// Register following data for usage
+        /// An runtime error is thrown if the registry already has an element with the same id as specified one
+        void push(deng_Id uuid, deng_SupportedRegType, const RegType &data);
 
 
-        /*
-         * Retrieve and verify entry from registry
-         * An runtime error is thrown if the registry entry type does not correspond to
-         * the expected registry entry type or if id is invalid
-         */
-        RegType &retrieve (
-            deng_Id id,
-            deng_SupportedRegTypeBitMask expected_type_mask,
-            deng_SupportedRegType *p_type_feedback
-        );
+        /// Retrieve and verify entry from registry
+        /// An runtime error is thrown if the registry entry type does not correspond to
+        /// the expected registry entry type or if id is invalid
+        RegType &retrieve(deng_Id id, deng_SupportedRegTypeBitMask expected_type_mask,
+            deng_SupportedRegType *p_type_feedback);
 
 
-        /*
-         * Retrieve and verify the pointer of an entry from registry
-         * An runtime error is thrown if the registry entry type does not correspond to
-         * the expected registry entry type or if id is invalid
-         */
-        RegType *retrievePtr (
-            deng_Id id,
-            deng_SupportedRegTypeBitMask expected_type_mask,
-            deng_SupportedRegType *p_type_feedback
-        );
+        /// Retrieve and verify the pointer of an entry from registry
+        /// An runtime error is thrown if the registry entry type does not correspond to
+        /// the expected registry entry type or if id is invalid
+        RegType *retrievePtr(deng_Id id, deng_SupportedRegTypeBitMask expected_type_mask,
+            deng_SupportedRegType *p_type_feedback);
 
         
         /// Pop an entry from from registry 

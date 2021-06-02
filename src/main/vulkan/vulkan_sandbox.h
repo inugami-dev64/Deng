@@ -69,6 +69,7 @@
 	#include <array>
     #include <thread>
     #include <mutex>
+    #include <queue>
     #include <vulkan/vulkan.h>
 
     #include <common/base_types.h>
@@ -82,36 +83,14 @@
 
     #include <math/deng_math.h>
     #include <deng/window.h>
-    #include <utils/shape_gen.h>
+
     #include <utils/timer.h>
     #include <utils/font.h>
-    #include <deng/camera.h>
-    #include <deng/vulkan/sd.h>
-    #include <deng/vulkan/qm.h>
-    #include <deng/vulkan/resources.h>
-
-    #include <deng/lighting/light_srcs.h>
     #include <deng/registry/registry.h>
     #include <deng/lighting/light_man.h>
-
-    #include <deng/vulkan/rend_infos.h>
-    #include <deng/vulkan/ic.h>
-    #include <deng/vulkan/scc.h>
-    #include <deng/vulkan/pipeline_data.h>
-    #include <deng/vulkan/pipelines.h>
-    #include <deng/vulkan/desc_pool.h>
-    #include <deng/vulkan/desc_set_layout.h>
-    #include <deng/vulkan/desc_sets.h>
-    #include <deng/vulkan/dc.h>
-    #include <deng/vulkan/tm.h>
-    #include <deng/vulkan/ubm.h>
-    #include <deng/vulkan/bm.h>
-    #include <deng/vulkan/rm.h>
-    #include <deng/vulkan/rend_init.h>
-    #include <deng/vulkan/runtime_updater.h>
-    #include <deng/vulkan/renderer.h>
+    #include <deng/camera.h>
     #include <deng/window.h>
-    
+    #include <deng/renderer/renderer.h>
 #endif
 
 namespace Sandbox {
@@ -124,9 +103,9 @@ namespace Sandbox {
         deng::__GlobalRegistry m_reg;
         dengMath::Transformer3D m_transformer;
         deng::LightManager m_light_man;
-        deng::vulkan::__vk_Renderer *m_p_rend = NULL;
-        std::vector<char*> m_asset_uuids;
-        std::vector<char*> m_tex_uuids;
+        std::unique_ptr<deng::Renderer> m_rend;
+        std::vector<das_Asset> m_assets;
+        std::vector<das_Texture> m_textures;
 
     private: 
         /// Create first person camera control bindings
@@ -150,7 +129,6 @@ namespace Sandbox {
 
     public:
         VulkanApp();
-        ~VulkanApp();
         void run();
         void setup();
     };

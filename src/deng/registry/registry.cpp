@@ -143,6 +143,7 @@ namespace deng {
                 break;
 
             case DENG_SUPPORTED_REG_TYPE_VK_ASSET:
+                LOG("Descriptor set count: " + std::to_string(m_entries[i].element.vk_asset.desc_c));
                 free(m_entries[i].element.vk_asset.uuid);
                 free(m_entries[i].element.vk_asset.desc_sets);
                 break;
@@ -202,20 +203,15 @@ namespace deng {
     }
 
     
-    /*
-     * Register given data for usage
-     * An runtime error is thrown if the registry already has an element with the same id as specified one
-     */
+    /// Register given data for usage
+    /// A runtime error is thrown if the registry already has an element with the same id as specified one
     void __GlobalRegistry::push (
         deng_Id uuid, 
         deng_SupportedRegType type, 
         const RegType &data
     ) {
-        void *val = findValue (
-            &m_map,
-            uuid,
-            strlen(uuid)
-        );
+        void *val = findValue(&m_map, uuid,
+            strlen(uuid));
 
         if(val)
             RUN_ERR("__GlobalRegistry::push()", "Value with identifier \"" + std::string(uuid) + "\" already exists");
@@ -228,11 +224,9 @@ namespace deng {
     }
 
 
-    /*
-     * Retrieve and verify entry from registry
-     * An runtime error is thrown if the registry entry type does not correspond to
-     * the expected registry entry type or if id is invalid
-     */
+    /// Retrieve and verify entry from registry
+    /// An runtime error is thrown if the registry entry type does not correspond to
+    /// the expected registry entry type or if id is invalid
     RegType &__GlobalRegistry::retrieve (
         deng_Id id,
         deng_SupportedRegTypeBitMask expected_type_mask,
@@ -243,24 +237,18 @@ namespace deng {
     }
 
 
-    /*
-     * Retrieve and verify the pointer of an entry from registry
-     * An runtime error is thrown if the registry entry type does not correspond to
-     * the expected registry entry type or if id is invalid
-     */
+    /// Retrieve and verify the pointer of an entry from registry
+    /// An runtime error is thrown if the registry entry type does not correspond to
+    /// the expected registry entry type or if id is invalid
     RegType *__GlobalRegistry::retrievePtr (
         deng_Id id,
         deng_SupportedRegTypeBitMask expected_type_mask,
         deng_SupportedRegType *p_type_feedback
-    ) { 
-        return &__findElemPtr(id, expected_type_mask, p_type_feedback)->element; 
-    } 
+    ) { return &__findElemPtr(id, expected_type_mask, p_type_feedback)->element; } 
 
 
-    /*
-     * Pop an entry from from registry
-     * An runtime error is thrown if the id is invalid
-     */
+    /// Pop an entry from from registry
+    /// An runtime error is thrown if the id is invalid
     RegType __GlobalRegistry::pop(deng_Id id) {
         __RegEntry *p_entry = (__RegEntry*) popFromHashmap (
             &m_map,

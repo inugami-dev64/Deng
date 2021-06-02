@@ -115,6 +115,7 @@ namespace deng {
             deng_bool_t cli_count_fps = false;
             dengMath::vec4<deng_vec_t> background = {0.0f, 0.0f, 0.0f, 1.0f};
             deng::Camera3D *p_cam;
+            deng::Window *p_win;
         };
 
 
@@ -123,34 +124,35 @@ namespace deng {
             // All renderer initialisers
             __vk_InstanceCreator *m_p_ic;
             __vk_SwapChainCreator *m_p_scc;
-            __vk_DescriptorCreator *m_p_desc_c; 
+            __vk_DescriptorSetsCreator *m_p_desc_c; 
             __vk_PipelineCreator *m_p_pl_c;
             __vk_ResourceManager *m_p_rm;
             __vk_DrawCaller *m_p_dc;
 
         protected:
             __GlobalRegistry &m_reg;
-            std::vector<deng_Id> m_assets = {};
-            std::vector<deng_Id> m_textures = {};
-            std::array<deng_Id, __DENG_MAX_LIGHT_SRC_COUNT> m_light_srcs = {};
+            std::vector<deng_Id> &m_assets;
+            std::vector<deng_Id> &m_textures;
 
         public:
             __vk_RendererInitialiser (
                 deng::Window &win, 
                 const __vk_ConfigVars &conf,
-                deng::__GlobalRegistry &reg
+                deng::__GlobalRegistry &reg,
+                std::vector<deng_Id> &assets,
+                std::vector<deng_Id> &textures
             );
 
             ~__vk_RendererInitialiser();
 
         /// Getters
         public:
-            __vk_InstanceCreator *getIC();
-            __vk_SwapChainCreator *getSCC();
-            __vk_DescriptorCreator *getDescC();
-            __vk_PipelineCreator *getPipelineC();
-            __vk_ResourceManager *getResMan();
-            __vk_DrawCaller *getDrawCaller();
+            __vk_InstanceCreator &getIC();
+            __vk_SwapChainCreator &getSCC();
+            __vk_DescriptorSetsCreator &getDescC();
+            __vk_PipelineCreator &getPipelineC();
+            __vk_ResourceManager &getResMan();
+            __vk_DrawCaller &getDrawCaller();
         };
     }
 }

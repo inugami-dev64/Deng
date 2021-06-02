@@ -81,10 +81,8 @@ namespace deng {
         }
 
 
-        /*
-         * Create missing texture in case any texture mapped asset
-         * has invalid texture uuid
-         */
+        /// Create missing texture in case any texture mapped asset
+        /// has invalid texture uuid
         void __vk_TextureManager::__mkMissingTex (
             VkDevice device,
             VkPhysicalDevice gpu,
@@ -97,36 +95,30 @@ namespace deng {
             missing_base_tex.tex.pixel_data.width = __DEFAULT_TEX_WIDTH;
             missing_base_tex.tex.pixel_data.height = __DEFAULT_TEX_HEIGHT;
             missing_base_tex.tex.pixel_data.size = __DEFAULT_TEX_SIZE;
-            missing_base_tex.tex.pixel_data.p_pixel_data = (deng_ui8_t*) malloc(__DEFAULT_TEX_SIZE);
+            missing_base_tex.tex.pixel_data.p_pixel_data = reinterpret_cast<deng_ui8_t*>(malloc(__DEFAULT_TEX_SIZE));
             memset(missing_base_tex.tex.pixel_data.p_pixel_data, 255, __DEFAULT_TEX_SIZE);
+
+            // Make Vulkan texture
+            deng::RegType missing_vk_tex = { { 0 } };
+            missing_vk_tex.vk_tex.base_id = missing_base_tex.tex.uuid;
+            missing_vk_tex.vk_tex.uuid = uuid_Generate();
+            missing_base_tex.tex.vk_id = missing_vk_tex.vk_tex.uuid;
+
+            m_missing_tex_uuid = missing_base_tex.tex.uuid;
             
             // Push the texture uuid to registry
             m_reg.push(missing_base_tex.tex.uuid, 
                 DENG_SUPPORTED_REG_TYPE_TEXTURE, missing_base_tex);
 
-            deng::RegType missing_vk_tex = { { 0 } };
-            missing_vk_tex.vk_tex.base_id = missing_base_tex.tex.uuid;
-            missing_vk_tex.vk_tex.uuid = uuid_Generate();
-            m_missing_tex_uuid = missing_vk_tex.vk_tex.uuid;
+            // Create new image samplers and image views
+            __newVkTexture(device, gpu, cmd_pool, g_queue, 1, false, false, true, missing_vk_tex.vk_tex);
+            m_textures.push_back(m_missing_tex_uuid);
 
-            // Create new Vulkan texture
-            __newVkTexture(device, gpu, cmd_pool, g_queue, 1, false,
-                false, true, missing_vk_tex.vk_tex);
-
-            m_reg.push (
-                missing_vk_tex.vk_tex.uuid, 
-                DENG_SUPPORTED_REG_TYPE_VK_TEXTURE, 
-                missing_vk_tex
-            );
-
-            LOG("texture capacity: " + std::to_string(m_textures.capacity()));
-            m_textures.push_back(missing_vk_tex.vk_tex.uuid);
+            m_reg.push(missing_vk_tex.vk_tex.uuid, DENG_SUPPORTED_REG_TYPE_VK_TEXTURE, missing_vk_tex);
         }
 
 
-        /*
-         * Create mipmaps for texture images
-         */
+        /// Create mipmaps for texture images
         void __vk_TextureManager::__mkMipMaps (
             VkDevice &device,
             VkCommandPool &cmd_pool,
@@ -138,11 +130,8 @@ namespace deng {
         ) {
             // Generate all mipmaps
             VkCommandBuffer cmd_buf;
-            __vk_CommandBufferRecorder::beginCommandBufferSingleCommand (
-                device,
-                cmd_pool,
-                &cmd_buf
-            );
+            __vk_CommandBufferRecorder::beginCommandBufferSingleCommand(
+                device, cmd_pool, &cmd_buf);
 
             VkImageMemoryBarrier mem_barrier{};
             VkImageBlit blit{};
@@ -157,70 +146,44 @@ namespace deng {
 
             deng_i32_t mip_width = width;
             deng_i32_t mip_height = height;
-            deng_ui32_t index;
-            for(index = 1; index < mip_levels; index++) {
-                mem_barrier.subresourceRange.baseMipLevel = index - 1;
+
+            for(deng_ui32_t i = 1; i < mip_levels; i++) {
+                mem_barrier.subresourceRange.baseMipLevel = i - 1;
                 mem_barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
                 mem_barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
                 mem_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
                 mem_barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 
                 // Record pipeline barrier
-                vkCmdPipelineBarrier (
-                    cmd_buf,
-                    VK_PIPELINE_STAGE_TRANSFER_BIT,
-                    VK_PIPELINE_STAGE_TRANSFER_BIT,
-                    0,
-                    0,
-                    NULL,
-                    0,
-                    NULL,
-                    1,
-                    &mem_barrier
-                );
+                vkCmdPipelineBarrier(cmd_buf, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                    VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
+                    &mem_barrier);
 
                 // Set blit image struct for mipmapping
                 blit.srcOffsets[0] = {0, 0, 0};
                 blit.srcOffsets[1] = {mip_width, mip_height, 1};
                 blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
                 blit.srcSubresource.baseArrayLayer = 0;
-                blit.srcSubresource.mipLevel = index - 1;
+                blit.srcSubresource.mipLevel = i - 1;
                 blit.srcSubresource.layerCount = 1;
                 blit.dstOffsets[0] = {0, 0, 0};
                 blit.dstOffsets[1] = {mip_width > 1 ? mip_width / 2 : 1, mip_height > 1 ? mip_height / 2 : 1, 1};
                 blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
                 blit.dstSubresource.baseArrayLayer = 0;
-                blit.dstSubresource.mipLevel = index;
+                blit.dstSubresource.mipLevel = i;
                 blit.dstSubresource.layerCount = 1;
 
-                vkCmdBlitImage (
-                    cmd_buf,
-                    image,
-                    VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                    image, 
-                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                    1,
-                    &blit,
-                    VK_FILTER_LINEAR
-                );
+                vkCmdBlitImage(cmd_buf, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                    image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
 
                 mem_barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
                 mem_barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 mem_barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
                 mem_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-                vkCmdPipelineBarrier (
-                    cmd_buf,
-                    VK_PIPELINE_STAGE_TRANSFER_BIT,
-                    VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                    0,
-                    0,
-                    NULL,
-                    0,
-                    NULL,
-                    1,
-                    &mem_barrier
-                );
+                vkCmdPipelineBarrier(cmd_buf, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                    VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1,
+                    &mem_barrier);
 
                 if(mip_width > 1) mip_width /= 2;
                 if(mip_height > 1) mip_height /= 2;
@@ -233,31 +196,15 @@ namespace deng {
             mem_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
             mem_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-            vkCmdPipelineBarrier (
-                cmd_buf,
-                VK_PIPELINE_STAGE_TRANSFER_BIT,
-                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                0,
-                0,
-                NULL,
-                0,
-                NULL,
-                1,
-                &mem_barrier
-            );
+            vkCmdPipelineBarrier(cmd_buf, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, &mem_barrier);
 
-            __vk_CommandBufferRecorder::endCommandBufferSingleCommand (
-                device,
-                g_queue,
-                cmd_pool,
-                &cmd_buf
-            );
+            __vk_CommandBufferRecorder::endCommandBufferSingleCommand(device,
+                g_queue, cmd_pool, &cmd_buf);
         }
 
 
-        /*
-         * Create texture sampler for texture image
-         */
+        /// Create texture sampler for texture image
         void __vk_TextureManager::__mkTextureSampler (
             VkDevice &device,
             VkSampler &sampler,
@@ -287,10 +234,8 @@ namespace deng {
         }
 
 
-        /*
-         * Allocate memory for texture buffers
-         * req_size must be larger than the memory required for all textures combined
-         */
+        /// Allocate memory for texture buffers
+        /// req_size must be larger than the memory required for all textures combined
         void __vk_TextureManager::__allocateTexMemory (
             VkDevice device,
             VkPhysicalDevice gpu,
@@ -367,9 +312,7 @@ namespace deng {
         }
 
             
-        /*
-         * Check if linear filtering is requested and if mipmaps should be created
-         */
+        /// Check if linear filtering is requested and if mipmaps should be created
         void __vk_TextureManager::__mipmapTransition (
             VkDevice device,
             VkCommandPool cmd_pool,
@@ -383,67 +326,40 @@ namespace deng {
 
             // Check if linear filtering is enabled and if mipmapping should be enabled
             if(is_lf) {
-                __mkMipMaps (
-                    device,
-                    cmd_pool,
-                    tex.image,
-                    g_queue,
-                    (deng_i32_t) reg_tex.tex.pixel_data.width,
-                    (deng_i32_t) reg_tex.tex.pixel_data.height,
-                    mip_levels
-                );
+                __mkMipMaps(device, cmd_pool, tex.image, g_queue,
+                    static_cast<deng_ui32_t>(reg_tex.tex.pixel_data.width),
+                    static_cast<deng_ui32_t>(reg_tex.tex.pixel_data.height),
+                    mip_levels);
             }
 
             else {
-                __vk_ImageCreator::transitionImageLayout (
-                    device,
-                    tex.image,
-                    cmd_pool,
-                    g_queue,
-                    VK_FORMAT_B8G8R8A8_SRGB,
-                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                    mip_levels
-                );
+                __vk_ImageCreator::transitionImageLayout(device, tex.image, cmd_pool, 
+                    g_queue, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mip_levels);
             }
 
         }
 
         
-        /*
-         * Create VkImageView for texture image
-         */
+        /// Create VkImageView for texture image
         void __vk_TextureManager::__mkImageView (
             VkDevice device,
             __vk_Texture &tex,
             deng_ui32_t mip_levels
         ) {
-            VkImageViewCreateInfo viewinfo = __vk_ImageCreator::getImageViewInfo (
-                tex.image, 
-                VK_FORMAT_B8G8R8A8_SRGB, 
-                VK_IMAGE_ASPECT_COLOR_BIT,
-                mip_levels
-            );
+            VkImageViewCreateInfo viewinfo = __vk_ImageCreator::getImageViewInfo(
+                tex.image, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, mip_levels);
 
-            if
-            (
-                vkCreateImageView (
-                    device, 
-                    &viewinfo, 
-                    NULL, 
-                    &tex.image_view
-                ) != VK_SUCCESS
-            ) VK_RES_ERR("Failed to create texture image view!");
+            if(vkCreateImageView(device, &viewinfo, NULL, &tex.image_view) != VK_SUCCESS) 
+                VK_RES_ERR("Failed to create texture image view!");
             LOG("Created image view for texture with id: " + std::string(tex.uuid));
         }
 
 
-        /*
-         * Copy all bitmap data to image bitmap buffer
-         * WARNING: This method performs no buffer bounds check and can cause errors!
-         * NOTE: Texture object must have a valid VkImage instance created before calling this 
-         * method
-         */
+        /// Copy all bitmap data to image bitmap buffer
+        /// WARNING: This method performs no buffer bounds check and can cause errors!
+        /// NOTE: Texture object must have a valid VkImage instance created before calling this 
+        /// method
         void __vk_TextureManager::__cpyBitmap (
             VkDevice device,
             VkPhysicalDevice gpu,
@@ -545,9 +461,7 @@ namespace deng {
         }
 
 
-        /*
-         * Create new VkImage and VkImageView instances for single texture
-         */
+        /// Create new VkImage and VkImageView instances for single texture
         void __vk_TextureManager::__newVkTexture (
             VkDevice device,
             VkPhysicalDevice gpu,
@@ -611,52 +525,40 @@ namespace deng {
         }
 
 
-        /* 
-         * Set up texture image buffers, samplers and mipmaps if they
-         * are supported
-         */
-        void __vk_TextureManager::mkTextures (
+        /// Set up texture image buffers, samplers and mipmaps if they
+        /// are supported
+        void __vk_TextureManager::mkTexture (
             VkDevice device, 
             VkPhysicalDevice gpu, 
             VkCommandPool cmd_pool,
             deng_bool_t is_lf, 
-            const dengMath::vec2<deng_ui32_t> &tex_bounds,
+            deng_Id id,
             VkQueue g_queue
         ) {
-            size_t index;
             deng_ui32_t mip_levels = 1;
 
-            // Iterate through assets an check if it is texture mapped
-            for(index = tex_bounds.first; index < tex_bounds.second; index++) {
-                // Retrieve Vulkan texture from the registry
-                RegType &vk_tex_reg = m_reg.retrieve (
-                    m_textures[index], 
-                    DENG_SUPPORTED_REG_TYPE_VK_TEXTURE,
-                    NULL
-                );
+            // Retrieve Vulkan texture from the registry
+            RegType &tex_reg = m_reg.retrieve(id, 
+                DENG_SUPPORTED_REG_TYPE_TEXTURE, NULL);
 
-                // Retrieve base texture from the registry
-                RegType &tex_reg = m_reg.retrieve (
-                    vk_tex_reg.vk_tex.base_id,
-                    DENG_SUPPORTED_REG_TYPE_TEXTURE,
-                    NULL
-                );
+            // Retrieve base texture from the registry
+            RegType &vk_tex_reg = m_reg.retrieve(tex_reg.tex.vk_id,
+                DENG_SUPPORTED_REG_TYPE_VK_TEXTURE, NULL);
 
 
-                // If linear filtering is supported, set the mip levels accordingly
-                // Otherwise set mip levels as 1
-                if(is_lf) {
-                    mip_levels = (deng_i32_t) floor (
-                        log2(std::max<VkDeviceSize>(tex_reg.tex.pixel_data.width,
-                        tex_reg.tex.pixel_data.height))) + 1;
-                }
-
-                else mip_levels = 1;
-                
-                // Create a new image
-                __newVkTexture(device, gpu, cmd_pool, g_queue,
-                    mip_levels, is_lf, false, false, vk_tex_reg.vk_tex);
+            // If linear filtering is supported, set the mip levels accordingly
+            // Otherwise set mip levels as 1
+            if(is_lf) {
+                mip_levels = floor (
+                    log2(std::max<VkDeviceSize>(tex_reg.tex.pixel_data.width,
+                    tex_reg.tex.pixel_data.height))) + 1;
             }
+
+            else mip_levels = 1;
+            
+            // Create a new image
+            __newVkTexture(device, gpu, cmd_pool, g_queue,
+                mip_levels, is_lf, false, false, vk_tex_reg.vk_tex);
         }
 
 

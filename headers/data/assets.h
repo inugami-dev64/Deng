@@ -67,9 +67,7 @@
 #define DAS_DEFAULT_AMBIENT_COLOR       (das_ObjColorData) {0.4f, 0.4f, 0.4f, 1.0f}   
 #define DAS_DEFAULT_SPECULAR_COLOR       (das_ObjColorData) {0.0f, 0.0f, 0.0f, 1.0f}   
 
-/*
- * Universal asset element offset container struct 
- */
+/// Universal asset element offset container struct 
 typedef struct das_OffsetData {
     // Vertices offsets
     deng_ui64_t pos_offset;
@@ -84,9 +82,7 @@ typedef struct das_OffsetData {
 } das_OffsetData;
 
 
-/* 
- * Base structures for storing model vertices data 
- */
+/// Base structures for storing model vertices data 
 typedef struct das_ObjPosData {
     deng_vec_t vert_x;
     deng_vec_t vert_y;
@@ -100,20 +96,16 @@ typedef struct das_ObjPosData2D {
 } das_ObjPosData2D;
 
 
-/* 
- * Base struct for storing information about model's 
- * texture mapping vertices
- */
+/// Base struct for storing information about model's 
+/// texture mapping vertices
 typedef struct das_ObjTextureData {
     deng_vec_t tex_x;
     deng_vec_t tex_y;
 } das_ObjTextureData;
 
 
-/*
- * Base struct for storing information about model's
- * vertex normals vertices
- */
+/// Base struct for storing information about model's
+/// vertex normals vertices
 typedef struct das_ObjNormalData {
     deng_vec_t nor_x;
     deng_vec_t nor_y;
@@ -121,9 +113,7 @@ typedef struct das_ObjNormalData {
 } das_ObjNormalData;
 
 
-/*
- * Base struct for asset vertices RGB color specification
- */
+/// Base struct for asset vertices RGB color specification
 typedef struct das_ObjColorData {
     deng_vec_t col_r;
     deng_vec_t col_g;
@@ -132,7 +122,7 @@ typedef struct das_ObjColorData {
 } das_ObjColorData;
 
 
-// Dynamic vertices structures
+/// Dynamic vertices structures
 typedef struct __das_VertDynamic3D {
     das_ObjPosData *pos;
     size_t pn;
@@ -152,18 +142,14 @@ typedef struct __das_VertDynamic2D {
 } __das_VertDynamic2D;
 
 
-/*
- * Universal dynamic vertices container union for both 3D and 2D assets
- */
+/// Universal dynamic vertices container union for both 3D and 2D assets
 typedef union das_VertDynamic {
     __das_VertDynamic2D v2d;
     __das_VertDynamic3D v3d;
 } das_VertDynamic;
 
 
-/* 
- * Structure for universal heap allocated indices data storage
- */
+/// Structure for universal heap allocated indices data storage
 typedef struct das_IndicesDynamic {
     deng_ui32_t *pos;
     deng_ui32_t *tex;
@@ -172,9 +158,7 @@ typedef struct das_IndicesDynamic {
 } das_IndicesDynamic;
 
 
-/* 
- * Structure for universal texture image bitmap data storage
- */
+/// Structure for universal texture image bitmap data storage
 typedef struct das_PixelDataDynamic {
     deng_ui8_t *p_pixel_data;
     size_t size;
@@ -184,9 +168,7 @@ typedef struct das_PixelDataDynamic {
 } das_PixelDataDynamic;
 
 
-/* 
- * Specify the type of the asset 
- */
+/// Specify the type of the asset 
 typedef enum das_AssetMode {
     DAS_ASSET_MODE_UNDEFINED                        = -1,
     DAS_ASSET_MODE_3D_TEXTURE_MAPPED                = 0,
@@ -225,9 +207,7 @@ typedef struct das_Asset {
 } das_Asset;
 
 
-/* 
- * Main texture struct 
- */
+/// Main texture struct 
 typedef struct das_Texture {
     deng_Id uuid;
     deng_Id vk_id;

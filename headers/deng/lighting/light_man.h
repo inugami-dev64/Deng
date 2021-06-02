@@ -129,6 +129,9 @@ namespace deng {
     /// Getter methods
     public:
         deng_ui32_t getMaxLightSrcCount();
+
+
+        /// Merge all light sources into one container
         std::vector<deng_Id> getUniversalLightSources();
     };
 

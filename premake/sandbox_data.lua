@@ -71,9 +71,9 @@ function sandbox_data.datacpy()
         os.execute("cp -r textures/ build/")
         os.execute("cp -r assets/ build/")
     elseif(package.config:sub(1,1) == '\\') then
-        os.execute("xcopy /s /q shaders build\\shaders")
-        os.execute("xcopy /s /q textures build\\textures")
-        os.execute("xcopy /s /q assets build\\assets")
+        os.execute("xcopy /s /c /y /q shaders build\\shaders")
+        os.execute("xcopy /s /c /y /q textures build\\textures")
+        os.execute("xcopy /s /c /y /q assets build\\assets")
     end
 end
 
