@@ -63,7 +63,6 @@
 #define __FPP_CAM_CPP
 #include <deng/camera/fpp_cam.h>
 
-extern deng::__SharedMouseData __ext_md;
 
 namespace deng {
 
@@ -135,9 +134,6 @@ namespace deng {
 			m_input_mode_timer.setNewTimePoint();
         }
 
-        __ext_md.mut.lock();
-        __ext_md.is_mouse_input = !m_p_win->isVCP();
-        __ext_md.mut.unlock();
 
         // Check if virtual mouse cursor mode is enabled and 
         // if true then update camera rotation and key events

@@ -63,8 +63,6 @@
 #define __VK_RENDERER_CPP
 #include <deng/vulkan/renderer.h>
 
-/// External mouse data variable declaration
-deng::__SharedMouseData __ext_md;
 
 namespace deng {
     namespace vulkan {

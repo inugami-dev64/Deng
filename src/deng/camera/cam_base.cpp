@@ -63,8 +63,6 @@
 #define __CAM_BASE_CPP
 #include <deng/camera/cam_base.h>
 
-// Shared data
-extern deng::__SharedMouseData __ext_md;
 
 namespace deng {
     
@@ -216,17 +214,11 @@ namespace deng {
     }
 
 
-    /* 
-     * Camera mouse update method 
-     * This method updates mouse cursor position in Window instance as well as
-     * externally available MouseInputInfo
-     */
+    /// Camera mouse update method 
+    /// This method updates mouse cursor position in Window instance as well as
+    /// externally available MouseInputInfo
     void __EventBase::__updateMouseEvData() {
-        std::lock_guard<std::mutex> lck(__ext_md.mut);
-        
-        __ext_md.is_mouse_input = !m_p_win->isVCP();
         m_mouse_pos = m_p_win->getMPos(true);
-        __ext_md.mouse_coords = m_mouse_pos;
     }
 
 

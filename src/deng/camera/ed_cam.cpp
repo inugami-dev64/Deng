@@ -63,7 +63,6 @@
 #define __ED_CAM_CPP
 #include <deng/camera/ed_cam.h>
 
-extern deng::__SharedMouseData __ext_md;
 
 namespace deng {
 
@@ -93,12 +92,8 @@ namespace deng {
     } 
 
 
-    /*
-     * Check if any camera events have occured
-     */
+    /// Check if any camera events have occured
     void __EditorCameraEv::findEditorEvent() {
-        __ext_md.mut.lock();
-
         deng_bool_t rot_act = __checkInputAction(DENG_CAMERA_ACTION_CHANGE_MM);
         deng_bool_t out_zoom = __checkInputAction(DENG_CAMERA_ACTION_MOV_W);
         deng_bool_t in_zoom = __checkInputAction(DENG_CAMERA_ACTION_MOV_NW);
@@ -110,14 +105,10 @@ namespace deng {
         else if(out_zoom) m_editor_cam_ev = DENG_EDITOR_CAMERA_EVENT_Z_MOV_OUT;
         else if(in_zoom) m_editor_cam_ev = DENG_EDITOR_CAMERA_EVENT_Z_MOV_IN;
         else m_editor_cam_ev = DENG_EDITOR_CAMERA_EVENT_NONE;
-        
-        __ext_md.mut.unlock();
     }
 
 
-    /*
-     * Zoom in the editor camera 
-     */
+    /// Zoom in the editor camera 
     void __EditorCameraEv::zoomIn(dengMath::CameraMatrix *p_vm) {
         p_vm->moveCamera (
             dengMath::vec3<deng_vec_t>{0.0f, 0.0f, m_zoom_step},
