@@ -1,6 +1,6 @@
-[submodule "modules/freetype2"]
-	path = modules/freetype2
-	url = https://git.savannah.gnu.org/git/freetype/freetype2.git/
 [submodule "modules/imgui"]
 	path = modules/imgui
 	url = https://github.com/ocornut/imgui
+[submodule "modules/freetype"]
+	path = modules/freetype
+	url = https://git.savannah.gnu.org/git/freetype/freetype2.git/
