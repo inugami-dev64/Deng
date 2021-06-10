@@ -60,108 +60,73 @@
  */ 
 
 
-#ifndef __WINDOW_H
-#define __WINDOW_H
+#define __IMGUI_SANDBOX_CPP
+#include <imgui-layer/imgui_sandbox.h>
 
-#ifdef __WINDOW_CPP
-    #include <stdlib.h>
-    #include <vector>
-    #include <string>
+namespace deng {
 
-    #include <common/base_types.h>
-    #include <common/err_def.h>
-    #include <data/assets.h>
-    #include <math/deng_math.h>
-    #include <vulkan/vulkan.h>
-#endif
+    ImGUIApplication::ImGUIApplication() : 
+        m_win(1280, 720, "ImGUI demo"),
+        m_cam(DENG_CAMERA_TYPE_EDITOR, static_cast<deng_vec_t>(dengMath::Conversion::degToRad(65.0)), 
+            {0.1f, -25.0f}, {0.7f, 0.7f, 0.7f}, {0.3f, 0.3f}, false, &m_win),
+        m_rend(DENG_RENDERER_HINT_API_VULKAN | DENG_RENDERER_HINT_ENABLE_API_DEBUGGING | DENG_RENDERER_HINT_MSAA_2, 
+            dengMath::vec4<deng_vec_t>{0.0f, 0.0f, 0.0f, 1.0f})
+    { 
+        // Set bindings
+        deng::Camera3DBindings bindings = {};
+        bindings.mov_w = deng_CreateInputMask(1, DENG_MOUSE_SCROLL_UP);
+        bindings.mov_nw = deng_CreateInputMask(1, DENG_MOUSE_SCROLL_DOWN);
+        bindings.ch_vcp = deng_CreateInputMask(1, DENG_MOUSE_BTN_2);
+        m_cam.setBindings(bindings);
 
-
-#include <deng/surface/surface_window.h>
-#include <deng/vulkan/surface.h>
-
-
-namespace deng {   
-    
-    /// Main window handling class for DENG
-    class Window {
-    private:
-        deng_SurfaceWindow *m_p_surface;
-        char *m_title;
-        dengMath::vec2<deng_ui32_t> m_size;
-        deng_bool_t m_is_vc = false;
-        dengMath::vec2<deng_vec_t> m_pixel_size;
-        dengMath::vec2<deng_px_t> m_prev_vc_pos;
-
-    public:
-        Window (
-            deng_i32_t width, 
-            deng_i32_t height, 
-            const char *title
-        );
-
-        ~Window();
-
-
-        /// Toggle virtual cursor mode
-        void toggleVCMode();
-
-
-        /// Force set virtual cursor mode
-        void changeVCMode(deng_bool_t is_vc);
-
+        // Load demo assets
+        das_Texture viking_tex = {};
+        das_LoadTexture(&viking_tex, "textures/viking_room.tga");
         
-        /// Hide the cursor's visbility
-        void hideCursor();
+        das_Asset viking = {};
+        das_LoadAsset(&viking, DAS_ASSET_MODE_UNDEFINED, das_ObjColorData{1.0f, 1.0f, 1.0f, 1.0f}, 
+            false, viking_tex.uuid, (char*) "assets/viking.das");
+
+        // Submit assets to the renderer
+        m_rend.submitAsset(viking);
+        m_rend.submitTexture(viking_tex);
+
+        m_rend.setup(m_cam, m_win); 
+        m_ui_man = std::make_unique<UIManager>(m_rend);
+    }
 
 
-        /// Make the cursor visible
-        /// NOTE: There should be a special cursor struct for DENG called deng_Cursor in the future
-        /// but for now it is ignored
-        void showCursor();
+    /// General run method
+    void ImGUIApplication::run() {
+        m_rend.update();
+        while(deng_IsRunning()) {
+            m_ui_man->updateIO(m_win);
+            ImGui::NewFrame();
+                ImGui::Begin("Test window");
+                ImGui::Text("Hello world!");
+                ImGui::End();
+            ImGui::EndFrame();
 
+            ImGui::Render();
+            ImDrawData *p_draw_data = ImGui::GetDrawData();
 
-        /// Check if virtual cursor mode is enabled
-        deng_bool_t isVCP();
+            // Update UI element generation
+            m_ui_man->render(p_draw_data, m_win);
 
+            // Update the renderer
+            m_rend.update();
 
-        /// Update window and input devices data
-        void update();
+            std::this_thread::sleep_for(std::chrono::microseconds(50));
+        }
 
-
-        /// Force specified VCP position to virtual mouse cursor instance
-        void forceVCPPos(const dengMath::vec2<deng_px_t> &pos);
-
-
-        /// Create new vulkan surface instance
-        VkResult initVkSurface(VkInstance &instance,
-            VkSurfaceKHR &surface);
-
-
-        /// Search for all required vulkan extensions
-        char **findVulkanSurfaceExtensions(
-            deng_ui32_t *p_ext_c, deng_bool_t enable_vl);
-
-
-
-        /// Get the current mouse position
-        dengMath::vec2<deng_px_t> getMPos() const;
-
-
-        /// Get the mouse delta compared to previous frame mouse position
-        dengMath::vec2<deng_px_t> getMDelta() const;
-
-
-        /// Get the title of the window
-        const char *getTitle() const;
-
-        
-        /// Get the size of the window
-        dengMath::vec2<deng_ui32_t> getSize() const;
-
-
-        /// Get the vector size for one pixel in surface
-        dengMath::vec2<deng_vec_t> getPixelSize() const;
-    };
+        ImGui::DestroyContext();
+    }
 }
 
-#endif
+
+int main() {
+    deng::ImGUIApplication app;
+    app.run();
+
+    return EXIT_SUCCESS;
+}

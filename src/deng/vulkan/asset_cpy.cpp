@@ -144,40 +144,20 @@ namespace deng {
 
         void __AssetCpy::__cpyVm2D(VkDevice device, das_Asset &asset, VkDeviceMemory mem) {
             // Copy position vertices
-            __vk_BufferCreator::cpyToBufferMem (
-                device, 
-                asset.vertices.v2d.pn * sizeof(das_ObjPosData2D),
-                asset.vertices.v2d.pos,
-                mem, 
-                asset.offsets.pos_offset
-            );
+            __vk_BufferCreator::cpyToBufferMem(device, asset.vertices.v2d.pn * sizeof(das_ObjPosData2D),
+                asset.vertices.v2d.pos, mem, asset.offsets.pos_offset);
 
             // Copy texture vertices
-            __vk_BufferCreator::cpyToBufferMem (
-                device, 
-                asset.vertices.v2d.tn * sizeof(das_ObjTextureData),
-                asset.vertices.v2d.tex,
-                mem, 
-                asset.offsets.tex_offset
-            );
+            __vk_BufferCreator::cpyToBufferMem(device, asset.vertices.v2d.tn * sizeof(das_ObjTextureData),
+                asset.vertices.v2d.tex, mem, asset.offsets.tex_offset);
 
             // Copy position indices
-            __vk_BufferCreator::cpyToBufferMem (
-                device,
-                asset.indices.n * sizeof(deng_ui32_t),
-                asset.indices.pos,
-                mem,
-                asset.offsets.ind_offset
-            );
+            __vk_BufferCreator::cpyToBufferMem(device, asset.indices.n * sizeof(deng_ui32_t),
+                asset.indices.pos, mem, asset.offsets.ind_offset); 
 
             // Copy texture indices
-            __vk_BufferCreator::cpyToBufferMem (
-                device,
-                asset.indices.n * sizeof(deng_ui32_t),
-                asset.indices.tex,
-                mem,
-                asset.offsets.ind_offset + asset.indices.n * sizeof(deng_ui32_t)
-            );
+            __vk_BufferCreator::cpyToBufferMem(device, asset.indices.n * sizeof(deng_ui32_t),
+                asset.indices.tex, mem, asset.offsets.ind_offset + asset.indices.n * sizeof(deng_ui32_t));
         }
 
 
@@ -222,58 +202,28 @@ namespace deng {
 
         void __AssetCpy::__cpyVm3D(VkDevice device, das_Asset &asset, VkDeviceMemory mem) {
             // Copy position vertices
-            __vk_BufferCreator::cpyToBufferMem (
-                device, 
-                asset.vertices.v3d.pn * sizeof(das_ObjPosData),
-                asset.vertices.v3d.pos, 
-                mem, 
-                asset.offsets.pos_offset
-            );
+            __vk_BufferCreator::cpyToBufferMem(device, asset.vertices.v3d.pn * sizeof(das_ObjPosData),
+                asset.vertices.v3d.pos, mem, asset.offsets.pos_offset);
 
             // Copy texture vertices
-            __vk_BufferCreator::cpyToBufferMem (
-                device, 
-                asset.vertices.v3d.tn * sizeof(das_ObjTextureData),
-                asset.vertices.v3d.tex, 
-                mem, 
-                asset.offsets.tex_offset
-            );
+            __vk_BufferCreator::cpyToBufferMem(device, asset.vertices.v3d.tn * sizeof(das_ObjTextureData),
+                asset.vertices.v3d.tex, mem, asset.offsets.tex_offset); 
 
             // Copy vertex normals
-            __vk_BufferCreator::cpyToBufferMem (
-                device, 
-                asset.vertices.v3d.nn * sizeof(das_ObjNormalData),
-                asset.vertices.v3d.norm, 
-                mem, 
-                asset.offsets.nor_offset
-            );
+            __vk_BufferCreator::cpyToBufferMem(device, asset.vertices.v3d.nn * sizeof(das_ObjNormalData),
+                asset.vertices.v3d.norm, mem, asset.offsets.nor_offset);
 
             // Copy position indices
-            __vk_BufferCreator::cpyToBufferMem (
-                device,
-                asset.indices.n * sizeof(deng_ui32_t),
-                asset.indices.pos,
-                mem,
-                asset.offsets.ind_offset
-            );
+            __vk_BufferCreator::cpyToBufferMem(device, asset.indices.n * sizeof(deng_ui32_t),
+                asset.indices.pos, mem, asset.offsets.ind_offset);
 
             // Copy texture vertex indices
-            __vk_BufferCreator::cpyToBufferMem (
-                device,
-                asset.indices.n * sizeof(deng_ui32_t),
-                asset.indices.tex,
-                mem,
-                asset.offsets.ind_offset + asset.indices.n * sizeof(deng_ui32_t)
-            );
+            __vk_BufferCreator::cpyToBufferMem(device, asset.indices.n * sizeof(deng_ui32_t),
+                asset.indices.tex, mem, asset.offsets.ind_offset + asset.indices.n * sizeof(deng_ui32_t));
 
             // Copy vertex normal indices
-            __vk_BufferCreator::cpyToBufferMem (
-                device,
-                asset.indices.n * sizeof(deng_ui32_t),
-                asset.indices.norm,
-                mem,
-                asset.offsets.ind_offset + 2 * asset.indices.n * sizeof(deng_ui32_t)
-            );
+            __vk_BufferCreator::cpyToBufferMem(device, asset.indices.n * sizeof(deng_ui32_t),
+                asset.indices.norm, mem, asset.offsets.ind_offset + 2 * asset.indices.n * sizeof(deng_ui32_t));
         }
 
 

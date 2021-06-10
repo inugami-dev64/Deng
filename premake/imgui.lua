@@ -59,62 +59,30 @@
 -- the conditions stated in this License.
 --
 
-local libdeng = {}
 
--- Build libdeng library
-function libdeng.build(build_static)
-    project "deng"
-        if build_static then
-            kind "StaticLib"
-        else
-            kind "SharedLib"
-        end
+local imgui = {}
+
+
+function imgui.build()
+    project "imgui"
+        kind "StaticLib"
         language "C++"
         cppdialect "C++14"
-
-        files {
-            "headers/**/*.h",
-            "src/common/*.c",
-            "src/data/*.c",
-            "src/deng/**.cpp",
-            "src/deng/**.c",
-            "src/imgui-layer/ui_manager.cpp",
-            "src/math/camera_mat.cpp",
-            "src/math/conversion.cpp",
-            "src/math/projection_mat.cpp",
-            "src/math/transformer.cpp",
-            "src/utils/*.cpp"
+        files { 
+            "modules/imgui/imgui.h",
+            "modules/imgui/imgui_draw.cpp",
+            "modules/imgui/imgui_tables.cpp",
+            "modules/imgui/imgui_widgets.cpp",
+            "modules/imgui/imgui.cpp"
         }
 
-        removefiles { "src/deng/renderer.cpp" }
-
-        -- Link all Windows specific dependencies
-        filter "platforms:Win32"
-            removefiles { "src/deng/surface/x11_surface.c" }
-            links {
-                "freetype",
-                "imgui",
-                "vulkan-1",
-                "comctl32",
-				"iphlpapi"
-            }
-
-        -- Link all GNU/Linux specific dependencies
-        filter "platforms:Linux"
-            removefiles { "src/deng/surface/win32_surface.c" }
-            links {
-                "freetype",
-                "imgui",
-                "vulkan",
-                "pthread",
-                "X11",
-                "Xcursor",
-                "dl"
-            }
-
+        optimize "Full"
+        defines { "ImDrawIdx=unsigned int" }
         filter "configurations:Debug"
-            defines { "__DEBUG" }
-        filter {}
+            symbols "On"
+        filter "configurations:Release"
+            symbols "Off"
 end
 
-return libdeng
+
+return imgui

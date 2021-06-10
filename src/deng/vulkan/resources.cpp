@@ -69,11 +69,9 @@ namespace deng {
         /******** __vk_HardwareSpecs *********/
         /*************************************/
 
-        /*
-         * Check if requested extension is supported
-         * This method gets information about supported Vulkan extensions and checks  
-         * if requested extension is one of them
-         */
+        /// Check if requested extension is supported
+        /// This method gets information about supported Vulkan extensions and checks  
+        /// if requested extension is one of them
         deng_bool_t __vk_HardwareSpecs::getExtensionSupport (
             const VkPhysicalDevice &gpu, 
             char *ext_name
@@ -111,10 +109,8 @@ namespace deng {
         }
 
 
-        /*
-         * Find device memory type
-         * This method finds appropriate memory type by VkMemoryPropertyFlags
-         */
+        /// Find device memory type
+        /// This method finds appropriate memory type by VkMemoryPropertyFlags
         deng_ui32_t __vk_HardwareSpecs::getMemoryType (
             const VkPhysicalDevice &gpu, 
             deng_ui32_t type_filter, 
@@ -137,10 +133,8 @@ namespace deng {
         }
 
 
-        /*
-         * Find device score
-         * Rate logical device based on its capabilities
-         */
+        /// Find device score
+        /// Rate logical device based on its capabilities
         deng_ui32_t __vk_HardwareSpecs::getDeviceScore (
             const VkPhysicalDevice &gpu, 
             std::vector<const char*> &required_extenstions
@@ -185,11 +179,9 @@ namespace deng {
         }
 
 
-        /*
-         * Find information about graphics device
-         * This method gets information about graphics device name, Vulkan api
-         * version and driver version
-         */
+        /// Find information about graphics device
+        /// This method gets information about graphics device name, Vulkan api
+        /// version and driver version
         __vk_HwInfo __vk_HardwareSpecs::getGpuInfo(const VkPhysicalDevice &gpu) {
             __vk_HwInfo dev_info;
             VkPhysicalDeviceProperties gpu_props{};
@@ -213,46 +205,42 @@ namespace deng {
         }
 
 
-        /**********************************/
+        /***************************************/
         /******** __vk_MemoryAllocator *********/
-        /**********************************/
+        /***************************************/
         
-        /*
-         * Allocate graphics memory using Vulkan
-         * This method is used to allocate memory for VkBuffer and VkImage objects
-         */
-            void __vk_MemoryAllocator::allocateMemory (
-                const VkDevice &device, 
-                const VkPhysicalDevice &gpu, 
-                VkDeviceSize size,
-                VkDeviceMemory &memory,  
-                deng_ui32_t mem_type_bits, 
-                VkMemoryPropertyFlags properties
-            ) {
-                VkMemoryAllocateInfo allocinfo{};
-                allocinfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-                allocinfo.allocationSize = size;
-                
-                allocinfo.memoryTypeIndex = __vk_HardwareSpecs::getMemoryType (
-                    gpu, 
-                    mem_type_bits, 
-                    properties
-            );
+        /// Allocate graphics memory using Vulkan
+        /// This method is used to allocate memory for VkBuffer and VkImage objects
+        void __vk_MemoryAllocator::allocateMemory (
+            const VkDevice &device, 
+            const VkPhysicalDevice &gpu, 
+            VkDeviceSize size,
+            VkDeviceMemory &memory,  
+            deng_ui32_t mem_type_bits, 
+            VkMemoryPropertyFlags properties
+        ) {
+            VkMemoryAllocateInfo allocinfo{};
+            allocinfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+            allocinfo.allocationSize = size;
+            
+            allocinfo.memoryTypeIndex = __vk_HardwareSpecs::getMemoryType (
+                gpu, 
+                mem_type_bits, 
+                properties
+        );
 
-            if(vkAllocateMemory(device, &allocinfo, nullptr, &memory) != VK_SUCCESS)
-                VK_BUFFER_ERR("failed to allocate buffer memory!");
+        if(vkAllocateMemory(device, &allocinfo, nullptr, &memory) != VK_SUCCESS)
+            VK_BUFFER_ERR("failed to allocate buffer memory!");
         }
 
 
-        /**********************************/
+        /***************************************/
         /********** __vk_ImageCreator **********/
-        /**********************************/
+        /***************************************/
 
         
-        /*
-         * Create new VkImageCreateInfo instance
-         * This method is used to simplify VkImageViewCreateInfo creation
-         */
+        /// Create new VkImageCreateInfo instance
+        /// This method is used to simplify VkImageViewCreateInfo creation
         VkImageViewCreateInfo __vk_ImageCreator::getImageViewInfo (
             const VkImage &image, 
             VkFormat format, 
@@ -275,11 +263,8 @@ namespace deng {
 
 
 
-        /*
-         * Create new VkImage instance
-         * This method creates new VkImage instance and returns 
-         * VkMemoryRequirements for this image
-         */
+        /// Create new VkImage instance
+        /// This method creates new VkImage instance and returns VkMemoryRequirements for this image
         VkMemoryRequirements __vk_ImageCreator::makeImage (
             const VkDevice &device, 
             const VkPhysicalDevice &gpu, 
@@ -324,10 +309,8 @@ namespace deng {
         }
 
 
-        /*
-         * Transition VkImage from one layout to another
-         * This method uses VkImageMemoryBarrier to transition image layout to new_layout
-         */
+        /// Transition VkImage from one layout to another
+        /// This method uses VkImageMemoryBarrier to transition image layout to new_layout
         void __vk_ImageCreator::transitionImageLayout (
             const VkDevice &device, 
             const VkImage &image, 
@@ -406,10 +389,8 @@ namespace deng {
         }
 
 
-        /*
-         * Copy VkBuffer to VkImage instance
-         * This method copies data from src_buffer to dst_image
-         */
+        /// Copy VkBuffer to VkImage instance
+        /// This method copies data from src_buffer to dst_image
         void __vk_ImageCreator::cpyBufferToImage (
             const VkDevice &device, 
             const VkCommandPool &cmd_pool, 
@@ -498,10 +479,8 @@ namespace deng {
         }
 
 
-        /*
-         * Copy data to graphics memory
-         * This method copies size bytes of data from src_data to buf_mem using vkMapMemory
-         */
+        /// Copy data to graphics memory
+        /// This method copies size bytes of data from src_data to buf_mem using vkMapMemory
         void __vk_BufferCreator::cpyToBufferMem (
             const VkDevice &device, 
             VkDeviceSize size, 
@@ -510,31 +489,14 @@ namespace deng {
             VkDeviceSize offset
         ) {
             void *buf;
-            vkMapMemory (
-                device, 
-                buf_mem, 
-                offset, 
-                size, 
-                0, 
-                &buf
-            );
-                memcpy (
-                    buf, 
-                    src_data, 
-                    size
-                );
-
-            vkUnmapMemory (
-                device, 
-                buf_mem
-            );
+            vkMapMemory(device, buf_mem, offset, size, 0, &buf);
+                memcpy(buf, src_data, size);
+            vkUnmapMemory(device, buf_mem);
         }
 
 
-        /*
-         * Copy buffer to other buffer
-         * This method copies data from src_buffer to dst_buffer
-         */
+        /// Copy buffer to other buffer
+        /// This method copies data from src_buffer to dst_buffer
         void __vk_BufferCreator::cpyBufferToBuffer (
             const VkDevice &device, 
             const VkCommandPool &cmd_pool, 
@@ -546,7 +508,7 @@ namespace deng {
             VkDeviceSize dst_offset
         ) {
             // Begin recording cmd_buf
-            VkCommandBuffer tmp_cmd_buf;
+            VkCommandBuffer tmp_cmd_buf = {};
             __vk_CommandBufferRecorder::beginCommandBufferSingleCommand (
                 device, 
                 cmd_pool, 
@@ -560,13 +522,7 @@ namespace deng {
             copy_region.size = size;
             
             // Call Vulkan buffer copy handler
-            vkCmdCopyBuffer (
-                tmp_cmd_buf, 
-                src_buffer, 
-                dst_buffer, 
-                1, 
-                &copy_region
-            );
+            vkCmdCopyBuffer(tmp_cmd_buf, src_buffer, dst_buffer, 1, &copy_region);
 
             // End recording cmd_buf
             __vk_CommandBufferRecorder::endCommandBufferSingleCommand (
@@ -575,12 +531,14 @@ namespace deng {
                 cmd_pool, 
                 &tmp_cmd_buf
             );
+
+            LOG("Done copying buffer to buffer");
         }
 
 
-        /******************************************/
+        /***********************************************/
         /********* __vk_CommandBufferRecorder **********/
-        /******************************************/
+        /***********************************************/
 
 
         /*
@@ -617,11 +575,9 @@ namespace deng {
         }
 
 
-        /* 
-         * Finish recording cmd_buf
-         * This method end cmd_buf recording, submits it into graphics queue
-         * and frees cmd_bufs
-         */
+        /// Finish recording cmd_buf
+        /// This method end cmd_buf recording, submits it into graphics queue
+        /// and frees cmd_bufs
         void __vk_CommandBufferRecorder::endCommandBufferSingleCommand (
             VkDevice device, 
             VkQueue g_queue, 
@@ -638,21 +594,11 @@ namespace deng {
             submitinfo.pCommandBuffers = p_cmd_buf;
             
             // Submit to the graphics queue
-            vkQueueSubmit (
-                g_queue, 
-                1, 
-                &submitinfo, 
-                VK_NULL_HANDLE
-            );
+            vkQueueSubmit(g_queue, 1, &submitinfo, VK_NULL_HANDLE);
             vkQueueWaitIdle(g_queue);
 
             // Cleanup
-            vkFreeCommandBuffers (
-                device, 
-                cmd_pool, 
-                1, 
-                p_cmd_buf
-            );
+            vkFreeCommandBuffers(device, cmd_pool, 1, p_cmd_buf);
         }
     }
 }

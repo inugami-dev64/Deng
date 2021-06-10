@@ -60,62 +60,59 @@
  */ 
 
 
-#ifndef __DENGUI_WIN_DEF_H
-#define __DENGUI_WIN_DEF_H
-
-// Triangle size and position
-#define DENGUI_DROP_DOWN_LIST_TRIANGLE_SIZE     0.1 // vec
-#define DENGUI_DROP_DOWN_LIST_TRIANGLE          { {\
-                                                    {-1.0f, -1.0f}, \
-                                                    {1.0f, 0.0f}, \
-                                                    {-1.0f, 1.0f} \
-                                                } }
+#define __DATA_UPDATER_CPP
+#include <deng/renderer/data_updater.h>
 
 
-// Hierarchy Level specifiers 
-#define DENGUI_CHILD_PUSH_BUTTON_LEVEL          2
-#define DENGUI_CHILD_CONTAINER_LEVEL            1
-#define DENGUI_DROP_DOWN_LIST_LEVEL             4
-// In pixels
-#define DENGUI_LIGHT_BORDER_THICKNESS           1
-#define DENGUI_MEDIUM_BORDER_THICKNESS          2
-#define DENGUI_HEAVY_BORDER_THICKNESS           5
+namespace deng {
 
-// Define default colors
-#define DENGUI_DEFAULT_PRIMARY_COLOR            {0.0f, 1.0f, 1.0f, 0.5f}
-#define DENGUI_DEFAULT_SECONDARY_COLOR          {1.0f, 1.0f, 1.0f, 1.0f}
-#define DENGUI_DEFAULT_TERTIARY_COLOR           {0.0f, 0.2f, 1.0f, 1.0f}
+    __DataUpdater::__DataUpdater (
+        __GlobalRegistry &reg, 
+        deng_RendererHintBits &api_bits,
+        std::shared_ptr<vulkan::__vk_Renderer> &vk_rend,
+        std::shared_ptr<vulkan::__vk_ConfigVars> &vk_cfg
+    ) : __AssetManager(vk_rend, vk_cfg, api_bits), m_vk_rend(vk_rend), m_vk_cfg(vk_cfg) {}
 
-// Define default position and size
-#define DENGUI_DEFAULT_POS                      {0.0f, 0.0f}
-#define DENGUI_DEFAULT_SIZE                     {0.1f, 0.1f}
 
-// Window flags
-#define DENGUI_WINDOW_FLAG_NULL                 0x00
-#define DENGUI_WINDOW_FLAG_MENUBAR              0x01
-#define DENGUI_WINDOW_FLAG_NO_COLLAPSE          0x02
-#define DENGUI_WINDOW_FLAG_NO_MOVE              0x04
-#define DENGUI_WINDOW_FLAG_NO_TITLEBAR          0x08
-#define DENGUI_WINDOW_FLAG_ALWAYS_ON_TOP        0x10
-#define DENGUI_WINDOW_FLAG_NO_RESIZE            0x20
-#define DENGUI_WINDOW_FLAG_NO_CLOSE             0x40
+    /// Check if the renderer is initialised for update methods and throw error if needed
+    void __DataUpdater::__initCheck(const std::string &func_name) {
+        if(!m_is_init)
+            RUN_ERR(func_name, "DENG renderer is not initialised");
+    }
 
-// Default window parametres
-#define DENGUI_TITLEBAR_HEIGHT                  0.05f
-#define DENGUI_TITLEBAR_ELEM_MARGIN             0.005f
-#define DENGUI_DEFAULT_LABEL_PADDING            5.0 // px
-#define DENGUI_DEFAULT_FONT_FILE                "PressStart2P-Regular"
 
-// Main window element ids
-#define DENGUI_FORM_ID                          "form"
-#define DENGUI_TITLEBAR_ID                      "titlebar"
-#define DENGUI_MINIMISE_TRIANGLE_ID             "min_triangle"
-#define DENGUI_MAXIMISE_TRIANGLE_ID             "max_triangle"
-#define DENGUI_CLOSE_BTN_ID                     "close_btn"
-#define DENGUI_TITLE_ID                         "title"
+    /// Overwrite asset vertices to main buffer.
+    /// Note that this method expects that vertices count hasn't changed,
+    /// otherwise weird stuff can happen!
+    void __DataUpdater::overwriteAssetData(const dengMath::vec2<deng_ui32_t> &bounds) {
+        __initCheck("deng::__DataUpdater::updateAssetVerticesBuffer()");
 
-// Default string buttons 
-#define DENGUI_CLOSE_BTN                        "[X]"
-#define DENGUI_WINDOW_LEVEL                     0
+        // Check the currently used API
+        if(m_api_bits == DENG_RENDERER_HINT_API_VULKAN)
+            m_vk_rend->updateAssetData(bounds);
+    }
 
-#endif
+
+    /// Replace current light sources with new ones
+    void __DataUpdater::updateLighting(std::array<deng_Id, __DENG_MAX_LIGHT_SRC_COUNT> &light_srcs) {
+        // Check the backend api type
+        if(m_api_bits == DENG_RENDERER_HINT_API_VULKAN)
+            m_vk_rend->setLighting(light_srcs);
+    }
+
+
+    /// Check if buffer needs to be reallocated for ui data
+    void __DataUpdater::checkBufferRealloc() {
+        // Check the backend api type
+        if(m_api_bits == DENG_RENDERER_HINT_API_VULKAN)
+            m_vk_rend->checkForReallocation();
+    }
+
+
+    /// Update ui vertices data in the buffer
+    void __DataUpdater::uiUpdateData() {
+        // Check the backend api type
+        if(m_api_bits == DENG_RENDERER_HINT_API_VULKAN)
+            m_vk_rend->updateUIData(m_vk_cfg->background);
+    }
+}

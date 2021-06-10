@@ -104,6 +104,7 @@ namespace deng {
     void __AssetManager::submitTexture(das_Texture &texture) {
         RegType reg_tex = { { 0 } };
         reg_tex.tex = texture;
+        LOG("Pushing atlas with id: " + std::string(reg_tex.tex.uuid));
         m_reg.push(reg_tex.tex.uuid, DENG_SUPPORTED_REG_TYPE_TEXTURE, reg_tex);
         m_texture_queue.push(reg_tex.tex.uuid);
     }
@@ -123,8 +124,11 @@ namespace deng {
 
     /// Submit all assets to in submission queue to renderer
     void __AssetManager::submitAssetQueue(const dengMath::vec4<deng_vec_t> &background) {
+        // Check if any assets are available in the queue
+        if(m_asset_queue.empty()) return;
+
         // Idle the renderer
-        if(m_api_bits == DENG_RENDERER_HINT_API_VULKAN)
+        if(m_api_bits == DENG_RENDERER_HINT_API_VULKAN && m_vk_rend->isInit())
             m_vk_rend->idle();
 
         // Keep popping asset ids from the queue
@@ -138,20 +142,29 @@ namespace deng {
         }
 
         // Push data to buffer and allocate descriptor sets
-        m_vk_rend->assetToBufferPushBack({ old_size, static_cast<deng_ui32_t>(m_assets.size()) });
-        m_vk_rend->updateDS({ old_size, static_cast<deng_ui32_t>(m_assets.size()) });
-        m_vk_rend->updateCmdBuffers(background);
+        if(m_api_bits == DENG_RENDERER_HINT_API_VULKAN && m_vk_rend->isInit()) {
+            m_vk_rend->updateAssetData({ old_size, static_cast<deng_ui32_t>(m_assets.size()) });
+            m_vk_rend->updateAssetDS({ old_size, static_cast<deng_ui32_t>(m_assets.size()) });
+            m_vk_rend->updateCmdBuffers(background);
+        }
     }
 
 
     /// Submit all textures in submission queue to renderer
     void __AssetManager::submitTextureQueue() {
-        if(m_api_bits == DENG_RENDERER_HINT_API_VULKAN)
+        // Check if any textures are available in the queue
+        if(m_texture_queue.empty()) return;
+
+        if(m_api_bits == DENG_RENDERER_HINT_API_VULKAN && m_vk_rend->isInit())
             m_vk_rend->idle();
 
         // Pop the queue while not empty
         while(!m_texture_queue.empty()) {
+            LOG("Pushed texture to the texture array");
             m_textures.push_back(m_texture_queue.front());
+
+            LOG("Api bits are " + std::to_string(m_api_bits) + " but should be " + 
+                std::to_string(DENG_RENDERER_HINT_API_VULKAN));
             if(m_api_bits == DENG_RENDERER_HINT_API_VULKAN)
                 m_vk_rend->prepareTexture(m_texture_queue.front());
 
@@ -170,10 +183,10 @@ namespace deng {
         switch(m_api_bits) {
         case DENG_RENDERER_HINT_API_VULKAN:
             m_vk_rend->idle();
-            m_vk_rend->updateDS(dengMath::vec2<deng_ui32_t>{ static_cast<deng_ui32_t>(m_assets.size() - 1), 
+            m_vk_rend->updateAssetDS(dengMath::vec2<deng_ui32_t>{ static_cast<deng_ui32_t>(m_assets.size() - 1), 
                 static_cast<deng_ui32_t>(m_assets.size()) } );
 
-            m_vk_rend->assetToBufferPushBack({ static_cast<deng_ui32_t>(m_assets.size() - 1), 
+            m_vk_rend->updateAssetData({ static_cast<deng_ui32_t>(m_assets.size() - 1), 
                 static_cast<deng_ui32_t>(m_assets.size()) });
             m_vk_rend->updateCmdBuffers(m_vk_vars->background);
             break;
@@ -188,6 +201,6 @@ namespace deng {
     /// PS! Texture UUIDs have to be generated before submitting them and renderer must be setup
     void __AssetManager::pushTexture(das_Texture &texture) {
         submitTexture(texture);
-        m_vk_rend->prepareTexture(m_textures.back());
+        submitTextureQueue();
     }
 }

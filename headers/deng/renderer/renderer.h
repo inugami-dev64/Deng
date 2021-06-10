@@ -84,12 +84,12 @@
     #include <deng/camera.h>
 
     #include <deng/registry/registry.h>
-    #include <utils/font.h>
-
+    #include <imgui-layer/imgui_entity.h>
 #endif
 
 #include <deng/vulkan/renderer.h>
 #include <deng/renderer/asset_man.h>
+#include <deng/renderer/data_updater.h>
 
 #define DENG_DEFAULT_NEAR_PLANE 0.1f
 #define DENG_DEFAULT_FAR_PLANE 25.0f
@@ -101,8 +101,9 @@ namespace deng {
     class Renderer;
     typedef void(*PCustomRunFunc)(Renderer&);
 
+
     /// Main renderer class
-    class Renderer : public __AssetManager {   
+    class Renderer : public __DataUpdater {   
     private:
         std::shared_ptr<vulkan::__vk_ConfigVars> m_vk_vars;
         std::shared_ptr<vulkan::__vk_Renderer> m_vk_rend;   
@@ -113,11 +114,6 @@ namespace deng {
 
         Window *m_p_win;
         Camera3D *m_p_cam;
-        PCustomRunFunc m_run_func = NULL;
-
-    private:
-        /// Check if the renderer is initialised for update methods and throw error if needed
-        void __initCheck(const std::string &func_name);
 
     public:
         Renderer(deng_RendererHintBits hints, const dengMath::vec4<deng_vec_t> &env_color);
@@ -126,21 +122,23 @@ namespace deng {
         void setup(Camera3D &main_cam, Window &main_win);
 
 
-        /// Overwrite asset vertices to main buffer.
-        /// Note that this method expects that vertices count hasn't changed,
-        /// otherwise weird stuff can happen!
-        void updateVerts(const dengMath::vec2<deng_ui32_t> &bounds);
-
-
-        /// Replace current light sources with new ones
-        void updateLighting(std::array<deng_Id, __DENG_MAX_LIGHT_SRC_COUNT> &light_srcs);
-
-
         /// Update data, before creating new frame
         void update();
 
+
         /// Begin the rendering loop
         void run();        
+
+
+        /// idle the renderer 
+        void idle();
+
+    // Render backend getter and setter methods
+    public:
+        void setUIDataPtr(__ImGuiData *p_data);
+        std::shared_ptr<vulkan::__vk_Renderer> getVkRenderer();
+        __GlobalRegistry &getRegistry();
+        deng_RendererHintBits getCurApiBackend();
     };
 }
 

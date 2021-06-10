@@ -86,6 +86,7 @@
     #include <utils/timer.h>
     #include <deng/camera.h>
     #include <deng/registry/registry.h>
+    #include <imgui-layer/imgui_entity.h>
 
     #include <utils/font.h>
     #include <deng/vulkan/renderer.h>
@@ -96,7 +97,6 @@ namespace deng {
 
     class __AssetManager {
     private:
-        deng_RendererHintBits &m_api_bits;
         std::shared_ptr<vulkan::__vk_ConfigVars> &m_vk_vars;
         std::shared_ptr<vulkan::__vk_Renderer> &m_vk_rend;
         std::queue<deng_Id> m_asset_queue;
@@ -113,12 +113,14 @@ namespace deng {
         void __assetTypeIncr(das_Asset &asset);
 
     protected:
+        deng_RendererHintBits &m_api_bits;
+
         __GlobalRegistry m_reg;
         std::vector<deng_Id> m_assets;
         std::vector<deng_Id> m_textures;
         
     public:
-        __AssetManager(std::shared_ptr<vulkan::__vk_Renderer> &vk_rend, 
+        __AssetManager(std::shared_ptr<vulkan::__vk_Renderer> &vk_rend,
             std::shared_ptr<vulkan::__vk_ConfigVars> &vk_vars, deng_RendererHintBits &api);
 
         /// Add texture id to submission queue

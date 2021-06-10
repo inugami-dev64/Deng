@@ -74,8 +74,8 @@ namespace deng {
             std::vector<deng_Id> &textures,
             deng::__GlobalRegistry &reg,
             __vk_BufferData &bd
-        ) : m_textures(textures), m_bd(bd), m_reg(reg) {
-
+        ) : m_textures(textures), m_bd(bd), m_reg(reg)
+        {
             // Create missing texture instance
             __mkMissingTex(device, gpu, cmd_pool, g_queue);
         }
@@ -368,96 +368,44 @@ namespace deng {
             deng_ui32_t mip_levels,
             __vk_Texture &tex
         ) {
-            RegType &reg_tex = m_reg.retrieve (
-                tex.base_id, 
-                DENG_SUPPORTED_REG_TYPE_TEXTURE,
-                NULL
-            );
+            RegType &reg_tex = m_reg.retrieve(tex.base_id, DENG_SUPPORTED_REG_TYPE_TEXTURE, NULL);
 
             // Create staging buffer
-            VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer (
-                device,
-                gpu,
-                reg_tex.tex.pixel_data.size,
-                VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                m_bd.staging_buffer
-            );
+            VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer(device, gpu,
+                reg_tex.tex.pixel_data.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_bd.staging_buffer);
 
             // Allocate memory for staging buffer
-            __vk_BufferCreator::allocateMemory (
-                device,
-                gpu,
-                mem_req.size,
-                m_bd.staging_buffer_memory,
-                mem_req.memoryTypeBits,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-            );
+            __vk_BufferCreator::allocateMemory(device, gpu, mem_req.size, m_bd.staging_buffer_memory, 
+                mem_req.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
             // Bind staging buffer to its memory
-            vkBindBufferMemory (
-                device,
-                m_bd.staging_buffer,
-                m_bd.staging_buffer_memory,
-                0
-            );
+            vkBindBufferMemory(device, m_bd.staging_buffer, m_bd.staging_buffer_memory, 0);
 
             // Copy all bitmap data to staging buffer
-            __vk_BufferCreator::cpyToBufferMem (
-                device,
-                reg_tex.tex.pixel_data.size,
-                reg_tex.tex.pixel_data.p_pixel_data,
-                m_bd.staging_buffer_memory,
-                0
-            );
+            __vk_BufferCreator::cpyToBufferMem(device, reg_tex.tex.pixel_data.size,
+                reg_tex.tex.pixel_data.p_pixel_data, m_bd.staging_buffer_memory, 0);
 
             reg_tex.tex.pixel_data.memory_offset = m_bd.img_memory_offset;
             m_bd.img_memory_offset += mem_req.size;
             
             // Bind the image to its memory with correct offsets
-            vkBindImageMemory (
-                device,
-                tex.image,
-                m_bd.img_memory,
-                reg_tex.tex.pixel_data.memory_offset
-            );
+            vkBindImageMemory(device, tex.image, m_bd.img_memory,
+                reg_tex.tex.pixel_data.memory_offset);
 
             // Transition image layout for copying from staging buffer
-            __vk_ImageCreator::transitionImageLayout (
-                device,
-                tex.image,
-                cmd_pool,
-                g_queue,
-                VK_FORMAT_B8G8R8A8_SRGB,
-                VK_IMAGE_LAYOUT_UNDEFINED,
-                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                mip_levels
-            );
+            __vk_ImageCreator::transitionImageLayout(device, tex.image, cmd_pool, g_queue,
+                VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                mip_levels);
 
             // Copy data from staging buffer to image buffer
-            __vk_ImageCreator::cpyBufferToImage (
-                device,
-                cmd_pool,
-                g_queue,
-                m_bd.staging_buffer,
-                tex.image,
-                reg_tex.tex.pixel_data.width,
-                reg_tex.tex.pixel_data.height
-            );
+            __vk_ImageCreator::cpyBufferToImage(device, cmd_pool, g_queue, m_bd.staging_buffer,
+                tex.image, reg_tex.tex.pixel_data.width, reg_tex.tex.pixel_data.height);
 
             // Clean the staging buffer
-            vkDestroyBuffer (
-                device, 
-                m_bd.staging_buffer, 
-                NULL
-            );
+            vkDestroyBuffer(device, m_bd.staging_buffer, NULL);
 
             // Free staging buffer's memory
-            vkFreeMemory (
-                device, 
-                m_bd.staging_buffer_memory, 
-                NULL
-            );
+            vkFreeMemory(device, m_bd.staging_buffer_memory, NULL);
         }
 
 
@@ -465,8 +413,7 @@ namespace deng {
         void __vk_TextureManager::__newVkTexture (
             VkDevice device,
             VkPhysicalDevice gpu,
-            VkCommandPool cmd_pool,
-            VkQueue g_queue,
+            VkCommandPool cmd_pool, VkQueue g_queue,
             deng_ui32_t mip_levels,
             deng_bool_t is_lf,
             deng_bool_t ignore_mem_check,

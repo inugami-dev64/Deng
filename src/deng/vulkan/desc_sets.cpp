@@ -90,9 +90,9 @@ namespace deng {
         }
 
         
-        /// Abstracted function for creating descriptor sets
+        /// Abstracted function for creating descriptor sets for assets
         /// for assets between the asset bounds
-        void __vk_DescriptorSetsCreator::mkDS (
+        void __vk_DescriptorSetsCreator::mkAssetDS (
             VkDevice device,
             __vk_BufferData &bd,
             deng_Id missing_tex_uuid,
@@ -110,6 +110,7 @@ namespace deng {
                 RegType &reg_vk_asset = m_reg.retrieve (
                     reg_asset.asset.vk_id, DENG_SUPPORTED_REG_TYPE_VK_ASSET, NULL);
 
+                // Increment asset count accordingly
                 switch(reg_asset.asset.asset_mode) {
                 case DAS_ASSET_MODE_2D_UNMAPPED:
                     m_2d_unmapped_asset_c++;
@@ -268,7 +269,7 @@ namespace deng {
 
 
         /// Create write descriptors for texture mapped assets
-        std::vector<VkWriteDescriptorSet> __vk_DescriptorSetsCreator::__mkMappedWriteDescInfos(
+        const std::vector<VkWriteDescriptorSet> __vk_DescriptorSetsCreator::__mkMappedWriteDescInfos (
             das_AssetMode asset_mode, 
             std::vector<VkDescriptorBufferInfo> &buffer_info, 
             VkDescriptorSet &desc_set,
@@ -340,7 +341,7 @@ namespace deng {
 
 
         /// Create write descriptors for unmapped assets
-        std::vector<VkWriteDescriptorSet> __vk_DescriptorSetsCreator::__mkUnmappedWriteDescInfos(
+        const std::vector<VkWriteDescriptorSet> __vk_DescriptorSetsCreator::__mkUnmappedWriteDescInfos(
             das_AssetMode asset_mode,
             std::vector<VkDescriptorBufferInfo> &buffer_info,
             VkDescriptorSet &desc_set
@@ -381,9 +382,25 @@ namespace deng {
         }
 
 
-        /* 
-         * Create unmapped descriptor sets for a single asset
-         */
+        /// Create write descriptors for ImGui elements
+        const VkWriteDescriptorSet __vk_DescriptorSetsCreator::__mkUIWriteDescInfo (
+            const VkDescriptorSet &desc_set,
+            const VkDescriptorImageInfo &img_info
+        ) {
+            VkWriteDescriptorSet write_desc_set = {};
+            write_desc_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_desc_set.dstSet = desc_set;
+            write_desc_set.dstBinding = 0;
+            write_desc_set.dstArrayElement = 0;
+            write_desc_set.descriptorCount = 1;
+            write_desc_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            write_desc_set.pImageInfo = &img_info;
+
+            return write_desc_set;
+        }
+
+
+        /// Create unmapped descriptor sets for a single asset
         void __vk_DescriptorSetsCreator::__mkUnmappedDS (
             VkDevice device, 
             __vk_Asset &asset,
@@ -407,12 +424,12 @@ namespace deng {
 
             // Set all layouts per swapchain image
             for(size_t i = 0; i < set_layouts.size(); i++)
-                set_layouts[i] = __vk_DescriptorSetLayoutCreator::getLayout(reg_asset.asset.asset_mode);
+                set_layouts[i] = __vk_DescriptorSetLayoutCreator::getLayout(assetModeToPipelineType(reg_asset.asset.asset_mode));
             
             // Create descriptor set allocate info instance
             VkDescriptorSetAllocateInfo allocinfo{};
             allocinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-            allocinfo.descriptorPool = __vk_DescriptorPoolCreator::getDescPool(reg_asset.asset.asset_mode);
+            allocinfo.descriptorPool = __vk_DescriptorPoolCreator::getDescPool(assetModeToPipelineType(reg_asset.asset.asset_mode));
             allocinfo.descriptorSetCount = static_cast<deng_ui32_t>(set_layouts.size());
             allocinfo.pSetLayouts = set_layouts.data();
 
@@ -484,17 +501,16 @@ namespace deng {
 
             // Set the layout data for each swapchain image
             for(size_t i = 0; i < set_layouts.size(); i++)
-                set_layouts[i] = __vk_DescriptorSetLayoutCreator::getLayout(reg_asset.asset.asset_mode);
+                set_layouts[i] = __vk_DescriptorSetLayoutCreator::getLayout(assetModeToPipelineType(reg_asset.asset.asset_mode));
 
             // Allocate memory for descriptor set instances
             asset.desc_c = __max_frame_c;
-            LOG("Desc set count: " + std::to_string(asset.desc_c));
             asset.desc_sets = (VkDescriptorSet*) calloc(asset.desc_c,
                 sizeof(VkDescriptorSet));
 
             VkDescriptorSetAllocateInfo allocinfo{};
             allocinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-            allocinfo.descriptorPool = __vk_DescriptorPoolCreator::getDescPool(reg_asset.asset.asset_mode);
+            allocinfo.descriptorPool = __vk_DescriptorPoolCreator::getDescPool(assetModeToPipelineType(reg_asset.asset.asset_mode));
             allocinfo.descriptorSetCount = static_cast<deng_ui32_t>(set_layouts.size());
             allocinfo.pSetLayouts = set_layouts.data();
             
@@ -518,5 +534,56 @@ namespace deng {
                     write_descs.data(), 0, NULL);
             }
         }
-    }
+
+        
+        /// Create descriptor sets for ImGui elements
+        void __vk_DescriptorSetsCreator::mkUIDS ( 
+            VkDevice device, 
+            __vk_BufferData &bd, 
+            deng_Id texture_atlas
+        ) {
+            // Retrieve the ui texture atlas' Vulkan instance
+            RegType reg_tex = m_reg.retrieve(texture_atlas, DENG_SUPPORTED_REG_TYPE_TEXTURE, NULL);
+            RegType reg_vk_tex = m_reg.retrieve(reg_tex.tex.vk_id, DENG_SUPPORTED_REG_TYPE_VK_TEXTURE, NULL);
+
+            // Set up image info structure for binding texture sampler
+            VkDescriptorImageInfo desc_imageinfo = {};
+            desc_imageinfo.sampler = reg_vk_tex.vk_tex.sampler;
+            desc_imageinfo.imageView = reg_vk_tex.vk_tex.image_view;
+            desc_imageinfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+            // Set the layout data for each swapchain image
+            std::vector<VkDescriptorSetLayout> set_layouts(__max_frame_c);
+            for(size_t i = 0; i < set_layouts.size(); i++)
+                set_layouts[i] = __vk_DescriptorSetLayoutCreator::getLayout(DENG_PIPELINE_TYPE_UI);
+
+            // Resize the desc set vector to have an capacity to store descriptor sets for each frame in flight
+            m_ui_desc_sets.resize(__max_frame_c);
+
+            VkDescriptorSetAllocateInfo allocinfo{};
+            allocinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+            allocinfo.descriptorPool = __vk_DescriptorPoolCreator::getDescPool(DENG_PIPELINE_TYPE_UI);
+            allocinfo.descriptorSetCount = static_cast<deng_ui32_t>(set_layouts.size());
+            allocinfo.pSetLayouts = set_layouts.data();
+            
+            // Allocate descriptor sets
+            if(vkAllocateDescriptorSets(device, &allocinfo, m_ui_desc_sets.data()) != VK_SUCCESS)
+                VK_DESC_ERR("failed to allocate descriptor sets");
+
+            // Iterate through every descriptor set in swapchain image and update it
+            for(size_t i = 0; i < __max_frame_c; i++) {
+                // Find write descriptors for texture mapped asset
+                const VkWriteDescriptorSet write_desc_set = __mkUIWriteDescInfo(m_ui_desc_sets[i], desc_imageinfo);
+
+                // Update texture mapped descriptor sets
+                vkUpdateDescriptorSets(device, 1, &write_desc_set, 0, NULL);
+            }
+        }
+
+
+        // Getter methods
+        const std::vector<VkDescriptorSet> &__vk_DescriptorSetsCreator::getUIDS() {
+            return m_ui_desc_sets;
+        }
+    }   
 }

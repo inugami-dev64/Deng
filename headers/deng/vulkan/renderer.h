@@ -65,7 +65,7 @@
 
 #ifdef __VK_RENDERER_CPP
     #include <vector>
-    #include <mutex>
+    #include <memory>
     #include <array>
     
     #include <vulkan/vulkan.h>
@@ -82,7 +82,7 @@
 
     #include <deng/lighting/light_srcs.h>
     #include <deng/registry/registry.h>
-    #include <utils/font.h>
+    #include <imgui-layer/imgui_entity.h>
 #endif
 
 
@@ -118,9 +118,7 @@ namespace deng {
         private:
             __vk_ConfigVars m_config;
             deng_bool_t m_is_init = false;
-
-            // This is reserved for future use
-            dengUtils::StringRasterizer *m_p_sr = NULL;
+            deng_bool_t m_is_idle = true;
 
         private:
 
@@ -174,6 +172,12 @@ namespace deng {
             /// This method needs to be called whenever any 
             /// command or data buffers need to be updated
             void idle();
+
+        // Setter and getter methods
+        public:
+            void setUIDataPtr(__ImGuiData *p_data);
+            const deng_bool_t isInit();
+            const __vk_BufferData &getBufferData();
         };
     }
 }

@@ -84,8 +84,8 @@ namespace deng {
             std::vector<deng_Id> &assets,
             std::vector<deng_Id> &textures,
             VkFormat sc_color_format,
-            const VkPhysicalDeviceLimits &gpu_limits
-        ) : __vk_BufferManager(gpu_limits, assets, reg),
+            const VkPhysicalDeviceLimits &gpu_limits) : 
+            __vk_BufferManager(device, gpu, gpu_limits, assets, reg),
             __vk_TextureManager(device, gpu, cmd_pool, g_queue, 
                 textures, reg, m_buffer_data) 
         {
@@ -142,42 +142,21 @@ namespace deng {
             VkExtent2D &extent,
             VkFormat sc_color_format
         ) {
-            VkMemoryRequirements mem_req = __vk_ImageCreator::makeImage (
-                device,
-                gpu,
-                m_color_image,
-                extent.width,
-                extent.height,
-                1,
-                sc_color_format,
-                VK_IMAGE_TILING_OPTIMAL,
-                VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | 
-                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-                m_sample_c
-            );
+            // Create a new Vulkan image handle
+            VkMemoryRequirements mem_req = __vk_ImageCreator::makeImage(device, gpu, m_color_image, extent.width, 
+                extent.height, 1, sc_color_format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | 
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, m_sample_c);
 
-            __vk_BufferCreator::allocateMemory (
-                device,
-                gpu,
-                mem_req.size,
-                m_color_image_mem,
-                mem_req.memoryTypeBits,
-                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-            );
+            // Allocate memory for the image handle
+            __vk_BufferCreator::allocateMemory(device, gpu, mem_req.size, m_color_image_mem,
+                mem_req.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-            vkBindImageMemory (
-                device,
-                m_color_image,
-                m_color_image_mem,
-                0
-            );
+            // Bind the memory with the image handle
+            vkBindImageMemory(device, m_color_image, m_color_image_mem, 0);
 
+            // Create image view
             VkImageViewCreateInfo image_view_createinfo = __vk_ImageCreator::getImageViewInfo (
-                m_color_image,
-                sc_color_format,
-                VK_IMAGE_ASPECT_COLOR_BIT,
-                1
-            );
+                m_color_image, sc_color_format, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 
             if(vkCreateImageView(device, &image_view_createinfo, NULL, &m_color_image_view) != VK_SUCCESS)
                 VK_RES_ERR("failed to create color image view");
@@ -224,5 +203,7 @@ namespace deng {
         VkImage __vk_ResourceManager::getColorImg() { return m_color_image; }
         VkDeviceMemory __vk_ResourceManager::getColorImgMem() { return m_color_image_mem; }
         VkImageView __vk_ResourceManager::getColorImgView() { return m_color_image_view; }
+
+        void __vk_ResourceManager::setUIDataPtr(__ImGuiData *p_gui) { __vk_BufferManager::setUIDataPtr(p_gui); };
     }
 }

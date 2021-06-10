@@ -308,9 +308,7 @@ namespace deng {
         }
 
 
-        /* 
-         * Create swapchain image views 
-         */
+        /// Create swapchain image views 
         void __vk_SwapChainCreator::__mkSCImageViews() {
             m_swapchain_image_views.resize(m_swapchain_images.size());
 
@@ -328,9 +326,7 @@ namespace deng {
         }
 
 
-        /* 
-         * Remake the swapchain (needed for resizing the window) 
-         */
+        /// Remake the swapchain (needed for resizing the window) 
         void __vk_SwapChainCreator::remkSwapChain (
             VkDevice device,
             deng::Window *p_win,
@@ -351,9 +347,7 @@ namespace deng {
         }
 
 
-        /* 
-         * Clean all swap chain related structs 
-         */
+        /// Clean all swap chain related structs 
         void __vk_SwapChainCreator::SCCleanup() {
             size_t index = 0;
             for(index = 0; index < m_swapchain_images.size(); index++) {

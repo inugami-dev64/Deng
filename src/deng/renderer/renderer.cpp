@@ -66,11 +66,13 @@
 namespace deng {
 
     Renderer::Renderer(deng_RendererHintBits hints, const dengMath::vec4<deng_vec_t> &env_color) :
-        __AssetManager(m_vk_rend, m_vk_vars, m_api_bits){
+        __DataUpdater(m_reg, m_api_bits, m_vk_rend, m_vk_vars) {
         m_hints = hints;
         m_env_color = env_color;
         m_api_bits = !(hints & DENG_RENDERER_HINT_API_VULKAN) ? hints & DENG_RENDERER_HINT_API_OPENGL :
                      hints & DENG_RENDERER_HINT_API_VULKAN;
+
+        LOG("Final api bits: " + std::to_string(m_api_bits));
 
         // Throw error if no api backend was specified
         if(m_api_bits != DENG_RENDERER_HINT_API_VULKAN && m_api_bits != DENG_RENDERER_HINT_API_OPENGL)
@@ -85,7 +87,8 @@ namespace deng {
 
         // Check the current api bits
         if(m_api_bits == DENG_RENDERER_HINT_API_VULKAN) {
-            m_vk_vars.reset(new vulkan::__vk_ConfigVars);
+            // Setup Vulkan renderer configuration values
+            m_vk_vars = std::make_shared<vulkan::__vk_ConfigVars>();
             m_vk_vars->background = m_env_color,
             m_vk_vars->p_cam = &main_cam;
             m_vk_vars->p_win = &main_win;
@@ -93,45 +96,20 @@ namespace deng {
             m_vk_vars->cli_count_fps = (m_hints & DENG_RENDERER_HINT_SHOW_CMD_FPS_COUNTER) > 1 ? 1 : m_hints & DENG_RENDERER_HINT_SHOW_CMD_FPS_COUNTER,
             m_vk_vars->gui_count_fps = (m_hints & DENG_RENDERER_HINT_SHOW_GUI_FPS_COUNTER) > 1 ? 1 : m_hints & DENG_RENDERER_HINT_SHOW_GUI_FPS_COUNTER,
             m_vk_vars->enable_validation_layers = (m_hints & DENG_RENDERER_HINT_ENABLE_API_DEBUGGING) > 1 ? 1 : m_hints & DENG_RENDERER_HINT_ENABLE_API_DEBUGGING,
-            m_vk_rend.reset(new vulkan::__vk_Renderer(*m_vk_vars.get(), m_reg, m_assets, m_textures));
 
-            // Setup the renderer
-            m_vk_rend->setup();
+            // Create a new renderer instance
+            m_vk_rend = std::make_shared<vulkan::__vk_Renderer>(*m_vk_vars.get(), Renderer::m_reg, m_assets, m_textures);
 
             // Tell Vulkan renderer to initialise Vulkan specific asset and texture instances 
             __AssetManager::submitTextureQueue();
             __AssetManager::submitAssetQueue(m_vk_vars->background);
+
+            // Setup the renderer
+            m_vk_rend->setup();
         }
         else RUN_ERR("deng::Renderer::setup()", "OpenGL is not supported in DENG :(");
 
         m_is_init = true;
-    }
-
-
-    /// Check if the renderer is initialised for update methods and throw error if needed
-    void Renderer::__initCheck(const std::string &func_name) {
-        if(!m_is_init)
-            RUN_ERR(func_name, "Renderer is not initilised");
-    }
-
-
-    /// Overwrite asset vertices to main buffer.
-    /// Note that this method expects that vertices count hasn't changed,
-    /// otherwise weird stuff can happen!
-    void Renderer::updateVerts(const dengMath::vec2<deng_ui32_t> &bounds) {
-        __initCheck("deng::Renderer::updateAssetVerticesBuffer()");
-
-        // Check the currently used API
-        if(m_api_bits == DENG_RENDERER_HINT_API_VULKAN)
-            m_vk_rend->updateAssetVerts(bounds);
-    }
-
-
-    /// Replace current light sources with new ones
-    void Renderer::updateLighting(std::array<deng_Id, __DENG_MAX_LIGHT_SRC_COUNT> &light_srcs) {
-        // Check the backend api type
-        if(m_api_bits == DENG_RENDERER_HINT_API_VULKAN)
-            m_vk_rend->setLighting(light_srcs);
     }
 
 
@@ -163,4 +141,23 @@ namespace deng {
         if(m_api_bits == DENG_RENDERER_HINT_API_VULKAN)
             m_vk_rend->idle();
     }
+
+
+    /// idle the renderer 
+    void Renderer::idle() {
+        if(m_api_bits == DENG_RENDERER_HINT_API_VULKAN)
+            m_vk_rend->idle();
+    }
+    
+
+    void Renderer::setUIDataPtr(__ImGuiData *p_data) {
+        // Check the backend renderer and call the correct ui data setter method accordingly
+        if(m_api_bits == DENG_RENDERER_HINT_API_VULKAN)
+            m_vk_rend->setUIDataPtr(p_data);
+    }
+
+
+    std::shared_ptr<vulkan::__vk_Renderer> Renderer::getVkRenderer() { return m_vk_rend; }
+    __GlobalRegistry &Renderer::getRegistry() { return m_reg; }
+    deng_RendererHintBits Renderer::getCurApiBackend() { return m_api_bits; }
 } 

@@ -81,7 +81,7 @@ layout(location = 1) in vec2 in_tex_pos;
 
 layout(location = 0) out vec4 out_color;
 layout(location = 1) out vec2 out_tex_pos;
-layout(location = 2) out uint out_is_unmapped;
+layout(location = 2) out flat uint out_is_unmapped;
 
 void main() {
     if(cl.ignore_transform == 1)

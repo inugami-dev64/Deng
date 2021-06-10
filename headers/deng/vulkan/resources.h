@@ -141,10 +141,20 @@ namespace deng {
             VkDeviceSize img_memory_cap = 0;
             VkDeviceSize img_memory_offset = 0;
 
+            // Main buffer hosts all vertices' and indices' data for assets and ui elements 
+            // NOTE: Asset data is always kept on lower memory addresses than UI data, this means that once one of these spaces is filled, 
+            // a potential reallocation is triggered
+            // NOTE: When offsetting keep in mind these conditions: asset_cap + ui_cap = buffer_cap
+            //                                                      ui_offset == asset_cap
+            //                                                      asset_offset == 0
+            //                                                      asset_size < asset_cap && ui_size < ui_cap
             VkBuffer main_buffer;
             VkDeviceMemory main_buffer_memory;
-            VkDeviceSize main_buffer_size = 0;
-            VkDeviceSize main_buffer_cap = 0;
+            VkDeviceSize asset_cap = 0;
+            VkDeviceSize asset_size = 0;
+            VkDeviceSize ui_cap = 0;
+            VkDeviceSize ui_size = 0;
+
 
             // Memory alignment for uniform data looks like that 
             // where n is swapchain image count and m is the amount of texture images

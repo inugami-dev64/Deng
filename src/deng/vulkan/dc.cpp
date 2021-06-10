@@ -76,10 +76,12 @@ namespace deng {
         __vk_DrawCaller::__vk_DrawCaller (
             VkDevice device,
             __vk_QueueManager qff,
-            std::vector<deng_Id> &assets,
-            std::vector<deng_Id> &textures,
+            const std::vector<deng_Id> &assets,
+            const std::vector<deng_Id> &textures,
+            const std::vector<VkDescriptorSet> &ui_sets,
             deng::__GlobalRegistry &reg
-        ) : m_assets(assets), m_textures(textures), m_reg(reg) {
+        ) : m_assets(assets), m_textures(textures), m_ui_sets(ui_sets), m_reg(reg) 
+        {
             m_qff = qff;
             __mkSynchronisation(device);
         }
@@ -124,15 +126,15 @@ namespace deng {
         }
 
         
-        void __vk_DrawCaller::__bindVertexResourceBuffers (
+        /// Bind asset resources to command buffers
+        void __vk_DrawCaller::__bindAssetResources (
             das_Asset &asset, 
             VkCommandBuffer cur_buf,
-            __vk_BufferData &bd
+            const __vk_BufferData &bd
         ) {
+            // Vertex normal binding number variable, since it can change according to the asset mode
             deng_ui32_t nor_bind_nr = 1;
-            LOG("offsets: " + std::to_string(asset.offsets.pos_offset) + " " + std::to_string(
-                asset.offsets.tex_offset) + " " + std::to_string(asset.offsets.nor_offset) + " " +
-                std::to_string(asset.offsets.ind_offset));
+
             // Bind the position vertex location in buffer
             vkCmdBindVertexBuffers(cur_buf, 0, 1, &bd.main_buffer, 
                 &asset.offsets.pos_offset);
@@ -162,8 +164,17 @@ namespace deng {
         }
 
 
+        /// Bind ImGui resources to command buffers
+        void __vk_DrawCaller::__bindUIElementResources(__ImGuiEntity *ent, VkCommandBuffer cur_buf, const __vk_BufferData &bd) {
+            vkCmdBindVertexBuffers(cur_buf, 0, 1, &bd.main_buffer, &bd.asset_cap);
+            LOG("Index offset: " + std::to_string(ent->buf_offset));
+            vkCmdBindIndexBuffer(cur_buf, bd.main_buffer, bd.asset_cap + ent->buf_offset, 
+                VK_INDEX_TYPE_UINT32);
+        }
+
+
         /// Bind asset pipeline and return its pipeline layout
-        VkPipelineLayout *__vk_DrawCaller::__bindPipeline(das_Asset &asset, VkCommandBuffer cmd_buf) {
+        VkPipelineLayout *__vk_DrawCaller::__bindAssetPipeline(das_Asset &asset, VkCommandBuffer cmd_buf) {
             VkPipeline *p_pl = NULL;
             VkPipelineLayout *p_pl_layout = NULL;
             // Find correct pipelines and their layouts according to the asset mode
@@ -201,9 +212,7 @@ namespace deng {
         }
 
 
-        /* 
-         * Set miscellanious data arrays 
-         */
+        /// Set miscellanious data arrays 
         void __vk_DrawCaller::setMiscData (
             const std::array<__vk_PipelineData, PIPELINE_C> &pl_data, 
             const std::vector<VkFramebuffer> &fb
@@ -213,14 +222,15 @@ namespace deng {
         }
 
 
-        /// Allocate and record draw command buffers for assets 
-        void __vk_DrawCaller::allocateMainCmdBuffers (
+        /// Allocate memory for commandbuffers
+        void __vk_DrawCaller::allocateCmdBuffers (
             VkDevice device, 
             VkQueue g_queue, 
             VkRenderPass renderpass, 
             VkExtent2D ext,
             dengMath::vec4<deng_vec_t> background,
-            __vk_BufferData &bd
+            const __vk_BufferData &bd,
+            const deng_bool_t use_lvl_zero
         ) {
             m_cmd_bufs.resize(m_framebuffers.size());
 
@@ -235,17 +245,17 @@ namespace deng {
             if(vkAllocateCommandBuffers(device, &cmd_buf_alloc_info, m_cmd_bufs.data())) 
                 VK_DRAWCMD_ERR("failed to allocate command buffers");
             
-            // Record all command buffer
-            recordMainCmdBuffers(renderpass, ext,
-                background, bd);
+            m_cmd_bufs.resize(__max_frame_c);
         }
 
 
-        void __vk_DrawCaller::recordMainCmdBuffers (
+        /// Record command buffers for drawing assets and optionally ui elements
+        void __vk_DrawCaller::recordCmdBuffers (
             VkRenderPass renderpass,
             VkExtent2D ext,
             const dengMath::vec4<deng_vec_t> &background,
-            __vk_BufferData &bd
+            const __vk_BufferData &bd,
+            const deng_bool_t use_lvl_zero
         ) {
             size_t i, j;
 
@@ -255,7 +265,7 @@ namespace deng {
                 cmd_buf_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
                 // Begin recording command buffer
-                if(vkBeginCommandBuffer(m_cmd_bufs[i], &cmd_buf_info) != VK_SUCCESS)
+                if(vkBeginCommandBuffer(m_cmd_bufs.at(i), &cmd_buf_info) != VK_SUCCESS)
                     VK_DRAWCMD_ERR("failed to begin recording command buffers");
 
                 // Set up renderpass begin info
@@ -281,8 +291,8 @@ namespace deng {
                 static_cast<deng_ui32_t>(clear_values.size());
                 renderpass_begininfo.pClearValues = clear_values.data();
                 
-                // Start a new render pass
-                vkCmdBeginRenderPass(m_cmd_bufs[i], &renderpass_begininfo, 
+                // Start a new render pass for recording asset draw commands
+                vkCmdBeginRenderPass(m_cmd_bufs.at(i), &renderpass_begininfo, 
                     VK_SUBPASS_CONTENTS_INLINE);
 
                     // Iterate through every asset, bind resources and issue an index draw to commandbuffer
@@ -294,29 +304,50 @@ namespace deng {
                             DENG_SUPPORTED_REG_TYPE_VK_ASSET, NULL);
 
                         if(reg_asset.asset.is_shown) {
-                            __bindVertexResourceBuffers(reg_asset.asset, m_cmd_bufs[i], bd);
-                            VkPipelineLayout *p_pl_layout = __bindPipeline(reg_asset.asset, m_cmd_bufs[i]);
+                            __bindAssetResources(reg_asset.asset, m_cmd_bufs.at(i), bd);
+                            VkPipelineLayout *p_pl_layout = __bindAssetPipeline(reg_asset.asset, m_cmd_bufs.at(i));
 
-                            vkCmdBindDescriptorSets(m_cmd_bufs[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            vkCmdBindDescriptorSets(m_cmd_bufs.at(i), VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 *p_pl_layout, 0, 1, &reg_vk_asset.vk_asset.desc_sets[i], 0, NULL);
 
-                            vkCmdDrawIndexed(m_cmd_bufs[i], static_cast<deng_ui32_t>(reg_asset.asset.indices.n), 
+                            vkCmdDrawIndexed(m_cmd_bufs.at(i), static_cast<deng_ui32_t>(reg_asset.asset.indices.n), 
                                 1, 0, 0, 0);
                         }
                     }
 
+                    // Check if ui elements should be drawn
+                    if(m_p_ui_data) {
+                        LOG("UI entity count: " + std::to_string(m_p_ui_data->entities.size()));
+                        for(j = 0; j < m_p_ui_data->entities.size(); j++) {
+                            __bindUIElementResources(&m_p_ui_data->entities[j], m_cmd_bufs.at(i), bd);
+
+                            vkCmdBindPipeline(m_cmd_bufs.at(i), VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                m_pl_data[UI_I].pipeline);
+
+                            vkCmdBindDescriptorSets(m_cmd_bufs.at(i), VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                *m_pl_data[UI_I].p_pipeline_layout, 0, 1, &m_ui_sets[i], 0, NULL);
+
+                            LOG("Index count: " + std::to_string(m_p_ui_data->entities[j].ind_c));
+                            vkCmdDrawIndexed(m_cmd_bufs.at(i), m_p_ui_data->entities[j].ind_c, 1, 0, 0, 0);
+                        }
+                    }
+
                 // End render pass
-                vkCmdEndRenderPass(m_cmd_bufs[i]);
+                vkCmdEndRenderPass(m_cmd_bufs.at(i));
+                
 
                 // Stop recording commandbuffer
-                if(vkEndCommandBuffer(m_cmd_bufs[i]) != VK_SUCCESS)
+                if(vkEndCommandBuffer(m_cmd_bufs.at(i)) != VK_SUCCESS)
                     VK_DRAWCMD_ERR("failed to end recording command buffer");
             }
         }
 
 
-        /// __vk_DrawCaller getter methods
+        /// Getter and setter methods
+        void __vk_DrawCaller::setUIDataPtr(__ImGuiData *p_gui) { m_p_ui_data = p_gui; }
         VkCommandPool __vk_DrawCaller::getComPool() { return m_cmd_pool; }
-        const std::vector<VkCommandBuffer> &__vk_DrawCaller::getComBufs() { return m_cmd_bufs; }
-    }
+        const std::vector<VkCommandBuffer> &__vk_DrawCaller::getComBufs() { 
+            return m_cmd_bufs;
+        }
+    }   
 }

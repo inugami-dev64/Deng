@@ -144,85 +144,42 @@ namespace deng {
              * in case the required allocation size floored to nearest base 2 exponant is smaller 
              * than the double of the previous capacity the latter will be used instead
              */
-            void __reallocTexMemory (
-                VkDevice device,
-                VkPhysicalDevice gpu,
-                VkCommandPool cmd_pool,
-                VkQueue g_queue,
-                VkDeviceSize min_size,
-                deng_bool_t is_lf,
-                deng_ui32_t mip_levels
-            );
+            void __reallocTexMemory(VkDevice device, VkPhysicalDevice gpu, VkCommandPool cmd_pool,
+                VkQueue g_queue, VkDeviceSize min_size, deng_bool_t is_lf, deng_ui32_t mip_levels);
 
             
             /// Check if linear filtering is requested and if mipmaps should be created
-            void __mipmapTransition (
-                VkDevice device,
-                VkCommandPool cmd_pool,
-                VkQueue g_queue,
-                deng_bool_t is_lf,
-                deng_ui32_t mip_levels,
-                __vk_Texture &tex
-            );
+            void __mipmapTransition(VkDevice device, VkCommandPool cmd_pool, VkQueue g_queue, deng_bool_t is_lf,
+                deng_ui32_t mip_levels, __vk_Texture &tex);
 
             
             /// Create VkImageViews for texture images
-            void __mkImageView (
-                VkDevice device,
-                __vk_Texture &tex,
-                deng_ui32_t mip_levels
-            );
+            void __mkImageView(VkDevice device, __vk_Texture &tex, deng_ui32_t mip_levels);
 
 
             /// Copy all bitmap data to image bitmap buffer
             /// WARNING: This method performs no buffer bounds check and can cause errors!
             /// NOTE: Texture object must have a valid VkImage instance created before calling this 
             /// method
-            void __cpyBitmap (
-                VkDevice device,
-                VkPhysicalDevice gpu,
-                VkCommandPool cmd_pool,
-                VkQueue g_queue,
-                deng_ui32_t mip_levels,
-                __vk_Texture &tex
-            );
+            void __cpyBitmap(VkDevice device, VkPhysicalDevice gpu, VkCommandPool cmd_pool,
+                VkQueue g_queue, deng_ui32_t mip_levels, __vk_Texture &tex);
 
 
             /// Create new VkImage and VkImageView instances for a single texture
-            void __newVkTexture (
-                VkDevice device,
-                VkPhysicalDevice gpu,
-                VkCommandPool cmd_pool,
-                VkQueue g_queue,
-                deng_ui32_t mip_levels,
-                deng_bool_t is_lf,
-                deng_bool_t ignore_mem_check,
-                deng_bool_t set_default_mem_req,
-                __vk_Texture &tex
-            );
+            void __newVkTexture(VkDevice device, VkPhysicalDevice gpu, VkCommandPool cmd_pool,
+                VkQueue g_queue, deng_ui32_t mip_levels, deng_bool_t is_lf, deng_bool_t ignore_mem_check,
+                deng_bool_t set_default_mem_req, __vk_Texture &tex);
 
 
         public:
-            __vk_TextureManager (
-                VkDevice device,
-                VkPhysicalDevice gpu,
-                VkCommandPool cmd_pool,
-                VkQueue g_queue,
-                std::vector<deng_Id> &textures,
-                deng::__GlobalRegistry &reg,
-                __vk_BufferData &bd
-            );
+            __vk_TextureManager(VkDevice device, VkPhysicalDevice gpu, VkCommandPool cmd_pool,
+                VkQueue g_queue, std::vector<deng_Id> &textures, deng::__GlobalRegistry &reg,
+                __vk_BufferData &bd);
 
 
             /// Create new Vulkan texture from texture specified via id
-            void mkTexture (
-                VkDevice device, 
-                VkPhysicalDevice gpu, 
-                VkCommandPool command_pool,
-                deng_bool_t is_lf_supported, 
-                deng_Id id,
-                VkQueue g_queue
-            );
+            void mkTexture(VkDevice device, VkPhysicalDevice gpu, VkCommandPool command_pool,
+                deng_bool_t is_lf_supported, deng_Id id, VkQueue g_queue);
 
 
             /// Get the id of a missing texture

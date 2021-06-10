@@ -89,6 +89,7 @@
 
     #include <deng/lighting/light_srcs.h>
     #include <deng/registry/registry.h>
+    #include <imgui-layer/imgui_entity.h>
 
     #include <deng/vulkan/rend_infos.h>
     #include <deng/vulkan/ic.h>
@@ -120,6 +121,12 @@ namespace deng {
             std::vector<deng_Id> &m_assets;
             std::vector<deng_Id> &m_tex;
 
+        protected:
+            __ImGuiData *m_p_gui_data = NULL;
+
+            // Flag which triggers commandbuffer level switching
+            deng_bool_t m_switch_flag = false;
+
         public:
             __vk_RuntimeUpdater (
                 __vk_InstanceCreator &ic,
@@ -133,7 +140,11 @@ namespace deng {
             );
 
             /// This method updates the vertices buffer that is allocated by given assets
-            void updateAssetVerts(const dengMath::vec2<deng_ui32_t> &bounds);
+            void updateAssetData(const dengMath::vec2<deng_ui32_t> &bounds);
+
+
+            /// Update ImGui vertices and indices
+            void updateUIData(const dengMath::vec4<deng_vec_t> &background);
 
 
             /// Rerecord existing commandbuffers 
@@ -142,17 +153,12 @@ namespace deng {
             
             /// Reallocate or allocate new descriptor sets for assets between given bounds
             /// NOTE: Vulkan renderer must be idled
-            void updateDS(const dengMath::vec2<deng_ui32_t> &bounds);
+            void updateAssetDS(const dengMath::vec2<deng_ui32_t> &bounds);
 
 
-            /// Reallocate main buffer and copy all asset data to it
+            /// Reallocate main buffer and copy all asset data to it if needed
             /// NOTE: Vulkan renderer must be idled
-            void reallocateMainBuffer();
-
-
-            /// Check if current main buffer is big enough for new asset data and if it isn't reallocate more memory
-            /// NOTE: Vulkan renderer must be idled
-            void assetToBufferPushBack(const dengMath::vec2<deng_ui32_t> &bounds);
+            void checkForReallocation();
         };
     }
 }

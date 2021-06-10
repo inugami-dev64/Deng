@@ -94,42 +94,24 @@ namespace deng {
         /// Free all depth and color image data
         void __vk_Renderer::__cleanRendImgResources() {
             // Clean depth image resources
-            vkDestroyImageView (
-                __vk_RendererInitialiser::getIC().getDev(), 
-                __vk_RendererInitialiser::getResMan().getDepImgView(), 
-                NULL
-            );
+            vkDestroyImageView(__vk_RendererInitialiser::getIC().getDev(), 
+                __vk_RendererInitialiser::getResMan().getDepImgView(), NULL);
 
-            vkDestroyImage (
-                __vk_RendererInitialiser::getIC().getDev(), 
-                __vk_RendererInitialiser::getResMan().getDepImg(), 
-                NULL
-            );
+            vkDestroyImage(__vk_RendererInitialiser::getIC().getDev(), 
+                __vk_RendererInitialiser::getResMan().getDepImg(), NULL);
 
-            vkFreeMemory (
-                __vk_RendererInitialiser::getIC().getDev(), 
-                __vk_RendererInitialiser::getResMan().getDepImgMem(), 
-                NULL
-            );
+            vkFreeMemory(__vk_RendererInitialiser::getIC().getDev(), 
+                __vk_RendererInitialiser::getResMan().getDepImgMem(), NULL);
 
             // Clean color image resources
-            vkDestroyImageView (
-                __vk_RendererInitialiser::getIC().getDev(),
-                __vk_RendererInitialiser::getResMan().getColorImgView(),
-                NULL
-            );
+            vkDestroyImageView(__vk_RendererInitialiser::getIC().getDev(),
+                __vk_RendererInitialiser::getResMan().getColorImgView(), NULL);
 
-            vkDestroyImage (
-                __vk_RendererInitialiser::getIC().getDev(),
-                __vk_RendererInitialiser::getResMan().getColorImg(),
-                NULL
-            );
+            vkDestroyImage(__vk_RendererInitialiser::getIC().getDev(),
+                __vk_RendererInitialiser::getResMan().getColorImg(), NULL);
 
-            vkFreeMemory (
-                __vk_RendererInitialiser::getIC().getDev(),
-                __vk_RendererInitialiser::getResMan().getColorImgMem(),
-                NULL
-            );
+            vkFreeMemory(__vk_RendererInitialiser::getIC().getDev(),
+                __vk_RendererInitialiser::getResMan().getColorImgMem(), NULL);
         }
 
 
@@ -138,20 +120,16 @@ namespace deng {
             std::vector<VkFramebuffer> fb;
             fb = __vk_RendererInitialiser::getResMan().getFB();
             for(size_t i = 0; i < fb.size(); i++) {
-                vkDestroyFramebuffer (
-                    __vk_RendererInitialiser::getIC().getDev(), 
-                    fb[i], 
-                    NULL
-                );
+                vkDestroyFramebuffer(__vk_RendererInitialiser::getIC().getDev(), 
+                    fb[i], NULL);
             }
 
-            // Clean commandbuffers and commandpools
-            vkFreeCommandBuffers (
-                __vk_RendererInitialiser::getIC().getDev(), 
+            // Free all commandbuffers
+            vkFreeCommandBuffers(__vk_RendererInitialiser::getIC().getDev(), 
                 __vk_RendererInitialiser::getDrawCaller().getComPool(), 
                 static_cast<deng_ui32_t>(__vk_RendererInitialiser::getDrawCaller().getComBufs().size()), 
-                __vk_RendererInitialiser::getDrawCaller().getComBufs().data()
-            );
+                __vk_RendererInitialiser::getDrawCaller().getComBufs().data());
+
         }
 
         
@@ -200,7 +178,7 @@ namespace deng {
                         reg_vk_asset.vk_asset.base_id, DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
 
                     // Free descriptor sets
-                    vkFreeDescriptorSets(__vk_RendererInitialiser::getIC().getDev(), __vk_RendererInitialiser::getDescC().getDescPool(reg_asset.asset.asset_mode),
+                    vkFreeDescriptorSets(__vk_RendererInitialiser::getIC().getDev(), __vk_RendererInitialiser::getDescC().getDescPool(assetModeToPipelineType(reg_asset.asset.asset_mode)),
                         static_cast<deng_ui32_t>(reg_vk_asset.vk_asset.desc_c), reg_vk_asset.vk_asset.desc_sets);
                     reg_vk_asset.vk_asset.is_desc = false;
                 }
@@ -235,118 +213,101 @@ namespace deng {
             // Destroy 2D unmapped asset descriptor pool 
             vkDestroyDescriptorPool(__vk_RendererInitialiser::getIC().getDev(), 
                 __vk_RendererInitialiser::getDescC().getDescPool(
-                    DAS_ASSET_MODE_2D_UNMAPPED), 
+                    DENG_PIPELINE_TYPE_UNMAPPED_2D), 
                 NULL);
 
             // Destroy 2D texture mapped asset descriptor pool
             vkDestroyDescriptorPool(__vk_RendererInitialiser::getIC().getDev(), 
                 __vk_RendererInitialiser::getDescC().getDescPool(
-                    DAS_ASSET_MODE_2D_TEXTURE_MAPPED), 
+                    DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D), 
                 NULL);
 
             // Destroy 3D unmapped asset descriptor pool 
             vkDestroyDescriptorPool(__vk_RendererInitialiser::getIC().getDev(), 
                 __vk_RendererInitialiser::getDescC().getDescPool(
-                    DAS_ASSET_MODE_3D_UNMAPPED), 
+                    DENG_PIPELINE_TYPE_UNMAPPED_3D), 
                 NULL);
 
             // Destroy 3D texture mapped asset descriptor pool
             vkDestroyDescriptorPool(__vk_RendererInitialiser::getIC().getDev(), 
                 __vk_RendererInitialiser::getDescC().getDescPool(
-                    DAS_ASSET_MODE_3D_TEXTURE_MAPPED), 
+                    DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D), 
                 NULL);
+
+            // Destroy ImGui descriptor pool
+            vkDestroyDescriptorPool(__vk_RendererInitialiser::getIC().getDev(),
+                __vk_RendererInitialiser::getDescC().getDescPool(DENG_PIPELINE_TYPE_UI), NULL);
         }
 
         
         void __vk_Renderer::__cleanDescSetLayouts() {
             // Destroy 2D unmapped descriptor set layout
             vkDestroyDescriptorSetLayout(__vk_RendererInitialiser::getIC().getDev(), 
-                __vk_RendererInitialiser::getDescC().getLayout(DAS_ASSET_MODE_2D_UNMAPPED), 
+                __vk_RendererInitialiser::getDescC().getLayout(DENG_PIPELINE_TYPE_UNMAPPED_2D), 
                 NULL);
 
             // Destroy 2D texture mapped descriptor set layout
             vkDestroyDescriptorSetLayout(__vk_RendererInitialiser::getIC().getDev(), 
                 __vk_RendererInitialiser::getDescC().getLayout(
-                    DAS_ASSET_MODE_2D_TEXTURE_MAPPED), 
+                    DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D), 
                 NULL);
 
             // Destroy 3D unmapped descriptor set layout
             vkDestroyDescriptorSetLayout(__vk_RendererInitialiser::getIC().getDev(), 
-                __vk_RendererInitialiser::getDescC().getLayout(DAS_ASSET_MODE_3D_UNMAPPED), 
+                __vk_RendererInitialiser::getDescC().getLayout(DENG_PIPELINE_TYPE_UNMAPPED_3D), 
                 NULL);
 
             // Destroy 3D texture mapped descriptor set layout
             vkDestroyDescriptorSetLayout(__vk_RendererInitialiser::getIC().getDev(), 
                 __vk_RendererInitialiser::getDescC().getLayout(
-                    DAS_ASSET_MODE_3D_TEXTURE_MAPPED), 
+                    DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D), 
                 NULL);
+
+            // Destroy ImGui descriptor set layouts
+            vkDestroyDescriptorSetLayout(__vk_RendererInitialiser::getIC().getDev(),
+                __vk_RendererInitialiser::getDescC().getLayout(DENG_PIPELINE_TYPE_UI), NULL);
         }
 
 
         void __vk_Renderer::__freeBuffers() {
             // Clean ubo buffer data 
-            vkDestroyBuffer (
-                __vk_RendererInitialiser::getIC().getDev(), 
-                __vk_RendererInitialiser::getResMan().getBD().uniform_buffer, 
-                NULL
-            );
+            vkDestroyBuffer(__vk_RendererInitialiser::getIC().getDev(), 
+                __vk_RendererInitialiser::getResMan().getBD().uniform_buffer, NULL);
 
-            vkFreeMemory (
-                __vk_RendererInitialiser::getIC().getDev(), 
-                __vk_RendererInitialiser::getResMan().getBD().uniform_buffer_mem, 
-                NULL
-            );
+            vkFreeMemory(__vk_RendererInitialiser::getIC().getDev(), 
+                __vk_RendererInitialiser::getResMan().getBD().uniform_buffer_mem, NULL);
 
 
             // Clean main buffer data
-            vkDestroyBuffer (
-                __vk_RendererInitialiser::getIC().getDev(), 
-                __vk_RendererInitialiser::getResMan().getBD().main_buffer, 
-                NULL
-            );
+            vkDestroyBuffer(__vk_RendererInitialiser::getIC().getDev(), 
+                __vk_RendererInitialiser::getResMan().getBD().main_buffer, NULL);
 
-            vkFreeMemory (
-                __vk_RendererInitialiser::getIC().getDev(), 
-                __vk_RendererInitialiser::getResMan().getBD().main_buffer_memory, 
-                NULL
-            );
+            vkFreeMemory(__vk_RendererInitialiser::getIC().getDev(), 
+                __vk_RendererInitialiser::getResMan().getBD().main_buffer_memory, NULL);
         }
 
         
         void __vk_Renderer::__cleanSemaphores() {
             // Clean semaphores and fences
             for(size_t i = 0; i < __max_frame_c; i++) {
-                vkDestroySemaphore (
-                    __vk_RendererInitialiser::getIC().getDev(), 
-                    __vk_RendererInitialiser::getDrawCaller().image_available_semaphore_set[i], 
-                    NULL
-                );
-                vkDestroySemaphore (
-                    __vk_RendererInitialiser::getIC().getDev(), 
-                    __vk_RendererInitialiser::getDrawCaller().render_finished_semaphore_set[i], 
-                    NULL
-                );
-                vkDestroyFence (
-                    __vk_RendererInitialiser::getIC().getDev(), 
-                    __vk_RendererInitialiser::getDrawCaller().flight_fences[i], 
-                    NULL
-                );
+                vkDestroySemaphore(__vk_RendererInitialiser::getIC().getDev(), 
+                    __vk_RendererInitialiser::getDrawCaller().image_available_semaphore_set[i], NULL);
+
+                vkDestroySemaphore(__vk_RendererInitialiser::getIC().getDev(), 
+                    __vk_RendererInitialiser::getDrawCaller().render_finished_semaphore_set[i], NULL);
+
+                vkDestroyFence(__vk_RendererInitialiser::getIC().getDev(), 
+                    __vk_RendererInitialiser::getDrawCaller().flight_fences[i], NULL);
             }
         }
 
         
         void __vk_Renderer::__cleanDevice() {
-            vkDestroyCommandPool (
-                __vk_RendererInitialiser::getIC().getDev(), 
-                __vk_RendererInitialiser::getDrawCaller().getComPool(), 
-                NULL
-            );
+            vkDestroyCommandPool(__vk_RendererInitialiser::getIC().getDev(), 
+                __vk_RendererInitialiser::getDrawCaller().getComPool(), NULL);
 
             // Clean instance and devices
-            vkDestroyDevice (
-                __vk_RendererInitialiser::getIC().getDev(), 
-                NULL
-            );
+            vkDestroyDevice(__vk_RendererInitialiser::getIC().getDev(), NULL);
 
             if(m_config.enable_validation_layers) {
                 __vk_InstanceCreator::destroyDebugUtils (
@@ -355,17 +316,10 @@ namespace deng {
                 );
             }
 
-            vkDestroySurfaceKHR (
-                __vk_RendererInitialiser::getIC().getIns(), 
-                __vk_RendererInitialiser::getIC().getSu(), 
-                NULL
-            );
+            vkDestroySurfaceKHR(__vk_RendererInitialiser::getIC().getIns(), 
+                __vk_RendererInitialiser::getIC().getSu(), NULL);
 
-            
-            vkDestroyInstance (
-                __vk_RendererInitialiser::getIC().getIns(), 
-                NULL
-            );
+            vkDestroyInstance(__vk_RendererInitialiser::getIC().getIns(), NULL);
         }
 
 
@@ -408,6 +362,7 @@ namespace deng {
 
         /// Prepare textures for binding them with assets
         void __vk_Renderer::prepareTexture(deng_Id id) {
+            LOG("Prep id: " + std::string(id));
             // For each texture between bounds, create Vulkan specific texture instance
             RegType reg_vk_tex;
             reg_vk_tex.vk_tex.base_id = id;
@@ -419,6 +374,9 @@ namespace deng {
             // Retrieve base texture and give it Vulkan texture uuid
             RegType &reg_tex = __vk_RendererInitialiser::m_reg.retrieve(reg_vk_tex.vk_asset.base_id, DENG_SUPPORTED_REG_TYPE_TEXTURE, NULL);
             reg_tex.tex.vk_id = reg_vk_tex.vk_tex.uuid;
+
+            LOG("uuid: " + std::string(reg_tex.tex.uuid));
+            LOG("vk_id: " + std::string(reg_tex.tex.vk_id));
 
             // Create vulkan image resources
             __vk_RendererInitialiser::getResMan().mkTexture(__vk_RendererInitialiser::getIC().getDev(), 
@@ -439,21 +397,15 @@ namespace deng {
 
         /// Submit new draw calls and update uniform data
         void __vk_Renderer::makeFrame() {
-            // Call Vulkan fence waiter function
             vkWaitForFences(__vk_RendererInitialiser::getIC().getDev(), 1, 
                 &__vk_RendererInitialiser::getDrawCaller().flight_fences[__vk_RendererInitialiser::getDrawCaller().current_frame], 
                 VK_TRUE, UINT64_MAX);
 
             // Call Vulkan next image acquire method
             deng_ui32_t image_index;
-            VkResult result = vkAcquireNextImageKHR (
-                __vk_RendererInitialiser::getIC().getDev(), 
-                __vk_RendererInitialiser::getSCC().getSC(), 
-                UINT64_MAX, 
-                __vk_RendererInitialiser::getDrawCaller().image_available_semaphore_set[__vk_RendererInitialiser::getDrawCaller().current_frame], 
-                VK_NULL_HANDLE, 
-                &image_index
-            );
+            VkResult result = vkAcquireNextImageKHR(__vk_RendererInitialiser::getIC().getDev(), __vk_RendererInitialiser::getSCC().getSC(), 
+                UINT64_MAX, __vk_RendererInitialiser::getDrawCaller().image_available_semaphore_set[__vk_RendererInitialiser::getDrawCaller().current_frame], 
+                VK_NULL_HANDLE, &image_index);
             
             if(result == VK_ERROR_OUT_OF_DATE_KHR) {
                 VK_FRAME_ERR("image acquiring timed out");
@@ -461,23 +413,26 @@ namespace deng {
             }
             
             else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
-                VK_FRAME_ERR("failed to acquire swap chain image");
+                VK_FRAME_ERR("failed to acquire a swap chain image");
 
             // Update uniform data buffer
-            __vk_RendererInitialiser::getResMan().updateUboTransform3D(
+            __vk_RendererInitialiser::getResMan().updateUboTransform3D (
                 __vk_RendererInitialiser::getIC().getDev(), 
                 __vk_RendererInitialiser::getDrawCaller().current_frame, m_config.p_cam);
 
             VkSemaphore wait_semaphores[] = 
-            {__vk_RendererInitialiser::getDrawCaller().image_available_semaphore_set[__vk_RendererInitialiser::getDrawCaller().current_frame]};
+            { __vk_RendererInitialiser::getDrawCaller().image_available_semaphore_set[__vk_RendererInitialiser::getDrawCaller().current_frame] };
 
             VkSemaphore signal_semaphores[] = 
-            {__vk_RendererInitialiser::getDrawCaller().render_finished_semaphore_set[__vk_RendererInitialiser::getDrawCaller().current_frame]};
+            { __vk_RendererInitialiser::getDrawCaller().render_finished_semaphore_set[__vk_RendererInitialiser::getDrawCaller().current_frame] };
 
             VkSubmitInfo submitinfo{};
             submitinfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-            VkPipelineStageFlags wait_stages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+            // Check if commandbuffer levels must be switched
+            //__vk_RendererInitialiser::getDrawCaller().checkLevelChange(__vk_RendererInitialiser::getIC().getDev());
+
+            VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
             submitinfo.waitSemaphoreCount = 1;
             submitinfo.pWaitSemaphores = wait_semaphores;
             submitinfo.pWaitDstStageMask = wait_stages;
@@ -489,9 +444,10 @@ namespace deng {
             vkResetFences(__vk_RendererInitialiser::getIC().getDev(), 1, 
                 &__vk_RendererInitialiser::getDrawCaller().flight_fences[__vk_RendererInitialiser::getDrawCaller().current_frame]);
 
-            if(vkQueueSubmit(__vk_RendererInitialiser::getIC().getQFF().graphics_queue, 1, &submitinfo, 
-               __vk_RendererInitialiser::getDrawCaller().flight_fences[__vk_RendererInitialiser::getDrawCaller().current_frame]) != VK_SUCCESS) 
-                VK_FRAME_ERR("failed to submit draw command"); 
+            VkResult res;
+            if((res = vkQueueSubmit(__vk_RendererInitialiser::getIC().getQFF().graphics_queue, 1, &submitinfo, 
+               __vk_RendererInitialiser::getDrawCaller().flight_fences[__vk_RendererInitialiser::getDrawCaller().current_frame])) != VK_SUCCESS) 
+                VK_FRAME_ERR("failed to submit draw command; error code: " + std::to_string(res));
 
             VkPresentInfoKHR present_info{};
             present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -503,11 +459,9 @@ namespace deng {
             present_info.swapchainCount = 1;
             present_info.pSwapchains = swapchains;
 
-            vkQueuePresentKHR (
-                __vk_RendererInitialiser::getIC().getQFF().present_queue, 
-                &present_info
-            );
+            vkQueuePresentKHR(__vk_RendererInitialiser::getIC().getQFF().present_queue, &present_info);
 
+            m_is_idle = false;
             __vk_RendererInitialiser::getDrawCaller().current_frame = (__vk_RendererInitialiser::getDrawCaller().current_frame + 1) % __max_frame_c;
         }
 
@@ -516,23 +470,27 @@ namespace deng {
         /// and record command buffers
         void __vk_Renderer::setup() {
             // Create graphics pipelines
-            __vk_RendererInitialiser::getPipelineC().mkPipelines (
-                __vk_RendererInitialiser::getIC().getDev(),
-                __vk_RendererInitialiser::getSCC().getExt(),
-                __vk_RendererInitialiser::getSCC().getRp(),
-                m_config.msaa_sample_count
-            );
+            __vk_RendererInitialiser::getPipelineC().mkPipelines(__vk_RendererInitialiser::getIC().getDev(), 
+                __vk_RendererInitialiser::getSCC().getExt(), __vk_RendererInitialiser::getSCC().getRp(), 
+                m_config.msaa_sample_count);
 
-            // Make and allocate memory for main buffer 
-            __vk_RendererInitialiser::getResMan().mkAssetBuffers (
-                __vk_RendererInitialiser::getIC().getDev(),
-                __vk_RendererInitialiser::getIC().getGpu(),
-                __vk_RendererInitialiser::getDrawCaller().getComPool(),
-                __vk_RendererInitialiser::getIC().getQFF().graphics_queue
-            );
+            // Check if any buffer reallocations might be needed
+            __vk_RendererInitialiser::getResMan().reallocCheck(__vk_RendererInitialiser::getIC().getDev(),
+                __vk_RendererInitialiser::getIC().getGpu(), __vk_RendererInitialiser::getDrawCaller().getComPool(),
+                __vk_RendererInitialiser::getIC().getQFF().graphics_queue);
+
+            // Copy all available assets to the main buffer
+            __vk_RendererInitialiser::getResMan().cpyAssetsToBuffer(__vk_RendererInitialiser::getIC().getDev(), 
+                __vk_RendererInitialiser::getIC().getGpu(), __vk_RendererInitialiser::getDrawCaller().getComPool(),
+                __vk_RendererInitialiser::getIC().getQFF().graphics_queue, false);
+
+            // Copy all available ui data to the main buffer
+            __vk_RendererInitialiser::getResMan().cpyUIDataToBuffer(__vk_RendererInitialiser::getIC().getDev(), 
+                __vk_RendererInitialiser::getIC().getGpu(), __vk_RendererInitialiser::getDrawCaller().getComPool(),
+                __vk_RendererInitialiser::getIC().getQFF().graphics_queue);
 
             // Create descriptor sets for all currently available assets
-            __vk_RendererInitialiser::getDescC().mkDS (
+            __vk_RendererInitialiser::getDescC().mkAssetDS (
                 __vk_RendererInitialiser::getIC().getDev(), 
                 __vk_RendererInitialiser::getResMan().getBD(),
                 __vk_RendererInitialiser::getResMan().getMissingTextureUUID(),
@@ -542,19 +500,28 @@ namespace deng {
             );
 
             // Start recording command buffers
-            __vk_RendererInitialiser::getDrawCaller().setMiscData (
-                __vk_RendererInitialiser::getPipelineC().getPipelines(),
-                __vk_RendererInitialiser::getResMan().getFB()
-            );
+            __vk_RendererInitialiser::getDrawCaller().setMiscData(__vk_RendererInitialiser::getPipelineC().getPipelines(),
+                __vk_RendererInitialiser::getResMan().getFB());
             
-            __vk_RendererInitialiser::getDrawCaller().allocateMainCmdBuffers (
-                __vk_RendererInitialiser::getIC().getDev(), 
-                __vk_RendererInitialiser::getIC().getQFF().graphics_queue, 
-                __vk_RendererInitialiser::getSCC().getRp(),
-                __vk_RendererInitialiser::getSCC().getExt(),
-                m_config.background,
-                __vk_RendererInitialiser::getResMan().getBD()
-            );
+
+            // Allocate memory for level 0 and level 1 commandbuffers
+            __vk_RendererInitialiser::getDrawCaller().allocateCmdBuffers(__vk_RendererInitialiser::getIC().getDev(), 
+                __vk_RendererInitialiser::getIC().getQFF().graphics_queue, __vk_RendererInitialiser::getSCC().getRp(),
+                __vk_RendererInitialiser::getSCC().getExt(), m_config.background, __vk_RendererInitialiser::getResMan().getBD(),
+                false);
+
+            __vk_RendererInitialiser::getDrawCaller().allocateCmdBuffers(__vk_RendererInitialiser::getIC().getDev(), 
+                __vk_RendererInitialiser::getIC().getQFF().graphics_queue, __vk_RendererInitialiser::getSCC().getRp(),
+                __vk_RendererInitialiser::getSCC().getExt(), m_config.background, __vk_RendererInitialiser::getResMan().getBD(),
+                true);
+
+            // Record the initial level zero commandbuffers
+            __vk_RendererInitialiser::getDrawCaller().recordCmdBuffers(__vk_RendererInitialiser::getSCC().getRp(),
+                __vk_RendererInitialiser::getSCC().getExt(), m_config.background, __vk_RendererInitialiser::getResMan().getBD(),
+                true);
+
+            // Set the running flag as true
+            m_is_init = true;
         }
 
 
@@ -562,7 +529,51 @@ namespace deng {
         /// This method needs to be called whenever any 
         /// command or data buffers need to be updated
         void __vk_Renderer::idle() {
-            vkDeviceWaitIdle(__vk_RendererInitialiser::getIC().getDev());
+            if(m_is_init && !m_is_idle) {
+                vkDeviceWaitIdle(__vk_RendererInitialiser::getIC().getDev());
+                m_is_idle = true;
+            }
+        }
+
+
+        /// Setter and getter methods
+        void __vk_Renderer::setUIDataPtr(__ImGuiData *p_gui) {
+            __vk_RendererInitialiser::setUIDataPtr(p_gui);
+
+            // Check if the renderer has been initialised and if it has idle it
+            //if(m_is_init) idle();
+
+            // Perform main buffer remapping for potentially new vertices to draw
+            // Check if any buffer reallocations might be needed
+            const deng_bool_t is_realloc = __vk_RendererInitialiser::getResMan().reallocCheck(__vk_RendererInitialiser::getIC().getDev(),
+                __vk_RendererInitialiser::getIC().getGpu(), __vk_RendererInitialiser::getDrawCaller().getComPool(),
+                __vk_RendererInitialiser::getIC().getQFF().graphics_queue);
+
+            if(!is_realloc) {
+                // Copy all available assets to the main buffer
+                __vk_RendererInitialiser::getResMan().cpyAssetsToBuffer(__vk_RendererInitialiser::getIC().getDev(), 
+                    __vk_RendererInitialiser::getIC().getGpu(), __vk_RendererInitialiser::getDrawCaller().getComPool(),
+                    __vk_RendererInitialiser::getIC().getQFF().graphics_queue, false);
+
+                // Copy all available ui data to the main buffer
+                __vk_RendererInitialiser::getResMan().cpyUIDataToBuffer(__vk_RendererInitialiser::getIC().getDev(), 
+                    __vk_RendererInitialiser::getIC().getGpu(), __vk_RendererInitialiser::getDrawCaller().getComPool(),
+                    __vk_RendererInitialiser::getIC().getQFF().graphics_queue);
+            }
+
+            // Create UI element descriptor sets
+            __vk_RendererInitialiser::getDescC().mkUIDS(__vk_RendererInitialiser::getIC().getDev(), 
+                __vk_RendererInitialiser::getResMan().getBD(), p_gui->tex_id);
+        }
+
+
+        const deng_bool_t __vk_Renderer::isInit() {
+            return m_is_init;
+        }
+
+
+        const __vk_BufferData &__vk_Renderer::getBufferData() {
+            return __vk_RendererInitialiser::getResMan().getBD();
         }
     }
 }

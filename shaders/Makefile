@@ -1,12 +1,14 @@
 CC = glslc
-BIN = bin/2d/TMF.spv \
-	  bin/2d/TMV.spv \
-	  bin/2d/UF.spv \
+BIN = bin/2d/UF.spv \
 	  bin/2d/UV.spv \
-	  bin/3d/TMF.spv \
-	  bin/3d/TMV.spv \
+	  bin/2d/TMF.spv \
+	  bin/2d/TMV.spv \
+	  bin/2d/UIV.spv \
+	  bin/2d/UIF.spv \
 	  bin/3d/UF.spv \
-	  bin/3d/UV.spv
+	  bin/3d/UV.spv \
+	  bin/3d/TMF.spv \
+	  bin/3d/TMV.spv
 
 # Primary target to make
 all: .bincheck $(BIN)
@@ -36,6 +38,16 @@ bin/2d/UF.spv: src/2d/unmapped.frag
 bin/2d/UV.spv: src/2d/unmapped.vert
 	@echo "Compiling: bin/2d/UV.spv"
 	@$(CC) src/2d/unmapped.vert -o bin/2d/UV.spv
+
+
+# ImGui shaders
+bin/2d/UIV.spv: src/2d/imgui.vert
+	@echo "Compiling: bin/2d/UIV.spv"
+	@$(CC) src/2d/imgui.vert -o bin/2d/UIV.spv
+
+bin/2d/UIF.spv: src/2d/imgui.frag
+	@echo "Compiling: bin/2d/UIF/spv"
+	@$(CC) src/2d/imgui.frag -o bin/2d/UIF.spv
 
 
 # 3D asset shaders

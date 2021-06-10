@@ -149,8 +149,10 @@ namespace deng {
                 break;
 
             case DENG_SUPPORTED_REG_TYPE_TEXTURE:
-                free(m_entries[i].element.tex.pixel_data.p_pixel_data);
-                free(m_entries[i].element.tex.uuid);
+                if(!m_entries[i].element.tex.no_reg_cleanup) {
+                    free(m_entries[i].element.tex.pixel_data.p_pixel_data);
+                    free(m_entries[i].element.tex.uuid);
+                }
                 break;
 
             case DENG_SUPPORTED_REG_TYPE_VK_TEXTURE:
@@ -184,7 +186,7 @@ namespace deng {
     ) {
         // Find the pointer value from the map
         __RegEntry *p_entry = (__RegEntry*) findValue(&m_map,
-            id, strlen(id));
+            (void*) id, strlen(id));
 
         if(!p_entry)
             RUN_ERR("__GlobalRegistry::retrieve()", "Invalid element id \"" + std::string(id) + "\"");
@@ -264,7 +266,7 @@ namespace deng {
 
 
     /// Find the size of total registry elements
-    size_t __GlobalRegistry::size() {
+    size_t __GlobalRegistry::size() const {
         return m_entries.size();
     }
     

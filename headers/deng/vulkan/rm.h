@@ -97,6 +97,7 @@
 
     #include <deng/lighting/light_srcs.h>
     #include <deng/registry/registry.h>
+    #include <imgui-layer/imgui_entity.h>
 
     #include <deng/vulkan/ubm.h>
     #include <deng/vulkan/bm.h>
@@ -126,45 +127,23 @@ namespace deng {
 
         private:
 
-            void __mkFrameBuffers (
-                VkDevice &device, 
-                VkRenderPass &renderpass, 
-                VkExtent2D &ext, 
-                const std::vector<VkImageView> &sc_img_views
-            );
+            void __mkFrameBuffers(VkDevice &device, VkRenderPass &renderpass, 
+                VkExtent2D &ext, const std::vector<VkImageView> &sc_img_views);
 
-            void __mkColorResources (
-                VkDevice &device,
-                VkPhysicalDevice &gpu,
-                VkExtent2D &ext,
-                VkFormat sc_color_format
-            );
+            void __mkColorResources(VkDevice &device, VkPhysicalDevice &gpu,
+                VkExtent2D &ext, VkFormat sc_color_format);
 
-            void __mkDepthResources (
-                VkDevice &device, 
-                VkPhysicalDevice &gpu, 
-                VkExtent2D &ext
-            );
+            void __mkDepthResources(VkDevice &device, VkPhysicalDevice &gpu, VkExtent2D &ext);
 
             
         public:
-            __vk_ResourceManager (
-                VkDevice device, 
-                VkPhysicalDevice gpu, 
-                VkExtent2D ext, 
-                VkSampleCountFlagBits sample_c,
-                VkRenderPass renderpass, 
-                VkCommandPool cmd_pool,
-                VkQueue g_queue,
-                const std::vector<VkImageView> &sc_img_views,
-                deng::__GlobalRegistry &reg,
-                std::vector<deng_Id> &assets,
-                std::vector<deng_Id> &textures,
-                VkFormat sc_color_format,
-                const VkPhysicalDeviceLimits &gpu_limits
-            );
+            __vk_ResourceManager(VkDevice device, VkPhysicalDevice gpu, VkExtent2D ext, VkSampleCountFlagBits sample_c,
+                VkRenderPass renderpass, VkCommandPool cmd_pool, VkQueue g_queue, const std::vector<VkImageView> &sc_img_views,
+                deng::__GlobalRegistry &reg, std::vector<deng_Id> &assets, std::vector<deng_Id> &textures, VkFormat sc_color_format,
+                const VkPhysicalDeviceLimits &gpu_limits);
 
 
+        // Getter and setter methods
         public:
             __vk_BufferData &getBD();
             std::vector<VkFramebuffer> getFB();
@@ -174,6 +153,8 @@ namespace deng {
             VkImage getColorImg();
             VkDeviceMemory getColorImgMem();
             VkImageView getColorImgView();
+
+            void setUIDataPtr(__ImGuiData *p_gui);
         };
     }
 }

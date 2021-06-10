@@ -109,33 +109,46 @@ namespace deng {
         }
 
 
-        /*
-         * Read appropriate vertex and fragment shaders according to 
-         * the pipeline mode
-         */
+        /// Read appropriate vertex and fragment shaders according to 
+        /// the pipeline mode
         void __vk_PipelineCreateInfoGenerator::__readShaders(deng_PipelineType pt, 
             char **p_vert, size_t &vert_c, char **p_frag, size_t &frag_c) {
 
             // Check which shaders to read according to the pipeline type
             switch(pt) {
             case DENG_PIPELINE_TYPE_UNMAPPED_2D:
+                LOG("Pipeline type unmapped 2d, using files: " + std::string(UNMAPPED_VERT_SHADER_2D) + " " + 
+                    std::string(UNMAPPED_FRAG_SHADER_2D));
                 *p_vert = __readBinShader(UNMAPPED_VERT_SHADER_2D, vert_c);
                 *p_frag = __readBinShader(UNMAPPED_FRAG_SHADER_2D, frag_c);
                 break;
 
             case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D:
+                LOG("Pipeline type texture mapped 2d, using files: " + std::string(TEXTURE_MAPPED_VERT_SHADER_2D) + " " + 
+                    std::string(TEXTURE_MAPPED_FRAG_SHADER_2D));
                 *p_vert = __readBinShader(TEXTURE_MAPPED_VERT_SHADER_2D, vert_c);
                 *p_frag = __readBinShader(TEXTURE_MAPPED_FRAG_SHADER_2D, frag_c);
                 break;
 
             case DENG_PIPELINE_TYPE_UNMAPPED_3D:
+                LOG("Pipeline type unmapped 3d, using files: " + std::string(UNMAPPED_VERT_SHADER_3D) + " " + 
+                    std::string(UNMAPPED_FRAG_SHADER_3D));
                 *p_vert = __readBinShader(UNMAPPED_VERT_SHADER_3D, vert_c);
                 *p_frag = __readBinShader(UNMAPPED_FRAG_SHADER_3D, frag_c);
                 break;
 
             case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D:
+                LOG("Pipeline type texture mapped 3d, using files: " + std::string(TEXTURE_MAPPED_VERT_SHADER_3D) + " " + 
+                    std::string(TEXTURE_MAPPED_FRAG_SHADER_3D));
                 *p_vert = __readBinShader(TEXTURE_MAPPED_VERT_SHADER_3D, vert_c);
                 *p_frag = __readBinShader(TEXTURE_MAPPED_FRAG_SHADER_3D, frag_c);
+                break;
+
+            case DENG_PIPELINE_TYPE_UI:
+                LOG("Pipeline type ui, using files: " + std::string(UI_VERT_SHADER) + " " + 
+                    std::string(UI_FRAG_SHADER));
+                *p_vert = __readBinShader(UI_VERT_SHADER, vert_c);
+                *p_frag = __readBinShader(UI_FRAG_SHADER, frag_c);
                 break;
 
             default:
@@ -162,7 +175,6 @@ namespace deng {
         /// Get binding description info in VkVertexInputBindingDescription instance
         std::vector<VkVertexInputBindingDescription> __vk_PipelineCreateInfoGenerator::__getBindingDesc() {
             std::vector<VkVertexInputBindingDescription> input_binding_desc;
-            deng_bool_t is_tex_mapped = false;
 
             switch (m_pipeline_data.pipeline_type) { 
             case DENG_PIPELINE_TYPE_UNMAPPED_2D:
@@ -171,7 +183,7 @@ namespace deng {
                 input_binding_desc[0].binding = 0;
                 input_binding_desc[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
                 input_binding_desc[0].stride = sizeof(das_ObjPosData2D);
-                break;
+                break; 
 
             case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D:
                 input_binding_desc.resize(2);
@@ -182,7 +194,6 @@ namespace deng {
                 input_binding_desc[1].binding = 1;
                 input_binding_desc[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
                 input_binding_desc[1].stride = sizeof(das_ObjTextureData);
-                is_tex_mapped = true;
                 break;
 
             case DENG_PIPELINE_TYPE_UNMAPPED_3D:
@@ -197,7 +208,6 @@ namespace deng {
                 break;
 
             case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D:
-                LOG("Using tex mapped 3d asset bindings");
                 input_binding_desc.resize(3);
                 input_binding_desc[0].binding = 0;
                 input_binding_desc[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
@@ -210,6 +220,13 @@ namespace deng {
                 input_binding_desc[2].binding = 2;
                 input_binding_desc[2].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
                 input_binding_desc[2].stride = sizeof(das_ObjNormalData);
+                break;
+
+            case DENG_PIPELINE_TYPE_UI:
+                input_binding_desc.resize(1);
+                input_binding_desc[0].binding = 0;
+                input_binding_desc[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+                input_binding_desc[0].stride = sizeof(ImDrawVert);
                 break;
                 
             default:
@@ -277,6 +294,24 @@ namespace deng {
                 input_attr_desc[2].offset = 0;
                 break;
 
+            case DENG_PIPELINE_TYPE_UI:
+                input_attr_desc.resize(3);
+                input_attr_desc[0].binding = 0;
+                input_attr_desc[0].location = 0;
+                input_attr_desc[0].format = VK_FORMAT_R32G32_SFLOAT;
+                input_attr_desc[0].offset = offsetof(ImDrawVert, pos);
+
+                input_attr_desc[1].binding = 0;
+                input_attr_desc[1].location = 1;
+                input_attr_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
+                input_attr_desc[1].offset = offsetof(ImDrawVert, uv);
+
+                input_attr_desc[2].binding = 0;
+                input_attr_desc[2].location = 2;
+                input_attr_desc[2].format = VK_FORMAT_R32_UINT;
+                input_attr_desc[2].offset = offsetof(ImDrawVert, col);
+                break;
+
             default:
                 break;
             }
@@ -289,7 +324,6 @@ namespace deng {
         /// This method is used to set up VkGraphicsPipelineCreateInfo, while defaulting
         /// some options that are not needed to be customised by different DENG pipelines
         VkGraphicsPipelineCreateInfo __vk_PipelineCreateInfoGenerator::mkGraphicsPipelineInfo (
-            deng_PipelineType pt,
             VkPolygonMode polygon_mode, 
             VkCullModeFlagBits cull_mode, 
             VkFrontFace front_face, 
@@ -306,7 +340,7 @@ namespace deng {
             size_t frag_c = 0;
             
             // Read binary data from compiled shaders
-            __readShaders(pt, &vert_bin, vert_c, &frag_bin, frag_c);
+            __readShaders(m_pipeline_data.pipeline_type, &vert_bin, vert_c, &frag_bin, frag_c);
 
             // Create vertex and fragment shader modules
             m_shader_modules[0] = __mkShaderModule(vert_bin, vert_c);
@@ -326,7 +360,11 @@ namespace deng {
             frag_shader_stage_createinfo.module = m_shader_modules[1];
             frag_shader_stage_createinfo.pName = "main";
             
-            m_shader_stage_createinfos = {vertex_shader_stage_createinfo, frag_shader_stage_createinfo};
+            m_shader_stage_createinfos = { vertex_shader_stage_createinfo, frag_shader_stage_createinfo };
+
+            // Clean the shader data from memory
+            free(frag_bin);
+            free(vert_bin);
 
             // Bind get binding descriptors and attribute descriptors for the current pipeline type
             m_input_binding_desc = __getBindingDesc();

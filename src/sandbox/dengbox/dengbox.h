@@ -60,65 +60,78 @@
  */ 
 
 
-#ifndef __VULKAN_UPDATE_H
-#define __VULKAN_UPDATE_H
+#ifndef __DENGBOX_H
+#define __DENGBOX_H
 
-#ifdef __VULKAN_UPDATE_CPP
-    #include <mutex>
+
+#ifdef __DENGBOX_CPP
     #include <vector>
-    #include <array>
+	#include <array>
+    #include <thread>
+    #include <mutex>
+    #include <queue>
     #include <vulkan/vulkan.h>
 
-    #include <deng/forward_dec.h>
     #include <common/base_types.h>
-    #include <das/assets.h>
+    #include <common/err_def.h>
+    #include <common/hashmap.h>
+    #include <common/common.h>
+    #include <common/uuid.h>
+    #include <data/assets.h>
+    #include <data/das_reader.h>
+    #include <data/tex_loader.h>
 
-    #include <deng/deng_math.h>
-    #include <deng/surface_window.h>
-    #include <deng/vulkan/vulkan_qm.h>
-    #include <deng/vulkan/vulkan_sd.h>
-    #include <deng/vulkan/vulkan_resources.h>
-    #include <deng/vulkan/vulkan_rend_infos.h>
-    #include <deng/vulkan/vulkan_renderer.h>
-    #include <dengui/dengui_infos.h>
+    #include <math/deng_math.h>
+    #include <deng/window.h>
+
+    #include <utils/timer.h>
+    #include <utils/font.h>
+    #include <deng/registry/registry.h>
+    #include <deng/lighting/light_man.h>
+    #include <deng/camera.h>
+    #include <deng/window.h>
+    #include <deng/renderer/renderer.h>
 #endif
 
+namespace Sandbox {
+    
+    /// Vulkan sandbox application class
+    class DengBox {
+    private:
+        deng::Window m_win;
+        deng::Camera3D m_cam;
+        deng::__GlobalRegistry m_reg;
+        dengMath::Transformer3D m_transformer;
+        deng::LightManager m_light_man;
+        std::unique_ptr<deng::Renderer> m_rend;
+        std::vector<das_Asset> m_assets;
+        std::vector<das_Texture> m_textures;
 
-namespace dengui {
-    namespace vulkan {
-        /* 
-         * This class is used for updating command and vertex buffers as well as
-         * texture descriptors on the second thread 
-         */
-        class __FrameUpdater {
-        private:
-            EventInfo *m_p_info;
+    private: 
+        /// Create first person camera control bindings
+        void __bindFPP();
+
+
+        /// Create editor camera control bindings
+        void __bindEditor();
+
+
+        /// Load test assets into the register
+        void __loadAssets(const std::vector<const char*> &files);
+
         
-        public:
-            __FrameUpdater(EventInfo *p_info);
+        /// Load test textures into the register 
+        void __loadTextures(const std::vector<const char*> &files);
 
-            /* Asset mutex lockers */
-            void lockAssets();
-            void unlockAssets();
 
-            /* Frame mutex lockers */
-            void lockFrame();
-            void unlockFrame();
+        /// Create new light sources
+        void __mkLightSources();
 
-            /* 
-             * External update caller methods 
-             * Frame locking is required for any of these method calls to work correctly!   
-             */
-            void reallocBuffer();
-            void updateVerts(dengMath::vec2<deng_ui32_t> remap_bounds);
-            void updateTexDS (
-                deng_bool_t realloc_ds, 
-                dengMath::vec2<deng_ui32_t> *p_tex_bounds
-            );
-            void updateTextures(dengMath::vec2<deng_ui32_t> tex_bounds);
-            void updateCmdBuffers();
-        };
-    }
+    public:
+        DengBox();
+        void run();
+        void setup();
+    };
 }
 
 #endif

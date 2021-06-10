@@ -57,36 +57,58 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: imgui_entity - structures for handling ImGui entity data
+ *  Purpose: Provide structures and enums for entities that use ImGui data
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef DENGUI_H
-#define DENGUI_H
+#ifndef __IMGUI_ENTITY_H
+#define __IMGUI_ENTITY_H
 
-//#ifndef __DENG_API_CORE
-    //#include <thread>
-    //#include <string>
-    //#include <stdlib.h>
-    //#include <vector>
-    //#include <chrono>
-    //#include <thread>
-    //#include <mutex>
-    //#include <array>
-    //#include "../common/base_types.h"
-    //#include "../das/assets.h"
-    //#include "../deng/deng_math.h"
-    //#include "../das/data_loader.h"
-    //#include "../deng/deng_surface_core.h"
-    //#include "../deng/window.h"
-    //#include "../utils/font.h"
-//#endif
+#if defined(NO_IMGUI)
+    typedef struct ImDrawVert {
+        dengMath::vec2<deng_vec_t> pos;
+        dengMath::vec2<deng_vec_t> uv;
+        deng_ui32_t col;
+    } ImDrawVert;
 
-// Window description flags
 
-#include <dengui/dengui_win_def.h>
-#include <dengui/dengui_infos.h>
-#include <dengui/vulkan/vulkan_update.h>
-#include <dengui/dengui_child.h>
-#include <dengui/dengui_events.h>
-#include <dengui/dengui_window.h>
+    typedef deng_ui32_t ImDrawIdx;
+#else 
+    #include <imgui.h>
+#endif
+
+namespace deng {
+    // Check if ImGui vertex and index data should be defined
+
+
+    /// All possible floating UI forms
+    enum UIForm {
+        DENG_UI_FORM_SYS_INFO       = 0,
+        DENG_UI_FORM_TEXTURE_VIEW   = 1,
+        DENG_UI_FORM_ASSET_VIEW     = 2
+    };
+
+
+    /// Structure used to pass ImGui entities
+    struct __ImGuiEntity {
+        size_t buf_offset;      // Offset from the beginning of the ui memory area
+        const ImDrawIdx *ind;
+        size_t ind_c;
+    };
+
+    
+    /// Data structure used for passing UI data between UI handler classes and the renderer 
+    struct __ImGuiData {
+        deng_Id tex_id;
+        ImDrawVert *verts;
+        deng_ui32_t vert_c;
+        ImDrawIdx *ind;
+        deng_ui32_t ind_c;
+
+        std::vector<__ImGuiEntity> entities;
+    };
+}
 #endif

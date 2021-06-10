@@ -67,11 +67,26 @@
 namespace deng {
     namespace vulkan {
 
+        /// Convert given asset mode into its corresponding pipeline type
+        deng_PipelineType assetModeToPipelineType(das_AssetMode am) {
+            switch(am) {
+                case DAS_ASSET_MODE_2D_UNMAPPED:            return DENG_PIPELINE_TYPE_UNMAPPED_2D;
+                case DAS_ASSET_MODE_3D_UNMAPPED:            return DENG_PIPELINE_TYPE_UNMAPPED_3D;
+                case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:      return DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D;
+                case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:      return DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D;
+                default:                                    return DENG_PIPELINE_TYPE_UNKNOWN;
+            }
+        }
+
+
         __vk_PipelineCreator::__vk_PipelineCreator (
-            VkDescriptorSetLayout &vu2d, VkDescriptorSetLayout &vm2d,
-            VkDescriptorSetLayout &vu3d, VkDescriptorSetLayout &vm3d
+            VkDescriptorSetLayout &vu2d, 
+            VkDescriptorSetLayout &vm2d,
+            VkDescriptorSetLayout &vu3d, 
+            VkDescriptorSetLayout &vm3d,
+            VkDescriptorSetLayout &ui
         ) : m_vu2d_ds_layout(vu2d), m_vm2d_ds_layout(vm2d), 
-            m_vu3d_ds_layout(vu3d), m_vm3d_ds_layout(vm3d) {}
+            m_vu3d_ds_layout(vu3d), m_vm3d_ds_layout(vm3d), m_ui_ds_layout(ui) {}
 
 
         /// Create a single pipeline layout
@@ -98,6 +113,7 @@ namespace deng {
             __mkPipelineLayout(device, m_vm2d_ds_layout, m_vm2d_layout);
             __mkPipelineLayout(device, m_vu3d_ds_layout, m_vu3d_layout);
             __mkPipelineLayout(device, m_vm3d_ds_layout, m_vm3d_layout);
+            __mkPipelineLayout(device, m_ui_ds_layout, m_ui_layout);
         }
 
         
@@ -116,11 +132,13 @@ namespace deng {
             m_pipelines[TM2D_I].pipeline_type = DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D;
             m_pipelines[UM3D_I].pipeline_type = DENG_PIPELINE_TYPE_UNMAPPED_3D;
             m_pipelines[TM3D_I].pipeline_type = DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D;
+            m_pipelines[UI_I].pipeline_type = DENG_PIPELINE_TYPE_UI;
 
             m_pipelines[UM2D_I].p_pipeline_layout = &m_vu2d_layout;
             m_pipelines[TM2D_I].p_pipeline_layout = &m_vm2d_layout;
             m_pipelines[UM3D_I].p_pipeline_layout = &m_vu3d_layout;
             m_pipelines[TM3D_I].p_pipeline_layout = &m_vm3d_layout;
+            m_pipelines[UI_I].p_pipeline_layout = &m_ui_layout;
 
             // Create pipeline creator instances
             __vk_PipelineCreateInfoGenerator vu2d_ci_gen(device, ext, 
@@ -135,25 +153,30 @@ namespace deng {
             __vk_PipelineCreateInfoGenerator vm3d_ci_gen(device, ext, 
                 rp, m_pipelines[TM3D_I]);
 
+            __vk_PipelineCreateInfoGenerator ui_ci_gen(device, ext,
+                rp, m_pipelines[UI_I]);
+
 
             // Generate all graphics pipeline createinfos
-            // As of now no culling will be done
+            // As for now, no culling will be done
             std::array<VkGraphicsPipelineCreateInfo, PIPELINE_C> pipeline_infos{};
-            pipeline_infos[UM2D_I] = vu2d_ci_gen.mkGraphicsPipelineInfo(DENG_PIPELINE_TYPE_UNMAPPED_2D, 
-                VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, 
-                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);
+            pipeline_infos[UM2D_I] = vu2d_ci_gen.mkGraphicsPipelineInfo(VK_POLYGON_MODE_FILL, 
+                VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 
+                true, true, sample_c, 0);
 
-            pipeline_infos[TM2D_I] = vm2d_ci_gen.mkGraphicsPipelineInfo(DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D, 
-                VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, 
-                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);
+            pipeline_infos[TM2D_I] = vm2d_ci_gen.mkGraphicsPipelineInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, 
+                VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);
 
-            pipeline_infos[UM3D_I] = vu3d_ci_gen.mkGraphicsPipelineInfo(DENG_PIPELINE_TYPE_UNMAPPED_3D, 
-                VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, 
-                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);
+            pipeline_infos[UM3D_I] = vu3d_ci_gen.mkGraphicsPipelineInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, 
+                VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);
 
-            pipeline_infos[TM3D_I] = vm3d_ci_gen.mkGraphicsPipelineInfo(DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D, 
-                VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, 
-                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);
+            pipeline_infos[TM3D_I] = vm3d_ci_gen.mkGraphicsPipelineInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, 
+                VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);
+
+            pipeline_infos[UI_I] = ui_ci_gen.mkGraphicsPipelineInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, 
+                VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);
+
+            LOG("pi count: " + std::to_string(pipeline_infos.size()));
 
             // Create all vulkan pipelines
             std::array<VkPipeline, PIPELINE_C> pipelines;

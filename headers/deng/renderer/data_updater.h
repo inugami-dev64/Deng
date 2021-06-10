@@ -57,80 +57,75 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: data_updater.h - class for handling update actions
+ *  Purpose: Provide a class interface for handling incoming update requests
+ *  the user
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __SANDBOX_H
-#define __SANDBOX_H
+#ifndef __DATA_UPDATER_H
+#define __DATA_UPDATER_H
 
 
-#ifdef __SANDBOX_CPP
+#ifdef __DATA_UPDATER_CPP
     #include <vector>
-	#include <array>
-    #include <thread>
-    #include <mutex>
+    #include <memory>
     #include <queue>
     #include <vulkan/vulkan.h>
 
     #include <common/base_types.h>
-    #include <common/err_def.h>
     #include <common/hashmap.h>
-    #include <common/common.h>
-    #include <common/uuid.h>
+    #include <common/err_def.h>
     #include <data/assets.h>
-    #include <data/das_reader.h>
-    #include <data/tex_loader.h>
 
     #include <math/deng_math.h>
     #include <deng/window.h>
-
     #include <utils/timer.h>
-    #include <utils/font.h>
-    #include <deng/registry/registry.h>
-    #include <deng/lighting/light_man.h>
     #include <deng/camera.h>
-    #include <deng/window.h>
-    #include <deng/renderer/renderer.h>
+    #include <deng/registry/registry.h>
+
+    // Api specific renderer instances
+    #include <imgui-layer/imgui_entity.h>
+    #include <deng/vulkan/renderer.h>
+    #include <deng/renderer/asset_man.h>
 #endif
 
-namespace Sandbox {
-    
-    /// Vulkan sandbox application class
-    class VulkanApp {
+namespace deng {
+
+    class __DataUpdater : public __AssetManager {
     private:
-        deng::Window m_win;
-        deng::Camera3D m_cam;
-        deng::__GlobalRegistry m_reg;
-        dengMath::Transformer3D m_transformer;
-        deng::LightManager m_light_man;
-        std::unique_ptr<deng::Renderer> m_rend;
-        std::vector<das_Asset> m_assets;
-        std::vector<das_Texture> m_textures;
+        std::shared_ptr<vulkan::__vk_Renderer> &m_vk_rend;
+        std::shared_ptr<vulkan::__vk_ConfigVars> &m_vk_cfg;
 
-    private: 
-        /// Create first person camera control bindings
-        void __bindFPP();
+    protected:
+        deng_bool_t m_is_init = false;
 
-
-        /// Create editor camera control bindings
-        void __bindEditor();
-
-
-        /// Load test assets into the register
-        void __loadAssets(const std::vector<const char*> &files);
-
-        
-        /// Load test textures into the register 
-        void __loadTextures(const std::vector<const char*> &files);
-
-
-        /// Create new light sources
-        void __mkLightSources();
+    private:
+        /// Check if the renderer is initialised for update methods and throw error if needed
+        void __initCheck(const std::string &func_name);
 
     public:
-        VulkanApp();
-        void run();
-        void setup();
+        __DataUpdater(__GlobalRegistry &reg, deng_RendererHintBits &api_bits,
+            std::shared_ptr<vulkan::__vk_Renderer> &vk_rend, std::shared_ptr<vulkan::__vk_ConfigVars> &cfg);
+
+        /// Overwrite asset vertices to main buffer.
+        /// Note that this method expects that vertices count hasn't changed,
+        /// otherwise memory corruption can happen!
+        void overwriteAssetData(const dengMath::vec2<deng_ui32_t> &bounds);
+
+
+        /// Replace current light sources with new ones
+        void updateLighting(std::array<deng_Id, __DENG_MAX_LIGHT_SRC_COUNT> &light_srcs);
+
+
+        /// Check if the main buffer needs to be reallocated for incoming data
+        void checkBufferRealloc();
+
+
+        /// Update ui vertices data in the buffer
+        void uiUpdateData();
     };
 }
 

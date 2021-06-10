@@ -151,9 +151,7 @@ void __deng_RegisterKeyEvent (
 }
 
 
-/*
- * Find given key or mouse button status from specified event array
- */
+/// Find given key or mouse button status from specified event array
 deng_bool_t __deng_FindKeyStatus (
     deng_Key key, 
     deng_MouseButton btn, 

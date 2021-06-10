@@ -87,17 +87,18 @@
     #include <deng/lighting/light_srcs.h>
     #include <deng/registry/registry.h>
 
+    #include <imgui-layer/imgui_entity.h>
 #endif
 
 
 namespace deng {
     namespace vulkan {
 
-        /// Class for making drawcalls and setting up proper synchronisation 
         class __vk_DrawCaller {
         private:
-            std::vector<deng_Id> &m_assets;
-            std::vector<deng_Id> &m_textures;
+            const std::vector<deng_Id> &m_assets;
+            const std::vector<deng_Id> &m_textures;
+            const std::vector<VkDescriptorSet> &m_ui_sets;
             deng::__GlobalRegistry &m_reg;
             std::vector<VkFramebuffer> m_framebuffers;
             std::array<__vk_PipelineData, PIPELINE_C> m_pl_data;
@@ -107,61 +108,57 @@ namespace deng {
             VkCommandPool m_cmd_pool;
             std::vector<VkCommandBuffer> m_cmd_bufs;
 
+            // UI data pointer
+            __ImGuiData *m_p_ui_data = NULL;
+
         private:
             void __mkSynchronisation(VkDevice &device);
 
-            /// Asset commandbuffer binder methods
-            void __bindVertexResourceBuffers (
-                das_Asset &asset, 
-                VkCommandBuffer cur_buf,
-                __vk_BufferData &bd
-            );
+            /// Bind asset resources to command buffers
+            void __bindAssetResources(das_Asset &asset, VkCommandBuffer cur_buf,
+                const __vk_BufferData &bd);
+
+
+            /// Bind ImGui resources to command buffers
+            void __bindUIElementResources(__ImGuiEntity *ent, VkCommandBuffer cur_buf, 
+                const __vk_BufferData &bd);
 
             
             /// Bind asset pipeline and return its pipeline layout
-            VkPipelineLayout *__bindPipeline(das_Asset &asset, VkCommandBuffer cmd_buf);
+            VkPipelineLayout *__bindAssetPipeline(das_Asset &asset, VkCommandBuffer cmd_buf);
 
         public:
-            // Needed for synchronising frames
+            // Needed for synchronising frame creation with cpu
             deng_ui32_t current_frame = 0;
             std::vector<VkFence> flight_fences;
             std::vector<VkSemaphore> image_available_semaphore_set;
             std::vector<VkSemaphore> render_finished_semaphore_set;
 
         public:
-            __vk_DrawCaller (
-                VkDevice device,
-                __vk_QueueManager qff,
-                std::vector<deng_Id> &assets,
-                std::vector<deng_Id> &textures,
-                deng::__GlobalRegistry &reg
-            );
+            __vk_DrawCaller(VkDevice device, __vk_QueueManager qff,
+                const std::vector<deng_Id> &assets, const std::vector<deng_Id> &textures,
+                const std::vector<VkDescriptorSet> &ui_sets, deng::__GlobalRegistry &reg);
             
-            void setMiscData (
-                const std::array<__vk_PipelineData, PIPELINE_C> &pl_data, 
-                const std::vector<VkFramebuffer> &fb
-            );
+            void setMiscData(const std::array<__vk_PipelineData, PIPELINE_C> &pl_data, 
+                const std::vector<VkFramebuffer> &fb);
 
             void mkCommandPool(VkDevice device);
 
-            void allocateMainCmdBuffers (
-                VkDevice device, 
-                VkQueue g_queue, 
-                VkRenderPass renderpass, 
-                VkExtent2D ext,
-                dengMath::vec4<deng_vec_t> background,
-                __vk_BufferData &bd
-            );
 
-            void recordMainCmdBuffers (
-                VkRenderPass renderpass,
-                VkExtent2D ext,
-                const dengMath::vec4<deng_vec_t> &background,
-                __vk_BufferData &bd
-            );
+            /// Allocate enough memory for command buffers
+            void allocateCmdBuffers(VkDevice device, VkQueue g_queue, VkRenderPass renderpass, 
+                VkExtent2D ext, dengMath::vec4<deng_vec_t> background, const __vk_BufferData &bd, 
+                const deng_bool_t use_lvl_zero);
+
+
+            /// Record command buffers for drawing assets and optionally ui elements
+            void recordCmdBuffers(VkRenderPass renderpass, VkExtent2D ext,
+                const dengMath::vec4<deng_vec_t> &background, const __vk_BufferData &bd, 
+                const deng_bool_t use_lvl_zero);
         
         public:
             VkCommandPool getComPool();
+            void setUIDataPtr(__ImGuiData *p_gui);
             const std::vector<VkCommandBuffer> &getComBufs();
         };
     }

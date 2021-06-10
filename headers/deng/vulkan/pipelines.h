@@ -68,11 +68,12 @@
 #define __PIPELINES_H
 
 // Pipeline indices
-#define UM3D_I          0
-#define TM3D_I          1
-#define UM2D_I          2
-#define TM2D_I          3
-#define PIPELINE_C      4
+#define UM2D_I          0
+#define TM2D_I          1
+#define UM3D_I          2
+#define TM3D_I          3
+#define UI_I            4
+#define PIPELINE_C      5
 
 
 #ifdef __PIPELINES_CPP
@@ -81,6 +82,7 @@
     #include <vulkan/vulkan.h>
 
     #include <common/base_types.h>
+    #include <data/assets.h>
     #include <common/err_def.h>
 
     #include <deng/vulkan/pipeline_data.h>
@@ -90,6 +92,9 @@
 
 namespace deng {
     namespace vulkan {
+
+        /// Convert given asset mode into its corresponding pipeline type
+        deng_PipelineType assetModeToPipelineType(das_AssetMode am);
         
         class __vk_PipelineCreator {
         private:
@@ -98,6 +103,7 @@ namespace deng {
             VkPipelineLayout m_vm2d_layout;
             VkPipelineLayout m_vu3d_layout;
             VkPipelineLayout m_vm3d_layout;
+            VkPipelineLayout m_ui_layout;
 
             // Descriptor set layouts, which are needed for 
             // pipeline layout creation
@@ -105,16 +111,14 @@ namespace deng {
             VkDescriptorSetLayout &m_vm2d_ds_layout;
             VkDescriptorSetLayout &m_vu3d_ds_layout;
             VkDescriptorSetLayout &m_vm3d_ds_layout;
+            VkDescriptorSetLayout &m_ui_ds_layout;
         
             std::array<__vk_PipelineData, PIPELINE_C> m_pipelines;
 
         private:
             /// Create a single pipeline layout
-            void __mkPipelineLayout (
-                VkDevice device, 
-                VkDescriptorSetLayout &ds_layout,
-                VkPipelineLayout &pl_layout
-            );
+            void __mkPipelineLayout(VkDevice device, VkDescriptorSetLayout &ds_layout,
+                VkPipelineLayout &pl_layout);
 
             /// Create new pipeline layouts for all compatible pipelines
             void __mkPipelineLayouts(VkDevice device);
@@ -122,7 +126,8 @@ namespace deng {
         public:
             __vk_PipelineCreator (
                 VkDescriptorSetLayout &vu2d, VkDescriptorSetLayout &vm2d,
-                VkDescriptorSetLayout &vu3d, VkDescriptorSetLayout &vm3d
+                VkDescriptorSetLayout &vu3d, VkDescriptorSetLayout &vm3d,
+                VkDescriptorSetLayout &ui
             );
 
             /// Create new pipelines 

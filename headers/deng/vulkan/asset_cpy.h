@@ -70,6 +70,8 @@
 
 #ifdef __ASSET_CPY_CPP
     #include <vector>
+    #include <string>
+    #include <common/err_def.h>
     #include <vulkan/vulkan.h>
 
     #include <common/base_types.h>

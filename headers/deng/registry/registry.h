@@ -154,7 +154,7 @@ namespace deng {
 
 
         /// Find the size of total registry elements
-        size_t size();
+        size_t size() const;
         
 
         /// Find all elements in the registry

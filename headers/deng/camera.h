@@ -95,11 +95,9 @@
 
 namespace deng {
 
-    /*
-     * DENG engine camera handling class
-     * This class is universal and it can be used to create first person, editor and third person
-     * camera systems
-     */
+    /// DENG engine camera handling class
+    /// This class is universal and it can be used to create first person, editor and third person
+    /// camera systems
     class Camera3D {
     private:
         __FPPCamera *p_fpp_cam = NULL;

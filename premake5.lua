@@ -70,10 +70,21 @@
 workspace "deng"
     configurations { "Debug", "Release" }
     platforms { "Win32", "Linux" }
-    includedirs { "./headers" }
+    includedirs { 
+        "./headers",
+        "./modules/imgui",
+        "./modules/freetype/include/",
+        "./modules/freetype/include/freetype"
+    }
+
 	architecture "x86_64"
+    defines { "ImDrawIdx=unsigned int" }
     targetdir "build"
 	pic "On"
+
+    -- Add freetype include directories when using linux
+    filter "platforms:Linux"
+        includedirs { "/usr/include/freetype2", "/usr/include/freetype2/freetype" }
 
 	-- Ignore safety warnings that MSVC gives
 	filter "platforms:Win32"
@@ -82,27 +93,25 @@ workspace "deng"
     -- Enable debug symbols if specified
     filter "configurations:Debug"
         symbols "On"
+        optimize "Off"
+
+    filter "configurations:Release"
+        symbols "Off"
+        optimize "On"
     filter {}
 
 --!!! Add new options to use !!!--
--- Create an option to compile all submodule dependencies from source
+-- Create an option to compile all dependencies from source
 newoption {
-    trigger = "use-modules",
-    description = "Use submodule dependencies instead of searching them in system path"
+    trigger = "use-all-modules",
+    description = "Compile all dependencies from source (all git submodules must be initialised)"
 }
 
 
 -- Create an option to specify vulkan sdk library location (Windows only)
 newoption {
 	trigger = "vk-sdk-path",
-	description = "Specify Vulkan SDK path for Windows builds "
-}
-
-
--- Create an option to build DENG as a static library instead of shared library (Windows only)
-newoption {
-    trigger = "build-static",
-    description = "Build libdeng as static library (Windows only)"
+	description = "Specify Vulkan SDK path for Windows builds (Windows only)"
 }
 
 
@@ -112,9 +121,10 @@ newoption {
     value = "MODE",
     description = "Select sandbox application mode",
     allowed = {
-        { "DEFAULT", "Use default Renderer class" },
-        { "VKR", "Use Vulkan renderer class specifically" },
-        { "NONE", "Do not build sandbox application" }
+        { "vulkan", "Build an application for testing the vulkan renderer by loading assets" },
+        { "deng", "Build an application for testing the renderer by loading assets" },
+        { "imgui", "Build an application for testing ImGui with DENG renderer" },
+        { "none", "Do not build any sandbox applications (default)" }
     }
 }
 
@@ -130,10 +140,10 @@ function oscheck()
 end
 
 
--- Check if given options are valid
-function optcheck()
-    -- Define the clean action 
+-- Define the clean action 
+function cleanoptcheck()
     if _ACTION == "clean" then
+        print("Cleaning project files")
         if(os.host() == "linux") then
             os.execute("rm -rf *.make obj Makefile")
             os.exit()
@@ -141,52 +151,65 @@ function optcheck()
             os.execute("del /s /q deng.sln obj *.vcxproj*")
             os.exit()
         end
-        print("Successfully cleaned generated project files")
     end
+end
 
 
-    -- Check if Vulkan SDK path should and is specified
-    if _OPTIONS["vk-sdk-path"] then
-        if package.config:sub(1,1) == '/' then
-            error("Vulkan SDK path is not supposed to be specified in GNU/Linux builds")
-        else
-            libdirs { _OPTIONS["vk-sdk-path"] .. "\\Lib" }
-            includedirs{ _OPTIONS["vk-sdk-path"] .. "\\Include" }
-        end
-    elseif package.config:sub(1,1) == '\\' then
-        error("No Vulkan SDK path specified on Windows build")
+-- Check for the SDK path to be used in correct situation
+function vksdkoptcheck()
+    -- Check if Vulkan SDK path should be and if it is specified
+    if os.istarget("windows") and _OPTIONS["vk-sdk-path"] then
+        libdirs { _OPTIONS["vk-sdk-path"] .. "\\Lib" }
+        includedirs{ _OPTIONS["vk-sdk-path"] .. "\\Include" }
+    elseif not os.istarget("windows") and _OPTIONS["vk-sdk-path"] then
+        print("Vulkan SDK path should only be specified for Windows builds")
+        os.exit()
     end
+end
 
+
+-- Check if static build is allowed if requested
+function staticbuildcheck() 
+    if _OPTIONS["build-static"] and not os.target("windows") then
+        print("Static builds are only allowed for Windows builds")
+        os.exit()
+    end
+end
+
+
+-- Check if given options are valid
+function optcheck()
+    cleanoptcheck()
+    vksdkoptcheck()
+    staticbuildcheck()
+end
+
+
+-- Check which modules to build
+function modcheck()
+    -- These modules are going to be built no matter what
+    local imgui = require("premake/imgui")
+    imgui.build()
 
     -- Check if all submodule build configs should be created
-    if _OPTIONS["use-modules"] then
-        includedirs {
-            "modules/freetype/include",
-            "modules/freetype/include/freetype"
-        }
+    if _OPTIONS["use-all-modules"] then
         local ft = require("premake/ft")
         ft.build()
-    elseif package.config:sub(1,1) == '\\' then
-        error("Please use use-modules option on Windows builds!")
-    else
-        includedirs { "/usr/include/freetype2", "/usr/include/freetype2/freetype" }
-    end
-
-
-    if _OPTIONS["build-static"] and not os.istarget("windows") then
-        error("Building DENG as static library is only supported on Windows")
+    elseif os.istarget("windows") then
+        print("Please use use-all-modules option on Windows builds!")
+        os.exit()
     end
 end
 
 
 -- Setup build destinations
-function buildCfg()
+function buildcfg()
     -- Check if sandbox application should be made and copy files if needed
     if not _OPTIONS["sandbox-mode"] then
-        _OPTIONS["sandbox-mode"] = "NONE"
-    elseif _OPTIONS["sandbox-mode"] ~= "NONE" then
+        _OPTIONS["sandbox-mode"] = "none"
+    elseif _OPTIONS["sandbox-mode"] ~= "none" then
         local sandbox_data = require("premake/sandbox_data")
-        sandbox_data.datacpy();
+        sandbox_data.dataset();
     end
 
 
@@ -198,18 +221,16 @@ function buildCfg()
         libdeng.build(false)
     end
 
-
     -- DENG asset manager build configuration
     local dam = require("premake/dam")
     dam.build()
 
-
     -- Sandbox application build configuration
-    if _OPTIONS["sandbox-mode"] == "VKR" then
-        local sandbox = require("premake/vk_sandbox")
+    if _OPTIONS["sandbox-mode"] == "deng" then
+        local sandbox = require("premake/dengbox")
         sandbox.build()
-    elseif _OPTIONS["sandbox-mode"] == "DEFAULT" then
-        local sandbox = require("premake/default_sandbox")
+    elseif _OPTIONS["sandbox-mode"] == "imgui" then
+        local sandbox = require("premake/imgui_sandbox")
         sandbox.build()
     end
 end
@@ -219,5 +240,6 @@ end
 if not _OPTIONS["help"] then
     oscheck()
     optcheck()
-    buildCfg()
+    modcheck()
+    buildcfg()
 end

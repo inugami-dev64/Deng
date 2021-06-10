@@ -84,32 +84,50 @@ namespace deng {
             m_assets(assets), m_tex(tex) {}
 
         
-        /// Free and reallocate new commandbuffers 
-        void __vk_RuntimeUpdater::updateCmdBuffers(const dengMath::vec4<deng_vec_t> &background) {
-            m_dc.recordMainCmdBuffers (
-                m_scc.getRp(),
-                m_scc.getExt(),
-                background,
-                m_rm.getBD()
-            );
+        /// Rerecord new level one commandbuffers if possible
+       void __vk_RuntimeUpdater::updateCmdBuffers(const dengMath::vec4<deng_vec_t> &background) {
+            vkWaitForFences(m_ic.getDev(), static_cast<deng_ui32_t>(m_dc.flight_fences.size()),
+                m_dc.flight_fences.data(), VK_TRUE, UINT64_MAX);
+
+            // Record new commandbuffers
+            m_dc.recordCmdBuffers(m_scc.getRp(), m_scc.getExt(),
+                background, m_rm.getBD(), true);
         }
 
 
         /// This method updates the vertices buffer that is allocated by given assets
-        void __vk_RuntimeUpdater::updateAssetVerts(const dengMath::vec2<deng_ui32_t> &bounds) {
-            m_rm.remapAssetVerts (
-                m_ic.getDev(),
-                m_ic.getGpu(),
-                m_dc.getComPool(),
-                m_ic.getQFF().graphics_queue,
-                bounds
-            );
+        void __vk_RuntimeUpdater::updateAssetData(const dengMath::vec2<deng_ui32_t> &bounds) {
+            // Check if reallocation is needed
+            const deng_bool_t is_realloc = m_rm.reallocCheck(m_ic.getDev(), m_ic.getGpu(), m_dc.getComPool(), 
+                m_ic.getQFF().graphics_queue);
+
+            if(!is_realloc) {
+                m_rm.cpyAssetsToBuffer(m_ic.getDev(), m_ic.getGpu(), m_dc.getComPool(), 
+                    m_ic.getQFF().graphics_queue, false);
+            }
+        }
+
+
+        /// Update ImGui vertices and indices
+        void __vk_RuntimeUpdater::updateUIData(const dengMath::vec4<deng_vec_t> &background) {
+            // Check if reallocation is needed
+            const deng_bool_t is_realloc = m_rm.reallocCheck(m_ic.getDev(), m_ic.getGpu(), m_dc.getComPool(), 
+                m_ic.getQFF().graphics_queue);
+
+            //// Copy UI element data to buffer, if no reallocation occured
+            if(!is_realloc) {
+                m_rm.cpyUIDataToBuffer(m_ic.getDev(), m_ic.getGpu(), m_dc.getComPool(),
+                    m_ic.getQFF().graphics_queue);
+            }
+
+            // Update command buffers for remapped ui elements
+            updateCmdBuffers(background);
         }
 
 
         /// Reallocate or allocate new descriptor sets for assets between given bounds
         /// NOTE: Vulkan renderer must be idled
-        void __vk_RuntimeUpdater::updateDS(const dengMath::vec2<deng_ui32_t> &bounds) {
+        void __vk_RuntimeUpdater::updateAssetDS(const dengMath::vec2<deng_ui32_t> &bounds) {
             // For each asset between bounds, check its descriptor set status
             for(deng_ui32_t i = bounds.first; i < bounds.second; i++) {
                 // Retrieve base and Vulkan assets
@@ -118,13 +136,13 @@ namespace deng {
 
                 // Check if descriptor sets have been previously allocated
                 if(reg_vk_asset.vk_asset.is_desc) {
-                    vkFreeDescriptorSets(m_ic.getDev(), m_desc_c.getDescPool(reg_asset.asset.asset_mode), 
+                    vkFreeDescriptorSets(m_ic.getDev(), m_desc_c.getDescPool(assetModeToPipelineType(reg_asset.asset.asset_mode)), 
                         reg_vk_asset.vk_asset.desc_c, reg_vk_asset.vk_asset.desc_sets);
                 }
 
                 else reg_vk_asset.vk_asset.is_desc = true;
 
-                m_desc_c.mkDS(m_ic.getDev(), m_rm.getBD(), m_rm.getMissingTextureUUID(), bounds, 
+                m_desc_c.mkAssetDS(m_ic.getDev(), m_rm.getBD(), m_rm.getMissingTextureUUID(), bounds, 
                     m_rm.getUboChunkSize(), m_ic.getGpuLimits().minUniformBufferOffsetAlignment);
             }
         }
@@ -132,43 +150,8 @@ namespace deng {
         
         /// Reallocate main buffer and copy all asset to it
         /// NOTE: Vulkan renderer must be idled
-        void __vk_RuntimeUpdater::reallocateMainBuffer() {
-            // Destroy and free memory for previous main buffer instance
-            vkFreeMemory(m_ic.getDev(), m_rm.getBD().main_buffer_memory, NULL);
-            vkDestroyBuffer(m_ic.getDev(), m_rm.getBD().main_buffer, NULL);
-
-            m_rm.mkAssetBuffers(m_ic.getDev(), m_ic.getGpu(), m_dc.getComPool(), m_ic.getQFF().graphics_queue);
-        }
-
-        
-        /// Check if current main buffer is big enough for new asset data and if it isn't reallocate more memory
-        /// NOTE: Vulkan renderer must be idled
-        void __vk_RuntimeUpdater::assetToBufferPushBack(const dengMath::vec2<deng_ui32_t> &bounds) {
-            VkDeviceSize old_size = m_rm.getBD().main_buffer_size;
-            // For each asset between bounds, find its offset and size
-            for(deng_ui32_t i = bounds.first; i < bounds.second; i++) {
-                RegType &reg_asset = m_reg.retrieve(m_assets[i], DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
-                m_rm.findAssetOffsets(reg_asset.asset);
-            }
-
-            // Check if the size exceeds capacity
-            if(m_rm.getBD().main_buffer_size >= m_rm.getBD().main_buffer_cap)
-                reallocateMainBuffer();
-            else {
-                // Find correct asset offsets
-                for(deng_ui32_t i = bounds.first; i < bounds.second; i++) {
-                    RegType reg_asset = m_reg.retrieve(m_assets[i], DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
-                    m_rm.findAssetOffsets(reg_asset.asset);
-                }
-
-                m_rm.stageAssets(m_ic.getDev(), m_ic.getGpu(), m_dc.getComPool(), m_ic.getQFF().graphics_queue,
-                    bounds, old_size);
-
-                // Copy data from staging buffer to main buffer 
-                __vk_BufferCreator::cpyBufferToBuffer(m_ic.getDev(), m_dc.getComPool(), m_ic.getQFF().graphics_queue, 
-                    m_rm.getBD().staging_buffer, m_rm.getBD().main_buffer, m_rm.getBD().main_buffer_size - old_size, 
-                    0, old_size);
-            }
+        void __vk_RuntimeUpdater::checkForReallocation() {
+            m_rm.reallocCheck(m_ic.getDev(), m_ic.getGpu(), m_dc.getComPool(), m_ic.getQFF().graphics_queue);
         }
     }
 }

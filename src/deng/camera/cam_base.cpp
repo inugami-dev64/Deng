@@ -218,13 +218,11 @@ namespace deng {
     /// This method updates mouse cursor position in Window instance as well as
     /// externally available MouseInputInfo
     void __EventBase::__updateMouseEvData() {
-        m_mouse_pos = m_p_win->getMPos(true);
+        m_mouse_pos = m_p_win->getMPos();
     }
 
 
-    /* 
-     * Find the current mouse control rotation 
-     */
+    /// Find the current mouse control rotation 
     dengMath::vec2<deng_f64_t> __EventBase::__getMouseRotation() {
         dengMath::vec2<deng_f64_t> out_rot;
         out_rot.first = (deng_f64_t) m_mouse_pos.second / (deng_f64_t) m_vc_bounds.second.second * m_max_rot.first;
@@ -233,9 +231,7 @@ namespace deng {
     }
 
         
-    /*
-     * Check if input input conditions are satified for certain action
-     */
+    /// Check if input input conditions are satified for certain action
     deng_bool_t __EventBase::__checkInputAction(deng_CameraAction action) {
         deng_InputEv *evs = NULL;
         switch(action)
@@ -329,28 +325,16 @@ namespace deng {
         for(int i = 0; i < MAX_KEY_COMBO; i++) {
             if(evs[i].key == DENG_KEY_UNKNOWN) continue;
             else if(evs[i].key <= DENG_KEY_LAST && evs[i].key >= DENG_KEY_FIRST) {
-                if (
-                    !__deng_FindKeyStatus (
-                        evs[i].key, 
-                        DENG_MOUSE_BTN_UNKNOWN, 
-                        DENG_INPUT_TYPE_KB,
-                        DENG_INPUT_EVENT_TYPE_ACTIVE
-                    )
-                ) {
+                if(!__deng_FindKeyStatus(evs[i].key, DENG_MOUSE_BTN_UNKNOWN, DENG_INPUT_TYPE_KB,
+                   DENG_INPUT_EVENT_TYPE_ACTIVE)) {
                     out = false; 
                     break;
                 }
             }
 
             else if(evs[i].btn <= DENG_MOUSE_BTN_LAST && evs[i].btn >= DENG_MOUSE_BTN_FIRST) {
-                if ( 
-                    !__deng_FindKeyStatus (
-                        DENG_KEY_UNKNOWN,
-                        evs[i].btn,
-                        DENG_INPUT_TYPE_MOUSE,
-                        DENG_INPUT_EVENT_TYPE_ACTIVE
-                    )
-                ) {
+                if(!__deng_FindKeyStatus(DENG_KEY_UNKNOWN, evs[i].btn, DENG_INPUT_TYPE_MOUSE,
+                   DENG_INPUT_EVENT_TYPE_ACTIVE)) {
                     out = false;
                     break;
                 }
@@ -358,8 +342,7 @@ namespace deng {
 
             else if(evs[i].md_mov <= DENG_MOUSE_DELTA_LAST && evs[i].md_mov >= DENG_MOUSE_DELTA_LAST) {
                 dengMath::vec2<deng_px_t> delta = m_p_win->getMDelta();
-                switch(evs[i].md_mov)
-                {
+                switch(evs[i].md_mov) {
                 case DENG_MOUSE_DELTA_X:
                     if(delta.first <= 0)
                         out = false;

@@ -88,9 +88,7 @@ namespace deng {
         }
 
 
-        /* 
-         * Create new vulkan instance for renderer 
-         */
+        /// Create new vulkan instance for renderer 
         void __vk_InstanceCreator::__mkInstance(deng_bool_t &enable_vl) {
             // Set up Vulkan application info
             VkApplicationInfo appinfo{};
@@ -153,9 +151,7 @@ namespace deng {
         }
 
 
-        /* 
-         * Check if Vulkan validation layers are available 
-         */
+        /// Check if Vulkan validation layers are available 
         deng_bool_t __vk_InstanceCreator::__checkValidationLayerSupport() {
             deng_ui32_t layer_count;
             vkEnumerateInstanceLayerProperties(&layer_count, NULL);
@@ -175,9 +171,7 @@ namespace deng {
         }
 
 
-        /* 
-         * Make debug messenger for Vulkan validation layer 
-         */
+        /// Make debug messenger for Vulkan validation layer 
         void __vk_InstanceCreator::__mkDebugMessenger() {
             VkDebugUtilsMessengerCreateInfoEXT messenger_createinfo{};
             messenger_createinfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -199,9 +193,7 @@ namespace deng {
         }
 
 
-        /* 
-         * Callback method for Vulkan validation layer debugging 
-         */
+        /// Callback method for Vulkan validation layer debugging 
         VKAPI_ATTR VkBool32 VKAPI_CALL __vk_InstanceCreator::__debugCallback (
             VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, 
             VkDebugUtilsMessageTypeFlagsEXT message_type, 
@@ -213,9 +205,7 @@ namespace deng {
         }
 
         
-        /* 
-         * Select appropriate graphics device 
-         */
+        /// Select appropriate graphics device 
         void __vk_InstanceCreator::__selectPhysicalDevice() {
             deng_ui32_t device_count;
             deng_ui32_t score;
@@ -264,9 +254,7 @@ namespace deng {
         }
 
         
-        /* 
-         * Create logical Vulkan device 
-         */ 
+        /// Create logical Vulkan device 
         void __vk_InstanceCreator::__mkLogicalDevice(deng_bool_t &enable_vl) {
             if (
                 !m_qff.findGraphicsFamily(m_gpu) || 
@@ -329,18 +317,14 @@ namespace deng {
         }
 
         
-        /* 
-         * Create window surface with deng surface library 
-         */
+        /// Create window surface with deng surface library 
         void __vk_InstanceCreator::__mkWindowSurface() {
             if(m_win.initVkSurface(m_instance, m_surface) != VK_SUCCESS)
                 VK_INSTANCE_ERR("failed to create window surface!");
         }
 
 
-        /* 
-         * Find the maximum supported sample count for anti-aliasing (MSAA) 
-         */
+        /// Find the maximum supported sample count for anti-aliasing (MSAA) 
         void __vk_InstanceCreator::__findSupportedProperties() {
             VkPhysicalDeviceProperties props;
             vkGetPhysicalDeviceProperties(m_gpu, &props);
@@ -351,36 +335,21 @@ namespace deng {
             props.limits.framebufferColorSampleCounts &
             props.limits.framebufferDepthSampleCounts;
 
-            if(counts & VK_SAMPLE_COUNT_64_BIT) {
+            if(counts & VK_SAMPLE_COUNT_64_BIT)
                 m_max_sample_count = VK_SAMPLE_COUNT_64_BIT;
-                LOG("Maximum sample count 64bit");
-            } 
-            else if(counts & VK_SAMPLE_COUNT_32_BIT) { 
+            else if(counts & VK_SAMPLE_COUNT_32_BIT)
                 m_max_sample_count = VK_SAMPLE_COUNT_32_BIT;
-                LOG("Maximum sample count 32bit");
-            }
-            else if(counts & VK_SAMPLE_COUNT_16_BIT) { 
+            else if(counts & VK_SAMPLE_COUNT_16_BIT)
                 m_max_sample_count = VK_SAMPLE_COUNT_16_BIT;
-                LOG("Maximum sample count 16bit");
-            }
-            else if(counts & VK_SAMPLE_COUNT_8_BIT) { 
+            else if(counts & VK_SAMPLE_COUNT_8_BIT)
                 m_max_sample_count = VK_SAMPLE_COUNT_8_BIT;
-                LOG("Maximum sample count 8bit");
-            }
-            else if(counts & VK_SAMPLE_COUNT_4_BIT) { 
+            else if(counts & VK_SAMPLE_COUNT_4_BIT)
                 m_max_sample_count = VK_SAMPLE_COUNT_4_BIT;
-                LOG("Maximum sample count 4bit");
-            }
-            else if(counts & VK_SAMPLE_COUNT_2_BIT) { 
+            else if(counts & VK_SAMPLE_COUNT_2_BIT) 
                 m_max_sample_count = VK_SAMPLE_COUNT_2_BIT;
-                LOG("Maximum sample count 2bit");
-            }
-            else if(counts & VK_SAMPLE_COUNT_1_BIT) { 
+            else if(counts & VK_SAMPLE_COUNT_1_BIT)
                 m_max_sample_count = VK_SAMPLE_COUNT_1_BIT;
-                LOG("Maximum sample count 1bit");
-            }
-            else 
-                m_max_sample_count = VK_SAMPLE_COUNT_FLAG_BITS_MAX_ENUM;
+            else m_max_sample_count = VK_SAMPLE_COUNT_FLAG_BITS_MAX_ENUM;
 
             // Find linear filtering support needed for mipmapping
             VkFormatProperties format_props;
@@ -401,9 +370,7 @@ namespace deng {
         }   
 
         
-        /*
-         * Destroy all debugging utilities
-         */
+        /// Destroy all debugging utilities
         void __vk_InstanceCreator::destroyDebugUtils (
             VkInstance instance,
             VkDebugUtilsMessengerEXT messenger
@@ -425,9 +392,7 @@ namespace deng {
 
 
 
-        /* 
-         * __vk_InstanceCreator getter methods 
-         */
+        /// __vk_InstanceCreator getter methods 
         VkInstance __vk_InstanceCreator::getIns() { return m_instance; }
         VkDevice __vk_InstanceCreator::getDev() { return m_device; }
         VkPhysicalDevice __vk_InstanceCreator::getGpu() { return m_gpu; }

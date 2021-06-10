@@ -87,10 +87,11 @@ namespace deng {
             VkDescriptorSetLayout m_vm2d_layout;
             VkDescriptorSetLayout m_vu3d_layout;
             VkDescriptorSetLayout m_vm3d_layout;
+            VkDescriptorSetLayout m_ui_layout;
 
         private:
             /// Find the binding data according to the asset mode
-            std::vector<VkDescriptorSetLayoutBinding> __findBindings(das_AssetMode asset_mode);
+            std::vector<VkDescriptorSetLayoutBinding> __findBindings(deng_PipelineType pl_type);
 
             /// Create new descriptor set layout
             void __mkGenericDescSetLayout(VkDevice device, std::vector<VkDescriptorSetLayoutBinding> &bindings, 
@@ -101,13 +102,14 @@ namespace deng {
             void __mkVm2DLayout(VkDevice device);
             void __mkVu3DLayout(VkDevice device);
             void __mkVm3DLayout(VkDevice device);
+            void __mkUILayout(VkDevice device);
 
         public:
             __vk_DescriptorSetLayoutCreator(VkDevice device);
 
         /// Layout getter
         public:
-            VkDescriptorSetLayout &getLayout(das_AssetMode asset_mode);
+            VkDescriptorSetLayout &getLayout(deng_PipelineType pl_type);
         };
     }
 }

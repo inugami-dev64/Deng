@@ -60,108 +60,18 @@
  */ 
 
 
-#ifndef __WINDOW_H
-#define __WINDOW_H
-
-#ifdef __WINDOW_CPP
-    #include <stdlib.h>
-    #include <vector>
-    #include <string>
-
-    #include <common/base_types.h>
-    #include <common/err_def.h>
-    #include <data/assets.h>
-    #include <math/deng_math.h>
-    #include <vulkan/vulkan.h>
-#endif
+#version 450
+#extension GL_ARB_separate_shader_objects : enable
 
 
-#include <deng/surface/surface_window.h>
-#include <deng/vulkan/surface.h>
+layout(binding = 0) uniform sampler2D tex_sampler;
 
+layout(location = 0) in vec2 in_tex;
+layout(location = 1) in flat uint in_col_mul;
 
-namespace deng {   
-    
-    /// Main window handling class for DENG
-    class Window {
-    private:
-        deng_SurfaceWindow *m_p_surface;
-        char *m_title;
-        dengMath::vec2<deng_ui32_t> m_size;
-        deng_bool_t m_is_vc = false;
-        dengMath::vec2<deng_vec_t> m_pixel_size;
-        dengMath::vec2<deng_px_t> m_prev_vc_pos;
+layout(location = 0) out vec4 out_color;
 
-    public:
-        Window (
-            deng_i32_t width, 
-            deng_i32_t height, 
-            const char *title
-        );
-
-        ~Window();
-
-
-        /// Toggle virtual cursor mode
-        void toggleVCMode();
-
-
-        /// Force set virtual cursor mode
-        void changeVCMode(deng_bool_t is_vc);
-
-        
-        /// Hide the cursor's visbility
-        void hideCursor();
-
-
-        /// Make the cursor visible
-        /// NOTE: There should be a special cursor struct for DENG called deng_Cursor in the future
-        /// but for now it is ignored
-        void showCursor();
-
-
-        /// Check if virtual cursor mode is enabled
-        deng_bool_t isVCP();
-
-
-        /// Update window and input devices data
-        void update();
-
-
-        /// Force specified VCP position to virtual mouse cursor instance
-        void forceVCPPos(const dengMath::vec2<deng_px_t> &pos);
-
-
-        /// Create new vulkan surface instance
-        VkResult initVkSurface(VkInstance &instance,
-            VkSurfaceKHR &surface);
-
-
-        /// Search for all required vulkan extensions
-        char **findVulkanSurfaceExtensions(
-            deng_ui32_t *p_ext_c, deng_bool_t enable_vl);
-
-
-
-        /// Get the current mouse position
-        dengMath::vec2<deng_px_t> getMPos() const;
-
-
-        /// Get the mouse delta compared to previous frame mouse position
-        dengMath::vec2<deng_px_t> getMDelta() const;
-
-
-        /// Get the title of the window
-        const char *getTitle() const;
-
-        
-        /// Get the size of the window
-        dengMath::vec2<deng_ui32_t> getSize() const;
-
-
-        /// Get the vector size for one pixel in surface
-        dengMath::vec2<deng_vec_t> getPixelSize() const;
-    };
+void main() {
+    //out_color = in_col_mul * texture(tex_sampler, in_tex);
+    out_color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 }
-
-#endif

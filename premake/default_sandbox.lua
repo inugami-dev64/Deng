@@ -66,7 +66,7 @@ function default_sandbox.build()
     project "sandboxapp"
         kind "ConsoleApp"
         language "C++"
-        cppdialect "C++11"
+        cppdialect "C++14"
         files { "src/main/sandbox_3d.cpp" }
         links { "deng" }
 

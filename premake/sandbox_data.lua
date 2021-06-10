@@ -63,14 +63,25 @@
 local sandbox_data = {}
 
 
--- Copy all necessary data to build dir
-function sandbox_data.datacpy()
-    -- Shaders copy task
-    if(package.config:sub(1,1) == '/') then
-        os.execute("cp -r shaders/ build/")
-        os.execute("cp -r textures/ build/")
-        os.execute("cp -r assets/ build/")
-    elseif(package.config:sub(1,1) == '\\') then
+-- Link or copy all necessary sandbox data to build directory
+function sandbox_data.dataset()
+    if(os.target("linux") == '/') then
+        -- Check if data is linked and if it isn't link it
+        os.execute (
+            "if [ ! -L build/shaders ]; then"..
+            "   ln -s $(realpath shaders/) $(realpath build/shaders)"..
+            "fi")
+
+        os.execute (
+            "if [ ! -L build/textures ]; then"..
+            "   ln -s $(realpath textures/) $(realpath build/textures)"..
+            "fi")
+        os.execute ( 
+            "if [ ! -L build/assets ]; then"..
+            "   ln -s $(realpath assets/) $(realpath build/assets)"..
+            "fi")
+
+    elseif(os.target("windows") == '\\') then
         os.execute("xcopy /s /c /y /q shaders build\\shaders")
         os.execute("xcopy /s /c /y /q textures build\\textures")
         os.execute("xcopy /s /c /y /q assets build\\assets")

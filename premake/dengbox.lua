@@ -59,62 +59,28 @@
 -- the conditions stated in this License.
 --
 
-local libdeng = {}
 
--- Build libdeng library
-function libdeng.build(build_static)
-    project "deng"
-        if build_static then
-            kind "StaticLib"
-        else
-            kind "SharedLib"
-        end
+local dengbox = {}
+
+
+function dengbox.build()
+    project "dengbox"
+        kind "ConsoleApp"
         language "C++"
         cppdialect "C++14"
-
         files {
-            "headers/**/*.h",
-            "src/common/*.c",
-            "src/data/*.c",
-            "src/deng/**.cpp",
-            "src/deng/**.c",
-            "src/imgui-layer/ui_manager.cpp",
-            "src/math/camera_mat.cpp",
-            "src/math/conversion.cpp",
-            "src/math/projection_mat.cpp",
-            "src/math/transformer.cpp",
-            "src/utils/*.cpp"
+            "src/main/vulkan/vulkan_sandbox.h",
+            "src/main/vulkan/vulkan_sandbox.cpp"
         }
 
-        removefiles { "src/deng/renderer.cpp" }
+		libdirs { "build" }
+        links { "deng" }
 
-        -- Link all Windows specific dependencies
-        filter "platforms:Win32"
-            removefiles { "src/deng/surface/x11_surface.c" }
-            links {
-                "freetype",
-                "imgui",
-                "vulkan-1",
-                "comctl32",
-				"iphlpapi"
-            }
-
-        -- Link all GNU/Linux specific dependencies
-        filter "platforms:Linux"
-            removefiles { "src/deng/surface/win32_surface.c" }
-            links {
-                "freetype",
-                "imgui",
-                "vulkan",
-                "pthread",
-                "X11",
-                "Xcursor",
-                "dl"
-            }
-
+        optimize "On"
         filter "configurations:Debug"
-            defines { "__DEBUG" }
-        filter {}
+            symbols "On"
+        filter "configurations:Release"
+            symbols "Off"
 end
 
-return libdeng
+return dengbox

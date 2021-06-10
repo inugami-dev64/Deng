@@ -176,12 +176,14 @@ typedef enum deng_MovementEvent {
 
 /// Pipeline type specifier 
 typedef enum deng_PipelineType {
+    DENG_PIPELINE_TYPE_UNKNOWN                  = -1,
     DENG_PIPELINE_TYPE_UNMAPPED_3D              = 0,
     DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D        = 1,
     DENG_PIPELINE_TYPE_UNMAPPED_2D              = 2,
     DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D        = 3,
-    DENG_PIPELINE_TYPE_FIRST                    = DENG_PIPELINE_TYPE_UNMAPPED_3D,
-    DENG_PIPELINE_TYPE_LAST                     = DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D
+    DENG_PIPELINE_TYPE_UI                       = 4,
+    DENG_PIPELINE_TYPE_FIRST                    = DENG_PIPELINE_TYPE_UNKNOWN,
+    DENG_PIPELINE_TYPE_LAST                     = DENG_PIPELINE_TYPE_UI
 } deng_PipelineType;
 
 
@@ -245,10 +247,8 @@ typedef enum deng_InputEventType {
 } deng_InputEventType;
 
 
-/*
- * Specify what should happen if virtual cursor achieves 
- * its maximum or minimum position 
- */
+/// Specify what should happen if virtual cursor achieves 
+/// its maximum or minimum position 
 typedef enum deng_VCPOverflowAction {
     DENG_VCP_OVERFLOW_ACTION_TO_OPPOSITE_POSITION   = 0,
     DENG_VCP_OVERFLOW_ACTION_BLOCK_POSITION         = 1,

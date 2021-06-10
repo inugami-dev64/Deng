@@ -66,7 +66,6 @@
 
 #ifdef __CAM_BASE_CPP
     #include <stdlib.h>
-    #include <mutex>
     #include <vulkan/vulkan.h>
 
     #include <common/base_types.h>
@@ -90,10 +89,8 @@
 
 namespace deng {
     
-    /*
-     * Structure for all camera control bindings
-     * NOTE: This structure uses input bits instead of regular input event keys
-     */
+    /// Structure for all camera control bindings
+    /// NOTE: This structure uses input bits instead of regular input event keys
     struct Camera3DBindings {
         // Movements according to camera's coordinate system
         deng_InputBits mov_u = DENG_KEY_UNKNOWN;
@@ -132,11 +129,8 @@ namespace deng {
     };
 
 
-    /*
-     * Parent class for every single camera class
-     */
-    class __CameraBase 
-    {
+    /// Parent class for every single camera class
+    class __CameraBase {
     protected:
         deng_vec_t m_fov; // Radians
         dengMath::vec4<deng_vec_t> m_origin = dengMath::vec4<deng_vec_t>{0.0f, 0.0f, 0.0f, 0.0f}; // Origin doesn't accept transformations
@@ -151,32 +145,25 @@ namespace deng {
             deng_vec_t aspect_ratio
         );
 
-        /* 
-         * Following methods are for moving the camera position in its coordinate system
-         */
+
+        /// Following methods are for moving the camera position in its coordinate system
         void moveU(deng_vec_t delta, deng_bool_t ignore_pitch);
         void moveV(deng_vec_t delta, deng_bool_t ignore_pitch);
         void moveW(deng_vec_t delta, deng_bool_t ignore_pitch);
 
 
-        /*
-         * Following methods are for moving the camera position in world coordinate system
-         */
+        /// Following methods are for moving the camera position in world coordinate system
         void moveX(deng_vec_t delta, deng_bool_t ignore_pitch);
         void moveY(deng_vec_t delta, deng_bool_t ignore_pitch);
         void moveZ(deng_vec_t delta, deng_bool_t ignore_pitch);
 
         
-        /*
-         * Following methods are for rotating the camera in its coordinate system
-         */
+        /// Following methods are for rotating the camera in its coordinate system
         void rotU(deng_vec_t rot);
         void rotV(deng_vec_t rot);
 
 
-        /*
-         * Following methods are for rotating the camera in origin specific coordinate system
-         */
+        /// Following methods are for rotating the camera in origin specific coordinate system
         void rotX(deng_vec_t rot);
         void rotY(deng_vec_t rot);
 
@@ -188,21 +175,8 @@ namespace deng {
     };
 
 
-    /*
-     * Data struct for sharing mouse coordinates data
-     * between multiple threads
-     */
-    struct __SharedMouseData {
-        std::mutex mut;
-        dengMath::vec2<deng_px_t> mouse_coords;
-        deng_bool_t is_mouse_input;
-    };
-
-
-    /*
-     * Base parent class for camera event classes
-     * This class contains methods mainly for handling mouse positioning and its usage
-     */
+    /// Base parent class for camera event classes
+    /// This class contains methods mainly for handling mouse positioning and its usage
     class __EventBase {
     protected:
         Window *m_p_win = NULL;
@@ -214,11 +188,9 @@ namespace deng {
 
     protected:
 
-        /* 
-         * Camera mouse update method 
-         * This method updates mouse cursor position in Window instance as well as
-         * externally available MouseInputInfo
-         */
+        /// Camera mouse update method 
+        /// This method updates mouse cursor position in Window instance as well as
+        /// externally available MouseInputInfo
         void __updateMouseEvData();
 
 

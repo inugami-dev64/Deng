@@ -64,28 +64,18 @@
 #include <deng/window.h>
 
 namespace deng {
-    Window::Window (
-        deng_i32_t x, 
-        deng_i32_t y, 
-        const char *title
-    ) {
+    Window::Window(deng_i32_t x, deng_i32_t y, const char *title) {
         m_title = (char*) title;
-
-        m_p_surface = deng_InitVKSurfaceWindow (
-            x,
-            y,
-            m_title,
-            DENG_WINDOW_MODE_FIXED
-        );
+        m_p_surface = deng_InitVKSurfaceWindow(x, y, m_title, DENG_WINDOW_MODE_FIXED);
 
         m_size = dengMath::vec2<deng_ui32_t> {
-            (deng_ui32_t) m_p_surface->width, 
-            (deng_ui32_t) m_p_surface->height 
+            static_cast<deng_ui32_t>(m_p_surface->width),
+            static_cast<deng_ui32_t>(m_p_surface->height) 
         };
 
         m_pixel_size = dengMath::vec2<deng_vec_t> {
-            2.0f / (deng_vec_t) m_size.first,
-            2.0f / (deng_vec_t) m_size.second
+            static_cast<deng_vec_t>(m_size.first),
+            static_cast<deng_vec_t>(m_size.second)
         };
     }
 
@@ -94,24 +84,18 @@ namespace deng {
     }
 
 
-    /*
-     * Set virtual cursor mode that locks real cursor to the center of the window
-     */
+    /// Set virtual cursor mode that locks real cursor to the center of the window
     void Window::toggleVCMode() {    
         if(!m_p_surface->vc_data.is_enabled) {
-            deng_SetMouseCursorMode(
-                m_p_surface,
-                DENG_MOUSE_MODE_INVISIBLE
-            );
+            deng_SetMouseCursorMode(m_p_surface,
+                DENG_MOUSE_MODE_INVISIBLE);
 
             m_p_surface->vc_data.is_enabled = true;
         } 
 
         else { 
-            deng_SetMouseCursorMode(
-                m_p_surface,
-                DENG_MOUSE_MODE_CURSOR_VISIBLE
-            );
+            deng_SetMouseCursorMode(m_p_surface,
+                DENG_MOUSE_MODE_CURSOR_VISIBLE);
 
             m_p_surface->vc_data.is_enabled = false;
         }
@@ -119,31 +103,23 @@ namespace deng {
     }
 
     
-    /*
-     * Force set virtual cursor mode
-     */
+    /// Force set virtual cursor mode
     void Window::changeVCMode(deng_bool_t is_vc) {
         if(m_is_vc == is_vc) return;
         m_is_vc = is_vc;
         if(is_vc) {
-            deng_SetMouseCursorMode (
-                m_p_surface,
-                DENG_MOUSE_MODE_INVISIBLE
-            );
+            deng_SetMouseCursorMode(m_p_surface,
+                DENG_MOUSE_MODE_INVISIBLE);
         }
 
         else {
-            deng_SetMouseCursorMode (
-                m_p_surface,
-                DENG_MOUSE_MODE_CURSOR_VISIBLE
-            );
+            deng_SetMouseCursorMode(m_p_surface,
+                DENG_MOUSE_MODE_CURSOR_VISIBLE);
         }
     }
     
 
-    /*
-     * Hide the cursor's visbility
-     */
+    /// Hide the cursor's visbility
     void Window::hideCursor() {
         deng_SetMouseCursorMode (
             m_p_surface, 
@@ -152,11 +128,9 @@ namespace deng {
     }
 
 
-    /*
-     * Make the cursor visible
-     * NOTE: There should be a special cursor struct for DENG called deng_Cursor in the future
-     * but for now it is ignored
-     */
+    /// Make the cursor visible
+    /// NOTE: There should be a special cursor struct for DENG called deng_Cursor in the future
+    /// but for now it is ignored
     void Window::showCursor() {
         deng_SetMouseCursorMode (
             m_p_surface,
@@ -165,9 +139,7 @@ namespace deng {
     }
 
 
-    /*
-     * Update window and input devices data
-     */
+    /// Update window and input devices data
     void Window::update() {
         m_prev_vc_pos.first = m_p_surface->vc_data.x;
         m_prev_vc_pos.second = m_p_surface->vc_data.y;
@@ -175,18 +147,14 @@ namespace deng {
     }
 
 
-    /*
-     * Force specified VCP position to virtual mouse cursor instance
-     */
+    /// Force specified VCP position to virtual mouse cursor instance
     void Window::forceVCPPos(const dengMath::vec2<deng_px_t> &pos) {
         m_p_surface->vc_data.x = pos.first;
         m_p_surface->vc_data.y = pos.second;
     }
 
 
-    /*
-     * Create new vulkan surface instance
-     */
+    /// Create new vulkan surface instance
     VkResult Window::initVkSurface (
         VkInstance &instance,
         VkSurfaceKHR &surface
@@ -199,9 +167,7 @@ namespace deng {
     }
 
 
-    /*
-     * Find all required surface extensions
-     */
+    /// Find all required surface extensions
     char **Window::findVulkanSurfaceExtensions (
         deng_ui32_t *p_ext_c, 
         deng_bool_t enable_vl
@@ -218,65 +184,54 @@ namespace deng {
     }
 
 
-    /*
-     * Get the current mouse position
-     */
-    dengMath::vec2<deng_px_t> Window::getMPos(deng_bool_t use_vcp) {
-        deng_GetMousePos (
-            m_p_surface,
-            false
-        );
+    /// Get the current mouse position
+    dengMath::vec2<deng_px_t> Window::getMPos() const {
+        deng_GetMousePos(m_p_surface, false);
 
-        if(use_vcp) {
+        // Return either virtual cursor position or real cursor position
+        if(m_is_vc) {
             return dengMath::vec2<deng_px_t>{
-                (deng_px_t) m_p_surface->vc_data.x, 
-                (deng_px_t) m_p_surface->vc_data.y
+                static_cast<deng_px_t>(m_p_surface->vc_data.x), 
+                static_cast<deng_px_t>(m_p_surface->vc_data.y)
             };
         }
 
         else {
             return dengMath::vec2<deng_px_t>{
-                (deng_px_t) m_p_surface->mx,
-                (deng_px_t) m_p_surface->my
+                static_cast<deng_px_t>(m_p_surface->mx),
+                static_cast<deng_px_t>(m_p_surface->my)
             };
         }
     }
 
 
-    /*
-     * Get the mouse delta compared to previous frame mouse position
-     */
-    dengMath::vec2<deng_px_t> Window::getMDelta() {
+    /// Get the mouse delta compared to previous frame mouse position
+    dengMath::vec2<deng_px_t> Window::getMDelta() const {
         if(m_p_surface->vc_data.is_enabled) {
             return dengMath::vec2<deng_px_t>{
-                (deng_px_t) m_p_surface->vc_data.x - m_prev_vc_pos.first,
-                (deng_px_t) m_p_surface->vc_data.y - m_prev_vc_pos.second
+                static_cast<deng_px_t>(m_p_surface->vc_data.x - m_prev_vc_pos.first),
+                static_cast<deng_px_t>(m_p_surface->vc_data.y - m_prev_vc_pos.second)
             };
         }
 
         else {
             return dengMath::vec2<deng_px_t>{
-                (deng_px_t) m_p_surface->mx - m_prev_vc_pos.first,
-                (deng_px_t) m_p_surface->my - m_prev_vc_pos.second
+                static_cast<deng_px_t>(m_p_surface->mx - m_prev_vc_pos.first),
+                static_cast<deng_px_t>(m_p_surface->my - m_prev_vc_pos.second)
             };
         }
     }
 
 
-    dengMath::vec2<deng_vec_t> Window::getPixelSize() {
-        return m_pixel_size;
-    }
+    /// Get the vector size for one pixel in surface
+    dengMath::vec2<deng_vec_t> Window::getPixelSize() const { return m_pixel_size; }
 
+    /// Get the title of the window
+    const char *Window::getTitle() const { return m_title; }
 
-    const char *Window::getTitle() {
-        return m_title;
-    }
+    /// Get the size of the window
+    dengMath::vec2<deng_ui32_t> Window::getSize() const { return m_size; }
 
-    dengMath::vec2<deng_ui32_t> Window::getSize() {
-        return m_size;
-    }
-
-    deng_bool_t Window::isVCP() {
-        return m_is_vc;
-    }
+    /// Check if virtual cursor mode is enabled
+    deng_bool_t Window::isVCP() { return m_is_vc; }
 }

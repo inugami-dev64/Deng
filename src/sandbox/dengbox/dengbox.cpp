@@ -60,13 +60,13 @@
  */ 
 
 
-#define __SANDBOX_CPP
-#include <../src/main/vulkan/vulkan_sandbox.h>
+#define __DENGBOX_CPP
+#include <../src/sandbox/dengbox/dengbox.h>
 
 
 namespace Sandbox {
 
-    VulkanApp::VulkanApp() : 
+    DengBox::DengBox() : 
         m_win(1200, 1000, "DENG game"),
         m_cam(DENG_CAMERA_TYPE_EDITOR, static_cast<deng_vec_t>(dengMath::Conversion::degToRad(65.0)),
             {0.1f, -25.0f}, {0.7f, 0.7f, 0.7f}, {0.3f, 0.3f}, false, &m_win),
@@ -112,7 +112,7 @@ namespace Sandbox {
 
 
     /// Create first person camera control bindings
-    void VulkanApp::__bindFPP() {
+    void DengBox::__bindFPP() {
         deng::Camera3DBindings bindings;
         bindings.mov_u = deng_CreateInputMask(1, DENG_KEY_D);
         bindings.mov_nu = deng_CreateInputMask(1, DENG_KEY_A);
@@ -132,7 +132,7 @@ namespace Sandbox {
 
 
     /// Create editor camera control bindings
-    void VulkanApp::__bindEditor() {
+    void DengBox::__bindEditor() {
         deng::Camera3DBindings bindings;
         bindings.mov_w = deng_CreateInputMask(1, DENG_MOUSE_SCROLL_UP);
         bindings.mov_nw = deng_CreateInputMask(1, DENG_MOUSE_SCROLL_DOWN);
@@ -143,7 +143,7 @@ namespace Sandbox {
 
 
     /// Load test assets into the register
-    void VulkanApp::__loadAssets(const std::vector<const char*> &files) {
+    void DengBox::__loadAssets(const std::vector<const char*> &files) {
         for(size_t i = 0; i < files.size(); i++) {
             das_Asset asset = {};
             das_LoadAsset(&asset, DAS_ASSET_MODE_UNDEFINED,
@@ -156,7 +156,7 @@ namespace Sandbox {
 
     
     /// Load test textures into the register 
-    void VulkanApp::__loadTextures(const std::vector<const char*> &files) {
+    void DengBox::__loadTextures(const std::vector<const char*> &files) {
         for(size_t i = 0; i < files.size(); i++) {
             das_Texture tex = {};
             das_LoadTexture(&tex, files[i]);
@@ -167,25 +167,25 @@ namespace Sandbox {
 
 
     /// Create new light sources
-    void VulkanApp::__mkLightSources() {
+    void DengBox::__mkLightSources() {
         m_light_man.newPtLightSrc(5.0f, dengMath::vec3<deng_vec_t>{0.0f, -0.5f, 0.0f});
         m_light_man.newPtLightSrc(10.0f, dengMath::vec3<deng_vec_t>{0.0f, 0.0f, -1.0f});
     }
 
 
-    void VulkanApp::setup() {
+    void DengBox::setup() {
         m_rend->setup(m_cam, m_win);
     }
 
 
-    void VulkanApp::run() {
+    void DengBox::run() {
         m_rend->run();
     }
 }
 
 int main(void) {
-    Sandbox::VulkanApp vk_app;
-    vk_app.setup();
-    vk_app.run();
+    Sandbox::DengBox deng_app;
+    deng_app.setup();
+    deng_app.run();
     return 0;
 }

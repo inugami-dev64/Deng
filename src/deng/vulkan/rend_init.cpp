@@ -80,59 +80,56 @@ namespace deng {
         ) : m_reg(reg), m_assets(assets), m_textures(textures) {
 
             // Create new VkInstace
-            m_p_ic = new __vk_InstanceCreator(win, conf.enable_validation_layers);
+            m_ic = std::make_unique<__vk_InstanceCreator>(win, conf.enable_validation_layers);
             
             // Create new swapchain creator
-            m_p_scc = new __vk_SwapChainCreator(m_p_ic->getDev(),
-                win, m_p_ic->getGpu(), m_p_ic->getSu(), m_p_ic->getQFF(),
+            m_scc = std::make_unique<__vk_SwapChainCreator>(m_ic->getDev(),
+                win, m_ic->getGpu(), m_ic->getSu(), m_ic->getQFF(),
                 conf.msaa_sample_count);
 
-            // Create new draw caller instance and make command pool
-            m_p_dc = new __vk_DrawCaller(m_p_ic->getDev(),
-                m_p_ic->getQFF(), m_assets, m_textures, m_reg);
-            
-            m_p_dc->mkCommandPool(m_p_ic->getDev());
-
-            __max_frame_c = static_cast<deng_ui32_t>(m_p_scc->getSCImg().size());
-
-            // Create new buffer resources allocator
-            m_p_rm = new __vk_ResourceManager(m_p_ic->getDev(), 
-                m_p_ic->getGpu(), m_p_scc->getExt(), conf.msaa_sample_count,
-                m_p_scc->getRp(), m_p_dc->getComPool(), m_p_ic->getQFF().graphics_queue,
-                m_p_scc->getSCImgViews(), m_reg, m_assets, m_textures, m_p_scc->getSF(),
-                m_p_ic->getGpuLimits()); 
-
             // Create new vulkan descriptor creator
-            m_p_desc_c = new __vk_DescriptorSetsCreator(m_p_ic->getDev(),
-                m_p_scc->getExt(), m_p_scc->getRp(), m_reg, m_assets,
+            m_desc_c = std::make_unique<__vk_DescriptorSetsCreator>(m_ic->getDev(),
+                m_scc->getExt(), m_scc->getRp(), m_reg, m_assets,
                 m_textures, conf.msaa_sample_count);
 
+            // Create new draw caller instance and make command pool
+            m_dc = std::make_unique<__vk_DrawCaller>(m_ic->getDev(),
+                m_ic->getQFF(), m_assets, m_textures, m_desc_c->getUIDS(), m_reg);
+            
+            m_dc->mkCommandPool(m_ic->getDev());
+
+            __max_frame_c = static_cast<deng_ui32_t>(m_scc->getSCImg().size());
+
+            // Create new buffer resources allocator
+            m_rm = std::make_unique<__vk_ResourceManager>(m_ic->getDev(), 
+                m_ic->getGpu(), m_scc->getExt(), conf.msaa_sample_count,
+                m_scc->getRp(), m_dc->getComPool(), m_ic->getQFF().graphics_queue,
+                m_scc->getSCImgViews(), m_reg, m_assets, m_textures, m_scc->getSF(),
+                m_ic->getGpuLimits()); 
+
             // Create new vulkan pipeline creator
-            m_p_pl_c = new __vk_PipelineCreator (
-                m_p_desc_c->getLayout(DAS_ASSET_MODE_2D_UNMAPPED),
-                m_p_desc_c->getLayout(DAS_ASSET_MODE_2D_TEXTURE_MAPPED),
-                m_p_desc_c->getLayout(DAS_ASSET_MODE_3D_UNMAPPED),
-                m_p_desc_c->getLayout(DAS_ASSET_MODE_3D_TEXTURE_MAPPED)
+            m_pl_c = std::make_unique<__vk_PipelineCreator>(
+                m_desc_c->getLayout(DENG_PIPELINE_TYPE_UNMAPPED_2D),
+                m_desc_c->getLayout(DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D),
+                m_desc_c->getLayout(DENG_PIPELINE_TYPE_UNMAPPED_3D),
+                m_desc_c->getLayout(DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D),
+                m_desc_c->getLayout(DENG_PIPELINE_TYPE_UI)
             );
         }
 
 
-        __vk_RendererInitialiser::~__vk_RendererInitialiser() {
-            delete m_p_desc_c;
-            delete m_p_pl_c;
-            delete m_p_dc;
-            delete m_p_rm;
-            delete m_p_scc;
-            delete m_p_ic;
-        }
-
-
         /// Renderer initialiser getter methods
-        __vk_InstanceCreator &__vk_RendererInitialiser::getIC() { return *m_p_ic; }
-        __vk_SwapChainCreator &__vk_RendererInitialiser::getSCC() { return *m_p_scc; } 
-        __vk_DescriptorSetsCreator &__vk_RendererInitialiser::getDescC() { return *m_p_desc_c; }
-        __vk_PipelineCreator &__vk_RendererInitialiser::getPipelineC() { return *m_p_pl_c; }
-        __vk_ResourceManager &__vk_RendererInitialiser::getResMan() { return *m_p_rm; }
-        __vk_DrawCaller &__vk_RendererInitialiser::getDrawCaller() { return *m_p_dc; }
+        __vk_InstanceCreator &__vk_RendererInitialiser::getIC() { return *m_ic.get(); }
+        __vk_SwapChainCreator &__vk_RendererInitialiser::getSCC() { return *m_scc.get(); } 
+        __vk_DescriptorSetsCreator &__vk_RendererInitialiser::getDescC() { return *m_desc_c.get(); }
+        __vk_PipelineCreator &__vk_RendererInitialiser::getPipelineC() { return *m_pl_c.get(); }
+        __vk_ResourceManager &__vk_RendererInitialiser::getResMan() { return *m_rm.get(); }
+        __vk_DrawCaller &__vk_RendererInitialiser::getDrawCaller() { return *m_dc.get(); }
+
+
+        void __vk_RendererInitialiser::setUIDataPtr(__ImGuiData *p_gui) { 
+            m_rm->setUIDataPtr(p_gui); 
+            m_dc->setUIDataPtr(p_gui);
+        }
     }
 }

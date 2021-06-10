@@ -111,6 +111,7 @@ namespace deng {
             deng_ui64_t m_3d_mapped_asset_c = 0;
 
             deng::__GlobalRegistry &m_reg;
+            std::vector<VkDescriptorSet> m_ui_desc_sets;
 
         private:
             /// Check if the pool was reallocated and if it was reallocate 
@@ -125,35 +126,29 @@ namespace deng {
 
 
             /// Create write descriptors for texture mapped assets
-            std::vector<VkWriteDescriptorSet> __mkMappedWriteDescInfos(das_AssetMode asset_mode, 
+            const std::vector<VkWriteDescriptorSet> __mkMappedWriteDescInfos(das_AssetMode asset_mode, 
                 std::vector<VkDescriptorBufferInfo> &buffer_infos, VkDescriptorSet &desc_set,
                 VkDescriptorImageInfo &img_info);
 
 
             /// Create write descriptors for unmapped assets
-            std::vector<VkWriteDescriptorSet> __mkUnmappedWriteDescInfos(das_AssetMode asset_mode,
+            const std::vector<VkWriteDescriptorSet> __mkUnmappedWriteDescInfos(das_AssetMode asset_mode,
                 std::vector<VkDescriptorBufferInfo> &buffer_info, VkDescriptorSet &desc_set);
 
 
+            /// Create write descriptors for ImGui elements
+            const VkWriteDescriptorSet __mkUIWriteDescInfo(const VkDescriptorSet &desc_set, 
+                const VkDescriptorImageInfo &img_info);
+
+
             /// Create descriptor sets for unmapped assets
-            void __mkUnmappedDS (
-                VkDevice device, 
-                __vk_Asset &asset,
-                __vk_BufferData &bd,
-                deng_ui64_t min_align,
-                deng_ui64_t ubo_chunk_size
-            );
+            void __mkUnmappedDS(VkDevice device, __vk_Asset &asset, __vk_BufferData &bd,
+                deng_ui64_t min_align, deng_ui64_t ubo_chunk_size);
             
 
             /// Create descriptor sets for texture mapped assets
-            void __mkTexMappedDS (
-                VkDevice device, 
-                __vk_Asset &asset,
-                __vk_BufferData &bd,
-                deng_Id missing_tex_uuid,
-                deng_ui64_t min_align,
-                deng_ui64_t ubo_chunk_size
-            );
+            void __mkTexMappedDS(VkDevice device, __vk_Asset &asset, __vk_BufferData &bd,
+                deng_Id missing_tex_uuid, deng_ui64_t min_align, deng_ui64_t ubo_chunk_size);
 
             
             /// Reallocate previously destroyed descriptor set instances
@@ -171,16 +166,19 @@ namespace deng {
             );
 
 
-            /// Abstracted method for creating descriptor sets
+            /// Abstracted method for creating descriptor sets for each asset
             /// for each asset
-            void mkDS (
-                VkDevice device,
-                __vk_BufferData &bd,
-                deng_Id missing_tex_uuid,
-                const dengMath::vec2<deng_ui32_t> &asset_bounds,
-                deng_ui64_t ubo_chunk_size,
-                deng_ui64_t min_ubo_align
-            );
+            void mkAssetDS(VkDevice device, __vk_BufferData &bd, deng_Id missing_tex_uuid,
+                const dengMath::vec2<deng_ui32_t> &asset_bounds, deng_ui64_t ubo_chunk_size,
+                deng_ui64_t min_ubo_align);
+
+
+            /// Create descriptor sets for ImGui elements
+            void mkUIDS(VkDevice device, __vk_BufferData &bd, deng_Id texture_atlas);
+
+        // Getter methods
+        public:
+            const std::vector<VkDescriptorSet> &getUIDS();
         };
     }
 }

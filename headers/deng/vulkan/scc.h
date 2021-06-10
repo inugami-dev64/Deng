@@ -114,7 +114,7 @@ namespace deng {
 
             void SCCleanup();
 
-            /* System that checks for window resizing should be made */
+            /// System that checks for window resizing should be made
             void remkSwapChain (
                 VkDevice device,
                 Window *p_win,

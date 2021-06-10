@@ -182,28 +182,28 @@ typedef enum das_AssetMode {
 } das_AssetMode;
 
 
-/// Main asset struct 
+/// Main asset structure for 2D and 3D assets
 typedef struct das_Asset {
-    deng_Id uuid;
-    deng_Id tex_uuid;
-    deng_Id vk_id;
-    deng_Id gl_id;
-    char *name;
+    deng_Id uuid;               // Identifier that is used to access the asset from the registry
+    deng_Id tex_uuid;           // Texture id that the current asset is bound to (can be set to zero, if unmapped)
+    deng_Id vk_id;              // Vulkan asset id, that is generated when Vulkan is used as the backend api
+    deng_Id gl_id;              // OpenGL asset id, that is generated when OpenGL is used as the backend api
+    char *name;                 // Asset name that is displayed in editors 
 
     // Temporary variables, since no material system is present
-    das_ObjColorData diffuse;
-    das_ObjColorData ambient;
-    das_ObjColorData specular;
-    deng_vec_t phong_exp;
+    das_ObjColorData diffuse;   // Asset diffuse color property
+    das_ObjColorData ambient;   // Asset ambient light intensity
+    das_ObjColorData specular;  // Specular light intensity
+    deng_vec_t phong_exp;       // Phong exponent that is used, with Blinn-Phong shading
     
 
-    das_AssetMode asset_mode;
-    deng_bool_t is_shown;
-    deng_bool_t is_transformed;
-    deng_bool_t force_unmap;
-    das_VertDynamic vertices;
-    das_IndicesDynamic indices;
-    das_OffsetData offsets;
+    das_AssetMode asset_mode;   // Asset mode specifier
+    deng_bool_t is_shown;       // False if asset is ignored from draw calls, otherwise True
+    deng_bool_t is_transformed; // Toggle transformation on and off
+    deng_bool_t force_unmap;    // Force the asset not to use texture image and texture mapping
+    das_VertDynamic vertices;   // All asset vertices that will be passed to command buffers
+    das_IndicesDynamic indices; // All asset indices that will be passed to command buffers
+    das_OffsetData offsets;     // Offsets, which are taken into account, when allocating buffer storage
 } das_Asset;
 
 
@@ -213,6 +213,7 @@ typedef struct das_Texture {
     deng_Id vk_id;
     deng_Id gl_id;
     char *name;
+    deng_bool_t no_reg_cleanup;         // Set this as true if no automatic cleanup is wanted in registry destruction
     das_PixelDataDynamic pixel_data;
 } das_Texture;
 

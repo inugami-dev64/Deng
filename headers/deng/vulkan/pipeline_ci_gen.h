@@ -73,9 +73,9 @@
     #include <array>
     #include <string>
     #include <stdexcept>
+    #include <stddef.h>
     #include <vulkan/vulkan.h>
 
-    #include <deng/forward_dec.h>
     #include <common/base_types.h>
     #include <common/hashmap.h>
     #include <common/err_def.h>
@@ -85,15 +85,24 @@
     #include <deng/vulkan/pipeline_data.h>
     #include <deng/vulkan/resources.h>
     #include <deng/window.h>
+
+    #include <imgui-layer/imgui_entity.h>
 #endif
 
 
 
 #ifdef __linux__
+    // UI system shaders
+    #define UI_VERT_SHADER                      "./shaders/bin/2d/UIV.spv"
+    #define UI_FRAG_SHADER                      "./shaders/bin/2d/UIF.spv"
+
+    // 2D asset shaders
     #define UNMAPPED_VERT_SHADER_2D             "./shaders/bin/2d/UV.spv"
     #define UNMAPPED_FRAG_SHADER_2D             "./shaders/bin/2d/UF.spv"
     #define TEXTURE_MAPPED_VERT_SHADER_2D       "./shaders/bin/2d/TMV.spv"
     #define TEXTURE_MAPPED_FRAG_SHADER_2D       "./shaders/bin/2d/TMF.spv"
+
+    // 3D asset shaders
     #define UNMAPPED_VERT_SHADER_3D             "./shaders/bin/3d/UV.spv"
     #define UNMAPPED_FRAG_SHADER_3D             "./shaders/bin/3d/UF.spv"
     #define TEXTURE_MAPPED_VERT_SHADER_3D       "./shaders/bin/3d/TMV.spv"
@@ -101,10 +110,17 @@
 #endif
 
 #ifdef _WIN32
+    // UI system shaders
+    #define UI_VERT_SHADER                      ".\\shaders\\bin\\2d\\UIV.spv"
+    #define UI_FRAG_SHADER                      ".\\shaders\\bin\\2d\\UIF.spv"
+
+    // 2D asset shaders
     #define UNMAPPED_VERT_SHADER_2D             ".\\shaders\\bin\\2d\\UV.spv"
     #define UNMAPPED_FRAG_SHADER_2D             ".\\shaders\\bin\\2d\\UF.spv"
     #define TEXTURE_MAPPED_VERT_SHADER_2D       ".\\shaders\\bin\\2d\\TMV.spv"
     #define TEXTURE_MAPPED_FRAG_SHADER_2D       ".\\shaders\\bin\\2d\\TMF.spv"
+
+    // 3D asset shaders
     #define UNMAPPED_VERT_SHADER_3D             ".\\shaders\\bin\\3d\\UV.spv"
     #define UNMAPPED_FRAG_SHADER_3D             ".\\shaders\\bin\\3d\\UF.spv"
     #define TEXTURE_MAPPED_VERT_SHADER_3D       ".\\shaders\\bin\\3d\\TMV.spv"
@@ -122,32 +138,25 @@ namespace deng {
             __vk_PipelineData &m_pipeline_data;
 
         private:
-            /*
-             * Read SPIR-V binary data from shader files
-             */
+            /// Read SPIR-V binary data from shader files
             char *__readBinShader(const char *file_name, size_t &size);
 
 
-            /*
-             * Read appropriate vertex and fragment shaders according to 
-             * the pipeline mode
-             */
+            /// Read appropriate vertex and fragment shaders according to 
+            /// the pipeline mode
             void __readShaders(deng_PipelineType pt, char **p_vert, size_t &vert_c, 
                 char **p_frag, size_t &frag_c);
 
-            /*
-             * Create new shader module from SPIR-V binaries
-             */
+
+            /// Create new shader module from SPIR-V binaries
             VkShaderModule __mkShaderModule(char *bin, size_t bin_c);
 
-            /*
-             * Get binding description info in VkVertexInputBindingDescription instance
-             */
+
+            /// Get binding description info in VkVertexInputBindingDescription instance
             std::vector<VkVertexInputBindingDescription> __getBindingDesc();
 
-            /*
-             * Get attribute description info in VkVertexInputAttributeDescription instances
-             */
+
+            /// Get attribute description info in VkVertexInputAttributeDescription instances
             std::vector<VkVertexInputAttributeDescription> __getAttributeDescs();
             
         public:
@@ -159,11 +168,9 @@ namespace deng {
             );
             ~__vk_PipelineCreateInfoGenerator();
 
-            /* 
-             * Make createinfo instance for graphics pipeline
-             */
+
+            /// Make createinfo instance for graphics pipeline
             VkGraphicsPipelineCreateInfo mkGraphicsPipelineInfo (
-                deng_PipelineType pt,
                 VkPolygonMode polygon_mode, 
                 VkCullModeFlagBits cull_mode, 
                 VkFrontFace front_face, 

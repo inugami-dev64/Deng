@@ -125,11 +125,15 @@ namespace deng {
             VkDescriptorPool m_vm3d_pool = {};
             deng_ui32_t m_vm3d_cap = 0;
 
+            // UI element pool
+            VkDescriptorPool m_ui_pool = {};
+
         private:
             void __mk2DUnmappedDescPool(VkDevice device);
             void __mk2DTexMappedDescPool(VkDevice device);
             void __mk3DUnmappedDescPool(VkDevice device);
             void __mk3DTexMappedDescPool(VkDevice device);
+            void __mkUIPool(VkDevice device);
 
             /// Destroy assets with specific asset mode
             void __destroyAssetDescriptorSets(VkDevice device, 
@@ -143,8 +147,8 @@ namespace deng {
             __vk_DescriptorPoolCreator(std::vector<deng_Id> &assets, 
                 __GlobalRegistry &reg) : m_assets(assets), m_reg(reg) {}
 
-            /// Create a new descriptor pool based on the asset mode
-            void mkDescPool(VkDevice device, deng_ui32_t cap, das_AssetMode mode);
+            /// Create a new descriptor pool based on the pipeline type
+            void mkDescPool(VkDevice device, deng_ui32_t cap, deng_PipelineType mode);
 
             /// Create new descriptor pools for all asset types
             void mkDescPools(VkDevice device, deng_ui32_t cap);
@@ -157,7 +161,7 @@ namespace deng {
 
         /// Getter / Setter methods
         public:
-            VkDescriptorPool &getDescPool(das_AssetMode mode);
+            VkDescriptorPool &getDescPool(deng_PipelineType type);
         };
     }
 }

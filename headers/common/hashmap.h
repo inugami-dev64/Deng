@@ -124,24 +124,18 @@ typedef struct __Hashmap {
     static int __keycmp(void *key1, size_t n1, void *key2, size_t n2);
 
 
-    /*
-     * Search for the bucket index of the key element
-     */
+    /// Search for the bucket index of the key element
     static size_t __findIndex(Hashmap *p_hm, void *key, size_t key_size);
 #endif
 
-    /*
-     * Create a new hashmap instance
-     */
+    /// Create a new hashmap instance
     void newHashmap (
         Hashmap *p_hashmap, 
         size_t n_len
     );
 
 
-    /*
-     * Push value to the hashmap
-     */
+    /// Push value to the hashmap
     void pushToHashmap (
         Hashmap *p_hm,
         void *key,
@@ -150,9 +144,7 @@ typedef struct __Hashmap {
     );
 
 
-    /*
-     * Pop the value from hashmap that is specified with the key
-     */
+    /// Pop the value from hashmap that is specified with the key
     void *popFromHashmap (
         Hashmap *p_hm,
         void *key,
@@ -160,15 +152,11 @@ typedef struct __Hashmap {
     );
 
 
-    /*
-     * Find the list of all elements' pointers in hashmap
-     */
+    /// Find the list of all elements' pointers in hashmap
     void **getHashmapList(Hashmap *p_hm);
 
 
-    /*
-     * Find value from the map by specified key
-     */
+    /// Find value from the map by specified key
     void *findValue (
         Hashmap *p_hm, 
         void *key, 
@@ -176,9 +164,7 @@ typedef struct __Hashmap {
     );
 
     
-    /*
-     * Destroy the given hashmap instance
-     */
+    /// Destroy the given hashmap instance
     void destroyHashmap(Hashmap *p_hm);
 
 #ifdef __cplusplus

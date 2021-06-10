@@ -57,58 +57,70 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: imgui-renderer - handle imgui draw data and render to screen
+ *  Purpose: Provide abstract class for rendering ImGui data
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __UI_CALLBACKS_H
-#define __UI_CALLBACKS_H
+#ifndef __IMGUI_RENDERER_H
+#define __IMGUI_RENDERER_H
 
-#ifdef __UI_CALLBACKS_CPP
+
+#ifdef __IMGUI_RENDERER_CPP
     #include <vector>
     #include <array>
-    #include <mutex>
-    #include <array>
-    #include <stdlib.h>
+    #include <string>
+    #include <memory>
+    #include <thread>
+    #include <queue>
     #include <vulkan/vulkan.h>
 
     #include <common/base_types.h>
-    #include <das/assets.h>
-    
-    #include <deng/forward_dec.h>
-    #include <deng/deng_math.h>
-    #include <deng/surface_window.h>
-    #include <deng/window.h>
-    #include <deng/vulkan/vulkan_qm.h>
-    #include <deng/vulkan/vulkan_sd.h>
-    #include <deng/vulkan/vulkan_resources.h>
-    #include <deng/vulkan/vulkan_rend_infos.h>
+    #include <common/err_def.h>
+    #include <common/hashmap.h>
+    #include <common/uuid.h>
+    #include <data/assets.h>
 
+    #include <imgui.h>
+    #include <imgui-layer/imgui_entity.h>
+
+    #include <math/deng_math.h>
+    #include <deng/registry/registry.h>
+    #include <deng/window.h>
+    #include <utils/timer.h>
     #include <utils/font.h>
-    #include <utils/collision.h>
-    #include <dengui/dengui_win_def.h>
-    #include <dengui/dengui_infos.h>
-    #include <dengui/vulkan/vulkan_update.h>
-    #include <dengui/dengui_window.h>
-    #include <dengui/dengui_events.h>
+    #include <deng/camera.h>
+    #include <deng/renderer/renderer.h>
+
+
+    #define DENG_IMGUI_ENTITY_RESERV    16
 #endif
 
-namespace dengui {
-    /* Setup dengui callbacks for use */
-    void setupCallbacks (
-        dengUtils::StringRasterizer *p_sr,
-        dengMath::vec2<deng_ui32_t> deng_window_area
-    );
+namespace deng {
 
-    void helloCallback(WindowElement *p_elem, Events *p_ev);
-    void helloCallback(DDMElement *p_elem, Events *p_ev);
-    
-    /* Spawn help window */
-    void ddmHelpCallback(DDMElement *p_elem, Events *p_ev);
-    
-    /* Basic window handling callbacks */
-    void minTriangleCallback(WindowElement *p_cur_elem, Events *p_ev);
-    void maxTriangleCallback(WindowElement *p_cur_elem, Events *p_ev);
-    void closeBtnCallback(WindowElement *p_cur_elem, Events *p_ev);
+
+    class UIManager {
+    private:
+        deng::Renderer &m_rend;
+        deng_Id m_imgui_atlas = NULL;
+        ImGuiIO *m_p_io;
+        deng::__ImGuiData m_gui_data = {};
+
+    public:
+        UIManager(Renderer &rend);
+
+        /// Create a new ui form in ImGui
+        //void spawnForm();
+
+        /// Update IO device input
+        void updateIO(const deng::Window &win);
+
+        /// Render ImGui data to screen
+        void render(ImDrawData *p_draw_data, const Window &win);
+    };
 }
+
 
 #endif

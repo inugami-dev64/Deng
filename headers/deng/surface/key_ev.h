@@ -89,32 +89,24 @@ extern "C" {
     #include <deng/surface/surface_window.h>
 
 
-    /*
-     * Key event registry arrays
-     */
+    /// Key event registry arrays
     deng_bool_t active_ev[DENG_INPUT_EV_COUNT] = {0};
     deng_bool_t released_ev[DENG_INPUT_EV_COUNT] = {0};
 #endif
 
 
-/*
- * Create new input bitmask from multiple input events
- */
+/// Create new input bitmask from multiple input events
 deng_InputBits deng_CreateInputMask(deng_ui32_t ev_c, ...);
 
 
-/*
- * Unmask deng_InputBits instance and return array
- * of deng_InputEv, which size is exactly 8.
- * NOTE: Array elements that have no event attached use DENG_KEY_UNKNOWN as a value
- */
+/// Unmask deng_InputBits instance and return array
+/// of deng_InputEv, which size is exactly 8.
+/// NOTE: Array elements that have no event attached use DENG_KEY_UNKNOWN as a value
 deng_InputEv *deng_UnmaskInput(deng_InputBits bits);
 
 
-/*
- * Register new keyevent to key register
- * This function is meant to be called only by DENG platform dependant surface instances
- */
+/// Register new keyevent to key register
+/// This function is meant to be called only by DENG platform dependant surface instances
 void __deng_RegisterKeyEvent (
     deng_Key key, 
     deng_MouseButton btn, 
@@ -123,15 +115,11 @@ void __deng_RegisterKeyEvent (
 );
 
 
-/*
- * Clean released key and mouse button array 
- */
+/// Clean released key and mouse button array 
 void __deng_UnreleaseKeys();
 
 
-/*
- * Find given key or mouse button status from specified event array
- */
+/// Find given key or mouse button status from specified event array
 deng_bool_t __deng_FindKeyStatus (
     deng_Key key, 
     deng_MouseButton btn, 

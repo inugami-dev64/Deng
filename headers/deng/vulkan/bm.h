@@ -91,6 +91,11 @@
     #include <deng/vulkan/ubo.h>
     #include <deng/vulkan/ubm.h>
     #include <deng/vulkan/asset_cpy.h>
+
+    #include <imgui-layer/imgui_entity.h>
+
+    #define DEF_ASSET_CAP       65536   // Initialise with 64KB of memory for assets
+    #define DEF_UI_CAP          32768   // Initialise with 32KB of memory for ui elements
 #endif
 
 namespace deng {
@@ -100,42 +105,65 @@ namespace deng {
         private:
             std::vector<deng_Id> &m_assets;
             const VkPhysicalDeviceLimits &m_gpu_limits;
+            __ImGuiData *m_p_imgui_data = NULL;
             deng_ui64_t m_ubo_chunk_size;
             deng::__GlobalRegistry &m_reg;
 
         protected:
             __vk_BufferData m_buffer_data;
 
-        protected:
-            __vk_BufferManager (
-                const VkPhysicalDeviceLimits &gpu_limits,
-                std::vector<deng_Id> &assets,
-                deng::__GlobalRegistry &reg
-            );
+        private:
+            void __setupMainBuffer(VkDevice device, VkPhysicalDevice gpu);
 
-            deng_ui64_t __findMaxAssetSize(const dengMath::vec2<deng_ui32_t> &bounds);
 
-        public:
             /// Create staging buffers for all asset data between bounds
-            void stageAssets(VkDevice device, VkPhysicalDevice gpu, VkCommandPool cmd_pool, VkQueue g_queue, 
+            void __stageAssets(VkDevice device, VkPhysicalDevice gpu, VkCommandPool cmd_pool, VkQueue g_queue, 
                 const dengMath::vec2<deng_ui32_t> &bounds, VkDeviceSize cpy_offset);
 
 
             /// Find the offset of the current asset
-            void findAssetOffsets(das_Asset &asset);
+            void __findAssetOffsets(das_Asset &asset);
 
 
-            /// Create main asset buffer and copy all assets data to it
-            void mkAssetBuffers(VkDevice device, VkPhysicalDevice gpu, 
+        protected:
+            __vk_BufferManager(VkDevice device, VkPhysicalDevice gpu, const VkPhysicalDeviceLimits &gpu_limits, 
+                std::vector<deng_Id> &assets, deng::__GlobalRegistry &reg);
+
+            deng_ui64_t __findMaxAssetSize(const dengMath::vec2<deng_ui32_t> &bounds);
+
+
+        public:
+            /// Check if buffer reallocation is needed for assets and gui elements
+            deng_bool_t reallocCheck(VkDevice device, VkPhysicalDevice gpu, VkCommandPool cmd_pool, VkQueue g_queue);
+
+
+            /// Check if the current capacity is enough for assets and if it isn't resize the capacity and return true
+            deng_bool_t assetCapCheck();
+
+
+            /// Check if the current capacity is enough for ImGui elements and if it isn't resize the capacity and return true
+            deng_bool_t uiCapCheck();
+
+
+            /// Allocate the reserved memory
+            void allocateMainBufferMemory(VkDevice device, VkPhysicalDevice gpu);
+
+
+            /// Copy all asset data between given bounds to buffer
+            /// NOTE: The asset capacity in buffer has to be larger than required asset size (use assetCapCheck() for this)
+            void cpyAssetsToBuffer(VkDevice device, VkPhysicalDevice gpu, 
+                VkCommandPool cmd_pool, VkQueue g_queue, deng_bool_t no_offset_calc);
+
+
+            /// Copy ImGui vertex and indices data to buffer
+            /// NOTE: The UI element capacity has to be larger than required UI element size (use uiCapCheck() for this)
+            void cpyUIDataToBuffer(VkDevice device, VkPhysicalDevice gpu,
                 VkCommandPool cmd_pool, VkQueue g_queue);
 
-
-            /// Replace data in main buffer with newer data from given asset vertices
-            void remapAssetVerts(VkDevice device, VkPhysicalDevice gpu,
-                VkCommandPool cmd_pool, VkQueue g_queue,
-                const dengMath::vec2<deng_ui32_t> &asset_bounds);
+        // Setter methods
+        public:
+            void setUIDataPtr(__ImGuiData *p_gui);
         };
     }
 }
-
 #endif

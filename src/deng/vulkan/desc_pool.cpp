@@ -188,6 +188,28 @@ namespace deng {
         }
 
 
+        void __vk_DescriptorPoolCreator::__mkUIPool(VkDevice device) {
+            m_vu2d_cap = m_vm3d_cap * __max_frame_c;
+            VkDescriptorPoolSize desc_pool_size;
+            VkDescriptorPoolCreateInfo desc_pool_info{};
+
+            // The first uniform binding is the 2D transformation uniform
+            desc_pool_size.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            desc_pool_size.descriptorCount = __max_frame_c;
+
+            // Set the createinfo
+            desc_pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+            desc_pool_info.poolSizeCount = 1;
+            desc_pool_info.pPoolSizes = &desc_pool_size;
+            desc_pool_info.maxSets = __max_frame_c;
+            
+            // Try to create descriptor pool
+            if(vkCreateDescriptorPool(device, &desc_pool_info, NULL, 
+               &m_ui_pool) != VK_SUCCESS)
+                VK_DESC_ERR("failed to create descriptor pool for ImGui elements");
+        }
+
+
         /// Destroy assets with specific asset mode
         void __vk_DescriptorPoolCreator::__destroyAssetDescriptorSets ( 
             VkDevice device, 
@@ -257,7 +279,7 @@ namespace deng {
                 // Destroy previous descriptor sets and pools
                 __destroyAssetDescriptorSets(device, destroyed_assets, DAS_ASSET_MODE_2D_UNMAPPED);
                 vkDestroyDescriptorPool(device, m_vu2d_pool, NULL);
-                mkDescPool(device, m_vu2d_cap, DAS_ASSET_MODE_2D_UNMAPPED);
+                mkDescPool(device, m_vu2d_cap, DENG_PIPELINE_TYPE_UNMAPPED_2D);
                 break;
 
             case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
@@ -267,7 +289,7 @@ namespace deng {
                 // Destroy previous descriptor sets and pools
                 __destroyAssetDescriptorSets(device, destroyed_assets, DAS_ASSET_MODE_2D_TEXTURE_MAPPED);
                 vkDestroyDescriptorPool(device, m_vm2d_pool, NULL);
-                mkDescPool(device, m_vm2d_cap, DAS_ASSET_MODE_2D_TEXTURE_MAPPED);
+                mkDescPool(device, m_vm2d_cap, DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D);
                 break;
 
             case DAS_ASSET_MODE_3D_UNMAPPED:
@@ -277,7 +299,7 @@ namespace deng {
                 // Destroy previous descriptor sets and pools
                 __destroyAssetDescriptorSets(device, destroyed_assets, DAS_ASSET_MODE_3D_UNMAPPED);
                 vkDestroyDescriptorPool(device, m_vu3d_pool, NULL);
-                mkDescPool(device, m_vu3d_cap, DAS_ASSET_MODE_3D_UNMAPPED);
+                mkDescPool(device, m_vu3d_cap, DENG_PIPELINE_TYPE_UNMAPPED_3D);
                 break;
 
             case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
@@ -287,7 +309,7 @@ namespace deng {
                 // Destroy previous descriptor sets and pools
                 __destroyAssetDescriptorSets(device, destroyed_assets, DAS_ASSET_MODE_3D_TEXTURE_MAPPED);
                 vkDestroyDescriptorPool(device, m_vm3d_pool, NULL);
-                mkDescPool(device, m_vm3d_cap, DAS_ASSET_MODE_3D_TEXTURE_MAPPED);
+                mkDescPool(device, m_vm3d_cap, DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D);
                 break;
 
             default:
@@ -300,28 +322,32 @@ namespace deng {
         void __vk_DescriptorPoolCreator::mkDescPool (
             VkDevice device, 
             deng_ui32_t cap, 
-            das_AssetMode mode
+            deng_PipelineType mode
         ) {
             // Check for the given asset mode
             switch(mode) {
-            case DAS_ASSET_MODE_2D_UNMAPPED:
+            case DENG_PIPELINE_TYPE_UNMAPPED_2D:
                 m_vu2d_cap = cap;
                 __mk2DUnmappedDescPool(device);
                 break;
 
-            case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
+            case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D:
                 m_vm2d_cap = cap;
                 __mk2DTexMappedDescPool(device);
                 break;
 
-            case DAS_ASSET_MODE_3D_UNMAPPED:
+            case DENG_PIPELINE_TYPE_UNMAPPED_3D:
                 m_vu3d_cap = cap;
                 __mk3DUnmappedDescPool(device);
                 break;
 
-            case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
+            case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D:
                 m_vm3d_cap = cap;
                 __mk3DTexMappedDescPool(device);
+                break;
+
+            case DENG_PIPELINE_TYPE_UI:
+                __mkUIPool(device);
                 break;
 
             default:
@@ -335,10 +361,11 @@ namespace deng {
 
         /// Create new descriptor pools for all asset types
         void __vk_DescriptorPoolCreator::mkDescPools(VkDevice device, deng_ui32_t cap) {
-            mkDescPool(device, cap, DAS_ASSET_MODE_2D_UNMAPPED);
-            mkDescPool(device, cap, DAS_ASSET_MODE_2D_TEXTURE_MAPPED);
-            mkDescPool(device, cap, DAS_ASSET_MODE_3D_UNMAPPED);
-            mkDescPool(device, cap, DAS_ASSET_MODE_3D_TEXTURE_MAPPED);
+            mkDescPool(device, cap, DENG_PIPELINE_TYPE_UNMAPPED_2D);
+            mkDescPool(device, cap, DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D);
+            mkDescPool(device, cap, DENG_PIPELINE_TYPE_UNMAPPED_3D);
+            mkDescPool(device, cap, DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D);
+            mkDescPool(device, cap, DENG_PIPELINE_TYPE_UI);
         }
 
 
@@ -387,20 +414,23 @@ namespace deng {
 
 
         /// Get the descriptor pool according to the given method
-        VkDescriptorPool &__vk_DescriptorPoolCreator::getDescPool(das_AssetMode mode) {
+        VkDescriptorPool &__vk_DescriptorPoolCreator::getDescPool(deng_PipelineType type) {
             // Check for the asset mode given
-            switch(mode) {
-            case DAS_ASSET_MODE_2D_UNMAPPED: 
+            switch(type) {
+            case DENG_PIPELINE_TYPE_UNMAPPED_2D: 
                 return m_vu2d_pool;
 
-            case DAS_ASSET_MODE_2D_TEXTURE_MAPPED: 
+            case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D: 
                 return m_vm2d_pool;
 
-            case DAS_ASSET_MODE_3D_UNMAPPED: 
+            case DENG_PIPELINE_TYPE_UNMAPPED_3D: 
                 return m_vu3d_pool;
 
-            case DAS_ASSET_MODE_3D_TEXTURE_MAPPED: 
+            case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D: 
                 return m_vm3d_pool;
+
+            case DENG_PIPELINE_TYPE_UI:
+                return m_ui_pool;
 
             default:
                 // Throw runtime error, because asset mode given was invalid

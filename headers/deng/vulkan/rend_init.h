@@ -68,6 +68,7 @@
     #include <mutex>
     #include <vector>
     #include <array>
+    #include <memory>
     #include <vulkan/vulkan.h>
 
     #include <common/base_types.h>
@@ -86,6 +87,8 @@
 
     #include <deng/lighting/light_srcs.h>
     #include <deng/registry/registry.h>
+
+    #include <imgui-layer/imgui_entity.h>
     
     #include <deng/vulkan/rend_infos.h>
     #include <deng/vulkan/ic.h>
@@ -122,12 +125,12 @@ namespace deng {
         class __vk_RendererInitialiser {
         private:
             // All renderer initialisers
-            __vk_InstanceCreator *m_p_ic;
-            __vk_SwapChainCreator *m_p_scc;
-            __vk_DescriptorSetsCreator *m_p_desc_c; 
-            __vk_PipelineCreator *m_p_pl_c;
-            __vk_ResourceManager *m_p_rm;
-            __vk_DrawCaller *m_p_dc;
+            std::unique_ptr<__vk_InstanceCreator> m_ic;
+            std::unique_ptr<__vk_SwapChainCreator> m_scc;
+            std::unique_ptr<__vk_DescriptorSetsCreator> m_desc_c; 
+            std::unique_ptr<__vk_PipelineCreator> m_pl_c;
+            std::unique_ptr<__vk_ResourceManager> m_rm;
+            std::unique_ptr<__vk_DrawCaller> m_dc;
 
         protected:
             __GlobalRegistry &m_reg;
@@ -143,9 +146,7 @@ namespace deng {
                 std::vector<deng_Id> &textures
             );
 
-            ~__vk_RendererInitialiser();
-
-        /// Getters
+        /// Getter and setter methods
         public:
             __vk_InstanceCreator &getIC();
             __vk_SwapChainCreator &getSCC();
@@ -153,6 +154,8 @@ namespace deng {
             __vk_PipelineCreator &getPipelineC();
             __vk_ResourceManager &getResMan();
             __vk_DrawCaller &getDrawCaller();
+
+            void setUIDataPtr(__ImGuiData *p_gui);
         };
     }
 }
