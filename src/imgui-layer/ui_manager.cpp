@@ -97,42 +97,7 @@ namespace deng {
         LOG("Texture width, height: " + std::to_string(imgui_atlas.pixel_data.width) + ":" + 
             std::to_string(imgui_atlas.pixel_data.height));
 
-        // TEMP CODE
-        das_Asset test_asset = {};
-        test_asset.asset_mode = DAS_ASSET_MODE_2D_TEXTURE_MAPPED;
-        test_asset.tex_uuid = m_imgui_atlas;
-        test_asset.uuid = uuid_Generate();
-        test_asset.indices.n = 6;
-        test_asset.indices.pos = (deng_ui32_t*) calloc(test_asset.indices.n, sizeof(deng_ui32_t));
-        test_asset.indices.tex = (deng_ui32_t*) calloc(test_asset.indices.n, sizeof(deng_ui32_t));
-        test_asset.indices.pos[0] = test_asset.indices.tex[0] = 0;
-        test_asset.indices.pos[1] = test_asset.indices.tex[1] = 1;
-        test_asset.indices.pos[2] = test_asset.indices.tex[2] = 2;
-        test_asset.indices.pos[3] = test_asset.indices.tex[3] = 2;
-        test_asset.indices.pos[4] = test_asset.indices.tex[4] = 3;
-        test_asset.indices.pos[5] = test_asset.indices.tex[5] = 0;
-
-        test_asset.vertices.v2d.pn = test_asset.vertices.v2d.tn = 4;
-        test_asset.vertices.v2d.pos = (das_ObjPosData2D*) calloc(test_asset.vertices.v2d.pn, sizeof(das_ObjPosData2D));
-        test_asset.vertices.v2d.tex = (das_ObjTextureData*) calloc(test_asset.vertices.v2d.tn, sizeof(das_ObjTextureData));
-        test_asset.vertices.v2d.pos[0] = {-1.0f, -1.0f};
-        test_asset.vertices.v2d.pos[1] = {-0.5f, -1.0f};
-        test_asset.vertices.v2d.pos[2] = {-0.5f, -0.5f};
-        test_asset.vertices.v2d.pos[3] = {-1.0f, -0.5f};
-
-        test_asset.vertices.v2d.tex[0] = { 0.0f, 0.0f };
-        test_asset.vertices.v2d.tex[1] = { 1.0f, 0.0f };
-        test_asset.vertices.v2d.tex[2] = { 1.0f, 1.0f };
-        test_asset.vertices.v2d.tex[3] = { 0.0f, 1.0f };
-
-        test_asset.diffuse = {1.0f, 1.0f, 1.0f, 1.0f};
-        test_asset.is_shown = true;
-
-        test_asset.is_transformed = false;
-        test_asset.force_unmap = false;
-
         m_rend.pushTexture(imgui_atlas);
-        m_rend.pushAsset(test_asset);
         m_rend.setUIDataPtr(&m_gui_data);
     }
 
@@ -151,9 +116,9 @@ namespace deng {
         m_p_io->MousePos.x = static_cast<deng_vec_t>(win.getMPos().first);
         m_p_io->MousePos.y = static_cast<deng_vec_t>(win.getMPos().second);
 
-        m_p_io->MouseDown[0] = __deng_FindKeyStatus(DENG_KEY_UNKNOWN, DENG_MOUSE_BTN_1, DENG_INPUT_TYPE_MOUSE,
+        m_p_io->MouseDown[0] = m_p_io->MouseClicked[0] = __deng_FindKeyStatus(DENG_KEY_UNKNOWN, DENG_MOUSE_BTN_1, DENG_INPUT_TYPE_MOUSE,
             DENG_INPUT_EVENT_TYPE_ACTIVE);
-        m_p_io->MouseDown[1] = __deng_FindKeyStatus(DENG_KEY_UNKNOWN, DENG_MOUSE_BTN_2, DENG_INPUT_TYPE_MOUSE,
+        m_p_io->MouseDown[1] = m_p_io->MouseClicked[1] = __deng_FindKeyStatus(DENG_KEY_UNKNOWN, DENG_MOUSE_BTN_2, DENG_INPUT_TYPE_MOUSE,
             DENG_INPUT_EVENT_TYPE_ACTIVE);
     }
 
@@ -163,6 +128,7 @@ namespace deng {
         std::this_thread::sleep_for(std::chrono::microseconds(1000));
 
         // For each command list in the list output its vertices to the renderer
+        LOG("Command lists count: " + std::to_string(p_draw_data->CmdListsCount));
         for(deng_ui32_t i = 0; i < p_draw_data->CmdListsCount; i++) {
             const ImDrawList *cmd_list = p_draw_data->CmdLists[i];
             ImDrawVert *verts = cmd_list->VtxBuffer.Data;
@@ -185,6 +151,7 @@ namespace deng {
             
             // For each command buffer in the current command list set its vertices and indices
             m_gui_data.entities.resize(cmd_list->CmdBuffer.Size);
+            LOG("Command buffer size: " + std::to_string(cmd_list->CmdBuffer.Size));
             for(deng_ui32_t j = 0; j < cmd_list->CmdBuffer.Size; j++) {
                 const ImDrawCmd *p_cmd = &cmd_list->CmdBuffer[j];
 

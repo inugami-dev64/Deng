@@ -82,9 +82,7 @@ extern "C" {
     #include <windows.h>
 #endif
 
-/*
- * Mouse mode specifier enum
- */
+/// Mouse mode specifier enum
 typedef enum deng_MouseMode {
     DENG_MOUSE_MODE_UNKNOWN         = -1,
     DENG_MOUSE_MODE_INVISIBLE       = 0,
@@ -94,9 +92,7 @@ typedef enum deng_MouseMode {
 } deng_MouseMode;
 
 
-/*
- * Keyboard key event specifier enum
- */
+/// Keyboard key event specifier enum
 typedef enum deng_Key {
     DENG_KEY_UNKNOWN        =   0,
     DENG_KEY_SPACE          =   1,
@@ -218,9 +214,7 @@ typedef enum deng_Key {
 } deng_Key;
 
 
-/*
- * Mouse button event specifier enum
- */
+/// Mouse button event specifier enum
 typedef enum deng_MouseButton {
     DENG_MOUSE_BTN_UNKNOWN  = 115,
     DENG_MOUSE_BTN_1        = 116,
@@ -233,9 +227,7 @@ typedef enum deng_MouseButton {
 } deng_MouseButton;
 
 
-/*
- * These values are used in case delta mouse movement is detected
- */
+/// These values are used in case delta mouse movement is detected
 typedef enum deng_MouseDeltaMovement {
     DENG_MOUSE_DELTA_UNKNOWN    = 121,
     DENG_MOUSE_DELTA_X          = 122,
@@ -247,9 +239,7 @@ typedef enum deng_MouseDeltaMovement {
 } deng_MouseDeltaMovement;
 
 
-/*
- * Universal union for specifying input information
- */
+/// Universal union for specifying input information
 typedef union {
     deng_Key key;
     deng_MouseButton btn;
@@ -257,9 +247,7 @@ typedef union {
 } deng_InputEv;
 
 
-/*
- * Universal input event type for general purpose input devices
- */
+/// Universal input event type for general purpose input devices
 typedef deng_ui64_t deng_InputBits;
 #define MAX_KEY_COMBO   8
 

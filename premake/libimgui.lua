@@ -70,6 +70,10 @@ function imgui.build()
         includedirs { "modules/imgui" }
         files {
             "modules/imgui/imgui.cpp",
+            "modules/imgui/imgui_widgets.cpp",
+            "modules/imgui/imgui_draw.cpp",
+            "modules/imgui/imgui_tables.cpp",
+            "modules/imgui/imgui_demo.cpp",
             "modules/imgui/imgui.h"
         }
 

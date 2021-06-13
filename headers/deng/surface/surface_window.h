@@ -158,9 +158,7 @@ extern "C" {
 #endif
 
 
-/*
- * Window mode specifier enum
- */
+/// Window mode specifier enum
 typedef enum deng_SurfaceWindowMode {
     DENG_WINDOW_MODE_FIXED          = 0,
     DENG_WINDOW_MODE_FULL_SCREEN    = 1,
@@ -193,10 +191,8 @@ typedef struct deng_VCData {
 } deng_VCData;
 
 
-/*
- * Main structure for storing information about surface window
- * and its parameters. Some members are platform specific to WIN32 or Xlib
- */
+/// Main structure for storing information about surface window
+/// and its parameters. Some members are platform specific to WIN32 or Xlib
 typedef struct deng_SurfaceWindow {
     deng_i32_t width;
     deng_i32_t height;
@@ -217,10 +213,8 @@ typedef struct deng_SurfaceWindow {
 } deng_SurfaceWindow;
 
 
-/*
- * Create new platform independant deng_SurfaceWindow instance for vulkan
- * This functions uses either Xlib or WIN32 api to create window depending on the operating system
- */
+/// Create new platform independant deng_SurfaceWindow instance for vulkan
+/// This functions uses either Xlib or WIN32 api to create window depending on the operating system
 deng_SurfaceWindow *deng_InitVKSurfaceWindow (
     deng_i32_t width, 
     deng_i32_t height, 
@@ -229,22 +223,16 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
 );
 
 
-/*
- * Update window events and key arrays
- * This function is meant to be called with every loop iteration 
- */
+/// Update window events and key arrays
+/// This function is meant to be called with every loop iteration 
 void deng_UpdateWindow(deng_SurfaceWindow *p_win);
 
 
-/*
- * Destroy window instance and free all resources that were used
- */
+/// Destroy window instance and free all resources that were used
 void deng_DestroyWindow(deng_SurfaceWindow *p_win);
 
 
-/*
- * Check if window is still running and no close events have happened
- */
+/// Check if window is still running and no close events have happened
 deng_bool_t deng_IsRunning();
 
 
@@ -252,18 +240,14 @@ deng_bool_t deng_IsRunning();
 /****** Input device communication ******/
 /****************************************/
 
-/*
- * Switch mouse cursor behaviour within the DENG window 
- */
+/// Switch mouse cursor behaviour within the DENG window 
 void deng_SetMouseCursorMode (
     deng_SurfaceWindow* p_window,
     deng_MouseMode mouse_mode
 );
 
 
-/*
- * Force mouse cursor to certain location on window
- */
+/// Force mouse cursor to certain location on window
 void deng_SetMouseCoords (
     deng_SurfaceWindow* p_window,
     deng_px_t x,
@@ -271,19 +255,15 @@ void deng_SetMouseCoords (
 );
 
 
-/*
- * Synchronise mouse position in deng_SurfaceWindow
- */
+/// Synchronise mouse position in deng_SurfaceWindow
 void deng_GetMousePos(
     deng_SurfaceWindow* p_window,
     deng_bool_t init_vc
 );
 
 
-/*
- * Limit the largest and smallest virtual cursor position that can be achieved using 
- * virtual mouse positioning
- */
+/// Limit the largest and smallest virtual cursor position that can be achieved using 
+/// virtual mouse positioning
 void deng_LimitVirtualPos (
     deng_px_t max_x,
     deng_px_t min_x,
@@ -292,10 +272,8 @@ void deng_LimitVirtualPos (
 );
 
 
-/*
- * Set virtual mouse position overflow actions that specify what
- * should happen if virtual mouse position limit has been reached
- */
+/// Set virtual mouse position overflow actions that specify what
+/// should happen if virtual mouse position limit has been reached
 void deng_SetOverflowAction (
     deng_VCPOverflowAction x_overflow_act,
     deng_VCPOverflowAction y_overflow_act

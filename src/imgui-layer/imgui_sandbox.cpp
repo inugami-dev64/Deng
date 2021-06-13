@@ -102,11 +102,11 @@ namespace deng {
         m_ui_man = std::make_unique<UIManager>(m_rend);
         while(deng_IsRunning()) {
             m_ui_man->updateIO(m_win);
+            char buf[128] = { 0 };
+            float fl = 0;
 
             ImGui::NewFrame();
-            ImGui::Begin("Test window, pls work", NULL, ImGuiWindowFlags_MenuBar);
-            ImGui::Text("Hello world");
-            ImGui::End();
+                ImGui::ShowDemoWindow();
             ImGui::EndFrame();
 
             ImGui::Render();
