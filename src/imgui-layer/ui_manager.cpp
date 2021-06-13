@@ -97,7 +97,7 @@ namespace deng {
 
         // TEMP CODE
         das_Asset test_asset = {};
-        test_asset.asset_mode = DAS_ASSET_MODE_2D_UNMAPPED;
+        test_asset.asset_mode = DAS_ASSET_MODE_2D_TEXTURE_MAPPED;
         test_asset.tex_uuid = m_imgui_atlas;
         test_asset.uuid = uuid_Generate();
         test_asset.indices.n = 6;
@@ -112,20 +112,25 @@ namespace deng {
 
         test_asset.vertices.v2d.pn = test_asset.vertices.v2d.tn = 4;
         test_asset.vertices.v2d.pos = (das_ObjPosData2D*) calloc(test_asset.vertices.v2d.pn, sizeof(das_ObjPosData2D));
-        //test_asset.vertices.v2d.tex = (das_ObjTextureData*) calloc(test_asset.vertices.v2d.tn, sizeof(das_ObjTextureData));
+        test_asset.vertices.v2d.tex = (das_ObjTextureData*) calloc(test_asset.vertices.v2d.tn, sizeof(das_ObjTextureData));
         test_asset.vertices.v2d.pos[0] = {-1.0f, -1.0f};
-        test_asset.vertices.v2d.pos[1] = {-0.8f, -1.0f};
-        test_asset.vertices.v2d.pos[2] = {-0.8f, -0.8f};
-        test_asset.vertices.v2d.pos[3] = {-1.0f, -0.8f};
+        test_asset.vertices.v2d.pos[1] = {-0.5f, -1.0f};
+        test_asset.vertices.v2d.pos[2] = {-0.5f, -0.5f};
+        test_asset.vertices.v2d.pos[3] = {-1.0f, -0.5f};
+
+        test_asset.vertices.v2d.tex[0] = { 0.0f, 0.0f };
+        test_asset.vertices.v2d.tex[1] = { 1.0f, 0.0f };
+        test_asset.vertices.v2d.tex[2] = { 1.0f, 1.0f };
+        test_asset.vertices.v2d.tex[3] = { 0.0f, 1.0f };
 
         test_asset.diffuse = {1.0f, 1.0f, 1.0f, 1.0f};
         test_asset.is_shown = true;
 
         test_asset.is_transformed = false;
-        test_asset.force_unmap = true;
+        test_asset.force_unmap = false;
 
-        m_rend.pushAsset(test_asset);
         m_rend.pushTexture(imgui_atlas);
+        m_rend.pushAsset(test_asset);
         m_rend.setUIDataPtr(&m_gui_data);
     }
 

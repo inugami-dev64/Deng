@@ -299,7 +299,7 @@ namespace deng {
             // Check the current asset mode in order to set correct write descriptors
             switch(asset_mode) {
             case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
-                write_descriptors.resize(2);
+                write_descriptors.resize(3);
 
                 // Set texture sampler
                 write_descriptors[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
