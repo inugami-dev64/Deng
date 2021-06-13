@@ -159,6 +159,11 @@ namespace deng {
             /// Reallocate main buffer and copy all asset data to it if needed
             /// NOTE: Vulkan renderer must be idled
             void checkForReallocation();
+
+
+            /// Update texture texel data, however it does not perform any texture size adjustments. For that
+            /// consider creating a new texture
+            void updateTexelData(__vk_Texture &tex);
         };
     }
 }

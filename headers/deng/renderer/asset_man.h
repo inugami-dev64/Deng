@@ -134,7 +134,7 @@ namespace deng {
 
 
         /// Submit all assets to in submission queue to renderer
-        void submitAssetQueue(const dengMath::vec4<deng_vec_t> &background);
+        void submitAssetQueue();
 
 
         /// Submit all textures in submission queue to renderer

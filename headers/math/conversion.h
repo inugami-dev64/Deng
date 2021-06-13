@@ -74,76 +74,75 @@
 
 
 namespace dengMath {
-    class Conversion 
-    {
+    class Conversion {
     public:
         
-        /*
-         * Convert degrees into radians
-         */
-        static deng_f64_t degToRad(deng_f64_t deg);
+        /// Convert degrees into radians
+        static const deng_f64_t degToRad(deng_f64_t deg);
 
         
-        /*
-         * Convert radians into degrees
-         */
-        static deng_f64_t radToDeg(deng_f64_t rad);
+        /// Convert radians into degrees
+        static const deng_f64_t radToDeg(deng_f64_t rad);
 
 
-        /*
-         * Convert from vector coordinate size into pixel size
-         */
-        static deng_px_t vector2DSizeToPixelSize (
+        /// Convert from vector coordinate size into pixel size
+        static const deng_px_t vector2DSizeToPixelSize (
             deng_vec_t vec_size, 
             deng_ui32_t window_size
         );
 
 
-        /*
-         * Convert from pixel size into vector coordinate size
-         */
-        static deng_vec_t pixelSizeToVector2DSize (
+        /// Convert from pixel size into vector coordinate size
+        static const deng_vec_t pixelSizeToVector2DSize (
             deng_px_t pixel_size,
             deng_ui32_t window_size
         );
 
 
-        /*
-         * Find the absolute position of child coordinates
-         * vert must be a pointer to valid array with at least 4 members
-         */
-        static vec2<deng_vec_t> findAbsPosition (
+        /// Find the absolute position of child coordinates
+        /// vert must be a pointer to valid array with at least 4 members
+        static const vec2<deng_vec_t> findAbsPosition (
             das_ObjPosData *vert,
             vec2<deng_vec_t> child_pos
         );
 
 
-        /*
-         * Find the relative position of absolute coordinates
-         * vert must be a pointer to valid array with at least 4 members
-         */
-        static vec2<deng_vec_t> findRelPosition (
+        /// Find the relative position of absolute coordinates
+        /// vert must be a pointer to valid array with at least 4 members
+        static const vec2<deng_vec_t> findRelPosition (
             das_ObjPosData *vert,
             vec2<deng_vec_t> abs_pos
         );
 
 
-        /*
-         * Find the absolute child size
-         */
-        static deng_vec_t findAbsSize (
+        /// Find the absolute size of the child element
+        static const deng_vec_t findAbsSize (
             deng_vec_t parent_size,
             deng_vec_t child_size
         );
 
 
-        /*
-         * Find the relative size of abs_size from its parent_size
-         */
-        static deng_vec_t findRelSize (
+        /// Find the relative size of abs_size from its parent_size
+        static const deng_vec_t findRelSize (
             deng_vec_t parent_size,
             deng_vec_t abs_size
         );
+
+
+        /// NOTE: Differences between mouse coordinates and vector coordinates
+        /// Mouse coordinates are used to describe pixel coordinates with starting origin from top-left of the surface
+        /// Primarly mouse coordinates are used to describe mouse and ImGui window locations 
+        /// Vector coordinates on the other hand are used to specify object coordinates in the viewspace
+        /// NOTE: Keep in mind that vector coordinates have a starting origin from the center of the surface and y-axis up is 
+        /// negative, while y-axis down is positive coordinate direction
+
+
+        /// Convert mouse axis position to corresponding vector coordinate
+        static const deng_vec_t mouseCoordToVecCoord(const deng_px_t mouse_axis_pos, const deng_px_t axis_len);
+
+
+        /// Convert vector axis coordinate to corresponding mouse coordinate
+        static const deng_vec_t vecCoordToMouseCoord(const deng_vec_t vec_axis_pos, const deng_px_t axis_len);
     };
 }
 

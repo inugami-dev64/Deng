@@ -82,6 +82,7 @@
     #include <common/hashmap.h>
     #include <common/uuid.h>
     #include <data/assets.h>
+    #include <data/tex_loader.h>
 
     #include <imgui.h>
     #include <imgui-layer/imgui_entity.h>
@@ -110,6 +111,7 @@ namespace deng {
 
     public:
         UIManager(Renderer &rend);
+        ~UIManager();
 
         /// Create a new ui form in ImGui
         //void spawnForm();

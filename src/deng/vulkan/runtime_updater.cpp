@@ -85,13 +85,13 @@ namespace deng {
 
         
         /// Rerecord new level one commandbuffers if possible
-       void __vk_RuntimeUpdater::updateCmdBuffers(const dengMath::vec4<deng_vec_t> &background) {
+        void __vk_RuntimeUpdater::updateCmdBuffers(const dengMath::vec4<deng_vec_t> &background) {
             vkWaitForFences(m_ic.getDev(), static_cast<deng_ui32_t>(m_dc.flight_fences.size()),
                 m_dc.flight_fences.data(), VK_TRUE, UINT64_MAX);
 
             // Record new commandbuffers
             m_dc.recordCmdBuffers(m_scc.getRp(), m_scc.getExt(),
-                background, m_rm.getBD(), true);
+                background, m_rm.getBD());
         }
 
 
@@ -103,7 +103,7 @@ namespace deng {
 
             if(!is_realloc) {
                 m_rm.cpyAssetsToBuffer(m_ic.getDev(), m_ic.getGpu(), m_dc.getComPool(), 
-                    m_ic.getQFF().graphics_queue, false);
+                    m_ic.getQFF().graphics_queue, false, bounds);
             }
         }
 
@@ -145,6 +145,14 @@ namespace deng {
                 m_desc_c.mkAssetDS(m_ic.getDev(), m_rm.getBD(), m_rm.getMissingTextureUUID(), bounds, 
                     m_rm.getUboChunkSize(), m_ic.getGpuLimits().minUniformBufferOffsetAlignment);
             }
+        }
+
+
+        /// Update texture texel data, however it does not perform any texture size adjustments. For that
+        /// consider creating a new texture
+        void __vk_RuntimeUpdater::updateTexelData(__vk_Texture &tex) {
+            m_rm.cpyBitmap(m_ic.getDev(), m_ic.getGpu(), m_dc.getComPool(), m_ic.getQFF().graphics_queue, 
+                true, tex);
         }
 
         

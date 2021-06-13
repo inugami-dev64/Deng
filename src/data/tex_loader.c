@@ -65,9 +65,7 @@
 
 static FILE *__file;
 
-/* 
- * Image headers initialisation 
- */
+/// Image headers initialisation 
 void __das_InitBMPImageHeaders (
     __BMPFileHeader *p_file_header, 
     __BMPInfoHeader *p_info_header, 
@@ -95,9 +93,7 @@ void __das_InitBMPImageHeaders (
 }
 
 
-/* 
- * Detect image format and return ImageFormat instance of it
- */
+ /// etect image format and return ImageFormat instance of it
  das_ImageFormat __das_DetectImageFormat(const char *file_name) {
     char *ext = cm_ExtractFileExtName((char*) file_name);
 
@@ -111,18 +107,81 @@ void __das_InitBMPImageHeaders (
 }
 
 
-/* 
- * Load texture bitmap data into das_Texture instance
- */
-void das_LoadTexture (
-    das_Texture *p_texture, 
-    const char *file_name
-) {
+/// Realign raw pixel data to B8G8R8A8 format in order to make it compatible with 
+/// specified texture format
+void das_RealignPixelData(das_Texture *p_tex, das_PixelFormat pix_format) {
+    // Check if the pixel format is correct already
+    if(pix_format == DAS_PIXEL_FORMAT_B8G8R8A8) return;
+    
+    // Variable for storing temporary pixel data
+    deng_ui32_t tmp_pix = 0;
+
+    // Save the pointer to old pixel data
+    deng_ui8_t *old_pix = p_tex->pixel_data.pixel_data;
+
+    // Allocate memory for new pixel array
+    deng_ui8_t *new_pix = (deng_ui8_t*) calloc(p_tex->pixel_data.height * p_tex->pixel_data.width * 4, sizeof(deng_ui8_t));
+
+    // For each pixel in pixel array
+    for(size_t i = 0; i < p_tex->pixel_data.width * p_tex->pixel_data.height; i++) {
+        switch(pix_format) {
+        case DAS_PIXEL_FORMAT_B8G8R8:
+            new_pix[i * 4] = p_tex->pixel_data.pixel_data[i * 3];
+            new_pix[i * 4 + 1] = p_tex->pixel_data.pixel_data[i * 3 + 1];
+            new_pix[i * 4 + 2] = p_tex->pixel_data.pixel_data[i * 3 + 2];
+            new_pix[i * 4 + 3] = UINT8_MAX;
+            break;
+
+        case DAS_PIXEL_FORMAT_R8G8B8:
+            new_pix[i * 4] = p_tex->pixel_data.pixel_data[i * 3 + 2];
+            new_pix[i * 4 + 1] = p_tex->pixel_data.pixel_data[i * 3 + 1];
+            new_pix[i * 4 + 2] = p_tex->pixel_data.pixel_data[i * 3];
+            new_pix[i * 4] = UINT8_MAX;
+            break;
+
+        case DAS_PIXEL_FORMAT_A8B8G8R8:
+            new_pix[i * 4] = p_tex->pixel_data.pixel_data[i * 4 + 1];
+            new_pix[i * 4 + 1] = p_tex->pixel_data.pixel_data[i * 4 + 2];
+            new_pix[i * 4 + 2] = p_tex->pixel_data.pixel_data[i * 4 + 3];
+            new_pix[i * 4 + 3] = p_tex->pixel_data.pixel_data[i * 4];
+            break;
+
+        case DAS_PIXEL_FORMAT_A8R8G8B8:
+            new_pix[i * 4] = p_tex->pixel_data.pixel_data[i * 4 + 3];
+            new_pix[i * 4 + 1] = p_tex->pixel_data.pixel_data[i * 4 + 2];
+            new_pix[i * 4 + 2] = p_tex->pixel_data.pixel_data[i * 4 + 1];
+            new_pix[i * 4 + 3] = p_tex->pixel_data.pixel_data[i * 4];
+            break;
+
+        case DAS_PIXEL_FORMAT_R8G8B8A8:
+            new_pix[i * 4] = p_tex->pixel_data.pixel_data[i * 4 + 2];
+            new_pix[i * 4 + 1] = p_tex->pixel_data.pixel_data[i * 4 + 1];
+            new_pix[i * 4 + 2] = p_tex->pixel_data.pixel_data[i * 4];
+            new_pix[i * 4 + 3] = p_tex->pixel_data.pixel_data[i * 4 + 3];
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    // Set the new pixel location for the texture
+    p_tex->pixel_data.pixel_data = new_pix;
+    
+    // Check if old memory area should be freed
+    if(!p_tex->no_reg_cleanup) {
+        free(old_pix);
+        p_tex->no_reg_cleanup = !p_tex->no_reg_cleanup;
+    }
+}
+
+
+/// Load texture bitmap data into das_Texture instance
+void das_LoadTexture(das_Texture *p_texture, const char *file_name) {
     p_texture->uuid = uuid_Generate();
     das_ImageFormat format = __das_DetectImageFormat(file_name);
 
-    switch (format)
-    {
+    switch (format) {
     case DAS_IMAGE_FORMAT_BMP:
         __das_LoadBMPImage(p_texture, file_name);
         break;
@@ -137,10 +196,8 @@ void das_LoadTexture (
 }
 
 
-/*
- * Read raw bitmap data from file
- * This function expects the file to be uncompressed and color depth either 24 bits or 32 bits
- */
+/// Read raw bitmap data from file
+/// This function expects the file to be uncompressed and color depth either 24 bits or 32 bits
 void __das_ReadBitmap (
     FILE* file,
     char *file_name,
@@ -153,8 +210,7 @@ void __das_ReadBitmap (
     deng_i32_t i, k;
     size_t j, res;
 
-    switch (bit_c)
-    {
+    switch (bit_c) {
     case 24:
         offset = 3 * p_tex->pixel_data.width * sizeof(deng_ui8_t);
         offseta = 4 * p_tex->pixel_data.width * sizeof(deng_ui8_t);
@@ -177,10 +233,10 @@ void __das_ReadBitmap (
         if (vert_re) {
             for (i = (deng_i32_t) p_tex->pixel_data.height - 1, k = 0; i >= 0; i--, k++) {
                 for (j = 0; j < p_tex->pixel_data.width; j++) {
-                    *(p_tex->pixel_data.p_pixel_data + k * offseta + j * 4) = *(tmp_pix + i * offset + j * 3);
-                    *(p_tex->pixel_data.p_pixel_data + k * offseta + j * 4 + 1) = *(tmp_pix + i * offset + j * 3 + 1);
-                    *(p_tex->pixel_data.p_pixel_data + k * offseta + j * 4 + 2) = *(tmp_pix + i * offset + j * 3 + 2);
-                    *(p_tex->pixel_data.p_pixel_data + k * offseta + j * 4 + 3) = 0xff;
+                    *(p_tex->pixel_data.pixel_data + k * offseta + j * 4) = *(tmp_pix + i * offset + j * 3);
+                    *(p_tex->pixel_data.pixel_data + k * offseta + j * 4 + 1) = *(tmp_pix + i * offset + j * 3 + 1);
+                    *(p_tex->pixel_data.pixel_data + k * offseta + j * 4 + 2) = *(tmp_pix + i * offset + j * 3 + 2);
+                    *(p_tex->pixel_data.pixel_data + k * offseta + j * 4 + 3) = 0xff;
                 }
             }
         }
@@ -188,10 +244,10 @@ void __das_ReadBitmap (
         else {
             for (i = 0; i < (deng_i32_t)p_tex->pixel_data.height; i++) {
                 for (j = 0; j < p_tex->pixel_data.width; j++) {
-                    *(p_tex->pixel_data.p_pixel_data + i * offseta + j * 4) = *(tmp_pix + i * offset + j * 3);
-                    *(p_tex->pixel_data.p_pixel_data + i * offseta + j * 4 + 1) = *(tmp_pix + i * offset + j * 3 + 1);
-                    *(p_tex->pixel_data.p_pixel_data + i * offseta + j * 4 + 2) = *(tmp_pix + i * offset + j * 3 + 2);
-                    *(p_tex->pixel_data.p_pixel_data + i * offseta + j * 4 + 3) = 0xff;
+                    *(p_tex->pixel_data.pixel_data + i * offseta + j * 4) = *(tmp_pix + i * offset + j * 3);
+                    *(p_tex->pixel_data.pixel_data + i * offseta + j * 4 + 1) = *(tmp_pix + i * offset + j * 3 + 1);
+                    *(p_tex->pixel_data.pixel_data + i * offseta + j * 4 + 2) = *(tmp_pix + i * offset + j * 3 + 2);
+                    *(p_tex->pixel_data.pixel_data + i * offseta + j * 4 + 3) = 0xff;
                 }
             }
         }
@@ -203,32 +259,18 @@ void __das_ReadBitmap (
         offset = 4 * p_tex->pixel_data.width * sizeof(deng_ui8_t);
            
         if (!vert_re) {
-            res = fread (
-                p_tex->pixel_data.p_pixel_data, 
-                sizeof(deng_ui8_t), 
-                p_tex->pixel_data.size, 
-                file
-            );
+            res = fread(p_tex->pixel_data.pixel_data, sizeof(deng_ui8_t), p_tex->pixel_data.size, file);
             if(!res) FILE_ERR(file_name);
         }
 
         else {
-            tmp_pix = (deng_ui8_t*)calloc (
-                p_tex->pixel_data.height,
-                offset
-            );
-
-            res = fread (
-                tmp_pix,
-                offset,
-                p_tex->pixel_data.height,
-                file
-            );
+            tmp_pix = (deng_ui8_t*) calloc(p_tex->pixel_data.height, offset);
+            res = fread(tmp_pix, offset, p_tex->pixel_data.height, file);
 
             if(!res) FILE_ERR(file_name);
 
             for (i = p_tex->pixel_data.height; i >= 0; i--)
-                memcpy(p_tex->pixel_data.p_pixel_data, tmp_pix + i * offset, offset);
+                memcpy(p_tex->pixel_data.pixel_data, tmp_pix + i * offset, offset);
         }
 
         break;
@@ -240,7 +282,7 @@ void __das_ReadBitmap (
 }
 
 
-/* __BMP image */
+/* BMP image */
 void __das_LoadBMPImage(das_Texture *p_texture, const char *file_name) {
     size_t res;
     __BMPFileHeader file_header;
@@ -321,7 +363,7 @@ void __das_LoadBMPImage(das_Texture *p_texture, const char *file_name) {
     p_texture->pixel_data.height = (deng_ui16_t) info_header.height;
 
     p_texture->pixel_data.size = info_header.height * info_header.width * 4;
-    p_texture->pixel_data.p_pixel_data = (deng_ui8_t*) calloc ( 
+    p_texture->pixel_data.pixel_data = (deng_ui8_t*) calloc ( 
         p_texture->pixel_data.size,
         sizeof(deng_ui8_t)
     );
@@ -351,7 +393,7 @@ void __das_LoadBMPImage(das_Texture *p_texture, const char *file_name) {
         // Realign pixels to top - bottom format
         for(h_index = (int) info_header.height - 1, data_index = 0; h_index >= 0; h_index--) {
             for(w_index = 0; w_index < 4 * info_header.width; w_index++, data_index++)
-                p_texture->pixel_data.p_pixel_data[data_index] = *(tmp_arr + h_index * height_offset + w_index);
+                p_texture->pixel_data.pixel_data[data_index] = *(tmp_arr + h_index * height_offset + w_index);
         }
         
         free(tmp_arr);
@@ -385,10 +427,10 @@ void __das_LoadBMPImage(das_Texture *p_texture, const char *file_name) {
 
         for(h_index = (int) info_header.height - 1, data_index = 0; h_index >= 0; h_index--) {
             for(w_index = 0; w_index < info_header.width * 3; w_index += 3, data_index += 4) {
-                p_texture->pixel_data.p_pixel_data[data_index] = *(tmp_arr + h_index * height_offset + w_index);
-                p_texture->pixel_data.p_pixel_data[data_index + 1] = *(tmp_arr + h_index * height_offset + w_index + 1);
-                p_texture->pixel_data.p_pixel_data[data_index + 2] = *(tmp_arr + h_index * height_offset + w_index + 2);
-                p_texture->pixel_data.p_pixel_data[data_index + 3] = 0xFF;
+                p_texture->pixel_data.pixel_data[data_index] = *(tmp_arr + h_index * height_offset + w_index);
+                p_texture->pixel_data.pixel_data[data_index + 1] = *(tmp_arr + h_index * height_offset + w_index + 1);
+                p_texture->pixel_data.pixel_data[data_index + 2] = *(tmp_arr + h_index * height_offset + w_index + 2);
+                p_texture->pixel_data.pixel_data[data_index + 3] = 0xFF;
             }
         }
     }
@@ -402,10 +444,8 @@ void __das_LoadBMPImage(das_Texture *p_texture, const char *file_name) {
 }
 
 
-/* 
- * Load TGA image into das_Texture
- */
- void __das_LoadTGAImage(das_Texture *p_asset, const char *file_name) {
+/// Load TGA image into das_Texture
+void __das_LoadTGAImage(das_Texture *p_asset, const char *file_name) {
     size_t res;
     __TGATypeHeader type_header = {0};
     __TGAColorMapHeader color_header = {0};
@@ -419,8 +459,7 @@ void __das_LoadBMPImage(das_Texture *p_texture, const char *file_name) {
     res = fread(&type_header, __TGATypeHeader_Size, 1, __file);
 
     // Check the tga image type and exit if image is not supported
-    switch (type_header.image_type)
-    {
+    switch (type_header.image_type) {
     case 0:
         printf("%s\n", "ERROR: No texture image data available!");
         return;
@@ -455,30 +494,14 @@ void __das_LoadBMPImage(das_Texture *p_texture, const char *file_name) {
     p_asset->pixel_data.width = info_header.width;
     p_asset->pixel_data.height = info_header.height;
     p_asset->pixel_data.size = (size_t) (info_header.height * info_header.width * 4);
-    printf (
-        "Width, height, size, bit count: %d %d %ld %d\n", 
-        info_header.width, 
-        info_header.height,
-        p_asset->pixel_data.size,
-        info_header.bit_count   
-    );
-    p_asset->pixel_data.p_pixel_data = (deng_ui8_t*) calloc(p_asset->pixel_data.size, sizeof(deng_ui8_t));
+    printf("Width, height, size, bit count: %d %d %ld %d\n", info_header.width, info_header.height,
+        p_asset->pixel_data.size, info_header.bit_count   );
+
+    p_asset->pixel_data.pixel_data = (deng_ui8_t*) calloc(p_asset->pixel_data.size, sizeof(deng_ui8_t));
     
     if (info_header.y_origin != p_asset->pixel_data.height)
-        __das_ReadBitmap(
-            __file,
-            (char*) file_name,
-            info_header.bit_count,
-            false,
-            p_asset
-        );
-    else __das_ReadBitmap(
-        __file,
-        (char*) file_name,
-        info_header.bit_count,
-        true,
-        p_asset
-    );
+        __das_ReadBitmap(__file, (char*) file_name, info_header.bit_count, false, p_asset);
+    else __das_ReadBitmap( __file, (char*) file_name, info_header.bit_count, true, p_asset);
 
     p_asset->pixel_data.width = info_header.width;
     p_asset->pixel_data.height = info_header.height;

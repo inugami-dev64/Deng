@@ -66,57 +66,36 @@
 
 namespace dengMath {
 
-    /*
-     * Convert degrees into radians
-     */
-    deng_f64_t Conversion::degToRad(deng_f64_t deg) {
+    /// Convert degrees into radians
+    const deng_f64_t Conversion::degToRad(deng_f64_t deg) {
         return PI * deg / 180;
     }
 
 
-    /*
-     * Convert radians into degrees
-     */
-    deng_f64_t Conversion::radToDeg(deng_f64_t rad) {
+    /// Convert radians into degrees
+    const deng_f64_t Conversion::radToDeg(deng_f64_t rad) {
         return 180 * rad / PI;
     }
 
 
-    /*
-     * Convert from vector coordinate size into pixel size
-     */
-    deng_px_t Conversion::vector2DSizeToPixelSize (
+    /// Convert from vector coordinate size into pixel size
+    const deng_px_t Conversion::vector2DSizeToPixelSize (
         deng_vec_t vec_size, 
         deng_ui32_t window_size
-    ) {
-        return (deng_px_t) (
-            vec_size *
-            (deng_px_t) window_size /
-            2.0
-        );
-    }
+    ) { return static_cast<deng_px_t>(vec_size * static_cast<deng_vec_t>(window_size) / 2.0f); }
 
 
-    /*
-     * Convert from pixel size into vector coordinate size
-     */
-    deng_vec_t Conversion::pixelSizeToVector2DSize (
+
+    /// Convert from pixel size into vector coordinate size
+    const deng_vec_t Conversion::pixelSizeToVector2DSize (
         deng_px_t pixel_size, 
         deng_ui32_t window_size
-    ) {
-        return (deng_vec_t) (
-            2.0 / 
-            (deng_px_t) window_size /
-            pixel_size
-        );
-    }
+    ) { return 2.0f * static_cast<deng_vec_t>(pixel_size) / static_cast<deng_vec_t>(window_size); }
 
 
-    /*
-     * Find the absolute position of child coordinates
-     * vert must be a pointer to valid array with at least 4 members
-     */
-    vec2<deng_vec_t> Conversion::findAbsPosition (
+    /// Find the absolute position of child coordinates
+    /// vert must be a pointer to valid array with at least 4 members
+    const vec2<deng_vec_t> Conversion::findAbsPosition (
         das_ObjPosData *vert,
         vec2<deng_vec_t> child_pos
     ) {
@@ -133,11 +112,9 @@ namespace dengMath {
     }
 
 
-    /*
-     * Find the relative position of absolute coordinates
-     * vert must be a pointer to valid array with at least 4 members
-     */
-    vec2<deng_vec_t> Conversion::findRelPosition (
+    /// Find the relative position of absolute coordinates
+    /// NOTE: vert must be a pointer to valid array with at least 4 members
+    const vec2<deng_vec_t> Conversion::findRelPosition (
         das_ObjPosData *vert,
         vec2<deng_vec_t> abs_pos
     ) {
@@ -154,20 +131,29 @@ namespace dengMath {
     }
 
 
-    /*
-     * Find the absolute child size
-     */
-    deng_vec_t Conversion::findAbsSize (
+    /// Find the absolute size of the child element
+    const deng_vec_t Conversion::findAbsSize (
         deng_vec_t parent_size,
         deng_vec_t child_size
     ) { return parent_size / 2 * child_size; }
 
 
-    /*
-     * Find the relative size of abs_size from its parent_size
-     */
-    deng_vec_t Conversion::findRelSize (
+
+    /// Find the relative size of abs_size from its parent_size
+    const deng_vec_t Conversion::findRelSize (
         deng_vec_t parent_size,
         deng_vec_t abs_size
     ) { return abs_size / parent_size * 2; }
+
+
+    /// Convert mouse axis position to corresponding vector coordinate
+    const deng_vec_t Conversion::mouseCoordToVecCoord(const deng_px_t mouse_axis_pos, const deng_px_t axis_len) {
+        return ((2.0f * static_cast<deng_vec_t>(mouse_axis_pos) - static_cast<deng_vec_t>(axis_len)) / axis_len);
+    }
+
+
+    /// Convert vector axis coordinate to corresponding mouse coordinate
+    const deng_vec_t Conversion::vecCoordToMouseCoord(const deng_vec_t vec_axis_pos, const deng_px_t axis_len) {
+        return (vec_axis_pos + 1.0f) * axis_len / 2;
+    }
 }

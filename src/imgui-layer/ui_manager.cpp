@@ -79,19 +79,60 @@ namespace deng {
     
         // Temporary width and height variables
         deng_i32_t width, height;
-        m_p_io->Fonts->GetTexDataAsRGBA32(&imgui_atlas.pixel_data.p_pixel_data, &width, &height);
-        imgui_atlas.pixel_data.size = width * height * 4;
-        imgui_atlas.no_reg_cleanup = true;
-        
-        // Set the texture ID
-        m_p_io->Fonts->SetTexID((void*) imgui_atlas.uuid);
-
+        m_p_io->Fonts->GetTexDataAsRGBA32(&imgui_atlas.pixel_data.pixel_data, &width, &height);
         // Cast the width and height parameters into texture width and height
         imgui_atlas.pixel_data.width = static_cast<deng_ui16_t>(width);
         imgui_atlas.pixel_data.height = static_cast<deng_ui16_t>(height);
 
+        imgui_atlas.pixel_data.size = width * height * 4;
+        imgui_atlas.no_reg_cleanup = true;
+
+        das_RealignPixelData(&imgui_atlas, DAS_PIXEL_FORMAT_R8G8B8A8);
+        
+        // Set the texture ID
+        m_p_io->Fonts->SetTexID((void*) imgui_atlas.uuid);
+
+        LOG("Texture width, height: " + std::to_string(imgui_atlas.pixel_data.width) + ":" + 
+            std::to_string(imgui_atlas.pixel_data.height));
+
+        // TEMP CODE
+        das_Asset test_asset = {};
+        test_asset.asset_mode = DAS_ASSET_MODE_2D_UNMAPPED;
+        test_asset.tex_uuid = m_imgui_atlas;
+        test_asset.uuid = uuid_Generate();
+        test_asset.indices.n = 6;
+        test_asset.indices.pos = (deng_ui32_t*) calloc(test_asset.indices.n, sizeof(deng_ui32_t));
+        test_asset.indices.tex = (deng_ui32_t*) calloc(test_asset.indices.n, sizeof(deng_ui32_t));
+        test_asset.indices.pos[0] = test_asset.indices.tex[0] = 0;
+        test_asset.indices.pos[1] = test_asset.indices.tex[1] = 1;
+        test_asset.indices.pos[2] = test_asset.indices.tex[2] = 2;
+        test_asset.indices.pos[3] = test_asset.indices.tex[3] = 2;
+        test_asset.indices.pos[4] = test_asset.indices.tex[4] = 3;
+        test_asset.indices.pos[5] = test_asset.indices.tex[5] = 0;
+
+        test_asset.vertices.v2d.pn = test_asset.vertices.v2d.tn = 4;
+        test_asset.vertices.v2d.pos = (das_ObjPosData2D*) calloc(test_asset.vertices.v2d.pn, sizeof(das_ObjPosData2D));
+        //test_asset.vertices.v2d.tex = (das_ObjTextureData*) calloc(test_asset.vertices.v2d.tn, sizeof(das_ObjTextureData));
+        test_asset.vertices.v2d.pos[0] = {-1.0f, -1.0f};
+        test_asset.vertices.v2d.pos[1] = {-0.8f, -1.0f};
+        test_asset.vertices.v2d.pos[2] = {-0.8f, -0.8f};
+        test_asset.vertices.v2d.pos[3] = {-1.0f, -0.8f};
+
+        test_asset.diffuse = {1.0f, 1.0f, 1.0f, 1.0f};
+        test_asset.is_shown = true;
+
+        test_asset.is_transformed = false;
+        test_asset.force_unmap = true;
+
+        m_rend.pushAsset(test_asset);
         m_rend.pushTexture(imgui_atlas);
         m_rend.setUIDataPtr(&m_gui_data);
+    }
+
+
+    UIManager::~UIManager() {
+        //delete [] m_gui_data.verts;
+        //delete [] m_gui_data.ind;
     }
 
 
@@ -122,8 +163,8 @@ namespace deng {
 
             // For each vertex, convert its pixel size to vector size
             for(deng_ui32_t j = 0; j < cmd_list->VtxBuffer.Size; j++) {
-                verts[j].pos.x = dengMath::Conversion::pixelSizeToVector2DSize(verts[j].pos.x, win.getSize().first);
-                verts[j].pos.y = dengMath::Conversion::pixelSizeToVector2DSize(verts[j].pos.y, win.getSize().second);
+                verts[j].pos.x = dengMath::Conversion::mouseCoordToVecCoord(verts[j].pos.x, static_cast<deng_px_t>(win.getSize().first));
+                verts[j].pos.y = dengMath::Conversion::mouseCoordToVecCoord(verts[j].pos.y, static_cast<deng_px_t>(win.getSize().second));
             }
 
             m_gui_data.verts = verts;
@@ -131,8 +172,6 @@ namespace deng {
 
             m_gui_data.ind = inds;
             m_gui_data.ind_c = cmd_list->IdxBuffer.Size;
-
-            LOG("Vert, ind count: " + std::to_string(m_gui_data.ind_c) + " " + std::to_string(m_gui_data.vert_c));
 
             // ImGui vertices buffer area offset
             size_t offset = 0;
@@ -151,7 +190,6 @@ namespace deng {
                     m_gui_data.entities[j].buf_offset = cmd_list->VtxBuffer.Size * sizeof(ImDrawVert) + 
                         p_cmd->IdxOffset * sizeof(ImDrawIdx);
                     m_gui_data.entities[j].ind = inds + p_cmd->IdxOffset;
-                    LOG("Indx offset: " + std::to_string(p_cmd->IdxOffset));
                     m_gui_data.entities[j].ind_c = p_cmd->ElemCount;
                 }
             }

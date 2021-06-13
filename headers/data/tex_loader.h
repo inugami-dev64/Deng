@@ -70,9 +70,7 @@ extern "C" {
 #define DEFAULT_ASSET_COLOR (das_ObjColorData) {0.7f, 0.7f, 0.7f, 1.0f}
 
 
-/*
- * This enum specifies the image file format 
- */
+/// This enum specifies the image file format 
 typedef enum das_ImageFormat {
     DAS_IMAGE_FORMAT_BMP = 0,
     DAS_IMAGE_FORMAT_TGA = 1,
@@ -99,10 +97,8 @@ typedef enum das_ImageFormat {
     
     das_ImageFormat __das_DetectImageFormat(const char *file_name);
 
-    /*
-     * Read raw bitmap data from file
-     * This function expects the file to be uncompressed
-     */
+    /// Read raw bitmap data from file
+    /// This function expects the file to be uncompressed
     void __das_ReadBitmap (
         FILE *file,
         char *file_name,
@@ -112,27 +108,21 @@ typedef enum das_ImageFormat {
     );
 
 
-    /*
-     * Load JPEG image into das_Texture instance
-     */
+    /// Load JPEG image into das_Texture instance
     void __das_LoadJPGImage (
         das_Texture *p_tex,
         const char *file_name
     );
 
 
-    /*
-     * Load BMP image data into das_Texture
-     */
+    /// Load BMP image data into das_Texture
     void __das_LoadBMPImage (
         das_Texture *p_tex, 
         const char *file_name
     );
     
 
-    /*
-     * Load TGA image into das_Texture instance
-     */
+    /// Load TGA image into das_Texture instance
     void __das_LoadTGAImage (
         das_Texture *p_tex, 
         const char *file_name
@@ -140,9 +130,23 @@ typedef enum das_ImageFormat {
 #endif
 
 
-/* 
- * Load texture bitmap data into das_Texture instance
- */
+/// Pixel alignment specifying enumeral
+typedef enum das_PixelFormat {
+    DAS_PIXEL_FORMAT_B8G8R8A8   = 0x01,
+    DAS_PIXEL_FORMAT_A8B8G8R8   = 0x02,
+    DAS_PIXEL_FORMAT_R8G8B8A8   = 0x04,
+    DAS_PIXEL_FORMAT_A8R8G8B8   = 0x08,
+    DAS_PIXEL_FORMAT_R8G8B8     = 0x10,
+    DAS_PIXEL_FORMAT_B8G8R8     = 0x12
+} das_PixelFormat;
+
+
+/// Realign raw pixel data to B8G8R8A8 format in order to make it compatible with 
+/// specified texture format
+void das_RealignPixelData(das_Texture *p_tex, das_PixelFormat format);
+
+
+/// Load texture bitmap data into das_Texture instance
 void das_LoadTexture (
     das_Texture *p_tex, 
     const char *file_name

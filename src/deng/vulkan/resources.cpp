@@ -509,11 +509,7 @@ namespace deng {
         ) {
             // Begin recording cmd_buf
             VkCommandBuffer tmp_cmd_buf = {};
-            __vk_CommandBufferRecorder::beginCommandBufferSingleCommand (
-                device, 
-                cmd_pool, 
-                &tmp_cmd_buf
-            );
+            __vk_CommandBufferRecorder::beginCommandBufferSingleCommand(device, cmd_pool, &tmp_cmd_buf);
 
             // Set up copy region 
             VkBufferCopy copy_region{};
@@ -525,14 +521,7 @@ namespace deng {
             vkCmdCopyBuffer(tmp_cmd_buf, src_buffer, dst_buffer, 1, &copy_region);
 
             // End recording cmd_buf
-            __vk_CommandBufferRecorder::endCommandBufferSingleCommand (
-                device, 
-                g_queue, 
-                cmd_pool, 
-                &tmp_cmd_buf
-            );
-
-            LOG("Done copying buffer to buffer");
+            __vk_CommandBufferRecorder::endCommandBufferSingleCommand(device, g_queue, cmd_pool, &tmp_cmd_buf);
         }
 
 

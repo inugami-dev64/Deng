@@ -66,12 +66,12 @@
 
 layout(binding = 0) uniform sampler2D tex_sampler;
 
-layout(location = 0) in vec2 in_tex;
-layout(location = 1) in flat uint in_col_mul;
+layout(location = 0) in vec2 in_uv;
+layout(location = 1) in vec4 in_col_mul;
 
 layout(location = 0) out vec4 out_color;
 
 void main() {
-    //out_color = in_col_mul * texture(tex_sampler, in_tex);
-    out_color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    out_color = in_col_mul * texture(tex_sampler, in_uv);
+    //out_color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 }

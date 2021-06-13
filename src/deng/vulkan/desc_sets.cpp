@@ -100,6 +100,7 @@ namespace deng {
             deng_ui64_t ubo_chunk_size,
             deng_ui64_t min_ubo_align
         ) {
+            LOG("Asset bounds: " + std::to_string(asset_bounds.first) + " " + std::to_string(asset_bounds.second));
             // Count new added assets by their type
             for(size_t i = asset_bounds.first; i < asset_bounds.second; i++) {
                 // Retrieve base asset
@@ -411,7 +412,6 @@ namespace deng {
             // Set up multiple descriptor layout structures
             std::vector<VkDescriptorSetLayout> set_layouts;
             set_layouts.resize(__max_frame_c);
-
 
             // Retrieve the base asset from registry
             RegType &reg_asset = m_reg.retrieve(asset.base_id, 

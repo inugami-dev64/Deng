@@ -147,14 +147,12 @@ namespace deng {
 
             /// Allocate enough memory for command buffers
             void allocateCmdBuffers(VkDevice device, VkQueue g_queue, VkRenderPass renderpass, 
-                VkExtent2D ext, dengMath::vec4<deng_vec_t> background, const __vk_BufferData &bd, 
-                const deng_bool_t use_lvl_zero);
+                VkExtent2D ext, dengMath::vec4<deng_vec_t> background, const __vk_BufferData &bd);
 
 
             /// Record command buffers for drawing assets and optionally ui elements
             void recordCmdBuffers(VkRenderPass renderpass, VkExtent2D ext,
-                const dengMath::vec4<deng_vec_t> &background, const __vk_BufferData &bd, 
-                const deng_bool_t use_lvl_zero);
+                const dengMath::vec4<deng_vec_t> &background, const __vk_BufferData &bd);
         
         public:
             VkCommandPool getComPool();

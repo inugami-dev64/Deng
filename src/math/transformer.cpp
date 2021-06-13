@@ -111,10 +111,8 @@ namespace dengMath {
     }
 
 
-    /*
-     * Rotate the given asset
-     * Rotation must be in radians
-     */
+    /// Rotate the given asset
+    /// NOTE: Rotation must be in radians
     void Transformer2D::rotate(deng_vec_t rot, das_Asset &asset) {
         mat3<deng_vec_t> rot_mat;
 
@@ -126,9 +124,7 @@ namespace dengMath {
     }
 
     
-    /*
-     * Scale the given asset
-     */
+    /// Scale the given asset
     void Transformer2D::scale(const vec2<deng_vec_t> &scale, das_Asset &asset) {
         mat3<deng_vec_t> mat;
         
@@ -140,9 +136,7 @@ namespace dengMath {
     }
 
 
-    /*
-     * Shear the given asset with the factor of opposite coordinate
-     */
+    /// Shear the given asset with the factor of opposite coordinate
     void Transformer2D::shear(const vec2<deng_vec_t> &shear, das_Asset &asset) {
         mat3<deng_vec_t> mat;
 
@@ -154,10 +148,8 @@ namespace dengMath {
     }
 
 
-    /*
-     * Translate the given asset vertices from custom coordinate system into
-     * world coordinate system
-     */
+    /// Translate the given asset vertices from custom coordinate system into
+    /// world coordinate system
     void Transformer2D::translate (
         const vec2<deng_vec_t> &u,
         const vec2<deng_vec_t> &v,
@@ -174,9 +166,7 @@ namespace dengMath {
     }
 
 
-    /*
-     * Set rotation for the class transformation matrix
-     */
+    /// Set rotation for the class transformation matrix
     void Transformer2D::setRotation(deng_vec_t rot) {
         m_rot_mat.row1 = vec3<deng_vec_t>{cosf(rot), -sinf(rot), 0.0f};
         m_rot_mat.row2 = vec3<deng_vec_t>{sinf(rot), cosf(rot), 0.0f};
@@ -184,9 +174,7 @@ namespace dengMath {
     }
 
 
-    /*
-     * Set scale for class transformation matrix
-     */
+    /// Set scale for class transformation matrix
     void Transformer2D::setScale(const vec2<deng_vec_t> &scale) {
         m_scale_mat.row1 = vec3<deng_vec_t>{scale.first, 0.0f, 0.0f};
         m_scale_mat.row2 = vec3<deng_vec_t>{0.0f, scale.second, 0.0f};
@@ -194,9 +182,7 @@ namespace dengMath {
     }
 
 
-    /*
-     * Set shear for class transformation matrix
-     */
+    /// Set shear for class transformation matrix
     void Transformer2D::setShear(const vec2<deng_vec_t> &shear) {
         m_shear_mat.row1 = vec3<deng_vec_t>{1.0f, shear.first, 0.0f};
         m_shear_mat.row2 = vec3<deng_vec_t>{shear.second, 1.0f, 0.0f};
@@ -204,9 +190,7 @@ namespace dengMath {
     }
 
 
-    /*
-     * Set coordinate translation for class transformation matrix
-     */
+    /// Set coordinate translation for class transformation matrix
     void Transformer2D::setTranslation (
         const vec2<deng_vec_t> &u,
         const vec2<deng_vec_t> &v,
@@ -219,25 +203,18 @@ namespace dengMath {
     }
 
 
-    /*
-     * Get the class transformation matrix 
-     */
+    /// Get the class transformation matrix 
     mat3<deng_vec_t> Transformer2D::getTransformMat() {
         // The order of transformations is following: rotation, scaling, shearing and translation
-        return (
-            m_translation_mat * 
-            m_shear_mat *
-            m_scale_mat *
-            m_rot_mat
-        );
+        return (m_translation_mat * m_shear_mat * m_scale_mat * m_rot_mat);
     }
 
     
-    /*
-     * Reset all transformations to identity matrices
-     */
+    /// Reset all transformations to identity matrices
     void Transformer2D::reset() {
         m_rot_mat.row1 = vec3<deng_vec_t>{1.0f, 0.0f, 0.0f};
+        m_rot_mat.row2 = vec3<deng_vec_t>{0.0f, 1.0f, 0.0f};
+        m_rot_mat.row3 = vec3<deng_vec_t>{0.0f, 0.0f, 1.0f};
 
         m_translation_mat.row1 = vec3<deng_vec_t>{1.0f, 0.0f, 0.0f};
         m_translation_mat.row2 = vec3<deng_vec_t>{0.0f, 1.0f, 0.0f};

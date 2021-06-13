@@ -308,7 +308,7 @@ namespace deng {
 
                 input_attr_desc[2].binding = 0;
                 input_attr_desc[2].location = 2;
-                input_attr_desc[2].format = VK_FORMAT_R32_UINT;
+                input_attr_desc[2].format = VK_FORMAT_R32G32B32A32_SFLOAT;
                 input_attr_desc[2].offset = offsetof(ImDrawVert, col);
                 break;
 
@@ -390,7 +390,7 @@ namespace deng {
             m_viewport.minDepth = 0.0f;
             m_viewport.maxDepth = 1.0f;
 
-            // Set scissor values
+            // Set scissor offset and extent values
             m_scissor.offset = {0, 0};
             m_scissor.extent = m_ext;
 

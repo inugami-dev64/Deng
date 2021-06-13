@@ -152,7 +152,7 @@ namespace deng {
             /// Copy all asset data between given bounds to buffer
             /// NOTE: The asset capacity in buffer has to be larger than required asset size (use assetCapCheck() for this)
             void cpyAssetsToBuffer(VkDevice device, VkPhysicalDevice gpu, 
-                VkCommandPool cmd_pool, VkQueue g_queue, deng_bool_t no_offset_calc);
+                VkCommandPool cmd_pool, VkQueue g_queue, deng_bool_t no_offset_calc, const dengMath::vec2<deng_ui32_t> &bounds);
 
 
             /// Copy ImGui vertex and indices data to buffer

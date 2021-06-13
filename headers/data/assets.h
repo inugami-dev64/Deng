@@ -160,7 +160,7 @@ typedef struct das_IndicesDynamic {
 
 /// Structure for universal texture image bitmap data storage
 typedef struct das_PixelDataDynamic {
-    deng_ui8_t *p_pixel_data;
+    deng_ui8_t *pixel_data;
     size_t size;
     deng_ui16_t width;
     deng_ui16_t height;

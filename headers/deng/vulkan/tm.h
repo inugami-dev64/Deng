@@ -136,6 +136,11 @@ namespace deng {
                 VkCommandPool cmd_pool, VkQueue g_queue, VkDeviceSize size);
 
             
+            /// Calculate miplevels for texture specified with specific width and height
+            const deng_ui32_t __findMipLevels(const deng_bool_t is_lf, const deng_ui16_t width, 
+                const deng_ui16_t height);
+
+            
             /*
              * Destroy previous texture memory instances, allocate new one and 
              * copy texture data over to the new memory area.
@@ -157,14 +162,6 @@ namespace deng {
             void __mkImageView(VkDevice device, __vk_Texture &tex, deng_ui32_t mip_levels);
 
 
-            /// Copy all bitmap data to image bitmap buffer
-            /// WARNING: This method performs no buffer bounds check and can cause errors!
-            /// NOTE: Texture object must have a valid VkImage instance created before calling this 
-            /// method
-            void __cpyBitmap(VkDevice device, VkPhysicalDevice gpu, VkCommandPool cmd_pool,
-                VkQueue g_queue, deng_ui32_t mip_levels, __vk_Texture &tex);
-
-
             /// Create new VkImage and VkImageView instances for a single texture
             void __newVkTexture(VkDevice device, VkPhysicalDevice gpu, VkCommandPool cmd_pool,
                 VkQueue g_queue, deng_ui32_t mip_levels, deng_bool_t is_lf, deng_bool_t ignore_mem_check,
@@ -180,6 +177,14 @@ namespace deng {
             /// Create new Vulkan texture from texture specified via id
             void mkTexture(VkDevice device, VkPhysicalDevice gpu, VkCommandPool command_pool,
                 deng_bool_t is_lf_supported, deng_Id id, VkQueue g_queue);
+
+
+            /// Copy all bitmap data to image bitmap buffer
+            /// WARNING: This method performs no buffer bounds check and can cause errors!
+            /// NOTE: Texture object must have a valid VkImage instance created before calling this 
+            /// method
+            void cpyBitmap(VkDevice device, VkPhysicalDevice gpu, VkCommandPool cmd_pool,
+                VkQueue g_queue, deng_ui32_t mip_levels, __vk_Texture &tex);
 
 
             /// Get the id of a missing texture

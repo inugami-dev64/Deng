@@ -341,13 +341,12 @@ namespace deng {
 
         /// Prepare assets for rendering with Vulkan
         void __vk_Renderer::prepareAsset(deng_Id id) {
-            LOG("Asset prep id: " + std::string(id));
             // Retrive base  asset
             RegType &reg_asset = __vk_RendererInitialiser::m_reg.retrieve(id, 
                 DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
 
             // Create new Vulkan specific asset instance
-            RegType reg_vk_asset;
+            RegType reg_vk_asset = {};
             reg_vk_asset.vk_asset.base_id = reg_asset.asset.uuid;
             reg_vk_asset.vk_asset.tex_uuid = reg_asset.asset.tex_uuid;
             reg_vk_asset.vk_asset.uuid = uuid_Generate();
@@ -429,9 +428,6 @@ namespace deng {
             VkSubmitInfo submitinfo{};
             submitinfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-            // Check if commandbuffer levels must be switched
-            //__vk_RendererInitialiser::getDrawCaller().checkLevelChange(__vk_RendererInitialiser::getIC().getDev());
-
             VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
             submitinfo.waitSemaphoreCount = 1;
             submitinfo.pWaitSemaphores = wait_semaphores;
@@ -482,7 +478,7 @@ namespace deng {
             // Copy all available assets to the main buffer
             __vk_RendererInitialiser::getResMan().cpyAssetsToBuffer(__vk_RendererInitialiser::getIC().getDev(), 
                 __vk_RendererInitialiser::getIC().getGpu(), __vk_RendererInitialiser::getDrawCaller().getComPool(),
-                __vk_RendererInitialiser::getIC().getQFF().graphics_queue, false);
+                __vk_RendererInitialiser::getIC().getQFF().graphics_queue, false, { 0, static_cast<deng_ui32_t>(__vk_RendererInitialiser::m_assets.size()) });
 
             // Copy all available ui data to the main buffer
             __vk_RendererInitialiser::getResMan().cpyUIDataToBuffer(__vk_RendererInitialiser::getIC().getDev(), 
@@ -490,35 +486,22 @@ namespace deng {
                 __vk_RendererInitialiser::getIC().getQFF().graphics_queue);
 
             // Create descriptor sets for all currently available assets
-            __vk_RendererInitialiser::getDescC().mkAssetDS (
-                __vk_RendererInitialiser::getIC().getDev(), 
-                __vk_RendererInitialiser::getResMan().getBD(),
-                __vk_RendererInitialiser::getResMan().getMissingTextureUUID(),
-                { 0, static_cast<deng_ui32_t>(__vk_RendererInitialiser::m_assets.size()) },
-                __vk_RendererInitialiser::getResMan().getUboChunkSize(),
-                __vk_RendererInitialiser::getIC().getGpuLimits().minUniformBufferOffsetAlignment
-            );
+            __vk_RendererInitialiser::getDescC().mkAssetDS(__vk_RendererInitialiser::getIC().getDev(), __vk_RendererInitialiser::getResMan().getBD(), 
+                __vk_RendererInitialiser::getResMan().getMissingTextureUUID(), { 0, static_cast<deng_ui32_t>(__vk_RendererInitialiser::m_assets.size()) },
+                __vk_RendererInitialiser::getResMan().getUboChunkSize(), __vk_RendererInitialiser::getIC().getGpuLimits().minUniformBufferOffsetAlignment);
 
             // Start recording command buffers
             __vk_RendererInitialiser::getDrawCaller().setMiscData(__vk_RendererInitialiser::getPipelineC().getPipelines(),
                 __vk_RendererInitialiser::getResMan().getFB());
-            
 
-            // Allocate memory for level 0 and level 1 commandbuffers
+            // Allocate memory for commandbuffers
             __vk_RendererInitialiser::getDrawCaller().allocateCmdBuffers(__vk_RendererInitialiser::getIC().getDev(), 
                 __vk_RendererInitialiser::getIC().getQFF().graphics_queue, __vk_RendererInitialiser::getSCC().getRp(),
-                __vk_RendererInitialiser::getSCC().getExt(), m_config.background, __vk_RendererInitialiser::getResMan().getBD(),
-                false);
+                __vk_RendererInitialiser::getSCC().getExt(), m_config.background, __vk_RendererInitialiser::getResMan().getBD());
 
-            __vk_RendererInitialiser::getDrawCaller().allocateCmdBuffers(__vk_RendererInitialiser::getIC().getDev(), 
-                __vk_RendererInitialiser::getIC().getQFF().graphics_queue, __vk_RendererInitialiser::getSCC().getRp(),
-                __vk_RendererInitialiser::getSCC().getExt(), m_config.background, __vk_RendererInitialiser::getResMan().getBD(),
-                true);
-
-            // Record the initial level zero commandbuffers
+            // Record commandbuffers with initial draw commands
             __vk_RendererInitialiser::getDrawCaller().recordCmdBuffers(__vk_RendererInitialiser::getSCC().getRp(),
-                __vk_RendererInitialiser::getSCC().getExt(), m_config.background, __vk_RendererInitialiser::getResMan().getBD(),
-                true);
+                __vk_RendererInitialiser::getSCC().getExt(), m_config.background, __vk_RendererInitialiser::getResMan().getBD());
 
             // Set the running flag as true
             m_is_init = true;
@@ -530,7 +513,9 @@ namespace deng {
         /// command or data buffers need to be updated
         void __vk_Renderer::idle() {
             if(m_is_init && !m_is_idle) {
-                vkDeviceWaitIdle(__vk_RendererInitialiser::getIC().getDev());
+                vkWaitForFences(__vk_RendererInitialiser::getIC().getDev(), static_cast<deng_ui32_t>(__vk_RendererInitialiser::getDrawCaller().flight_fences.size()), 
+                    __vk_RendererInitialiser::getDrawCaller().flight_fences.data(), VK_TRUE, UINT64_MAX);
+
                 m_is_idle = true;
             }
         }
@@ -538,6 +523,7 @@ namespace deng {
 
         /// Setter and getter methods
         void __vk_Renderer::setUIDataPtr(__ImGuiData *p_gui) {
+            __vk_RuntimeUpdater::m_p_gui_data = p_gui;
             __vk_RendererInitialiser::setUIDataPtr(p_gui);
 
             // Check if the renderer has been initialised and if it has idle it
@@ -553,7 +539,7 @@ namespace deng {
                 // Copy all available assets to the main buffer
                 __vk_RendererInitialiser::getResMan().cpyAssetsToBuffer(__vk_RendererInitialiser::getIC().getDev(), 
                     __vk_RendererInitialiser::getIC().getGpu(), __vk_RendererInitialiser::getDrawCaller().getComPool(),
-                    __vk_RendererInitialiser::getIC().getQFF().graphics_queue, false);
+                    __vk_RendererInitialiser::getIC().getQFF().graphics_queue, false, { 0, static_cast<deng_ui32_t>(__vk_RendererInitialiser::m_assets.size()) });
 
                 // Copy all available ui data to the main buffer
                 __vk_RendererInitialiser::getResMan().cpyUIDataToBuffer(__vk_RendererInitialiser::getIC().getDev(), 

@@ -60,6 +60,7 @@
  */ 
 
 
+#include "imgui.h"
 #define __IMGUI_SANDBOX_CPP
 #include <imgui-layer/imgui_sandbox.h>
 
@@ -92,19 +93,20 @@ namespace deng {
         m_rend.submitTexture(viking_tex);
 
         m_rend.setup(m_cam, m_win); 
-        m_ui_man = std::make_unique<UIManager>(m_rend);
     }
 
 
     /// General run method
     void ImGUIApplication::run() {
         m_rend.update();
+        m_ui_man = std::make_unique<UIManager>(m_rend);
         while(deng_IsRunning()) {
             m_ui_man->updateIO(m_win);
+
             ImGui::NewFrame();
-                ImGui::Begin("Test window");
-                ImGui::Text("Hello world!");
-                ImGui::End();
+            ImGui::Begin("Test window, pls work", NULL, ImGuiWindowFlags_MenuBar);
+            ImGui::Text("Hello world");
+            ImGui::End();
             ImGui::EndFrame();
 
             ImGui::Render();

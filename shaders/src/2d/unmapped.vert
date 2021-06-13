@@ -71,8 +71,11 @@ layout(binding = 0) uniform UniformData {
 // Store color information about asset when it is not texture mapped
 layout(binding = 1) uniform ColorData {
     vec4 color;
-    uint ignore_transform;
+    uint is_transform;
     uint is_unmapped;
+
+    // Padding bytes
+    vec2 pad;
 } cl;
 
 
@@ -80,8 +83,8 @@ layout(location = 0) in vec2 in_pos;
 layout(location = 0) out vec4 out_color;
 
 void main() {
-    if(cl.ignore_transform == 1)
-        gl_Position = vec4(in_pos, 0.0f, 0.0f);
+    if(cl.is_transform == 0)
+        gl_Position = vec4(in_pos, 0.0f, 1.0f);
     else {
         mat4 view_mat;
         view_mat[0] = vec4(ubo.view[0], 0.0f);

@@ -105,6 +105,17 @@ namespace deng {
         };
 
 
+        /// Uniform color data for 2D assets
+        struct __vk_UniformAssetData2D {
+            dengMath::vec4<deng_vec_t> color;
+            deng_ui32_t is_transform;
+            deng_ui32_t is_unmapped;
+
+            // Padding
+            dengMath::vec2<deng_vec_t> pad;
+        };
+
+
         /// Light data uniform structure
         struct __vk_UniformLightData {
             __vk_UniformLightSource light_srcs[__DENG_MAX_LIGHT_SRC_COUNT];

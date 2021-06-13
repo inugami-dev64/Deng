@@ -276,20 +276,19 @@ namespace deng {
             const VkDeviceSize prev_asset_cap = m_buffer_data.asset_cap;
             const VkDeviceSize prev_ui_cap = m_buffer_data.ui_cap;
             
-            m_buffer_data.asset_size = 0;
-
             // For each asset add its size to total asset size and calculate asset offsets
             m_buffer_data.asset_size = 0;
             for(size_t i = 0; i < m_assets.size(); i++) {
                 // Retrieve the asset from registry
                 RegType &reg_asset = m_reg.retrieve(m_assets[i], DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
                 __findAssetOffsets(reg_asset.asset);
+
+                LOG("New pos offset: " + std::to_string(reg_asset.asset.offsets.pos_offset));
+                LOG("New index offset: " + std::to_string(reg_asset.asset.offsets.ind_offset));
             }
 
             // Calculate the total required memory for ui elements
             if(m_p_imgui_data) {
-                LOG("ImGui data is set in reallocCheck()");
-                printf("ui ptr: %p\n", m_p_imgui_data);
                 m_buffer_data.ui_size = m_p_imgui_data->ind_c * sizeof(ImDrawIdx) + 
                     m_p_imgui_data->vert_c * sizeof(ImDrawVert);
             }
@@ -305,7 +304,7 @@ namespace deng {
                 
                 // Allocate new buffer
                 allocateMainBufferMemory(device, gpu);
-                cpyAssetsToBuffer(device, gpu, cmd_pool, g_queue, true);
+                cpyAssetsToBuffer(device, gpu, cmd_pool, g_queue, true, { 0, static_cast<deng_ui32_t>(m_assets.size()) });
                 cpyUIDataToBuffer(device, gpu, cmd_pool, g_queue);
             }
 
@@ -360,7 +359,8 @@ namespace deng {
             VkPhysicalDevice gpu, 
             VkCommandPool cmd_pool, 
             VkQueue g_queue,
-            deng_bool_t no_offset_calc
+            deng_bool_t no_offset_calc,
+            const dengMath::vec2<deng_ui32_t> &bounds
         ) {
             VkMemoryRequirements mem_req = {};
 
@@ -368,8 +368,7 @@ namespace deng {
             if(!no_offset_calc) {
                 m_buffer_data.asset_size = 0;
                 for(size_t i = 0; i < m_assets.size(); i++) {
-                    RegType &reg_asset = m_reg.retrieve(m_assets[i], 
-                        DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
+                    RegType &reg_asset = m_reg.retrieve(m_assets[i], DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
                     
                     // Find buffer offsets for the asset
                     __findAssetOffsets(reg_asset.asset);
@@ -377,8 +376,7 @@ namespace deng {
             }
 
             // Create asset staging buffers
-            __stageAssets(device, gpu, cmd_pool, g_queue, dengMath::vec2<deng_ui32_t>{ 0, 
-                static_cast<deng_ui32_t>(m_assets.size()) }, 0);
+            __stageAssets(device, gpu, cmd_pool, g_queue, dengMath::vec2<deng_ui32_t>{ bounds.first, bounds.second}, 0);
 
             // Copy data from staging buffer to main buffer
             __vk_BufferCreator::cpyBufferToBuffer(device, cmd_pool, g_queue, 
@@ -416,7 +414,6 @@ namespace deng {
 
             // Bind the staging buffer with its memory
             vkBindBufferMemory(device, m_buffer_data.staging_buffer, m_buffer_data.staging_buffer_memory, 0);
-
 
             // Copy data to staging buffer
             void *data = NULL;

@@ -188,9 +188,18 @@ namespace deng {
                 DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
             reg_asset.asset.offsets.ubo_offset = m_buffer_data.ubo_size;
 
-            // Set the new size for ubo buffer
-            m_buffer_data.ubo_size += __max_frame_c * cm_FindChunkSize(m_min_align,
-                sizeof(__vk_UniformAssetData));
+            // Increase the used size by required margin 
+            if(reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED || 
+               reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED) {
+                LOG("Mapping ubo data for 2D assets");
+                m_buffer_data.ubo_size += __max_frame_c * cm_FindChunkSize(m_min_align,
+                    sizeof(__vk_UniformAssetData2D));
+            }
+
+            else {
+                m_buffer_data.ubo_size += __max_frame_c * cm_FindChunkSize(m_min_align,
+                    sizeof(__vk_UniformAssetData));
+            }
 
             // Check if buffer reallocation is needed 
             if(m_buffer_data.ubo_size > m_buffer_data.ubo_cap) {
@@ -227,26 +236,45 @@ namespace deng {
             deng_ui32_t current_image, 
             __vk_Asset &asset
         ) {
-            __vk_UniformAssetData ubo = {};
 
             // Retrieve base asset from the registry
             RegType &reg_asset = m_reg.retrieve(asset.base_id, 
                 DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
 
-            // Set all color / material properties
-            ubo.ambient = reg_asset.asset.ambient;
-            ubo.diffuse = reg_asset.asset.diffuse;
-            ubo.specular = reg_asset.asset.specular;
-            ubo.phong_exp = reg_asset.asset.phong_exp;
+            // Check the asset type and copy appopriate data structure to buffer accordingly
+            if(reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED || 
+               reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED) {
+                __vk_UniformAssetData2D ubo = {};
 
-            // Set additional asset properties
-            ubo.ignore_transform = static_cast<deng_ui32_t>(reg_asset.asset.is_transformed);
-            ubo.is_unmapped = static_cast<deng_ui32_t>(reg_asset.asset.force_unmap);
+                // Set all properties accordingly
+                ubo.color = reg_asset.asset.diffuse;
+                ubo.is_transform = reg_asset.asset.is_transformed;
+                ubo.is_unmapped = reg_asset.asset.force_unmap;
 
-            // Copy the constructed uniform buffer data to uniform buffer
-            __vk_BufferCreator::cpyToBufferMem(device, sizeof(__vk_UniformAssetData), 
-                &ubo, m_buffer_data.uniform_buffer_mem, reg_asset.asset.offsets.ubo_offset + 
-                current_image * cm_FindChunkSize(m_min_align, sizeof(__vk_UniformAssetData)));
+                // Copy the constructed uniform data structure to uniform buffer
+                __vk_BufferCreator::cpyToBufferMem(device, sizeof(__vk_UniformAssetData2D), 
+                    &ubo, m_buffer_data.uniform_buffer_mem, reg_asset.asset.offsets.ubo_offset + 
+                    current_image * cm_FindChunkSize(m_min_align, sizeof(__vk_UniformAssetData2D)));
+            }
+
+            else {
+                __vk_UniformAssetData ubo = {};
+
+                // Set all color / material properties
+                ubo.ambient = reg_asset.asset.ambient;
+                ubo.diffuse = reg_asset.asset.diffuse;
+                ubo.specular = reg_asset.asset.specular;
+                ubo.phong_exp = reg_asset.asset.phong_exp;
+
+                // Set additional asset properties
+                ubo.ignore_transform = static_cast<deng_ui32_t>(reg_asset.asset.is_transformed);
+                ubo.is_unmapped = static_cast<deng_ui32_t>(reg_asset.asset.force_unmap);
+
+                // Copy the constructed uniform buffer data to uniform buffer
+                __vk_BufferCreator::cpyToBufferMem(device, sizeof(__vk_UniformAssetData), 
+                    &ubo, m_buffer_data.uniform_buffer_mem, reg_asset.asset.offsets.ubo_offset + 
+                    current_image * cm_FindChunkSize(m_min_align, sizeof(__vk_UniformAssetData)));
+            }
         }
 
 

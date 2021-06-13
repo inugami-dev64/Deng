@@ -71,7 +71,7 @@ layout(binding = 0) uniform UniformData {
 // Store color information about asset when it is not texture mapped
 layout(binding = 1) uniform ColorData {
     vec4 color;
-    uint ignore_transform;
+    uint is_transform;
     uint is_unmapped;
 } cl;
 
@@ -84,7 +84,7 @@ layout(location = 1) out vec2 out_tex_pos;
 layout(location = 2) out flat uint out_is_unmapped;
 
 void main() {
-    if(cl.ignore_transform == 1)
+    if(cl.is_transform == 1)
         gl_Position = vec4(in_pos, 0.0f, 1.0f);
     
     else {

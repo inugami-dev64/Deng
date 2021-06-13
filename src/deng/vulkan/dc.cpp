@@ -136,8 +136,8 @@ namespace deng {
             deng_ui32_t nor_bind_nr = 1;
 
             // Bind the position vertex location in buffer
-            vkCmdBindVertexBuffers(cur_buf, 0, 1, &bd.main_buffer, 
-                &asset.offsets.pos_offset);
+            vkCmdBindVertexBuffers(cur_buf, 0, 1, &bd.main_buffer, &asset.offsets.pos_offset);
+            LOG("Offsets pos / ind: " + std::to_string(asset.offsets.pos_offset) + "; " + std::to_string(asset.offsets.ind_offset));
 
 
             // Check if texture vertices should be bound
@@ -167,7 +167,6 @@ namespace deng {
         /// Bind ImGui resources to command buffers
         void __vk_DrawCaller::__bindUIElementResources(__ImGuiEntity *ent, VkCommandBuffer cur_buf, const __vk_BufferData &bd) {
             vkCmdBindVertexBuffers(cur_buf, 0, 1, &bd.main_buffer, &bd.asset_cap);
-            LOG("Index offset: " + std::to_string(ent->buf_offset));
             vkCmdBindIndexBuffer(cur_buf, bd.main_buffer, bd.asset_cap + ent->buf_offset, 
                 VK_INDEX_TYPE_UINT32);
         }
@@ -229,8 +228,7 @@ namespace deng {
             VkRenderPass renderpass, 
             VkExtent2D ext,
             dengMath::vec4<deng_vec_t> background,
-            const __vk_BufferData &bd,
-            const deng_bool_t use_lvl_zero
+            const __vk_BufferData &bd
         ) {
             m_cmd_bufs.resize(m_framebuffers.size());
 
@@ -254,8 +252,7 @@ namespace deng {
             VkRenderPass renderpass,
             VkExtent2D ext,
             const dengMath::vec4<deng_vec_t> &background,
-            const __vk_BufferData &bd,
-            const deng_bool_t use_lvl_zero
+            const __vk_BufferData &bd
         ) {
             size_t i, j;
 
@@ -273,7 +270,7 @@ namespace deng {
                 renderpass_begininfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
                 renderpass_begininfo.renderPass = renderpass;
                 renderpass_begininfo.framebuffer = m_framebuffers[i];
-                renderpass_begininfo.renderArea.offset = {0, 0};
+                renderpass_begininfo.renderArea.offset = { 0, 0 };
                 renderpass_begininfo.renderArea.extent = ext;
 
                 // Set up clear values
@@ -292,8 +289,7 @@ namespace deng {
                 renderpass_begininfo.pClearValues = clear_values.data();
                 
                 // Start a new render pass for recording asset draw commands
-                vkCmdBeginRenderPass(m_cmd_bufs.at(i), &renderpass_begininfo, 
-                    VK_SUBPASS_CONTENTS_INLINE);
+                vkCmdBeginRenderPass(m_cmd_bufs.at(i), &renderpass_begininfo, VK_SUBPASS_CONTENTS_INLINE);
 
                     // Iterate through every asset, bind resources and issue an index draw to commandbuffer
                     for(j = 0; j < m_assets.size(); j++) {
@@ -317,7 +313,6 @@ namespace deng {
 
                     // Check if ui elements should be drawn
                     if(m_p_ui_data) {
-                        LOG("UI entity count: " + std::to_string(m_p_ui_data->entities.size()));
                         for(j = 0; j < m_p_ui_data->entities.size(); j++) {
                             __bindUIElementResources(&m_p_ui_data->entities[j], m_cmd_bufs.at(i), bd);
 
@@ -327,7 +322,6 @@ namespace deng {
                             vkCmdBindDescriptorSets(m_cmd_bufs.at(i), VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 *m_pl_data[UI_I].p_pipeline_layout, 0, 1, &m_ui_sets[i], 0, NULL);
 
-                            LOG("Index count: " + std::to_string(m_p_ui_data->entities[j].ind_c));
                             vkCmdDrawIndexed(m_cmd_bufs.at(i), m_p_ui_data->entities[j].ind_c, 1, 0, 0, 0);
                         }
                     }
@@ -335,7 +329,6 @@ namespace deng {
                 // End render pass
                 vkCmdEndRenderPass(m_cmd_bufs.at(i));
                 
-
                 // Stop recording commandbuffer
                 if(vkEndCommandBuffer(m_cmd_bufs.at(i)) != VK_SUCCESS)
                     VK_DRAWCMD_ERR("failed to end recording command buffer");

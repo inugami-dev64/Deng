@@ -102,7 +102,7 @@ namespace deng {
 
             // Tell Vulkan renderer to initialise Vulkan specific asset and texture instances 
             __AssetManager::submitTextureQueue();
-            __AssetManager::submitAssetQueue(m_vk_vars->background);
+            __AssetManager::submitAssetQueue();
 
             // Setup the renderer
             m_vk_rend->setup();

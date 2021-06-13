@@ -123,13 +123,10 @@ namespace deng {
 
 
     /// Submit all assets to in submission queue to renderer
-    void __AssetManager::submitAssetQueue(const dengMath::vec4<deng_vec_t> &background) {
+    void __AssetManager::submitAssetQueue() {
         // Check if any assets are available in the queue
-        if(m_asset_queue.empty()) return;
-
-        // Idle the renderer
-        if(m_api_bits == DENG_RENDERER_HINT_API_VULKAN && m_vk_rend->isInit())
-            m_vk_rend->idle();
+        if(m_asset_queue.empty()) 
+            return;
 
         // Keep popping asset ids from the queue
         deng_ui32_t old_size = static_cast<deng_ui32_t>(m_assets.size());
@@ -145,7 +142,7 @@ namespace deng {
         if(m_api_bits == DENG_RENDERER_HINT_API_VULKAN && m_vk_rend->isInit()) {
             m_vk_rend->updateAssetData({ old_size, static_cast<deng_ui32_t>(m_assets.size()) });
             m_vk_rend->updateAssetDS({ old_size, static_cast<deng_ui32_t>(m_assets.size()) });
-            m_vk_rend->updateCmdBuffers(background);
+            m_vk_rend->updateCmdBuffers(m_vk_vars->background);
         }
     }
 
@@ -177,23 +174,7 @@ namespace deng {
     /// PS! Asset UUIDs have to be generated before push and renderer must be setup
     void __AssetManager::pushAsset(das_Asset &asset) {
         submitAsset(asset);
-        __assetTypeIncr(asset);
-
-        // Check the currently used API instance
-        switch(m_api_bits) {
-        case DENG_RENDERER_HINT_API_VULKAN:
-            m_vk_rend->idle();
-            m_vk_rend->updateAssetDS(dengMath::vec2<deng_ui32_t>{ static_cast<deng_ui32_t>(m_assets.size() - 1), 
-                static_cast<deng_ui32_t>(m_assets.size()) } );
-
-            m_vk_rend->updateAssetData({ static_cast<deng_ui32_t>(m_assets.size() - 1), 
-                static_cast<deng_ui32_t>(m_assets.size()) });
-            m_vk_rend->updateCmdBuffers(m_vk_vars->background);
-            break;
-
-        default:
-            break;
-        }
+        submitAssetQueue();
     }
 
 

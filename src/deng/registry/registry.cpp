@@ -150,7 +150,7 @@ namespace deng {
 
             case DENG_SUPPORTED_REG_TYPE_TEXTURE:
                 if(!m_entries[i].element.tex.no_reg_cleanup) {
-                    free(m_entries[i].element.tex.pixel_data.p_pixel_data);
+                    free(m_entries[i].element.tex.pixel_data.pixel_data);
                     free(m_entries[i].element.tex.uuid);
                 }
                 break;
