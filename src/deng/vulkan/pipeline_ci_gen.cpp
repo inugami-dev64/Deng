@@ -308,7 +308,7 @@ namespace deng {
 
                 input_attr_desc[2].binding = 0;
                 input_attr_desc[2].location = 2;
-                input_attr_desc[2].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+                input_attr_desc[2].format = VK_FORMAT_R8G8B8A8_UNORM;
                 input_attr_desc[2].offset = offsetof(ImDrawVert, col);
                 break;
 

@@ -70,9 +70,7 @@ static FILE* __file;
 /************* String functions ****************/
 /***********************************************/
 
-/* 
- * Replace all chars in string with other char
- */
+/// Replace all chars in string with other char
 char *cm_StrReplaceCh (
     const char *str,
     char find_ch,
@@ -88,9 +86,7 @@ char *cm_StrReplaceCh (
 }
 
 
-/* 
- * Get the file extension name 
- */
+/// Get the file extension name 
 char *cm_ExtractFileExtName(char *file_name) {
     deng_i64_t l_index;
     deng_bool_t is_ext_found = false;
@@ -201,10 +197,8 @@ deng_ui8_t cm_RandI8() {
 }
 
 
-/*
- * Convert regular ASCII string into wide UTF-16 string
- * This method allocates memory on heap, manual cleanup is necessary
- */
+/// Convert regular ASCII string into wide UTF-16 string
+/// This method allocates memory on heap, manual cleanup is necessary
 wchar_t* cm_ToWideString(char* str) {
     wchar_t* out = (wchar_t*) calloc(strlen(str) + 1, sizeof(wchar_t));
     for (size_t i = 0; i < strlen(str); i++)
@@ -214,10 +208,8 @@ wchar_t* cm_ToWideString(char* str) {
 }
 
 
-/*
- * Convert wide string into regular string
- * This functions reads first 8 least significant bits of the wide string
- */
+/// Convert wide string into regular string
+/// This functions reads first 8 least significant bits of the wide string
 char* cm_ToRegularString(wchar_t* wstr) {
     char* out = (char*)calloc(wcslen(wstr) + 1, sizeof(char));
     for (size_t i = 0; i < wcslen(wstr); i++)
@@ -227,9 +219,7 @@ char* cm_ToRegularString(wchar_t* wstr) {
 }
 
 
-/*
- * Convert time from epoch into TimeInfo struct
- */
+/// Convert time from epoch into TimeInfo struct
 void cm_ConvertTime (
     deng_i64_t epocht,
     TimeInfo *p_out_info
@@ -291,17 +281,13 @@ void cm_ConvertTime (
 }
 
 
-/*
- * This function calculates the total chuck size from the required memory size
- */
+/// This function calculates the total chuck size from the required memory size
 deng_ui64_t cm_FindChunkSize(deng_ui64_t chunk, deng_ui64_t req_mem) {
     return req_mem + (req_mem % chunk > 0 ? chunk - (req_mem % chunk) : 0);
 }
 
 
-/*
- * Substring finder algorithm core function
- */
+/// Substring finder algorithm core function
 void __cm_SubstrAl (
     char *str,
     size_t str_len,
@@ -673,9 +659,7 @@ void cm_FormatTimeFromEpoch (
 }
 
 
-/*
- * Extract file name from file path
- */
+/// Extract file name from file path
 char *cm_ExtractFileName(char *path) {
     deng_i64_t i = 0;
     for(i = strlen(path) - 1; i >= 0; i++) {
@@ -687,10 +671,8 @@ char *cm_ExtractFileName(char *path) {
 }
 
 
-/*
- * Find the total line count from beg to rlen
- * rlen must be less than the amount of memory under beg
- */
+/// Find the total line count from beg to rlen
+/// rlen must be less than the amount of memory under beg
 deng_ui32_t cm_FindLineCount(char *str, size_t rlen) {
     deng_ui32_t lc = 1;
 
@@ -702,9 +684,7 @@ deng_ui32_t cm_FindLineCount(char *str, size_t rlen) {
 }
 
 
-/* 
- * Make all lowercase chars into uppercase chars 
- */
+/// Make all lowercase chars into uppercase chars 
 char *cm_MakeUpperCase(const char *str) {
     char *out_str = (char*) str;
     
@@ -717,7 +697,7 @@ char *cm_MakeUpperCase(const char *str) {
 }
 
 
-/* Make all uppercase chars into lowercase chars */
+/// Make all uppercase chars into lowercase chars
 char *cm_MakeLowerCase(const char *str) {
     char *out_str = (char*) str;
     for(size_t i = 0; i < strlen(str); i++) {
@@ -729,10 +709,8 @@ char *cm_MakeLowerCase(const char *str) {
 }
 
 
-/*
- * Open new file for logging (write only)
- */
-void cm_OpenLogger(char* file_name) {
+/// Open new file for logging (write only)
+void cm_OpenLogger(const char* file_name) {
     __file = fopen(file_name, "wb");
     if (!__file)
         fprintf(stderr, "Failed to open file '%s'\n", file_name);
@@ -747,18 +725,14 @@ void cm_OpenLogger(char* file_name) {
 }
 
 
-/*
- * Close logger FILE instance 
- */
+/// Close logger FILE instance 
 void cm_CloseLogger() {
     fclose(__file);
     __file = NULL;
 }
 
 
-/* 
- * Write content into log file 
- */
+/// Write content into log file 
 void cm_LogWrite(const char *content) {
     fwrite(content, sizeof(const char), strlen(content), __file);
     fwrite("\n", sizeof(char), 1, __file);

@@ -160,9 +160,8 @@ namespace deng {
             // Generate all graphics pipeline createinfos
             // As for now, no culling will be done
             std::array<VkGraphicsPipelineCreateInfo, PIPELINE_C> pipeline_infos{};
-            pipeline_infos[UM2D_I] = vu2d_ci_gen.mkGraphicsPipelineInfo(VK_POLYGON_MODE_FILL, 
-                VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 
-                true, true, sample_c, 0);
+            pipeline_infos[UM2D_I] = vu2d_ci_gen.mkGraphicsPipelineInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, 
+                VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);
 
             pipeline_infos[TM2D_I] = vm2d_ci_gen.mkGraphicsPipelineInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, 
                 VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);

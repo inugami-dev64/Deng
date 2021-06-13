@@ -146,6 +146,13 @@ typedef enum das_PixelFormat {
 void das_RealignPixelData(das_Texture *p_tex, das_PixelFormat format);
 
 
+/// Write a log file for texture instance in following format:
+/// <WIDTH>x<HEIGHT>\n
+/// <B><G><R><A>\n 
+/// ...
+void das_LogTexture(das_Texture *p_tex, const char *file_name);
+
+
 /// Load texture bitmap data into das_Texture instance
 void das_LoadTexture (
     das_Texture *p_tex, 

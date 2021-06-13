@@ -137,7 +137,6 @@ namespace deng {
 
             // Bind the position vertex location in buffer
             vkCmdBindVertexBuffers(cur_buf, 0, 1, &bd.main_buffer, &asset.offsets.pos_offset);
-            LOG("Offsets pos / ind: " + std::to_string(asset.offsets.pos_offset) + "; " + std::to_string(asset.offsets.ind_offset));
 
 
             // Check if texture vertices should be bound
@@ -254,10 +253,8 @@ namespace deng {
             const dengMath::vec4<deng_vec_t> &background,
             const __vk_BufferData &bd
         ) {
-            size_t i, j;
-
             // Record each command buffer
-            for(i = 0; i < m_cmd_bufs.size(); i++) {
+            for(size_t i = 0; i < m_cmd_bufs.size(); i++) {
                 VkCommandBufferBeginInfo cmd_buf_info{};
                 cmd_buf_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -292,7 +289,7 @@ namespace deng {
                 vkCmdBeginRenderPass(m_cmd_bufs.at(i), &renderpass_begininfo, VK_SUBPASS_CONTENTS_INLINE);
 
                     // Iterate through every asset, bind resources and issue an index draw to commandbuffer
-                    for(j = 0; j < m_assets.size(); j++) {
+                    for(size_t j = 0; j < m_assets.size(); j++) {
                         RegType reg_asset = m_reg.retrieve(m_assets[j], 
                             DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
 
@@ -313,7 +310,7 @@ namespace deng {
 
                     // Check if ui elements should be drawn
                     if(m_p_ui_data) {
-                        for(j = 0; j < m_p_ui_data->entities.size(); j++) {
+                        for(deng_i64_t j = m_p_ui_data->entities.size() - 1; j >= 0; j--) {
                             __bindUIElementResources(&m_p_ui_data->entities[j], m_cmd_bufs.at(i), bd);
 
                             vkCmdBindPipeline(m_cmd_bufs.at(i), VK_PIPELINE_BIND_POINT_GRAPHICS,

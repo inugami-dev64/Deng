@@ -176,6 +176,34 @@ void das_RealignPixelData(das_Texture *p_tex, das_PixelFormat pix_format) {
 }
 
 
+/// Write a log file for texture instance in following format:
+/// <WIDTH>x<HEIGHT>\n
+/// <B> <G> <R> <A>\n 
+/// ...
+void das_LogTexture(das_Texture *p_tex, const char *file_name) {
+    #define BUF_SIZE 512
+
+    // Buffer for all character data written into a log file
+    char buf[BUF_SIZE] = { 0 };
+    cm_OpenLogger(file_name);
+
+    // Write width and height to log file
+    sprintf(buf, "%dx%d", p_tex->pixel_data.width, p_tex->pixel_data.height);
+    cm_LogWrite(buf);
+    memset(buf, 0, BUF_SIZE);
+
+    // For each pixel output its data
+    for(size_t i = 0; i < p_tex->pixel_data.width * p_tex->pixel_data.height; i++) {
+        const deng_ui8_t *pix_data = p_tex->pixel_data.pixel_data + i * 4;
+        sprintf(buf, "%d %d %d %d", pix_data[0], pix_data[1], pix_data[2], pix_data[3]);
+        cm_LogWrite(buf);
+        memset(buf, 0, BUF_SIZE);
+    }
+
+    cm_CloseLogger();
+}
+
+
 /// Load texture bitmap data into das_Texture instance
 void das_LoadTexture(das_Texture *p_texture, const char *file_name) {
     p_texture->uuid = uuid_Generate();

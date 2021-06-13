@@ -80,6 +80,7 @@ namespace deng {
         // Temporary width and height variables
         deng_i32_t width, height;
         m_p_io->Fonts->GetTexDataAsRGBA32(&imgui_atlas.pixel_data.pixel_data, &width, &height);
+
         // Cast the width and height parameters into texture width and height
         imgui_atlas.pixel_data.width = static_cast<deng_ui16_t>(width);
         imgui_atlas.pixel_data.height = static_cast<deng_ui16_t>(height);
@@ -88,6 +89,7 @@ namespace deng {
         imgui_atlas.no_reg_cleanup = true;
 
         das_RealignPixelData(&imgui_atlas, DAS_PIXEL_FORMAT_R8G8B8A8);
+        das_LogTexture(&imgui_atlas, "imgui-tex.log");
         
         // Set the texture ID
         m_p_io->Fonts->SetTexID((void*) imgui_atlas.uuid);

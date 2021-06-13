@@ -319,8 +319,8 @@ void cm_FormatTimeFromEpoch (
 );
 
 
-// Log writers
-void cm_OpenLogger(char* file_name);
+// Log writer functions
+void cm_OpenLogger(const char* file_name);
 void cm_LogWrite(const char *content);
 void cm_CloseLogger();
 

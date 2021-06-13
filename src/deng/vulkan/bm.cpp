@@ -282,9 +282,6 @@ namespace deng {
                 // Retrieve the asset from registry
                 RegType &reg_asset = m_reg.retrieve(m_assets[i], DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
                 __findAssetOffsets(reg_asset.asset);
-
-                LOG("New pos offset: " + std::to_string(reg_asset.asset.offsets.pos_offset));
-                LOG("New index offset: " + std::to_string(reg_asset.asset.offsets.ind_offset));
             }
 
             // Calculate the total required memory for ui elements
