@@ -66,12 +66,6 @@
 
 namespace deng {
 
-    /**********************************/
-    /**********************************/
-    /************ Camera3D ************/
-    /**********************************/
-    /**********************************/
-
     Camera3D::Camera3D (
         deng_CameraType cam_type,
         deng_vec_t fov,
@@ -85,8 +79,7 @@ namespace deng {
         m_cam_type = cam_type;
 
         // Check for camera instance to create
-        switch(m_cam_type)
-        {
+        switch(m_cam_type) {
         case DENG_CAMERA_TYPE_FPP:
             p_fpp_cam = new __FPPCamera (
                 mov_speed,
@@ -119,13 +112,10 @@ namespace deng {
     }
 
 
-    /*
-     * Set the camera key bindings
-     * NOTE: These bindings are the ones that control camera movement and rotation actions
-     */
+    /// Set the camera key bindings
+    /// NOTE: These bindings are the ones that control camera movement and rotation actions
     void Camera3D::setBindings(const Camera3DBindings &bindings) {
-        switch(m_cam_type)
-        {
+        switch(m_cam_type) {
         case DENG_CAMERA_TYPE_FPP:
             p_fpp_cam->setBindings(bindings);
             break;
@@ -140,11 +130,9 @@ namespace deng {
     }
 
 
-    /*
-     * Move camera's origin in world space by delta_mov
-     * NOTE: This method only effects editor camera and third person perspective camera
-     * systems. It does nothing on the first person camera.
-     */
+    /// Move camera's origin in world space by delta_mov
+    /// NOTE: This method only effects editor camera and third person perspective camera
+    /// systems. It does nothing on the first person camera.
     void Camera3D::moveOrigin(const dengMath::vec3<deng_vec_t> &delta_mov) {
         switch(m_cam_type)
         {
@@ -159,15 +147,12 @@ namespace deng {
     }
 
 
-    /*
-     * Move camera's position by delta_mov in camera's coordinate system
-     */
+    /// Move camera's position by delta_mov in camera's coordinate system
     void Camera3D::moveCameraPOVC (
         const dengMath::vec3<deng_vec_t> &delta_mov,
         deng_bool_t ignore_pitch
     ) {
-        switch(m_cam_type)
-        {
+        switch(m_cam_type) {
         case DENG_CAMERA_TYPE_FPP:
             if(delta_mov.first)
                 p_fpp_cam->moveU(delta_mov.first, ignore_pitch);
@@ -192,15 +177,12 @@ namespace deng {
     }
 
 
-    /*
-     * Move camera's position in world coordinate system
-     */
+    /// Move camera's position in world coordinate system
     void Camera3D::moveCameraPOVW (
         const dengMath::vec3<deng_vec_t> &delta_mov,
         deng_bool_t ignore_pitch
     ) {
-        switch(m_cam_type)
-        {
+        switch(m_cam_type) {
         case DENG_CAMERA_TYPE_FPP:
             if(delta_mov.first)
                 p_fpp_cam->moveX(delta_mov.first, ignore_pitch);
@@ -227,8 +209,7 @@ namespace deng {
 
     /// Rotate camera's position by rot in camera's coordinate system
     void Camera3D::rotCameraPOVC(const dengMath::vec2<deng_vec_t> &rot) {
-        switch(m_cam_type)
-        {
+        switch(m_cam_type) {
         case DENG_CAMERA_TYPE_EDITOR:
             p_ed_cam->rotU(rot.first);
             p_ed_cam->rotV(rot.second);
@@ -247,8 +228,7 @@ namespace deng {
 
     /// Rotate camera's position by rot in world's coordinate system
     void Camera3D::rotCameraPOVW(const dengMath::vec2<deng_vec_t> &rot) {
-        switch(m_cam_type)
-        {
+        switch(m_cam_type) {
         case DENG_CAMERA_TYPE_EDITOR:
             p_ed_cam->rotX(rot.first);
             p_ed_cam->rotY(rot.second);
@@ -267,8 +247,7 @@ namespace deng {
 
     /// Main camera system update method
     void Camera3D::update() {
-        switch(m_cam_type)
-        {
+        switch(m_cam_type) {
         case DENG_CAMERA_TYPE_EDITOR:
             p_ed_cam->update();
             break;
@@ -321,8 +300,6 @@ namespace deng {
     }
 
 
-    /*
-     * Returns true if camera has perspective view
-     */
+    /// Returns true if camera has perspective view
     deng_bool_t Camera3D::isPerspective() { return true; }
 }

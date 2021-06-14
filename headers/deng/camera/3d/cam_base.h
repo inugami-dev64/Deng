@@ -57,16 +57,20 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: cam_base - base class for various 3D camera systems
+ *  Purpose: Provide a base class with uniform functionality for all 
+ *           3D camera system child classes
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __FPP_CAM_H
-#define __FPP_CAM_H
+#ifndef __CAM_BASE_H
+#define __CAM_BASE_H
 
 
-#ifdef __FPP_CAM_CPP
+#ifdef __CAM_BASE_CPP
     #include <stdlib.h>
-    #include <mutex>
     #include <vulkan/vulkan.h>
 
     #include <common/base_types.h>
@@ -78,128 +82,53 @@
     #include <math/vec4.h>
     #include <math/mat3.h>
     #include <math/mat4.h>
-    #include <math/projection_mat.h>
     #include <math/camera_mat.h>
+    #include <math/projection_mat.h>
+    #include <deng/surface/key_definitions.h>
     #include <deng/window.h>
-    #include <deng/camera/cam_base.h>
-    #include <utils/timer.h>
 #endif
 
-
 namespace deng {
-    /*
-     * FPPCamera forward declaration
-     */
-    class __FPPCamera;
-
-
-    /* 
-     * Perspective first person camera event class
-     */
-    class __FPPCameraEv : protected __EventBase 
-    {
-    private:
-        dengUtils::Timer m_mov_timer;
-        dengUtils::Timer m_input_mode_timer;
-        dengMath::vec4<deng_vec_t> m_move_speed;
-        dengMath::vec3<deng_MovementEvent> m_movements;
-
-    private:
-        void __findMovements();
-        void __checkForInputModeChange(dengMath::CameraMatrix *p_cm);
-        void __update(__FPPCamera *p_cam);
-        deng_bool_t __keyEvHandler(deng_Key key);
+    
+    class __Camera3DBase {
+    protected:
+        deng_vec_t m_fov; // Radians
+        dengMath::vec4<deng_vec_t> m_origin = dengMath::vec4<deng_vec_t>{0.0f, 0.0f, 0.0f, 0.0f}; // Origin doesn't accept transformations
+        dengMath::CameraMatrix m_cam_mat;
+        dengMath::ProjectionMatrix m_proj_mat;
 
     public:
-        __FPPCameraEv (
-            Window *p_win,
-            const dengMath::vec2<deng_f64_t> &mouse_sens,
-            const dengMath::vec3<deng_vec_t> &camera_mov_speed
-        );
+        __Camera3DBase(deng_CameraType type, deng_vec_t fov,
+            const dengMath::vec2<deng_vec_t> &planes, deng_vec_t aspect_ratio);
 
 
-        /*
-         * Find the correct movement speed
-         * Parameters for this method are boolean flags about the axis being opposite or not
-         */
-        dengMath::vec4<deng_vec_t> getMoveSpeed (
-            deng_bool_t op_x,
-            deng_bool_t op_y,
-            deng_bool_t op_z
-        );
+        /// Following methods are for moving the camera position in its coordinate system
+        void moveU(deng_vec_t delta, deng_bool_t ignore_pitch);
+        void moveV(deng_vec_t delta, deng_bool_t ignore_pitch);
+        void moveW(deng_vec_t delta, deng_bool_t ignore_pitch);
 
 
-        /*
-         * Check for input mode changes and move camera if needed
-         */
-        void updateEv(__FPPCamera *p_cam, deng_bool_t ignore_pitch);
-
-
-        /*
-         * Set the first person perspective camera bindings
-         */
-        void setBindings(const Camera3DBindings &bindings);
+        /// Following methods are for moving the camera position in world coordinate system
+        void moveX(deng_vec_t delta, deng_bool_t ignore_pitch);
+        void moveY(deng_vec_t delta, deng_bool_t ignore_pitch);
+        void moveZ(deng_vec_t delta, deng_bool_t ignore_pitch);
 
         
-        /*
-         * Get the pointer to the window instance
-         */
-        Window *getWinPtr();
+        /// Following methods are for rotating the camera in its coordinate system
+        void rotU(deng_vec_t rot);
+        void rotV(deng_vec_t rot);
 
-        
-        /*
-         * Set the window pointer
-         */
-        void setWinPtr(Window *p_win);
-    };
 
-        
-    /* 
-     * First person perspective camera class 
-     */
-    class __FPPCamera : private __FPPCameraEv, public __CameraBase 
-    {
-    private:
-        deng_bool_t m_is_pitch_ignore;
+        /// Following methods are for rotating the camera in origin specific coordinate system
+        void rotX(deng_vec_t rot);
+        void rotY(deng_vec_t rot);
 
+
+    // Getters
     public:
-        __FPPCamera (
-            const dengMath::vec3<deng_vec_t> &camera_mov_speed_mul, 
-            const dengMath::vec2<deng_f64_t> &mouse_sens, 
-            deng_vec_t fov, 
-            deng_vec_t near_plane, 
-            deng_vec_t far_plane, 
-            deng_bool_t ignore_pitch_mov,
-            Window *p_win
-        );
-
-
-        /* 
-         * FPPCamera wrapper method for event update 
-         */
-        void update(); 
-
-        
-        /*
-         * Set first person camera control bindings
-         */
-        void setBindings(const Camera3DBindings &bindings);
-
-        
-        /*
-         * Check if camera movement system should ignore pitch rotation, when translating
-         * movements into camera coordinate system.
-         */
-        deng_bool_t isPitchIgnore();
-
-        
-        /*
-         * Get the pointer to camera matrix instance
-         */
-        dengMath::CameraMatrix *getCamMatPtr();
+        dengMath::mat4<deng_vec_t> getCamMat(); 
+        dengMath::mat4<deng_vec_t> getProjMat();
     };
-
-
 }
 
 #endif

@@ -68,29 +68,25 @@
     
     #include <mutex>
     #include <cstring>
-    #include <common/base_types.h>
     #include <vulkan/vulkan.h>
+
+    #include <common/base_types.h>
+    #include <common/err_def.h>
     #include <data/assets.h>
 
-    #include <deng/surface/key_definitions.h>
-    #include <deng/surface/key_ev.h>
-    #include <math/vec2.h>
-    #include <math/vec3.h>
-    #include <math/vec4.h>
-    #include <math/mat3.h>
-    #include <math/mat4.h>
-    #include <math/projection_mat.h>
-    #include <math/camera_mat.h>
-    #include <common/err_def.h>
+    #include <math/deng_math.h>
     #include <deng/window.h>
-    #include <utils/timer.h>
 #endif
 
 
-#include <deng/camera/cam_base.h>
-#include <deng/camera/ed_cam.h>
-#include <deng/camera/tpp_cam.h>
-#include <deng/camera/fpp_cam.h>
+#include <deng/camera/3d/cam_bindings.h>
+#include <deng/camera/3d/cam_base.h>
+#include <deng/camera/3d/ev_base.h>
+#include <deng/camera/3d/ed_cam_ev.h>
+#include <deng/camera/3d/ed_cam.h>
+#include <deng/camera/3d/fpp_cam_ev.h>
+#include <deng/camera/3d/fpp_cam.h>
+#include <deng/camera/3d/tpp_cam.h>
 
 
 namespace deng {

@@ -57,98 +57,59 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
- * ----------------------------------------------------------------
- *  Name: asset_man - Asset manager parent for Renderer class
- *  Purpose: Provide interface for interacting with assets and textures
- *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __ASSET_MAN_H
-#define __ASSET_MAN_H
-
-#ifdef __ASSET_MAN_CPP
-    #include <stdlib.h>
-    #include <vector>
-    #include <array>
-    #include <mutex>
-    #include <memory>
-    #include <queue>
-    #include <vulkan/vulkan.h>
-
-    #include <common/base_types.h>
-    #include <common/err_def.h>
-    #include <common/hashmap.h>
-    #include <data/assets.h>
-    #include <math/deng_math.h>
-    
-    #include <deng/window.h>
-    #include <deng/camera.h>
-    #include <deng/registry/registry.h>
-    #include <imgui-layer/imgui_entity.h>
-
-    #include <utils/font.h>
-    #include <deng/vulkan/renderer.h>
-#endif
+#define __FPP_CAM_CPP
+#include <deng/camera/3d/fpp_cam.h>
 
 
 namespace deng {
 
-    class __AssetManager {
-    private:
-        std::shared_ptr<vulkan::__vk_ConfigVars> &m_vk_vars;
-        std::shared_ptr<vulkan::__vk_Renderer> &m_vk_rend;
-        std::queue<deng_Id> m_asset_queue;
-        std::queue<deng_Id> m_texture_queue;
-
-        // Bookkeeping variables for assets
-        deng_ui32_t m_vu2d_c = 0;
-        deng_ui32_t m_vm2d_c = 0;
-        deng_ui32_t m_vu3d_c = 0;
-        deng_ui32_t m_vm3d_c = 0;
-
-    private:
-        /// Increment asset type instance count
-        void __assetTypeIncr(das_Asset &asset);
-
-    protected:
-        deng_RendererHintBits &m_api_bits;
-
-        __GlobalRegistry m_reg;
-        std::vector<deng_Id> m_assets;
-        std::vector<deng_Id> m_textures;
-        
-    public:
-        __AssetManager(std::shared_ptr<vulkan::__vk_Renderer> &vk_rend,
-            std::shared_ptr<vulkan::__vk_ConfigVars> &vk_vars, deng_RendererHintBits &api);
-
-        /// Add texture id to submission queue
-        /// PS! Texture UUIDs have to be generated before submitting them
-        void submitTexture(das_Texture &texture);
+    __FPPCamera::__FPPCamera (
+        const dengMath::vec3<deng_vec_t> &camera_mov_sens, 
+		const dengMath::vec2<deng_f64_t> &mouse_sens, 
+		deng_vec_t fov, 
+		deng_vec_t near_plane, 
+		deng_vec_t far_plane, 
+        deng_bool_t ignore_pitch_mov,
+		Window *p_win
+	) : __FPPCameraEv (
+            p_win,
+            mouse_sens, 
+            camera_mov_sens
+        ),
+        __Camera3DBase (
+            DENG_CAMERA_TYPE_FPP,
+            fov,
+            {near_plane, far_plane},
+            (deng_vec_t) __FPPCameraEv::getWinPtr()->getSize().first / (deng_vec_t) __FPPCameraEv::getWinPtr()->getSize().second
+        ) {
+        __FPPCameraEv::setWinPtr(p_win);
+    }
 
 
-        /// Add asset id to submission queue
-        /// PS! Asset UUIDs have to be generated before submitting them
-        void submitAsset(das_Asset &asset);
+    /// __FPPCamera wrapper method for event update 
+    void __FPPCamera::update() {
+        __FPPCameraEv::updateEv(this, m_is_pitch_ignore);
+    }
+
+    
+    /// Set first person camera control bindings
+    void __FPPCamera::setBindings(const Camera3DBindings &bindings) {
+        m_bindings = bindings;
+    }
+
+    
+    /// Check if camera movement system should ignore pitch rotation, when translating
+    /// movements into camera coordinate system.
+    deng_bool_t __FPPCamera::isPitchIgnore() {
+        return m_is_pitch_ignore;
+    }
 
 
-        /// Submit all assets to in submission queue to renderer
-        void submitAssetQueue();
-
-
-        /// Submit all textures in submission queue to renderer
-        void submitTextureQueue();
-
-
-        /// Push asset to renderer and initialise it, possibly reallocate vertices buffer if needed
-        /// PS! Asset UUIDs have to be generated before push and renderer must be setup
-        void pushAsset(das_Asset &asset);
-
-
-        /// Push texture to renderer and initialise it, possibly reallocate texture memory if needed,
-        /// PS! Texture UUIDs have to be generated before submitting them and renderer must be setup
-        void pushTexture(das_Texture &texture);
-    };
+    /// Get the pointer to camera matrix instance
+    dengMath::CameraMatrix *__FPPCamera::getCamMatPtr() {
+        return &m_cam_mat;
+    }
 }
-
-#endif

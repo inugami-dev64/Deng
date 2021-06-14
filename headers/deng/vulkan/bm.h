@@ -84,7 +84,6 @@
 
     #include <math/deng_math.h>
     #include <deng/surface/key_definitions.h>
-    #include <utils/timer.h>
     #include <deng/camera.h>
     #include <deng/lighting/light_srcs.h>
     #include <deng/vulkan/resources.h>

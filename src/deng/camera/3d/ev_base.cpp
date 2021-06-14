@@ -60,136 +60,13 @@
  */ 
 
 
-#define __CAM_BASE_CPP
-#include <deng/camera/cam_base.h>
+#define __EV_BASE_CPP
+#include <deng/camera/3d/ev_base.h>
 
 
 namespace deng {
-    
-    /*********************************/
-    /*********************************/
-    /********* __CameraBase **********/
-    /*********************************/
-    /*********************************/
 
-    __CameraBase::__CameraBase (
-        deng_CameraType type,
-        deng_vec_t fov,
-        const dengMath::vec2<deng_vec_t> &planes,
-        deng_vec_t aspect_ratio
-    ) : m_cam_mat(type),
-        m_proj_mat(fov, planes, aspect_ratio) { m_fov = fov; }
-
-
-    /* 
-     * Following methods are for moving the camera position in its coordinate system
-     */
-    void __CameraBase::moveU(deng_vec_t delta, deng_bool_t ignore_pitch) {
-        m_cam_mat.moveCamera (
-            dengMath::vec3<deng_vec_t>{delta, 0.0f, 0.0f},
-            false,
-            ignore_pitch,
-            DENG_COORD_AXIS_X
-        );
-    }
-
-
-    void __CameraBase::moveV(deng_vec_t delta, deng_bool_t ignore_pitch) {
-        m_cam_mat.moveCamera (
-            dengMath::vec3<deng_vec_t>{0.0f, delta, 0.0f},
-            false,
-            ignore_pitch,
-            DENG_COORD_AXIS_Y 
-        );
-    }
-
-
-    void __CameraBase::moveW(deng_vec_t delta, deng_bool_t ignore_pitch) {
-        m_cam_mat.moveCamera (
-            dengMath::vec3<deng_vec_t>{0.0f, 0.0f, delta},
-            false,
-            ignore_pitch,
-            DENG_COORD_AXIS_Z 
-        );
-    }
-
-
-    /* 
-     * Following methods are for moving the camera's position in world coordinate system
-     */
-    void __CameraBase::moveX(deng_vec_t delta, deng_bool_t ignore_pitch) {
-        m_cam_mat.moveCamera (
-            dengMath::vec3<deng_vec_t>{delta, 0.0f, 0.0f},
-            true,
-            ignore_pitch,
-            DENG_COORD_AXIS_X
-        );
-    }
-
-
-    void __CameraBase::moveY(deng_vec_t delta, deng_bool_t ignore_pitch) {
-        m_cam_mat.moveCamera (
-            dengMath::vec3<deng_vec_t>{0.0f, delta, 0.0f},
-            true,
-            ignore_pitch,
-            DENG_COORD_AXIS_Y 
-        );
-    }
-
-
-    void __CameraBase::moveZ(deng_vec_t delta, deng_bool_t ignore_pitch) {
-        m_cam_mat.moveCamera (
-            dengMath::vec3<deng_vec_t>{0.0f, 0.0f, delta},
-            true,
-            ignore_pitch,
-            DENG_COORD_AXIS_Z 
-        );
-    }
-
-    
-    /*
-     * Following methods are for rotating the camera in its coordinate system
-     */
-    void __CameraBase::rotU(deng_vec_t rot) {
-        m_cam_mat.setCameraRotation(rot, 0);
-    }
-
-
-    void __CameraBase::rotV(deng_vec_t rot) {
-        m_cam_mat.setCameraRotation(0, rot);
-    }
-
-
-    /*
-     * Following methods are for rotating the camera in origin specific coordinate system
-     */
-    void __CameraBase::rotX(deng_vec_t rot) {
-        m_cam_mat.setOriginRotation (
-            {m_origin.first, m_origin.second, m_origin.third},
-            rot,
-            0
-        );
-    }
-
-
-    void __CameraBase::rotY(deng_vec_t rot) {
-        m_cam_mat.setOriginRotation (
-            {m_origin.first, m_origin.second, m_origin.third},
-            0,
-            rot
-        );
-    }
-
-
-    dengMath::mat4<deng_vec_t> __CameraBase::getCamMat() { return m_cam_mat.getTransformMat(); }
-    dengMath::mat4<deng_vec_t> __CameraBase::getProjMat() { return m_proj_mat.getProjectionMatrix(); }
-
-
-    /**********************************/
-    /*********** Event base ***********/
-    /**********************************/
-
-    __EventBase::__EventBase (
+    __Event3DBase::__Event3DBase (
 		const dengMath::vec2<deng_VCPOverflowAction> &vcp_act,
 		const dengMath::vec2<dengMath::vec2<deng_px_t>> &vc_bounds,
 		const dengMath::vec2<deng_f64_t> &max_rot,
@@ -215,27 +92,26 @@ namespace deng {
 
 
     /// Camera mouse update method 
-    /// This method updates mouse cursor position in Window instance as well as
-    /// externally available MouseInputInfo
-    void __EventBase::__updateMouseEvData() {
+    void __Event3DBase::__updateCameraMousePos() {
         m_mouse_pos = m_p_win->getMPos();
     }
 
 
-    /// Find the current mouse control rotation 
-    dengMath::vec2<deng_f64_t> __EventBase::__getMouseRotation() {
+    /// Find the current mouse rotation 
+    dengMath::vec2<deng_f64_t> __Event3DBase::__getMouseRotation() {
         dengMath::vec2<deng_f64_t> out_rot;
-        out_rot.first = (deng_f64_t) m_mouse_pos.second / (deng_f64_t) m_vc_bounds.second.second * m_max_rot.first;
-        out_rot.second = (deng_f64_t) m_mouse_pos.first / (deng_f64_t) m_vc_bounds.first.second * m_max_rot.second; 
+        out_rot.first = static_cast<deng_f64_t>(m_mouse_pos.second) / static_cast<deng_f64_t>(m_vc_bounds.second.second) * m_max_rot.first;
+        out_rot.second = static_cast<deng_f64_t>(m_mouse_pos.first) / static_cast<deng_f64_t>(m_vc_bounds.first.second) * m_max_rot.second; 
         return out_rot;
     }
 
         
-    /// Check if input input conditions are satified for certain action
-    deng_bool_t __EventBase::__checkInputAction(deng_CameraAction action) {
+    /// Check if input conditions are satisfied for certain action
+    deng_bool_t __Event3DBase::__checkInputAction(deng_CameraAction action) {
         deng_InputEv *evs = NULL;
-        switch(action)
-        {
+
+        // Check the current requested action type and unmask its bindings into array
+        switch(action) {
         case DENG_CAMERA_ACTION_MOV_U:
             evs = deng_UnmaskInput(m_bindings.mov_u);
             break;
@@ -315,15 +191,17 @@ namespace deng {
         case DENG_CAMERA_ACTION_CHANGE_MM:
             evs = deng_UnmaskInput(m_bindings.ch_vcp);
             break;
-
         default:
             break;
         }
 
-        // Check if input button or key is active
+        // For each input id in input bits, perform array input id check 
         deng_bool_t out = true;
-        for(int i = 0; i < MAX_KEY_COMBO; i++) {
+        for(deng_i32_t i = 0; i < MAX_KEY_COMBO; i++) {
+            // In case no binding was specified skip the iteration
             if(evs[i].key == DENG_KEY_UNKNOWN) continue;
+
+            // Check if the key status is active for certain event to occur 
             else if(evs[i].key <= DENG_KEY_LAST && evs[i].key >= DENG_KEY_FIRST) {
                 if(!__deng_FindKeyStatus(evs[i].key, DENG_MOUSE_BTN_UNKNOWN, DENG_INPUT_TYPE_KB,
                    DENG_INPUT_EVENT_TYPE_ACTIVE)) {
@@ -340,6 +218,7 @@ namespace deng {
                 }
             }
 
+            // Check if new mouse position exceeds the limit and set the event flag as false if needed
             else if(evs[i].md_mov <= DENG_MOUSE_DELTA_LAST && evs[i].md_mov >= DENG_MOUSE_DELTA_LAST) {
                 dengMath::vec2<deng_px_t> delta = m_p_win->getMDelta();
                 switch(evs[i].md_mov) {

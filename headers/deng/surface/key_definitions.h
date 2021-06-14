@@ -239,6 +239,11 @@ typedef enum deng_MouseDeltaMovement {
 } deng_MouseDeltaMovement;
 
 
+/// NOTE: In DENG all active input device events are masked into a single 64bit integer with the input event index being
+/// 8 bits wide. This means that the 64 bit integer can store up to 8 different masked events, which allows to create
+/// keybindings with up to 8 keys very efficiently.
+
+
 /// Universal union for specifying input information
 typedef union {
     deng_Key key;

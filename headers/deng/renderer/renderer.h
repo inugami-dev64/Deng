@@ -66,6 +66,7 @@
 #ifdef __RENDERER_CPP
     #include <vector>
     #include <thread>
+    #include <chrono>
     #include <mutex>
     #include <queue>
     #include <memory>
@@ -80,7 +81,6 @@
 
     #include <math/deng_math.h>
     #include <deng/window.h>
-    #include <utils/timer.h>
     #include <deng/camera.h>
 
     #include <deng/registry/registry.h>

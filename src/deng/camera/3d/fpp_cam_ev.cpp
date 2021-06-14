@@ -60,27 +60,25 @@
  */ 
 
 
-#define __FPP_CAM_CPP
-#include <deng/camera/fpp_cam.h>
+#define __FPP_CAM_EV_CPP
+#include <deng/camera/3d/fpp_cam_ev.h>
 
 
 namespace deng {
-
-    /*********************************************/
-    /****** First person perspective camera ******/
-    /*********************************************/
     
     __FPPCameraEv::__FPPCameraEv (
         Window *p_win,
         const dengMath::vec2<deng_f64_t> &mouse_sens,
         const dengMath::vec3<deng_vec_t> &camera_mov_sens
-    ) : __EventBase (
+    ) : __Event3DBase (
             {
                 DENG_VCP_OVERFLOW_ACTION_TO_OPPOSITE_POSITION, 
                 DENG_VCP_OVERFLOW_ACTION_BLOCK_POSITION
             },
-            {{static_cast<deng_px_t>(-BASE_MAX_VC_X / mouse_sens.first), static_cast<deng_px_t>(BASE_MAX_VC_X / mouse_sens.first)}, 
-			 {static_cast<deng_px_t>(-BASE_MAX_VC_Y / mouse_sens.second), static_cast<deng_px_t>(BASE_MAX_VC_Y / mouse_sens.second)}},
+            {
+                { static_cast<deng_px_t>(-BASE_MAX_VC_X / mouse_sens.first), static_cast<deng_px_t>(BASE_MAX_VC_X / mouse_sens.first) }, 
+			    { static_cast<deng_px_t>(-BASE_MAX_VC_Y / mouse_sens.second), static_cast<deng_px_t>(BASE_MAX_VC_Y / mouse_sens.second) }
+            },
             { PI / 2, PI * 2 },
             p_win
     ) {
@@ -92,9 +90,7 @@ namespace deng {
     }
 
 
-    /* 
-     * Find the current movement type and direction 
-     */
+    /// Find the current movement type and direction 
     void __FPPCameraEv::__findMovements() {
         deng_bool_t mov_nw = __checkInputAction(DENG_CAMERA_ACTION_MOV_NW);
         deng_bool_t mov_w = __checkInputAction(DENG_CAMERA_ACTION_MOV_W);
@@ -118,20 +114,15 @@ namespace deng {
     }
 
     
-    /* 
-     * Check if input FPP camera mouse input mode has changed 
-     * This method is not thread safe and can cause race conditions, make sure that __ext_md.mut is locked!
-     */
+    /// Check if input FPP camera mouse input mode has changed 
     void __FPPCameraEv::__checkForInputModeChange(dengMath::CameraMatrix *p_vm) {
-        __EventBase::__updateMouseEvData();
+        __Event3DBase::__updateCameraMousePos();
 
         // Check if input mode should be changed ([ESC] key)
-        if (
-            m_input_mode_timer.isTimePassed(DENG_KEY_PRESS_INTERVAL) &&
-            __checkInputAction(DENG_CAMERA_ACTION_CHANGE_MM)
-        ) {
+        if(m_input_mode_timer.count() > DENG_INPUT_EV_COUNT && 
+           __checkInputAction(DENG_CAMERA_ACTION_CHANGE_MM)) {
             m_p_win->toggleVCMode();
-			m_input_mode_timer.setNewTimePoint();
+            m_input_mode_timer = std::chrono::milliseconds(0);
         }
 
 
@@ -139,7 +130,7 @@ namespace deng {
         // if true then update camera rotation and key events
         if(m_p_win->isVCP()) {
             __findMovements();
-            dengMath::vec2<deng_f64_t> rot = __EventBase::__getMouseRotation();
+            dengMath::vec2<deng_f64_t> rot = __Event3DBase::__getMouseRotation();
             p_vm->setCameraRotation (
                 (deng_vec_t) rot.first, 
                 (deng_vec_t) rot.second
@@ -155,17 +146,14 @@ namespace deng {
     }
 
 
-    /*
-     * Check for input mode changes and move camera if needed
-     */
+    /// Check for input mode changes and move camera if needed
     void __FPPCameraEv::updateEv (
         __FPPCamera *p_cam,
         deng_bool_t ignore_pitch
     ) {
         __checkForInputModeChange(p_cam->getCamMatPtr());
-        if (m_mov_timer.isTimePassed(DENG_MOVEMENT_INTERVAL)) {
-            switch (m_movements.first)
-            {
+        if(m_mov_timer.count() > DENG_MOVEMENT_INTERVAL) {
+            switch (m_movements.first) {
             case DENG_MOVEMENT_LEFTWARD:
                 p_cam->moveU(-m_move_speed.first, ignore_pitch);
                 break;
@@ -196,8 +184,7 @@ namespace deng {
                 break;
             }
 
-            switch (m_movements.third)
-            {
+            switch (m_movements.third) {
             case DENG_MOVEMENT_FORWARD:
                 p_cam->moveW(-m_move_speed.first, ignore_pitch);
                 break;
@@ -209,31 +196,26 @@ namespace deng {
             default:
                 break;
             }
-            m_mov_timer.setNewTimePoint();
+
+            m_mov_timer = std::chrono::milliseconds(0);
         }
     }
 
 
-    /*
-     * Get the pointer to the window instance
-     */
+    /// Get the pointer to the window instance
     Window *__FPPCameraEv::getWinPtr() {
         return m_p_win;
     }
 
     
-    /*
-     * Set the window pointer
-     */
+    /// Set the window pointer
     void __FPPCameraEv::setWinPtr(Window *p_win) {
         m_p_win = p_win;
     }
 
 
-    /*
-     * Find the correct movement speed
-     * Parameters for this method are boolean flags about the axis being opposite or not
-     */
+    /// Find the correct movement speed
+    /// Parameters for this method are boolean flags about the axis being opposite or not
     dengMath::vec4<deng_vec_t> __FPPCameraEv::getMoveSpeed (
         deng_bool_t op_x,
         deng_bool_t op_y,
@@ -255,69 +237,4 @@ namespace deng {
 
         return move_speed; 
     } 
-
-
-    /************************************/
-    /************************************/
-    /************ __FPPCamera ***********/
-    /************************************/
-    /************************************/
-
-    __FPPCamera::__FPPCamera (
-        const dengMath::vec3<deng_vec_t> &camera_mov_sens, 
-		const dengMath::vec2<deng_f64_t> &mouse_sens, 
-		deng_vec_t fov, 
-		deng_vec_t near_plane, 
-		deng_vec_t far_plane, 
-        deng_bool_t ignore_pitch_mov,
-		Window *p_win
-	) : __FPPCameraEv (
-            p_win,
-            mouse_sens, 
-            camera_mov_sens
-        ),
-        __CameraBase (
-            DENG_CAMERA_TYPE_FPP,
-            fov,
-            {near_plane, far_plane},
-            (deng_vec_t) __FPPCameraEv::getWinPtr()->getSize().first / (deng_vec_t) __FPPCameraEv::getWinPtr()->getSize().second
-        ) {
-        __FPPCameraEv::setWinPtr(p_win);
-    }
-
-
-    /* 
-     * __FPPCamera wrapper method for event update 
-     */
-    void __FPPCamera::update() {
-        updateEv (
-            this, 
-            m_is_pitch_ignore
-        );
-    }
-
-    
-    /*
-     * Set first person camera control bindings
-     */
-    void __FPPCamera::setBindings(const Camera3DBindings &bindings) {
-        m_bindings = bindings;
-    }
-
-    
-    /*
-     * Check if camera movement system should ignore pitch rotation, when translating
-     * movements into camera coordinate system.
-     */
-    deng_bool_t __FPPCamera::isPitchIgnore() {
-        return m_is_pitch_ignore;
-    }
-
-
-    /*
-     * Get the pointer to camera matrix instance
-     */
-    dengMath::CameraMatrix *__FPPCamera::getCamMatPtr() {
-        return &m_cam_mat;
-    }
 }

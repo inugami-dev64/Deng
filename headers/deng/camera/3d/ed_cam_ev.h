@@ -57,39 +57,33 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: ed_cam_ev - world editor camera event system
+ *  Purpose: Provide a base class for handling 3D world editor camera events
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __ED_CAM_H
-#define __ED_CAM_H
+#ifndef __ED_CAM_EV_H
+#define __ED_CAM_EV_H
 
 
-#ifdef __ED_CAM_CPP
-    #include <stdlib.h>
-    #include <mutex>
-    #include <cmath>
+#ifdef __ED_CAM_EV_CPP
     #include <vulkan/vulkan.h>
-
     #include <common/base_types.h>
-    #include <common/err_def.h>
     #include <data/assets.h>
-
-    #include <math/vec2.h>
-    #include <math/vec3.h>
-    #include <math/vec4.h>
-    #include <math/mat3.h>
-    #include <math/mat4.h>
-    #include <math/conversion.h>
-    #include <math/projection_mat.h>
-    #include <math/camera_mat.h>
+    
+    #include <math/deng_math.h>
     #include <deng/window.h>
-    #include <deng/camera/cam_base.h>
+    #include <deng/camera/3d/cam_bindings.h>
+    #include <deng/camera/3d/ev_base.h>
 #endif
+
 
 namespace deng {
     
     /// Event handler class for editor camera
-    class __EditorCameraEv : protected __EventBase {
+    class __EditorCameraEv : protected __Event3DBase {
     private:
         deng_EditorCameraEvent m_editor_cam_ev;
         dengMath::vec2<deng_f64_t> m_last_rot = {0, 0};
@@ -98,37 +92,28 @@ namespace deng {
 
     protected:
         /// Set the default camera rotation and position values
-        void __initCamera (
-            dengMath::CameraMatrix *p_vm,
-            const dengMath::vec4<deng_vec_t> &origin
-        );
-
-    public:
-        __EditorCameraEv (
-            const dengMath::vec2<deng_f64_t> &mouse_sens,
-            deng_vec_t zoom_step,
-            const dengMath::vec3<deng_vec_t> &origin,
-            Window *p_ww
-        );
+        void __initCamera(dengMath::CameraMatrix *p_vm, const dengMath::vec4<deng_vec_t> &origin);
 
         
         /// Check if any camera events have occured
-        void findEditorEvent();
+        void __findEditorEvent();
 
 
         /// Zoom in the editor camera 
-        void zoomIn(dengMath::CameraMatrix *p_vm);
+        void __zoomIn(dengMath::CameraMatrix *p_vm);
 
 
         /// Zoom out the editor camera
-        void zoomOut(dengMath::CameraMatrix *p_vm);
+        void __zoomOut(dengMath::CameraMatrix *p_vm);
+
+
+    public:
+        __EditorCameraEv(const dengMath::vec2<deng_f64_t> &mouse_sens, deng_vec_t zoom_step,
+            const dengMath::vec3<deng_vec_t> &origin, Window *p_ww);
         
 
-        /// Main update method for editor camera system
-        void updateEv (
-            dengMath::vec3<deng_vec_t> origin,
-            dengMath::CameraMatrix *p_vm
-        );
+        /// Check new editor camera events from IO bindings and perform camera updates
+        void updateEv(dengMath::vec3<deng_vec_t> origin, dengMath::CameraMatrix *p_vm);
 
 
         /// Set the editor camera bindings
@@ -141,36 +126,6 @@ namespace deng {
         
         /// Set the window pointer
         void setWinPtr(Window *p_win);
-    };
-
-
-    /// Main class for editor camera instance creation
-    class __EditorCamera : private __EditorCameraEv, public __CameraBase {
-    private:
-        dengMath::vec3<deng_vec_t> m_origin;
-
-    public:
-        __EditorCamera (
-            deng_vec_t zoom_step,
-            const dengMath::vec3<deng_vec_t> &origin,
-            const dengMath::vec2<deng_f64_t> &mouse_sens,
-            deng_vec_t FOV,
-            deng_vec_t near_plane,
-            deng_vec_t far_plane,
-            Window *p_ww
-        );
-        
-
-        /// Move origin point in world coordinate system by delta_mov
-        void moveOrigin(const dengMath::vec3<deng_vec_t> &delta_mov); 
-
-        
-        /// Set camera control bindings for editor camera system
-        void setBindings(const Camera3DBindings &bindings);
-
-
-        /// Wrapper method for updating camera events
-        void update();
     };
 }
 

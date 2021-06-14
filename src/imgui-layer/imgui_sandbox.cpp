@@ -60,7 +60,6 @@
  */ 
 
 
-#include "imgui.h"
 #define __IMGUI_SANDBOX_CPP
 #include <imgui-layer/imgui_sandbox.h>
 
@@ -107,14 +106,14 @@ namespace deng {
 
             ImGui ::NewFrame();
                 // This is a custom test window sample
-                //ImGui::Begin("Test window", NULL, ImGuiWindowFlags_MenuBar);
-                    //ImGui::Text("This button click prints out appropriate message regarding the button click");
-                    //if(ImGui::Button("Test"))
-                        //LOG("You just clicked a test button");
-                //ImGui::End();
+                ImGui::Begin("Test window", NULL, ImGuiWindowFlags_MenuBar);
+                    ImGui::Text("This button click prints out appropriate message regarding the button click");
+                    if(ImGui::Button("Test"))
+                        LOG("You just clicked a test button");
+                ImGui::End();
 
                 // Use this to test functionality
-                ImGui::ShowDemoWindow();
+                //ImGui::ShowDemoWindow();
             ImGui::EndFrame();
 
             ImGui::Render();

@@ -57,30 +57,65 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: ed_cam - 3D world editor camera
+ *  Purpose: Provide a class for handling 3D world editor camera system
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
-#define __TIMER_CPP
-#include <utils/timer.h>
+#ifndef __ED_CAM_H
+#define __ED_CAM_H
 
-namespace dengUtils {
-    deng_ui64_t Timer::getTime() {
-        return (deng_ui64_t)std::chrono::duration_cast<std::chrono::milliseconds> 
-            (std::chrono::system_clock::now().time_since_epoch()).count();
-    }
 
-    //These functions set new time point from epoch
-    void Timer::setNewTimePoint() {
-        m_time_point = getTime();
-    }
+#ifdef __ED_CAM_CPP
+    #include <stdlib.h>
+    #include <mutex>
+    #include <cmath>
+    #include <vulkan/vulkan.h>
 
-    Timer::Timer() {
-        this->setNewTimePoint();
-    }
+    #include <common/base_types.h>
+    #include <common/err_def.h>
+    #include <data/assets.h>
 
-    // Function that returns true if certain amount of time has passed 
-    deng_bool_t Timer::isTimePassed(const deng_ui64_t &ms) {
-        if(getTime() - m_time_point >= ms) return true;
-        else return false; 
-    }
+    #include <math/deng_math.h>
+    #include <deng/window.h>
+    #include <deng/camera/3d/cam_bindings.h>
+    #include <deng/camera/3d/cam_base.h>
+    #include <deng/camera/3d/ev_base.h>
+    #include <deng/camera/3d/ed_cam_ev.h>
+#endif
+
+namespace deng {
+
+    /// Main class for editor camera instance creation
+    class __EditorCamera : private __EditorCameraEv, public __Camera3DBase {
+    private:
+        dengMath::vec3<deng_vec_t> m_origin;
+
+    public:
+        __EditorCamera (
+            deng_vec_t zoom_step,
+            const dengMath::vec3<deng_vec_t> &origin,
+            const dengMath::vec2<deng_f64_t> &mouse_sens,
+            deng_vec_t FOV,
+            deng_vec_t near_plane,
+            deng_vec_t far_plane,
+            Window *p_ww
+        );
+        
+
+        /// Move origin point in world coordinate system by delta_mov
+        void moveOrigin(const dengMath::vec3<deng_vec_t> &delta_mov); 
+
+        
+        /// Set camera control bindings for editor camera system
+        void setBindings(const Camera3DBindings &bindings);
+
+
+        /// Wrapper method for updating camera events
+        void update();
+    };
 }
+
+#endif

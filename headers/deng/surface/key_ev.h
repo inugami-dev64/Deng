@@ -99,8 +99,7 @@ extern "C" {
 deng_InputBits deng_CreateInputMask(deng_ui32_t ev_c, ...);
 
 
-/// Unmask deng_InputBits instance and return array
-/// of deng_InputEv, which size is exactly 8.
+/// Unmask deng_InputBits instance and return a static array of deng_InputEv, which size is exactly 8.
 /// NOTE: Array elements that have no event attached use DENG_KEY_UNKNOWN as a value
 deng_InputEv *deng_UnmaskInput(deng_InputBits bits);
 

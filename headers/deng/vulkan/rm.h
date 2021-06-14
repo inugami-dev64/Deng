@@ -86,7 +86,6 @@
 
     #include <math/deng_math.h>
     #include <deng/window.h>
-    #include <utils/timer.h>
     #include <deng/camera.h>
 
     #include <deng/vulkan/asset_cpy.h>

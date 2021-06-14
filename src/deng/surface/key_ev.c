@@ -64,9 +64,7 @@
 #include <deng/surface/key_ev.h>
 
 
-/*
- * Create new input bitmask from multiple input events
- */
+/// Create new input bitmask from multiple input events
 deng_InputBits deng_CreateInputMask(deng_ui32_t ev_c, ...) {
     deng_InputBits bits = 0;
     va_list args;
@@ -83,22 +81,22 @@ deng_InputBits deng_CreateInputMask(deng_ui32_t ev_c, ...) {
         if(i != 7) bits = bits << 8;
     }
 
-    printf("Input mask bits: 0x%016lx\n", bits);
     return bits;
 }
 
 
-/*
- * Unmask deng_InputBits instance and return array
- * of deng_InputEv, whose size is exactly 8.
- * NOTE: Array elements that have no event attached use DENG_KEY_UNKNOWN as a value
- */
+/// Unmask deng_InputBits instance and return array
+/// of deng_InputEv, whose size is exactly 8.
+/// NOTE: Array elements that have no event index attached use DENG_KEY_UNKNOWN as a value
 deng_InputEv *deng_UnmaskInput(deng_InputBits bits) {
     static deng_InputEv out_ev[8];
     deng_ui32_t ev = DENG_KEY_UNKNOWN;
 
     for(deng_i32_t i = 7; i >= 0; i--) {
+        // If not the last index, shift input bits right
         if(i != 7) bits = bits >> 8;
+
+        // Perform event id unmasking 
         ev = bits & 0b11111111;
 
         if(ev >= DENG_KEY_UNKNOWN && ev <= DENG_KEY_MENU)
@@ -113,10 +111,8 @@ deng_InputEv *deng_UnmaskInput(deng_InputBits bits) {
 }
 
 
-/*
- * Register new keyevent to key register
- * This function is meant to be called only by DENG platform dependant surface instances
- */
+/// Register new keyevent to key register
+/// This function is meant to be called only by DENG platform dependant surface instances
 void __deng_RegisterKeyEvent (
     deng_Key key, 
     deng_MouseButton btn, 
@@ -124,8 +120,7 @@ void __deng_RegisterKeyEvent (
     deng_InputEventType ev_type
 ) {
     if(in_type == DENG_INPUT_TYPE_KB) {
-        if(key == DENG_KEY_UNKNOWN) 
-            return;
+        if(key == DENG_KEY_UNKNOWN) return;
         if(ev_type == DENG_INPUT_EVENT_TYPE_ACTIVE) {
             active_ev[key] = true;
             released_ev[key] = false;
@@ -137,8 +132,7 @@ void __deng_RegisterKeyEvent (
     }
 
     else if(in_type == DENG_INPUT_TYPE_MOUSE) {
-        if(btn == DENG_MOUSE_BTN_UNKNOWN)
-            return;
+        if(btn == DENG_MOUSE_BTN_UNKNOWN) return;
         if(ev_type == DENG_INPUT_EVENT_TYPE_ACTIVE) {
             active_ev[btn] = true;
             released_ev[btn] = false;
@@ -181,18 +175,8 @@ deng_bool_t __deng_FindKeyStatus (
 }
 
 
-/*
- * Clean released key and mouse button array 
- */
+/// Clean released key and mouse button array 
 void __deng_UnreleaseKeys() {
-    memset (
-        released_ev, 
-        0x00, 
-        C_ARR_SIZE(released_ev)
-    );
-    memset (
-        released_ev, 
-        0x00, 
-        C_ARR_SIZE(released_ev)
-    );
+    memset(released_ev, 0x00, C_ARR_SIZE(released_ev));
+    memset(released_ev, 0x00, C_ARR_SIZE(released_ev));
 }

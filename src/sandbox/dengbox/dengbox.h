@@ -68,6 +68,7 @@
     #include <vector>
 	#include <array>
     #include <thread>
+    #include <chrono>
     #include <mutex>
     #include <queue>
     #include <vulkan/vulkan.h>
@@ -84,7 +85,6 @@
     #include <math/deng_math.h>
     #include <deng/window.h>
 
-    #include <utils/timer.h>
     #include <utils/font.h>
     #include <deng/registry/registry.h>
     #include <deng/lighting/light_man.h>

@@ -57,29 +57,54 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: cam_bindings - 3D camera bindings
+ *  Purpose: Provide a structure for controlling 3D camera control bindings 
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __TIMER_H
-#define __TIMER_H
+#ifndef __CAM_BINDINGS_H
+#define __CAM_BINDINGS_H
 
-#ifdef __TIMER_CPP
-    #include <chrono>   
-    #include <common/base_types.h>
-#endif
+namespace deng {
 
-namespace dengUtils {
-    
-    class Timer {
-    private:
-        deng_ui64_t getTime();
-        deng_ui64_t m_time_point;
+    /// NOTE: This structure uses input bits instead of regular input event keys
+    struct Camera3DBindings {
+        // Movements according to camera's coordinate system
+        deng_InputBits mov_u = DENG_KEY_UNKNOWN;
+        deng_InputBits mov_nu = DENG_KEY_UNKNOWN;
+        deng_InputBits mov_v = DENG_KEY_UNKNOWN;
+        deng_InputBits mov_nv = DENG_KEY_UNKNOWN;
+        deng_InputBits mov_w = DENG_KEY_UNKNOWN;
+        deng_InputBits mov_nw = DENG_KEY_UNKNOWN;
         
-    public:
-        void setNewTimePoint();
-        deng_bool_t isTimePassed(const deng_ui64_t &ms);
-        void delay();
-        Timer();
+        // Movements according to world's coordinate system
+        deng_InputBits mov_x = DENG_KEY_UNKNOWN;
+        deng_InputBits mov_nx = DENG_KEY_UNKNOWN;
+        deng_InputBits mov_y = DENG_KEY_UNKNOWN;
+        deng_InputBits mov_ny = DENG_KEY_UNKNOWN;
+        deng_InputBits mov_z = DENG_KEY_UNKNOWN;
+        deng_InputBits mov_nz = DENG_KEY_UNKNOWN;
+
+        // Rotations according to camera coordinate system (pitch, yaw roll)
+        deng_InputBits rot_u = DENG_KEY_UNKNOWN;
+        deng_InputBits rot_nu = DENG_KEY_UNKNOWN;
+        deng_InputBits rot_v = DENG_KEY_UNKNOWN;
+        deng_InputBits rot_nv = DENG_KEY_UNKNOWN;
+        deng_InputBits rot_w = DENG_KEY_UNKNOWN;
+        deng_InputBits rot_nw = DENG_KEY_UNKNOWN;
+
+        // Rotations according to origin point (default word origin)
+        deng_InputBits rot_x = DENG_KEY_UNKNOWN;
+        deng_InputBits rot_nx = DENG_KEY_UNKNOWN;
+        deng_InputBits rot_y = DENG_KEY_UNKNOWN;
+        deng_InputBits rot_ny = DENG_KEY_UNKNOWN;
+        deng_InputBits rot_z = DENG_KEY_UNKNOWN;
+        deng_InputBits rot_nz = DENG_KEY_UNKNOWN;
+
+        // Mask for mouse input mode changing bindings
+        deng_InputBits ch_vcp = DENG_KEY_UNKNOWN;
     };
 }
 

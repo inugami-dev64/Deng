@@ -87,7 +87,6 @@
     
     #include <math/deng_math.h>
     #include <deng/window.h>
-    #include <utils/timer.h>
     #include <utils/font.h>
     #include <deng/camera.h>
     #include <deng/registry/registry.h>

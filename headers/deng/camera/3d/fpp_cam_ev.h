@@ -58,97 +58,90 @@
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
  * ----------------------------------------------------------------
- *  Name: asset_man - Asset manager parent for Renderer class
- *  Purpose: Provide interface for interacting with assets and textures
+ *  Name: fpp_cam_ev - first person perspective camera event system
+ *  Purpose: Provide a base class for handling first person camera events
  *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __ASSET_MAN_H
-#define __ASSET_MAN_H
+#ifndef __FPP_CAM_EV_H
+#define __FPP_CAM_EV_H
 
-#ifdef __ASSET_MAN_CPP
-    #include <stdlib.h>
-    #include <vector>
-    #include <array>
-    #include <mutex>
-    #include <memory>
-    #include <queue>
+
+#ifdef __FPP_CAM_EV_CPP
+    #include <chrono>
+
     #include <vulkan/vulkan.h>
-
     #include <common/base_types.h>
-    #include <common/err_def.h>
-    #include <common/hashmap.h>
     #include <data/assets.h>
-    #include <math/deng_math.h>
-    
-    #include <deng/window.h>
-    #include <deng/camera.h>
-    #include <deng/registry/registry.h>
-    #include <imgui-layer/imgui_entity.h>
 
-    #include <utils/font.h>
-    #include <deng/vulkan/renderer.h>
+    #include <math/deng_math.h>
+    #include <deng/window.h>
+    #include <deng/camera/3d/cam_bindings.h>
+    #include <deng/camera/3d/ev_base.h>
 #endif
 
 
 namespace deng {
 
-    class __AssetManager {
+    /// FPPCamera forward declaration, needed in update method
+    class __FPPCamera;
+
+
+    /// Perspective first person camera event class
+    class __FPPCameraEv : protected __Event3DBase {
     private:
-        std::shared_ptr<vulkan::__vk_ConfigVars> &m_vk_vars;
-        std::shared_ptr<vulkan::__vk_Renderer> &m_vk_rend;
-        std::queue<deng_Id> m_asset_queue;
-        std::queue<deng_Id> m_texture_queue;
-
-        // Bookkeeping variables for assets
-        deng_ui32_t m_vu2d_c = 0;
-        deng_ui32_t m_vm2d_c = 0;
-        deng_ui32_t m_vu3d_c = 0;
-        deng_ui32_t m_vm3d_c = 0;
-
-    private:
-        /// Increment asset type instance count
-        void __assetTypeIncr(das_Asset &asset);
-
-    protected:
-        deng_RendererHintBits &m_api_bits;
-
-        __GlobalRegistry m_reg;
-        std::vector<deng_Id> m_assets;
-        std::vector<deng_Id> m_textures;
+        // NEED TO BE REPLACED WITH STD::CHRONO CALLS ! ! !
+        //dengUtils::Timer m_mov_timer;
+        //dengUtils::Timer m_input_mode_timer;
         
+        std::chrono::duration<deng_ui64_t, std::milli> m_mov_timer = std::chrono::milliseconds(0); 
+        std::chrono::duration<deng_ui64_t, std::milli> m_input_mode_timer = std::chrono::milliseconds(0);
+        dengMath::vec4<deng_vec_t> m_move_speed;
+        dengMath::vec3<deng_MovementEvent> m_movements;
+
+    private:
+        void __findMovements();
+        void __checkForInputModeChange(dengMath::CameraMatrix *p_cm);
+        void __update(__FPPCamera *p_cam);
+        deng_bool_t __keyEvHandler(deng_Key key);
+
     public:
-        __AssetManager(std::shared_ptr<vulkan::__vk_Renderer> &vk_rend,
-            std::shared_ptr<vulkan::__vk_ConfigVars> &vk_vars, deng_RendererHintBits &api);
-
-        /// Add texture id to submission queue
-        /// PS! Texture UUIDs have to be generated before submitting them
-        void submitTexture(das_Texture &texture);
-
-
-        /// Add asset id to submission queue
-        /// PS! Asset UUIDs have to be generated before submitting them
-        void submitAsset(das_Asset &asset);
+        __FPPCameraEv (
+            Window *p_win,
+            const dengMath::vec2<deng_f64_t> &mouse_sens,
+            const dengMath::vec3<deng_vec_t> &camera_mov_speed
+        );
 
 
-        /// Submit all assets to in submission queue to renderer
-        void submitAssetQueue();
+        /// Find the correct movement speed
+        /// Parameters for this method are boolean flags about the axis being opposite or not
+        dengMath::vec4<deng_vec_t> getMoveSpeed(deng_bool_t op_x,
+            deng_bool_t op_y, deng_bool_t op_z);
 
 
-        /// Submit all textures in submission queue to renderer
-        void submitTextureQueue();
+        /// Check for input mode changes and move camera if needed
+        void updateEv(__FPPCamera *p_cam, deng_bool_t ignore_pitch);
 
 
-        /// Push asset to renderer and initialise it, possibly reallocate vertices buffer if needed
-        /// PS! Asset UUIDs have to be generated before push and renderer must be setup
-        void pushAsset(das_Asset &asset);
+        /// Set the first person perspective camera bindings
+        void setBindings(const Camera3DBindings &bindings);
 
+        
+        /// Get the pointer to the window instance
+        Window *getWinPtr();
 
-        /// Push texture to renderer and initialise it, possibly reallocate texture memory if needed,
-        /// PS! Texture UUIDs have to be generated before submitting them and renderer must be setup
-        void pushTexture(das_Texture &texture);
+        
+        /// Set the window pointer
+        void setWinPtr(Window *p_win);
     };
 }
+
+
+#ifdef __FPP_CAM_EV_CPP
+    #include <deng/camera/3d/cam_base.h>
+    #include <deng/camera/3d/fpp_cam.h>
+#endif
+
 
 #endif

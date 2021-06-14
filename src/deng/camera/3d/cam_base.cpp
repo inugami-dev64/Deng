@@ -57,98 +57,84 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
- * ----------------------------------------------------------------
- *  Name: asset_man - Asset manager parent for Renderer class
- *  Purpose: Provide interface for interacting with assets and textures
- *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __ASSET_MAN_H
-#define __ASSET_MAN_H
-
-#ifdef __ASSET_MAN_CPP
-    #include <stdlib.h>
-    #include <vector>
-    #include <array>
-    #include <mutex>
-    #include <memory>
-    #include <queue>
-    #include <vulkan/vulkan.h>
-
-    #include <common/base_types.h>
-    #include <common/err_def.h>
-    #include <common/hashmap.h>
-    #include <data/assets.h>
-    #include <math/deng_math.h>
-    
-    #include <deng/window.h>
-    #include <deng/camera.h>
-    #include <deng/registry/registry.h>
-    #include <imgui-layer/imgui_entity.h>
-
-    #include <utils/font.h>
-    #include <deng/vulkan/renderer.h>
-#endif
+#define __CAM_BASE_CPP
+#include <deng/camera/3d/cam_base.h>
 
 
 namespace deng {
 
-    class __AssetManager {
-    private:
-        std::shared_ptr<vulkan::__vk_ConfigVars> &m_vk_vars;
-        std::shared_ptr<vulkan::__vk_Renderer> &m_vk_rend;
-        std::queue<deng_Id> m_asset_queue;
-        std::queue<deng_Id> m_texture_queue;
-
-        // Bookkeeping variables for assets
-        deng_ui32_t m_vu2d_c = 0;
-        deng_ui32_t m_vm2d_c = 0;
-        deng_ui32_t m_vu3d_c = 0;
-        deng_ui32_t m_vm3d_c = 0;
-
-    private:
-        /// Increment asset type instance count
-        void __assetTypeIncr(das_Asset &asset);
-
-    protected:
-        deng_RendererHintBits &m_api_bits;
-
-        __GlobalRegistry m_reg;
-        std::vector<deng_Id> m_assets;
-        std::vector<deng_Id> m_textures;
-        
-    public:
-        __AssetManager(std::shared_ptr<vulkan::__vk_Renderer> &vk_rend,
-            std::shared_ptr<vulkan::__vk_ConfigVars> &vk_vars, deng_RendererHintBits &api);
-
-        /// Add texture id to submission queue
-        /// PS! Texture UUIDs have to be generated before submitting them
-        void submitTexture(das_Texture &texture);
+    __Camera3DBase::__Camera3DBase (
+        deng_CameraType type,
+        deng_vec_t fov,
+        const dengMath::vec2<deng_vec_t> &planes,
+        deng_vec_t aspect_ratio
+    ) : m_cam_mat(type),
+        m_proj_mat(fov, planes, aspect_ratio) { m_fov = fov; }
 
 
-        /// Add asset id to submission queue
-        /// PS! Asset UUIDs have to be generated before submitting them
-        void submitAsset(das_Asset &asset);
+    /// Following methods are for moving the camera position in its coordinate system
+    void __Camera3DBase::moveU(deng_vec_t delta, deng_bool_t ignore_pitch) {
+        m_cam_mat.moveCamera(dengMath::vec3<deng_vec_t>{delta, 0.0f, 0.0f}, false,
+            ignore_pitch, DENG_COORD_AXIS_X);
+    }
 
 
-        /// Submit all assets to in submission queue to renderer
-        void submitAssetQueue();
+    void __Camera3DBase::moveV(deng_vec_t delta, deng_bool_t ignore_pitch) {
+        m_cam_mat.moveCamera(dengMath::vec3<deng_vec_t>{0.0f, delta, 0.0f}, false,
+            ignore_pitch, DENG_COORD_AXIS_Y );
+    }
 
 
-        /// Submit all textures in submission queue to renderer
-        void submitTextureQueue();
+    void __Camera3DBase::moveW(deng_vec_t delta, deng_bool_t ignore_pitch) {
+        m_cam_mat.moveCamera(dengMath::vec3<deng_vec_t>{0.0f, 0.0f, delta},
+            false, ignore_pitch, DENG_COORD_AXIS_Z);
+    }
 
 
-        /// Push asset to renderer and initialise it, possibly reallocate vertices buffer if needed
-        /// PS! Asset UUIDs have to be generated before push and renderer must be setup
-        void pushAsset(das_Asset &asset);
+    /// Following methods are for moving the camera's position in world coordinate system
+    void __Camera3DBase::moveX(deng_vec_t delta, deng_bool_t ignore_pitch) {
+        m_cam_mat.moveCamera(dengMath::vec3<deng_vec_t>{delta, 0.0f, 0.0f},
+            true, ignore_pitch, DENG_COORD_AXIS_X);
+    }
 
 
-        /// Push texture to renderer and initialise it, possibly reallocate texture memory if needed,
-        /// PS! Texture UUIDs have to be generated before submitting them and renderer must be setup
-        void pushTexture(das_Texture &texture);
-    };
+    void __Camera3DBase::moveY(deng_vec_t delta, deng_bool_t ignore_pitch) {
+        m_cam_mat.moveCamera(dengMath::vec3<deng_vec_t>{0.0f, delta, 0.0f}, true,
+            ignore_pitch, DENG_COORD_AXIS_Y );
+    }
+
+
+    void __Camera3DBase::moveZ(deng_vec_t delta, deng_bool_t ignore_pitch) {
+        m_cam_mat.moveCamera(dengMath::vec3<deng_vec_t>{0.0f, 0.0f, delta}, true,
+            ignore_pitch, DENG_COORD_AXIS_Z );
+    }
+
+    
+    /// Following methods are for rotating the camera in its coordinate system
+    void __Camera3DBase::rotU(deng_vec_t rot) {
+        m_cam_mat.setCameraRotation(rot, 0);
+    }
+
+
+    void __Camera3DBase::rotV(deng_vec_t rot) {
+        m_cam_mat.setCameraRotation(0, rot);
+    }
+
+
+    /// Following methods are for rotating the camera in origin specific coordinate system
+    void __Camera3DBase::rotX(deng_vec_t rot) {
+        m_cam_mat.setOriginRotation({m_origin.first, m_origin.second, m_origin.third}, rot, 0);
+    }
+
+
+    void __Camera3DBase::rotY(deng_vec_t rot) { 
+        m_cam_mat.setOriginRotation({m_origin.first, m_origin.second, m_origin.third}, 0, rot);
+    }
+
+
+    dengMath::mat4<deng_vec_t> __Camera3DBase::getCamMat() { return m_cam_mat.getTransformMat(); }
+    dengMath::mat4<deng_vec_t> __Camera3DBase::getProjMat() { return m_proj_mat.getProjectionMatrix(); }
 }
-
-#endif

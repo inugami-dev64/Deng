@@ -80,7 +80,6 @@
     #include <common/err_def.h>
     #include <data/assets.h>
 
-    #include <utils/timer.h>
     #include <math/deng_math.h>
     #include <deng/window.h>
     #include <deng/camera.h>

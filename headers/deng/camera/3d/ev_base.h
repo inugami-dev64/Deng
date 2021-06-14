@@ -58,96 +58,63 @@
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
  * ----------------------------------------------------------------
- *  Name: asset_man - Asset manager parent for Renderer class
- *  Purpose: Provide interface for interacting with assets and textures
+ *  Name: ev_base - 3D camera event base class
+ *  Purpose: Provide a base class for handling 3D camera events
  *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __ASSET_MAN_H
-#define __ASSET_MAN_H
-
-#ifdef __ASSET_MAN_CPP
-    #include <stdlib.h>
-    #include <vector>
-    #include <array>
-    #include <mutex>
-    #include <memory>
-    #include <queue>
+#ifdef __EV_BASE_CPP
     #include <vulkan/vulkan.h>
-
     #include <common/base_types.h>
-    #include <common/err_def.h>
-    #include <common/hashmap.h>
+
     #include <data/assets.h>
     #include <math/deng_math.h>
-    
     #include <deng/window.h>
-    #include <deng/camera.h>
-    #include <deng/registry/registry.h>
-    #include <imgui-layer/imgui_entity.h>
-
-    #include <utils/font.h>
-    #include <deng/vulkan/renderer.h>
+    
+    #include <deng/camera/3d/cam_bindings.h>
 #endif
+
+
+#ifndef __EV_BASE_H
+#define __EV_BASE_H
+
+
+#define BASE_MAX_VC_X   720
+#define BASE_MAX_VC_Y   180
 
 
 namespace deng {
 
-    class __AssetManager {
-    private:
-        std::shared_ptr<vulkan::__vk_ConfigVars> &m_vk_vars;
-        std::shared_ptr<vulkan::__vk_Renderer> &m_vk_rend;
-        std::queue<deng_Id> m_asset_queue;
-        std::queue<deng_Id> m_texture_queue;
-
-        // Bookkeeping variables for assets
-        deng_ui32_t m_vu2d_c = 0;
-        deng_ui32_t m_vm2d_c = 0;
-        deng_ui32_t m_vu3d_c = 0;
-        deng_ui32_t m_vm3d_c = 0;
-
-    private:
-        /// Increment asset type instance count
-        void __assetTypeIncr(das_Asset &asset);
+    class __Event3DBase {
+    protected:
+        Window *m_p_win = NULL;
+        dengMath::vec2<deng_px_t> m_mouse_pos = dengMath::vec2<deng_px_t>{0, 0};
+        dengMath::vec2<deng_VCPOverflowAction> m_vcp_overflow;
+        dengMath::vec2<dengMath::vec2<deng_px_t>> m_vc_bounds;
+        dengMath::vec2<deng_f64_t> m_max_rot;
+        Camera3DBindings m_bindings;
 
     protected:
-        deng_RendererHintBits &m_api_bits;
 
-        __GlobalRegistry m_reg;
-        std::vector<deng_Id> m_assets;
-        std::vector<deng_Id> m_textures;
-        
+        /// Camera mouse position update method 
+        void __updateCameraMousePos();
+
+
+        /// Find the current mouse control rotation 
+        dengMath::vec2<deng_f64_t> __getMouseRotation();
+
+
+        /// Check if input input conditions are satified for certain action
+        deng_bool_t __checkInputAction(deng_CameraAction action);
+
     public:
-        __AssetManager(std::shared_ptr<vulkan::__vk_Renderer> &vk_rend,
-            std::shared_ptr<vulkan::__vk_ConfigVars> &vk_vars, deng_RendererHintBits &api);
-
-        /// Add texture id to submission queue
-        /// PS! Texture UUIDs have to be generated before submitting them
-        void submitTexture(das_Texture &texture);
-
-
-        /// Add asset id to submission queue
-        /// PS! Asset UUIDs have to be generated before submitting them
-        void submitAsset(das_Asset &asset);
-
-
-        /// Submit all assets to in submission queue to renderer
-        void submitAssetQueue();
-
-
-        /// Submit all textures in submission queue to renderer
-        void submitTextureQueue();
-
-
-        /// Push asset to renderer and initialise it, possibly reallocate vertices buffer if needed
-        /// PS! Asset UUIDs have to be generated before push and renderer must be setup
-        void pushAsset(das_Asset &asset);
-
-
-        /// Push texture to renderer and initialise it, possibly reallocate texture memory if needed,
-        /// PS! Texture UUIDs have to be generated before submitting them and renderer must be setup
-        void pushTexture(das_Texture &texture);
+        __Event3DBase (
+            const dengMath::vec2<deng_VCPOverflowAction> &vcp_act,
+            const dengMath::vec2<dengMath::vec2<deng_px_t>> &vc_bounds,
+            const dengMath::vec2<deng_f64_t> &max_rot,
+            Window *p_win
+        );
     };
 }
 

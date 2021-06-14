@@ -72,6 +72,7 @@
 #ifdef __DATA_UPDATER_CPP
     #include <vector>
     #include <memory>
+    #include <chrono>
     #include <queue>
     #include <vulkan/vulkan.h>
 
@@ -82,7 +83,6 @@
 
     #include <math/deng_math.h>
     #include <deng/window.h>
-    #include <utils/timer.h>
     #include <deng/camera.h>
     #include <deng/registry/registry.h>
 

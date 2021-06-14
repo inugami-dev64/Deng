@@ -93,12 +93,7 @@ namespace deng {
         dengMath::vec2<deng_px_t> m_prev_vc_pos;
 
     public:
-        Window (
-            deng_i32_t width, 
-            deng_i32_t height, 
-            const char *title
-        );
-
+        Window(deng_i32_t width, deng_i32_t height, const char *title);
         ~Window();
 
 

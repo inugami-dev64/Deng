@@ -94,27 +94,18 @@ namespace deng {
         // Set the texture ID
         m_p_io->Fonts->SetTexID((void*) imgui_atlas.uuid);
 
-        LOG("Texture width, height: " + std::to_string(imgui_atlas.pixel_data.width) + ":" + 
-            std::to_string(imgui_atlas.pixel_data.height));
-
         m_rend.pushTexture(imgui_atlas);
         m_rend.setUIDataPtr(&m_gui_data);
     }
 
 
-    UIManager::~UIManager() {
-        //delete [] m_gui_data.verts;
-        //delete [] m_gui_data.ind;
-    }
-
-
     // Update IO device input
     void UIManager::updateIO(const deng::Window &win) {
-        m_p_io->DeltaTime = 1 / 60.0f;
         m_p_io->DisplaySize.x = static_cast<deng_vec_t>(win.getSize().first);
         m_p_io->DisplaySize.y = static_cast<deng_vec_t>(win.getSize().second);
         m_p_io->MousePos.x = static_cast<deng_vec_t>(win.getMPos().first);
         m_p_io->MousePos.y = static_cast<deng_vec_t>(win.getMPos().second);
+        m_p_io->WantCaptureMouse = true;
 
         m_p_io->MouseDown[0] = m_p_io->MouseClicked[0] = __deng_FindKeyStatus(DENG_KEY_UNKNOWN, DENG_MOUSE_BTN_1, DENG_INPUT_TYPE_MOUSE,
             DENG_INPUT_EVENT_TYPE_ACTIVE);
@@ -131,7 +122,6 @@ namespace deng {
         std::this_thread::sleep_for(std::chrono::microseconds(1000));
 
         // For each command list in the list output its vertices to the renderer
-        LOG("Command lists count: " + std::to_string(p_draw_data->CmdListsCount));
         for(deng_ui32_t i = 0; i < p_draw_data->CmdListsCount; i++) {
             const ImDrawList *draw_list = p_draw_data->CmdLists[i];
             ImDrawVert *verts = draw_list->VtxBuffer.Data;
@@ -150,7 +140,6 @@ namespace deng {
             m_gui_data.cmd_data[i].ind_c = draw_list->IdxBuffer.Size;
             
             // For each command buffer in the current command list set its vertices and indices
-            LOG("Command buffer size: " + std::to_string(draw_list->CmdBuffer.Size));
             for(deng_ui32_t j = 0; j < draw_list->CmdBuffer.Size; j++) {
                 const ImDrawCmd *p_cmd = &draw_list->CmdBuffer[j];
 

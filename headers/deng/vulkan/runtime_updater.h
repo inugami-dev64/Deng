@@ -70,7 +70,7 @@
 #ifdef __RUNTIME_UPDATE_CPP
     #include <vector>
     #include <array>
-    #include <mutex>
+    #include <chrono>
     #include <queue>
     #include <vulkan/vulkan.h>
 
@@ -81,7 +81,6 @@
     #include <math/deng_math.h>
 
     #include <deng/window.h>
-    #include <utils/timer.h>
     #include <deng/camera.h>
 
     #include <deng/vulkan/qm.h>

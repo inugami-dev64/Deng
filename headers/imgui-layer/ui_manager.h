@@ -58,7 +58,7 @@
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
  * ----------------------------------------------------------------
- *  Name: imgui-renderer - handle imgui draw data and render to screen
+ *  Name: ui_manager - handle ImGui draw data structures 
  *  Purpose: Provide abstract class for rendering ImGui data
  *  Author: Karl-Mihkel Ott
  */ 
@@ -84,14 +84,11 @@
     #include <data/assets.h>
     #include <data/tex_loader.h>
 
-
     #include <math/deng_math.h>
-
     #include <imgui-layer/imgui_entity.h>
 
     #include <deng/registry/registry.h>
     #include <deng/window.h>
-    #include <utils/timer.h>
     #include <utils/font.h>
     #include <deng/camera.h>
     #include <deng/renderer/renderer.h>
@@ -110,9 +107,12 @@ namespace deng {
         ImGuiIO *m_p_io;
         deng::__ImGuiData m_gui_data = {};
 
+    private:
+        // Update ImGui IO key data
+        void __updateKeyData();
+
     public:
         UIManager(Renderer &rend);
-        ~UIManager();
 
         /// Create a new ui form in ImGui
         //void spawnForm();

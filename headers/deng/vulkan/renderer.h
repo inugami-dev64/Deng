@@ -66,6 +66,7 @@
 #ifdef __VK_RENDERER_CPP
     #include <vector>
     #include <memory>
+    #include <chrono>
     #include <queue>
     #include <array>
     
@@ -78,7 +79,6 @@
 
     #include <math/deng_math.h>
     #include <deng/window.h>
-    #include <utils/timer.h>
     #include <deng/camera.h>
 
     #include <deng/lighting/light_srcs.h>

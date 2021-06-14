@@ -57,43 +57,39 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
- */ 
+ */
 
 
-#define __ED_CAM_CPP
-#include <deng/camera/ed_cam.h>
+#define __ED_CAM_EV_CPP
+#include <deng/camera/3d/ed_cam_ev.h>
 
 
 namespace deng {
 
-    /********************************/
-    /********************************/
-    /********* Editor Camera ********/
-    /********************************/
-    /********************************/
-
     __EditorCameraEv::__EditorCameraEv (
         const dengMath::vec2<deng_f64_t> &mouse_sens,
-        deng_vec_t zoom_step,
+        deng_vec_t __zoom_step,
         const dengMath::vec3<deng_vec_t> &origin,
         Window *p_win
-    ) : __EventBase (
+    ) : __Event3DBase (
             {
                 DENG_VCP_OVERFLOW_ACTION_TO_OPPOSITE_POSITION,
                 DENG_VCP_OVERFLOW_ACTION_BLOCK_POSITION
             },
-            {{static_cast<deng_px_t>(-BASE_MAX_VC_X / mouse_sens.first), static_cast<deng_px_t>(BASE_MAX_VC_X / mouse_sens.first)}, 
-             {static_cast<deng_px_t>(-BASE_MAX_VC_Y / mouse_sens.second), static_cast<deng_px_t>(BASE_MAX_VC_Y / mouse_sens.second)}},
+            {
+                { static_cast<deng_px_t>(-BASE_MAX_VC_X / mouse_sens.first), static_cast<deng_px_t>(BASE_MAX_VC_X / mouse_sens.first) }, 
+                { static_cast<deng_px_t>(-BASE_MAX_VC_Y / mouse_sens.second), static_cast<deng_px_t>(BASE_MAX_VC_Y / mouse_sens.second)} 
+            },
             {PI / 2, PI * 2},
             p_win
     ) { 
         m_p_win = p_win;
-        m_zoom_step = zoom_step;
+        m_zoom_step = __zoom_step;
     } 
 
 
     /// Check if any camera events have occured
-    void __EditorCameraEv::findEditorEvent() {
+    void __EditorCameraEv::__findEditorEvent() {
         deng_bool_t rot_act = __checkInputAction(DENG_CAMERA_ACTION_CHANGE_MM);
         deng_bool_t out_zoom = __checkInputAction(DENG_CAMERA_ACTION_MOV_W);
         deng_bool_t in_zoom = __checkInputAction(DENG_CAMERA_ACTION_MOV_NW);
@@ -109,36 +105,31 @@ namespace deng {
 
 
     /// Zoom in the editor camera 
-    void __EditorCameraEv::zoomIn(dengMath::CameraMatrix *p_vm) {
-        p_vm->moveCamera (
-            dengMath::vec3<deng_vec_t>{0.0f, 0.0f, m_zoom_step},
-            true,
-            false,
-            DENG_COORD_AXIS_Z
-        );
+    void __EditorCameraEv::__zoomIn(dengMath::CameraMatrix *p_vm) {
+        p_vm->moveCamera(dengMath::vec3<deng_vec_t>{0.0f, 0.0f, m_zoom_step},
+            true, false, DENG_COORD_AXIS_Z);
     }
 
 
     /// Move camera position in z direction 
-    void __EditorCameraEv::zoomOut(dengMath::CameraMatrix *p_vm) {
-        p_vm->moveCamera (
-            dengMath::vec3<deng_vec_t>{0.0f, 0.0f, -m_zoom_step},
-            true,
-            false,
-            DENG_COORD_AXIS_Z
-        );
+    void __EditorCameraEv::__zoomOut(dengMath::CameraMatrix *p_vm) {
+        p_vm->moveCamera(dengMath::vec3<deng_vec_t>{0.0f, 0.0f, -m_zoom_step},
+            true, false, DENG_COORD_AXIS_Z);
     }
 
 
-    /// Update editor camera event polling 
+    /// Check new editor camera events from IO bindings and perform camera updates
     void __EditorCameraEv::updateEv (
         dengMath::vec3<deng_vec_t> origin, 
         dengMath::CameraMatrix *p_vm
     ) {
-        if(m_is_rot_cur) 
-            __EventBase::__updateMouseEvData();
-        findEditorEvent();
+        // Check if mouse data should be updated
+        if(m_is_rot_cur) __Event3DBase::__updateCameraMousePos();
 
+        /// Check if any actions were triggered according to IO bindings
+        __findEditorEvent();
+
+        // Check the occured event type and perform action accordingly
         switch(m_editor_cam_ev) {
         case DENG_EDITOR_CAMERA_EVENT_Z_MOV_IN: {
             if(m_is_rot_cur) {
@@ -146,12 +137,9 @@ namespace deng {
                 m_is_rot_cur = false;
             }
 
-            zoomIn(p_vm);
-            p_vm->setOriginRotation (
-                origin, 
-                static_cast<deng_vec_t>(m_last_rot.first),
-                static_cast<deng_vec_t>(m_last_rot.second)
-            );
+            __zoomIn(p_vm);
+            p_vm->setOriginRotation(origin, static_cast<deng_vec_t>(m_last_rot.first),
+                static_cast<deng_vec_t>(m_last_rot.second));
             break;
         }
 
@@ -161,7 +149,7 @@ namespace deng {
                 m_is_rot_cur = false;
             }
 
-            zoomOut(p_vm);
+            __zoomOut(p_vm);
             p_vm->setOriginRotation (
                 origin,
                 static_cast<deng_vec_t>(m_last_rot.first), 
@@ -177,7 +165,7 @@ namespace deng {
                 m_is_rot_cur = true;
             }
 
-            m_last_rot = __EventBase::__getMouseRotation();
+            m_last_rot = __Event3DBase::__getMouseRotation();
             p_vm->setOriginRotation (
                 origin,
                 static_cast<deng_vec_t>(m_last_rot.first),
@@ -204,73 +192,14 @@ namespace deng {
     }
 
     
-    /*
-     * Get the pointer to the window instance
-     */
+    /// Get the pointer to the window instance
     Window *__EditorCameraEv::getWinPtr() {
         return m_p_win;
     }
 
     
-    /*
-     * Set the window pointer
-     */
+    /// Set the window pointer
     void __EditorCameraEv::setWinPtr(Window *p_win) {
         m_p_win = p_win;
-    }
-
-
-    /********************************/
-    /********************************/
-    /********* EditorCamera *********/
-    /********************************/
-    /********************************/
-
-    __EditorCamera::__EditorCamera (
-        deng_vec_t zoom_step,
-        const dengMath::vec3<deng_vec_t> &origin,
-        const dengMath::vec2<deng_f64_t> &mouse_sens,
-        deng_vec_t fov,
-        deng_vec_t near_plane,
-        deng_vec_t far_plane,
-        Window *p_ww
-    ) : __EditorCameraEv (
-            mouse_sens, 
-            zoom_step, 
-            origin, 
-            p_ww
-        ), 
-        __CameraBase (
-            DENG_CAMERA_TYPE_EDITOR,
-            fov,
-            {near_plane, far_plane},
-            (deng_vec_t) __EditorCameraEv::getWinPtr()->getSize().first / (deng_vec_t) __EditorCameraEv::getWinPtr()->getSize().second
-        ) {
-        m_origin = origin;
-        setWinPtr(p_ww);
-        getWinPtr()->changeVCMode(false);
-    }
-
-
-    /*
-     * Move origin point in world coordinate system by delta_mov
-     */
-    void __EditorCamera::moveOrigin(const dengMath::vec3<deng_vec_t> &delta_mov) {
-        m_origin += delta_mov;
-    }
-
-
-    /// Set camera control bindings for editor camera system
-    void __EditorCamera::setBindings(const Camera3DBindings &bindings) {
-        m_bindings = bindings;
-    }
-
-
-    /// Wrapper method for updating camera events
-    void __EditorCamera::update() {
-        updateEv (
-            m_origin,
-            &m_cam_mat
-        );
     }
 }

@@ -165,7 +165,6 @@ namespace deng {
 
         /// Bind ImGui resources to command buffers
         void __vk_DrawCaller::__bindUIElementResources(__ImGuiEntity *ent, VkCommandBuffer cur_buf, const __vk_BufferData &bd) {
-            LOG("Cmd list index, offset: " + std::to_string(ent->cmd_list_ind) + "; " + std::to_string(bd.asset_cap + m_p_ui_data->cmd_data[ent->cmd_list_ind].offset));
             VkDeviceSize vert_offset = bd.asset_cap + m_p_ui_data->cmd_data[ent->cmd_list_ind].offset;
             vkCmdBindVertexBuffers(cur_buf, 0, 1, &bd.main_buffer, &vert_offset);
             vkCmdBindIndexBuffer(cur_buf, bd.main_buffer, bd.asset_cap + ent->buf_offset, VK_INDEX_TYPE_UINT32);
