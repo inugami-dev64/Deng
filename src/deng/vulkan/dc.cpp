@@ -311,7 +311,7 @@ namespace deng {
 
                     // Check if ui elements should be drawn
                     if(m_p_ui_data) {
-                        for(deng_i64_t j = m_p_ui_data->entities.size() - 1; j >= 0; j--) {
+                        for(deng_i64_t j = 0; j < m_p_ui_data->entities.size(); j++) {
                             __bindUIElementResources(&m_p_ui_data->entities[j], m_cmd_bufs.at(i), bd);
 
                             vkCmdBindPipeline(m_cmd_bufs.at(i), VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -325,7 +325,8 @@ namespace deng {
                                 VkOffset2D { m_p_ui_data->entities.at(j).sc_rec_offset.first, m_p_ui_data->entities.at(j).sc_rec_offset.second },
                                 VkExtent2D { m_p_ui_data->entities.at(j).sc_rec_size.first, m_p_ui_data->entities.at(j).sc_rec_size.second }
                             };
-                             vkCmdSetScissor(m_cmd_bufs.at(i), 0, 1, &sc_rect);
+
+                            vkCmdSetScissor(m_cmd_bufs.at(i), 0, 1, &sc_rect);
                             vkCmdDrawIndexed(m_cmd_bufs.at(i), m_p_ui_data->entities[j].ind_c, 1, 0, 0, 0);
                         }
                     }

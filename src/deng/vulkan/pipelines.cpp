@@ -172,8 +172,6 @@ namespace deng {
             pi_flags.add_scissoring = true;
             pipeline_infos[UI_I] = ui_ci_gen.mkGraphicsPipelineInfo(pi_flags);
 
-            LOG("pi count: " + std::to_string(pipeline_infos.size()));
-
             // Create all vulkan pipelines
             std::array<VkPipeline, PIPELINE_C> pipelines;
             if(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, static_cast<deng_ui32_t>(pipeline_infos.size()), 
