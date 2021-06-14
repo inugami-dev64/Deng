@@ -84,10 +84,11 @@
     #include <data/assets.h>
     #include <data/tex_loader.h>
 
-    #include <imgui.h>
-    #include <imgui-layer/imgui_entity.h>
 
     #include <math/deng_math.h>
+
+    #include <imgui-layer/imgui_entity.h>
+
     #include <deng/registry/registry.h>
     #include <deng/window.h>
     #include <utils/timer.h>

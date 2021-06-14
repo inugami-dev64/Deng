@@ -92,23 +92,32 @@ namespace deng {
     };
 
 
+    /// Structure for storing data about ImGui draw operations
+    struct __ImGuiCmdData {
+        size_t offset;                  // Vertex offset from the beginning of the ui memory area
+        const ImDrawVert *verts = NULL;
+        size_t vert_c = 0;
+        const ImDrawIdx *ind = NULL;
+        size_t ind_c = 0;
+    };
+
+
     /// Structure used to pass ImGui entities
     struct __ImGuiEntity {
-        size_t buf_offset;      // Offset from the beginning of the ui memory area
+        size_t buf_offset;                          // Indices offset from the beginning of the ui memory area
         const ImDrawIdx *ind;
-        size_t ind_c;
+        size_t ind_c;                               // Total count of indices
+        size_t cmd_list_ind;                        // Index of the used command list
+        dengMath::vec2<deng_i32_t> sc_rec_offset;   // Scissor rectangle offset
+        dengMath::vec2<deng_ui32_t> sc_rec_size;    // Scissor rectangle size
     };
 
     
     /// Data structure used for passing UI data between UI handler classes and the renderer 
     struct __ImGuiData {
         deng_Id tex_id;
-        ImDrawVert *verts;
-        deng_ui32_t vert_c;
-        ImDrawIdx *ind;
-        deng_ui32_t ind_c;
-
-        std::vector<__ImGuiEntity> entities;
+        std::vector<__ImGuiCmdData> cmd_data;   // Data required for creating entity commandbuffers
+        std::vector<__ImGuiEntity> entities;    // All entities related to ImGui
     };
 }
 #endif

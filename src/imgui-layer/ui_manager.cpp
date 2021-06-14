@@ -125,48 +125,60 @@ namespace deng {
 
     /// Update ImGui draw content according to the changed data
     void UIManager::render(ImDrawData *p_draw_data, const Window &win) {
+        size_t list_offset = 0;
+        m_gui_data.cmd_data.resize(p_draw_data->CmdListsCount);
+        m_gui_data.entities.clear();
         std::this_thread::sleep_for(std::chrono::microseconds(1000));
 
         // For each command list in the list output its vertices to the renderer
         LOG("Command lists count: " + std::to_string(p_draw_data->CmdListsCount));
         for(deng_ui32_t i = 0; i < p_draw_data->CmdListsCount; i++) {
-            const ImDrawList *cmd_list = p_draw_data->CmdLists[i];
-            ImDrawVert *verts = cmd_list->VtxBuffer.Data;
-            ImDrawIdx *inds = cmd_list->IdxBuffer.Data;
+            const ImDrawList *draw_list = p_draw_data->CmdLists[i];
+            ImDrawVert *verts = draw_list->VtxBuffer.Data;
+            ImDrawIdx *inds = draw_list->IdxBuffer.Data;
 
             // For each vertex, convert its pixel size to vector size
-            for(deng_ui32_t j = 0; j < cmd_list->VtxBuffer.Size; j++) {
+            for(deng_ui32_t j = 0; j < draw_list->VtxBuffer.Size; j++) {
                 verts[j].pos.x = dengMath::Conversion::mouseCoordToVecCoord(verts[j].pos.x, static_cast<deng_px_t>(win.getSize().first));
                 verts[j].pos.y = dengMath::Conversion::mouseCoordToVecCoord(verts[j].pos.y, static_cast<deng_px_t>(win.getSize().second));
             }
 
-            m_gui_data.verts = verts;
-            m_gui_data.vert_c = cmd_list->VtxBuffer.Size;
+            m_gui_data.cmd_data[i].verts = verts;
+            m_gui_data.cmd_data[i].vert_c = draw_list->VtxBuffer.Size;
 
-            m_gui_data.ind = inds;
-            m_gui_data.ind_c = cmd_list->IdxBuffer.Size;
-
-            // ImGui vertices buffer area offset
-            size_t offset = 0;
+            m_gui_data.cmd_data[i].ind = inds;
+            m_gui_data.cmd_data[i].ind_c = draw_list->IdxBuffer.Size;
             
             // For each command buffer in the current command list set its vertices and indices
-            m_gui_data.entities.resize(cmd_list->CmdBuffer.Size);
-            LOG("Command buffer size: " + std::to_string(cmd_list->CmdBuffer.Size));
-            for(deng_ui32_t j = 0; j < cmd_list->CmdBuffer.Size; j++) {
-                const ImDrawCmd *p_cmd = &cmd_list->CmdBuffer[j];
+            LOG("Command buffer size: " + std::to_string(draw_list->CmdBuffer.Size));
+            for(deng_ui32_t j = 0; j < draw_list->CmdBuffer.Size; j++) {
+                const ImDrawCmd *p_cmd = &draw_list->CmdBuffer[j];
 
                 // Check if user callback should be respected
                 if(p_cmd->UserCallback) 
-                    p_cmd->UserCallback(cmd_list, p_cmd);
+                    p_cmd->UserCallback(draw_list, p_cmd);
 
                 // Perform buffer data update 
                 else {
-                    m_gui_data.entities[j].buf_offset = cmd_list->VtxBuffer.Size * sizeof(ImDrawVert) + 
+                    __ImGuiEntity ent = {};
+                    ent.buf_offset = list_offset + draw_list->VtxBuffer.Size * sizeof(ImDrawVert) + 
                         p_cmd->IdxOffset * sizeof(ImDrawIdx);
-                    m_gui_data.entities[j].ind = inds + p_cmd->IdxOffset;
-                    m_gui_data.entities[j].ind_c = p_cmd->ElemCount;
+                    ent.ind = inds + p_cmd->IdxOffset;
+                    ent.ind_c = p_cmd->ElemCount;
+
+                    // Set up clipping rectangle parameters
+                    ent.sc_rec_offset.first = static_cast<deng_i32_t>(p_cmd->ClipRect.x - p_draw_data->DisplayPos.x);
+                    ent.sc_rec_offset.second = static_cast<deng_i32_t>(p_cmd->ClipRect.y - p_draw_data->DisplayPos.y);
+                    ent.sc_rec_size.first = static_cast<deng_ui32_t>(p_cmd->ClipRect.z - p_cmd->ClipRect.x);
+                    ent.sc_rec_size.second = static_cast<deng_ui32_t>(p_cmd->ClipRect.w - p_cmd->ClipRect.y);
+                    ent.cmd_list_ind = i;
+
+                    m_gui_data.entities.push_back(ent);
                 }
             }
+
+            // Increment the list offset accordingly
+            list_offset += draw_list->VtxBuffer.Size * sizeof(ImDrawVert) + draw_list->IdxBuffer.Size * sizeof(ImDrawIdx);
         }
         
         // Update vertices data

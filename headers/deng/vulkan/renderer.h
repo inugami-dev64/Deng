@@ -66,6 +66,7 @@
 #ifdef __VK_RENDERER_CPP
     #include <vector>
     #include <memory>
+    #include <queue>
     #include <array>
     
     #include <vulkan/vulkan.h>

@@ -471,19 +471,21 @@ namespace deng {
                 m_config.msaa_sample_count);
 
             // Check if any buffer reallocations might be needed
-            __vk_RendererInitialiser::getResMan().reallocCheck(__vk_RendererInitialiser::getIC().getDev(),
+            const deng_bool_t is_realloc = __vk_RendererInitialiser::getResMan().reallocCheck(__vk_RendererInitialiser::getIC().getDev(),
                 __vk_RendererInitialiser::getIC().getGpu(), __vk_RendererInitialiser::getDrawCaller().getComPool(),
                 __vk_RendererInitialiser::getIC().getQFF().graphics_queue);
 
-            // Copy all available assets to the main buffer
-            __vk_RendererInitialiser::getResMan().cpyAssetsToBuffer(__vk_RendererInitialiser::getIC().getDev(), 
-                __vk_RendererInitialiser::getIC().getGpu(), __vk_RendererInitialiser::getDrawCaller().getComPool(),
-                __vk_RendererInitialiser::getIC().getQFF().graphics_queue, false, { 0, static_cast<deng_ui32_t>(__vk_RendererInitialiser::m_assets.size()) });
+            // Copy all available assets to the main buffer, if no reallocation occured
+            if(!is_realloc) {
+                __vk_RendererInitialiser::getResMan().cpyAssetsToBuffer(__vk_RendererInitialiser::getIC().getDev(), 
+                    __vk_RendererInitialiser::getIC().getGpu(), __vk_RendererInitialiser::getDrawCaller().getComPool(),
+                    __vk_RendererInitialiser::getIC().getQFF().graphics_queue, false, { 0, static_cast<deng_ui32_t>(__vk_RendererInitialiser::m_assets.size()) });
 
-            // Copy all available ui data to the main buffer
-            __vk_RendererInitialiser::getResMan().cpyUIDataToBuffer(__vk_RendererInitialiser::getIC().getDev(), 
-                __vk_RendererInitialiser::getIC().getGpu(), __vk_RendererInitialiser::getDrawCaller().getComPool(),
-                __vk_RendererInitialiser::getIC().getQFF().graphics_queue);
+                // Copy all available ui data to the main buffer
+                __vk_RendererInitialiser::getResMan().cpyUIDataToBuffer(__vk_RendererInitialiser::getIC().getDev(), 
+                    __vk_RendererInitialiser::getIC().getGpu(), __vk_RendererInitialiser::getDrawCaller().getComPool(),
+                    __vk_RendererInitialiser::getIC().getQFF().graphics_queue, false);
+            }
 
             // Create descriptor sets for all currently available assets
             __vk_RendererInitialiser::getDescC().mkAssetDS(__vk_RendererInitialiser::getIC().getDev(), __vk_RendererInitialiser::getResMan().getBD(), 
@@ -544,7 +546,7 @@ namespace deng {
                 // Copy all available ui data to the main buffer
                 __vk_RendererInitialiser::getResMan().cpyUIDataToBuffer(__vk_RendererInitialiser::getIC().getDev(), 
                     __vk_RendererInitialiser::getIC().getGpu(), __vk_RendererInitialiser::getDrawCaller().getComPool(),
-                    __vk_RendererInitialiser::getIC().getQFF().graphics_queue);
+                    __vk_RendererInitialiser::getIC().getQFF().graphics_queue, false);
             }
 
             // Create UI element descriptor sets

@@ -165,9 +165,10 @@ namespace deng {
 
         /// Bind ImGui resources to command buffers
         void __vk_DrawCaller::__bindUIElementResources(__ImGuiEntity *ent, VkCommandBuffer cur_buf, const __vk_BufferData &bd) {
-            vkCmdBindVertexBuffers(cur_buf, 0, 1, &bd.main_buffer, &bd.asset_cap);
-            vkCmdBindIndexBuffer(cur_buf, bd.main_buffer, bd.asset_cap + ent->buf_offset, 
-                VK_INDEX_TYPE_UINT32);
+            LOG("Cmd list index, offset: " + std::to_string(ent->cmd_list_ind) + "; " + std::to_string(bd.asset_cap + m_p_ui_data->cmd_data[ent->cmd_list_ind].offset));
+            VkDeviceSize vert_offset = bd.asset_cap + m_p_ui_data->cmd_data[ent->cmd_list_ind].offset;
+            vkCmdBindVertexBuffers(cur_buf, 0, 1, &bd.main_buffer, &vert_offset);
+            vkCmdBindIndexBuffer(cur_buf, bd.main_buffer, bd.asset_cap + ent->buf_offset, VK_INDEX_TYPE_UINT32);
         }
 
 
@@ -319,6 +320,12 @@ namespace deng {
                             vkCmdBindDescriptorSets(m_cmd_bufs.at(i), VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 *m_pl_data[UI_I].p_pipeline_layout, 0, 1, &m_ui_sets[i], 0, NULL);
 
+                            // Convert scissor coordinates to VkRect2D structure
+                            const VkRect2D sc_rect = VkRect2D {
+                                VkOffset2D { m_p_ui_data->entities.at(j).sc_rec_offset.first, m_p_ui_data->entities.at(j).sc_rec_offset.second },
+                                VkExtent2D { m_p_ui_data->entities.at(j).sc_rec_size.first, m_p_ui_data->entities.at(j).sc_rec_size.second }
+                            };
+                             vkCmdSetScissor(m_cmd_bufs.at(i), 0, 1, &sc_rect);
                             vkCmdDrawIndexed(m_cmd_bufs.at(i), m_p_ui_data->entities[j].ind_c, 1, 0, 0, 0);
                         }
                     }

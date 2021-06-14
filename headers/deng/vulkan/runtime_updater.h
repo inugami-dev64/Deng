@@ -71,6 +71,7 @@
     #include <vector>
     #include <array>
     #include <mutex>
+    #include <queue>
     #include <vulkan/vulkan.h>
 
     #include <common/base_types.h>

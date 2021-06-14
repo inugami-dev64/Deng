@@ -67,6 +67,7 @@
 #ifdef __REND_INIT_CPP
     #include <mutex>
     #include <vector>
+    #include <queue>
     #include <array>
     #include <memory>
     #include <vulkan/vulkan.h>

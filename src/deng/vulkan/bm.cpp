@@ -206,6 +206,17 @@ namespace deng {
             }
         }
 
+
+        /// Find offsets for all ImGui entities 
+        void __vk_BufferManager::__findGuiEntitiesOffsets() {
+            // For each command data vector element, calculate its offset from the beginning of the ui memory area
+            for(size_t i = 0; i < m_p_imgui_data->cmd_data.size(); i++) {
+                m_p_imgui_data->cmd_data[i].offset = m_buffer_data.ui_size;
+                m_buffer_data.ui_size += m_p_imgui_data->cmd_data[i].vert_c * sizeof(ImDrawVert) +
+                    m_p_imgui_data->cmd_data[i].ind_c * sizeof(ImDrawIdx);
+            }
+        }
+
         
         /// Find the largest asset size
         deng_ui64_t __vk_BufferManager::__findMaxAssetSize(const dengMath::vec2<deng_ui32_t> &bounds) {
@@ -284,10 +295,11 @@ namespace deng {
                 __findAssetOffsets(reg_asset.asset);
             }
 
+
             // Calculate the total required memory for ui elements
             if(m_p_imgui_data) {
-                m_buffer_data.ui_size = m_p_imgui_data->ind_c * sizeof(ImDrawIdx) + 
-                    m_p_imgui_data->vert_c * sizeof(ImDrawVert);
+                m_buffer_data.ui_size = 0;
+                __findGuiEntitiesOffsets();
             }
 
             const deng_bool_t asset_realloc = assetCapCheck();
@@ -302,7 +314,7 @@ namespace deng {
                 // Allocate new buffer
                 allocateMainBufferMemory(device, gpu);
                 cpyAssetsToBuffer(device, gpu, cmd_pool, g_queue, true, { 0, static_cast<deng_ui32_t>(m_assets.size()) });
-                cpyUIDataToBuffer(device, gpu, cmd_pool, g_queue);
+                cpyUIDataToBuffer(device, gpu, cmd_pool, g_queue, true);
             }
 
             return asset_realloc || ui_realloc;
@@ -392,14 +404,17 @@ namespace deng {
             VkDevice device,
             VkPhysicalDevice gpu,
             VkCommandPool cmd_pool,
-            VkQueue g_queue
+            VkQueue g_queue,
+            deng_bool_t no_offset_calc
         ) {
             // Check if ImGui data is even present
-            if(!m_p_imgui_data || !m_p_imgui_data->ind_c) return;
+            if(!m_p_imgui_data || !m_p_imgui_data->cmd_data.size()) return;
 
-            // Calculate the total required size
-            m_buffer_data.ui_size = m_p_imgui_data->ind_c * sizeof(ImDrawIdx) + 
-                m_p_imgui_data->vert_c * sizeof(ImDrawVert);
+            // Calculate offsets and required size 
+            if(!no_offset_calc) {
+                m_buffer_data.ui_size = 0;
+                __findGuiEntitiesOffsets();
+            }
 
             // Create staging buffer for UI data
             VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer(device, gpu, m_buffer_data.ui_size,
@@ -416,12 +431,18 @@ namespace deng {
             void *data = NULL;
             vkMapMemory(device, m_buffer_data.staging_buffer_memory, 0, m_buffer_data.ui_size, 0, &data);
                 VkDeviceSize offset = 0;
-                // Copy all vertices to buffer
-                memcpy(data, m_p_imgui_data->verts, m_p_imgui_data->vert_c * sizeof(ImDrawVert));
-                offset += m_p_imgui_data->vert_c * sizeof(ImDrawVert);
+                
+                // For each command list copy its vertices and indices to the buffer
+                for(size_t i = 0; i < m_p_imgui_data->cmd_data.size(); i++) {
+                    // Copy all vertices to buffer
+                    memcpy(((char*) data) + offset, m_p_imgui_data->cmd_data[i].verts, m_p_imgui_data->cmd_data[i].vert_c * sizeof(ImDrawVert));
+                    offset += m_p_imgui_data->cmd_data[i].vert_c * sizeof(ImDrawVert);
 
-                // Copy all indices to buffer
-                memcpy(((char*) data) + offset, m_p_imgui_data->ind, m_p_imgui_data->ind_c * sizeof(ImDrawIdx));
+                    // Copy all indices to buffer
+                    memcpy(((char*) data) + offset, m_p_imgui_data->cmd_data[i].ind, m_p_imgui_data->cmd_data[i].ind_c * sizeof(ImDrawIdx));
+                    offset += m_p_imgui_data->cmd_data[i].ind_c * sizeof(ImDrawIdx);
+                }
+
                 // Unmap buffer memory area
             vkUnmapMemory(device, m_buffer_data.staging_buffer_memory);
 

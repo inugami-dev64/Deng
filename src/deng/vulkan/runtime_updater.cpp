@@ -117,7 +117,7 @@ namespace deng {
             //// Copy UI element data to buffer, if no reallocation occured
             if(!is_realloc) {
                 m_rm.cpyUIDataToBuffer(m_ic.getDev(), m_ic.getGpu(), m_dc.getComPool(),
-                    m_ic.getQFF().graphics_queue);
+                    m_ic.getQFF().graphics_queue, false);
             }
 
             // Update command buffers for remapped ui elements

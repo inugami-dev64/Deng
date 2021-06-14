@@ -76,22 +76,25 @@ namespace deng {
 
         /// Parent structure for pipeline createinfo generation class
         struct __vk_PipelineCreateInfoSpecifiers {
-            std::array<VkPipelineShaderStageCreateInfo, 2> m_shader_stage_createinfos{};
-            std::array<VkShaderModule, 2> m_shader_modules{};
-            std::vector<VkVertexInputBindingDescription> m_input_binding_desc{};
-            std::vector<VkVertexInputAttributeDescription> m_input_attr_descs{};
+            std::array<VkPipelineShaderStageCreateInfo, 2> m_shader_stage_createinfos = {};
+            std::array<VkShaderModule, 2> m_shader_modules = {};
+            std::vector<VkVertexInputBindingDescription> m_input_binding_desc = {};
+            std::vector<VkVertexInputAttributeDescription> m_input_attr_descs = {};
 
-            VkViewport m_viewport{};
-            VkRect2D m_scissor{};
+            VkViewport m_viewport = {};
+            VkRect2D m_scissor = {};
 
-            VkPipelineVertexInputStateCreateInfo    m_vert_input_create_info{};
-            VkPipelineInputAssemblyStateCreateInfo  m_input_asm_createinfo{};
-            VkPipelineViewportStateCreateInfo       m_viewport_state_createinfo{};
-            VkPipelineRasterizationStateCreateInfo  m_rasterization_createinfo{};
-            VkPipelineMultisampleStateCreateInfo    m_multisample_createinfo{};
-            VkPipelineColorBlendAttachmentState     m_colorblend_attachment{};
-            VkPipelineDepthStencilStateCreateInfo   m_depth_stencil{};
-            VkPipelineColorBlendStateCreateInfo     m_colorblend_state_createinfo{};
+            VkPipelineVertexInputStateCreateInfo    m_vert_input_create_info = {};
+            VkPipelineInputAssemblyStateCreateInfo  m_input_asm_createinfo = {};
+            VkPipelineViewportStateCreateInfo       m_viewport_state_createinfo = {};
+            VkPipelineRasterizationStateCreateInfo  m_rasterization_createinfo = {};
+            VkPipelineMultisampleStateCreateInfo    m_multisample_createinfo = {};
+            VkPipelineColorBlendAttachmentState     m_colorblend_attachment = {};
+            VkPipelineDepthStencilStateCreateInfo   m_depth_stencil = {};
+            VkPipelineColorBlendStateCreateInfo     m_colorblend_state_createinfo = {};
+
+            VkPipelineDynamicStateCreateInfo        m_dyn_state_createinfo = {};
+            std::vector<VkDynamicState> m_dynamic_states;
         };
     }
 }

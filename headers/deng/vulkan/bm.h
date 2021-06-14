@@ -73,6 +73,7 @@
     #include <vector>
     #include <string>
     #include <mutex>
+    #include <queue>
     #include <vulkan/vulkan.h>
 
     #include <common/base_types.h>
@@ -121,8 +122,12 @@ namespace deng {
                 const dengMath::vec2<deng_ui32_t> &bounds, VkDeviceSize cpy_offset);
 
 
-            /// Find the offset of the current asset
+            /// Find offsets for the current asset
             void __findAssetOffsets(das_Asset &asset);
+
+
+            /// Find offsets for all ImGui entities 
+            void __findGuiEntitiesOffsets();
 
 
         protected:
@@ -158,7 +163,7 @@ namespace deng {
             /// Copy ImGui vertex and indices data to buffer
             /// NOTE: The UI element capacity has to be larger than required UI element size (use uiCapCheck() for this)
             void cpyUIDataToBuffer(VkDevice device, VkPhysicalDevice gpu,
-                VkCommandPool cmd_pool, VkQueue g_queue);
+                VkCommandPool cmd_pool, VkQueue g_queue, deng_bool_t no_offset_calc);
 
         // Setter methods
         public:

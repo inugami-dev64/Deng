@@ -60,6 +60,7 @@
  */ 
 
 
+#include <vulkan/vulkan_core.h>
 #define __PIPELINE_CI_GEN_CPP
 #include <deng/vulkan/pipeline_ci_gen.h>
 
@@ -323,16 +324,7 @@ namespace deng {
         /// Make createinfo instance for graphics pipeline
         /// This method is used to set up VkGraphicsPipelineCreateInfo, while defaulting
         /// some options that are not needed to be customised by different DENG pipelines
-        VkGraphicsPipelineCreateInfo __vk_PipelineCreateInfoGenerator::mkGraphicsPipelineInfo (
-            VkPolygonMode polygon_mode, 
-            VkCullModeFlagBits cull_mode, 
-            VkFrontFace front_face, 
-            VkPrimitiveTopology primitive_topology, 
-            deng_bool_t add_depth_stencil, 
-            deng_bool_t add_color_blend, 
-            VkSampleCountFlagBits sample_c,
-            deng_ui32_t subpass_index
-        ) {
+        VkGraphicsPipelineCreateInfo __vk_PipelineCreateInfoGenerator::mkGraphicsPipelineInfo(const __vk_PipelineCreationFlags &pl_flags) {
             // Binary shader data pointers
             char *vert_bin = NULL;
             size_t vert_c = 0;
@@ -379,7 +371,7 @@ namespace deng {
 
             // Set up input assembly createinfo object
             m_input_asm_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-            m_input_asm_createinfo.topology = primitive_topology;
+            m_input_asm_createinfo.topology = pl_flags.primitive_topology;
             m_input_asm_createinfo.primitiveRestartEnable = VK_FALSE;
 
             // Set viewport values
@@ -405,12 +397,12 @@ namespace deng {
             m_rasterization_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
             m_rasterization_createinfo.depthClampEnable = VK_FALSE;
             m_rasterization_createinfo.rasterizerDiscardEnable = VK_FALSE;
-            m_rasterization_createinfo.polygonMode = polygon_mode;
+            m_rasterization_createinfo.polygonMode = pl_flags.polygon_mode;
             m_rasterization_createinfo.lineWidth = 1.0f;
-            m_rasterization_createinfo.cullMode = cull_mode;
+            m_rasterization_createinfo.cullMode = pl_flags.cull_mode;
 
-            if(cull_mode != VK_CULL_MODE_NONE) {
-                m_rasterization_createinfo.frontFace = front_face;
+            if(pl_flags.cull_mode != VK_CULL_MODE_NONE) {
+                m_rasterization_createinfo.frontFace = pl_flags.front_face;
                 m_rasterization_createinfo.depthBiasEnable = VK_TRUE;
             }
 
@@ -418,11 +410,11 @@ namespace deng {
             // Set up multisampling createinfo
             m_multisample_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
             m_multisample_createinfo.sampleShadingEnable = VK_FALSE;
-            m_multisample_createinfo.rasterizationSamples = sample_c;
+            m_multisample_createinfo.rasterizationSamples = pl_flags.sample_c;
 
             // Set colorblend options
             m_colorblend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-            if(add_color_blend) m_colorblend_attachment.blendEnable = VK_TRUE;
+            if(pl_flags.add_color_blend) m_colorblend_attachment.blendEnable = VK_TRUE;
             else m_colorblend_attachment.blendEnable = VK_FALSE;
             m_colorblend_attachment.alphaBlendOp = VK_BLEND_OP_SUBTRACT;
             m_colorblend_attachment.blendEnable = VK_TRUE;
@@ -433,9 +425,9 @@ namespace deng {
             m_colorblend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
             m_colorblend_attachment.alphaBlendOp = VK_BLEND_OP_SUBTRACT;
             
-            // Set depth stencil
+            // Check if depth stencil is enabled and if it is set the createinfo accordingly
             m_depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-            if(add_depth_stencil) {
+            if(pl_flags.add_depth_stencil) {
                 m_depth_stencil.depthTestEnable = VK_TRUE;
                 m_depth_stencil.depthWriteEnable = VK_TRUE;
                 m_depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS;
@@ -447,6 +439,16 @@ namespace deng {
                 m_depth_stencil.depthWriteEnable = VK_FALSE;
                 m_depth_stencil.depthBoundsTestEnable = VK_FALSE;
                 m_depth_stencil.stencilTestEnable = VK_FALSE;
+            }
+
+            // Check if the dynamic pipeline state createinfo should be created
+            VkPipelineDynamicStateCreateInfo *p_dyn_info = NULL;
+            if(pl_flags.add_scissoring) {
+                m_dyn_state_createinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+                m_dynamic_states.push_back(VK_DYNAMIC_STATE_SCISSOR);
+                m_dyn_state_createinfo.dynamicStateCount = static_cast<deng_ui32_t>(m_dynamic_states.size());
+                m_dyn_state_createinfo.pDynamicStates = m_dynamic_states.data();
+                p_dyn_info = &m_dyn_state_createinfo;
             }
             
             // Set up colorblend state createinfo
@@ -467,10 +469,11 @@ namespace deng {
             graphics_pipeline_createinfo.pRasterizationState = &m_rasterization_createinfo;
             graphics_pipeline_createinfo.pMultisampleState = &m_multisample_createinfo;
             graphics_pipeline_createinfo.pDepthStencilState = &m_depth_stencil;
+            graphics_pipeline_createinfo.pDynamicState = p_dyn_info;
             graphics_pipeline_createinfo.layout = *m_pipeline_data.p_pipeline_layout;
 
             graphics_pipeline_createinfo.renderPass = m_renderpass;
-            graphics_pipeline_createinfo.subpass = subpass_index;
+            graphics_pipeline_createinfo.subpass = pl_flags.subpass_index;
             graphics_pipeline_createinfo.basePipelineHandle = VK_NULL_HANDLE;
 
             return graphics_pipeline_createinfo;

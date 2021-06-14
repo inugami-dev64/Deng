@@ -141,39 +141,36 @@ namespace deng {
             m_pipelines[UI_I].p_pipeline_layout = &m_ui_layout;
 
             // Create pipeline creator instances
-            __vk_PipelineCreateInfoGenerator vu2d_ci_gen(device, ext, 
-                rp, m_pipelines[UM2D_I]);
+            __vk_PipelineCreateInfoGenerator vu2d_ci_gen(device, ext, rp, m_pipelines[UM2D_I]);
+            __vk_PipelineCreateInfoGenerator vm2d_ci_gen(device, ext, rp, m_pipelines[TM2D_I]);
+            __vk_PipelineCreateInfoGenerator vu3d_ci_gen(device, ext, rp, m_pipelines[UM3D_I]);
+            __vk_PipelineCreateInfoGenerator vm3d_ci_gen(device, ext, rp, m_pipelines[TM3D_I]);
+            __vk_PipelineCreateInfoGenerator ui_ci_gen(device, ext, rp, m_pipelines[UI_I]);
 
-            __vk_PipelineCreateInfoGenerator vm2d_ci_gen(device, ext, 
-                rp, m_pipelines[TM2D_I]);
-
-            __vk_PipelineCreateInfoGenerator vu3d_ci_gen(device, ext, 
-                rp, m_pipelines[UM3D_I]);
-
-            __vk_PipelineCreateInfoGenerator vm3d_ci_gen(device, ext, 
-                rp, m_pipelines[TM3D_I]);
-
-            __vk_PipelineCreateInfoGenerator ui_ci_gen(device, ext,
-                rp, m_pipelines[UI_I]);
-
+            // Setup the pipeline creation flags structure
+            __vk_PipelineCreationFlags pi_flags = __vk_PipelineCreationFlags();
+            pi_flags.add_color_blend = true;
+            pi_flags.add_depth_stencil = false;
+            pi_flags.add_scissoring = false;
+            pi_flags.cull_mode = VK_CULL_MODE_NONE;
+            pi_flags.polygon_mode = VK_POLYGON_MODE_FILL;
+            pi_flags.front_face = VK_FRONT_FACE_CLOCKWISE;
+            pi_flags.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+            pi_flags.sample_c = sample_c;
+            pi_flags.subpass_index = 0;
 
             // Generate all graphics pipeline createinfos
-            // As for now, no culling will be done
             std::array<VkGraphicsPipelineCreateInfo, PIPELINE_C> pipeline_infos{};
-            pipeline_infos[UM2D_I] = vu2d_ci_gen.mkGraphicsPipelineInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, 
-                VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);
+            pipeline_infos[UM2D_I] = vu2d_ci_gen.mkGraphicsPipelineInfo(pi_flags);
+            pipeline_infos[TM2D_I] = vm2d_ci_gen.mkGraphicsPipelineInfo(pi_flags);
 
-            pipeline_infos[TM2D_I] = vm2d_ci_gen.mkGraphicsPipelineInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, 
-                VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);
+            pi_flags.add_depth_stencil = true;
+            pipeline_infos[UM3D_I] = vu3d_ci_gen.mkGraphicsPipelineInfo(pi_flags);
+            pipeline_infos[TM3D_I] = vm3d_ci_gen.mkGraphicsPipelineInfo(pi_flags);
 
-            pipeline_infos[UM3D_I] = vu3d_ci_gen.mkGraphicsPipelineInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, 
-                VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);
-
-            pipeline_infos[TM3D_I] = vm3d_ci_gen.mkGraphicsPipelineInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, 
-                VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);
-
-            pipeline_infos[UI_I] = ui_ci_gen.mkGraphicsPipelineInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, 
-                VK_FRONT_FACE_CLOCKWISE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, sample_c, 0);
+            pi_flags.add_depth_stencil = false;
+            pi_flags.add_scissoring = true;
+            pipeline_infos[UI_I] = ui_ci_gen.mkGraphicsPipelineInfo(pi_flags);
 
             LOG("pi count: " + std::to_string(pipeline_infos.size()));
 

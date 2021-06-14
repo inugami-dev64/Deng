@@ -105,7 +105,15 @@ namespace deng {
             char buf[128] = { 0 };
             float fl = 0;
 
-            ImGui::NewFrame();
+            ImGui ::NewFrame();
+                // This is a custom test window sample
+                //ImGui::Begin("Test window", NULL, ImGuiWindowFlags_MenuBar);
+                    //ImGui::Text("This button click prints out appropriate message regarding the button click");
+                    //if(ImGui::Button("Test"))
+                        //LOG("You just clicked a test button");
+                //ImGui::End();
+
+                // Use this to test functionality
                 ImGui::ShowDemoWindow();
             ImGui::EndFrame();
 

@@ -72,6 +72,7 @@
     #include <vector>
     #include <array>
     #include <string>
+    #include <queue>
     #include <stdexcept>
     #include <stddef.h>
     #include <vulkan/vulkan.h>
@@ -130,6 +131,20 @@
 namespace deng {
     namespace vulkan {
 
+        /// Structure to specify all used flags in certain pipeline creation
+        struct __vk_PipelineCreationFlags {
+            VkPolygonMode polygon_mode              = VK_POLYGON_MODE_FILL;
+            VkCullModeFlagBits cull_mode            = VK_CULL_MODE_NONE;
+            VkFrontFace front_face                  = VK_FRONT_FACE_CLOCKWISE;
+            VkPrimitiveTopology primitive_topology  = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+            deng_bool_t add_depth_stencil           = false;
+            deng_bool_t add_color_blend             = true;
+            deng_bool_t add_scissoring              = false;
+            VkSampleCountFlagBits sample_c          = VK_SAMPLE_COUNT_1_BIT;
+            deng_ui32_t subpass_index               = 0;
+        };
+
+
         class __vk_PipelineCreateInfoGenerator : private __vk_PipelineCreateInfoSpecifiers {
         private:
             VkDevice m_device;
@@ -160,26 +175,13 @@ namespace deng {
             std::vector<VkVertexInputAttributeDescription> __getAttributeDescs();
             
         public:
-            __vk_PipelineCreateInfoGenerator (
-                VkDevice device, 
-                VkExtent2D extent, 
-                VkRenderPass renderpass,
-                __vk_PipelineData &pd
-            );
+            __vk_PipelineCreateInfoGenerator(VkDevice device, VkExtent2D extent, VkRenderPass renderpass, 
+                __vk_PipelineData &pd);
             ~__vk_PipelineCreateInfoGenerator();
 
 
             /// Make createinfo instance for graphics pipeline
-            VkGraphicsPipelineCreateInfo mkGraphicsPipelineInfo (
-                VkPolygonMode polygon_mode, 
-                VkCullModeFlagBits cull_mode, 
-                VkFrontFace front_face, 
-                VkPrimitiveTopology primitive_topology, 
-                deng_bool_t add_depth_stencil, 
-                deng_bool_t add_color_blend, 
-                VkSampleCountFlagBits sample_c,
-                deng_ui32_t subpass_index
-            );
+            VkGraphicsPipelineCreateInfo mkGraphicsPipelineInfo(const __vk_PipelineCreationFlags &pl_flags);
         };
     }
 }
