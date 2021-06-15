@@ -107,6 +107,8 @@ namespace deng {
         ImGuiIO *m_p_io;
         deng::__ImGuiData m_gui_data = {};
 
+        std::chrono::duration<deng_vec_t, std::milli> m_frame_dur = std::chrono::milliseconds(0);
+
     private:
         // Update ImGui IO key data
         void __updateKeyData();
@@ -122,6 +124,13 @@ namespace deng {
 
         /// Render ImGui data to screen
         void render(ImDrawData *p_draw_data, const Window &win);
+
+    public:
+        ImGuiIO *getIO();
+
+        /// Set new time points to measure framerate
+        void setTime(std::chrono::time_point<std::chrono::high_resolution_clock> t1, 
+            std::chrono::time_point<std::chrono::high_resolution_clock> t2);
     };
 }
 

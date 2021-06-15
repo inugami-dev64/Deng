@@ -138,7 +138,8 @@ namespace deng {
 
         public:
             /// Check if buffer reallocation is needed for assets and gui elements
-            deng_bool_t reallocCheck(VkDevice device, VkPhysicalDevice gpu, VkCommandPool cmd_pool, VkQueue g_queue);
+            deng_bool_t reallocCheck(VkDevice device, VkPhysicalDevice gpu, VkCommandPool cmd_pool, VkQueue g_queue,
+                const std::vector<VkFence> &fences);
 
 
             /// Check if the current capacity is enough for assets and if it isn't resize the capacity and return true

@@ -87,6 +87,8 @@ typedef uint8_t deng_bool_t;
 /* Size types */
 typedef int64_t deng_px_t;
 typedef float deng_vec_t;
+
+typedef deng_ui32_t deng_idx_t;
 #define true 1
 #define false 0
 

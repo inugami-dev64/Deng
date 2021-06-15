@@ -101,6 +101,8 @@ namespace deng {
 
     // Update IO device input
     void UIManager::updateIO(const deng::Window &win) {
+        m_p_io->DeltaTime = m_frame_dur.count() / 1000;
+        LOG("Delta time: " + std::to_string(m_p_io->DeltaTime) + " s");
         m_p_io->DisplaySize.x = static_cast<deng_vec_t>(win.getSize().first);
         m_p_io->DisplaySize.y = static_cast<deng_vec_t>(win.getSize().second);
         m_p_io->MousePos.x = static_cast<deng_vec_t>(win.getMPos().first);
@@ -173,4 +175,14 @@ namespace deng {
         // Update vertices data
         m_rend.uiUpdateData();
     }
+
+
+    ImGuiIO *UIManager::getIO() { return m_p_io; }
+
+
+    /// Set new time points to measure framerate
+    void UIManager::setTime (
+        std::chrono::time_point<std::chrono::high_resolution_clock> t1, 
+        std::chrono::time_point<std::chrono::high_resolution_clock> t2
+    ) { m_frame_dur = t2 - t1; }
 }

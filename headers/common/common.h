@@ -67,10 +67,12 @@
 extern "C" {
 #endif
 
-/*
- * Universal macro for getting the size of an array
- */
+/// Universal macro for getting the size of an array
 #define C_ARR_SIZE(x) (sizeof(x) / sizeof(x[0]))
+
+
+/// Calculate the remaining number needed to ceil given number x to have zero reminder when dividing with divider div
+#define ZERO_MOD_CEIL_REM(x, div) ((div - (x % div)) == div ? 0 : (div - (x % div)))
 
 #ifdef __COMMON_C
     #include <stdlib.h>

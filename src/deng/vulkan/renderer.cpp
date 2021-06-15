@@ -473,7 +473,7 @@ namespace deng {
             // Check if any buffer reallocations might be needed
             const deng_bool_t is_realloc = __vk_RendererInitialiser::getResMan().reallocCheck(__vk_RendererInitialiser::getIC().getDev(),
                 __vk_RendererInitialiser::getIC().getGpu(), __vk_RendererInitialiser::getDrawCaller().getComPool(),
-                __vk_RendererInitialiser::getIC().getQFF().graphics_queue);
+                __vk_RendererInitialiser::getIC().getQFF().graphics_queue, __vk_RendererInitialiser::getDrawCaller().flight_fences);
 
             // Copy all available assets to the main buffer, if no reallocation occured
             if(!is_realloc) {
@@ -535,7 +535,7 @@ namespace deng {
             // Check if any buffer reallocations might be needed
             const deng_bool_t is_realloc = __vk_RendererInitialiser::getResMan().reallocCheck(__vk_RendererInitialiser::getIC().getDev(),
                 __vk_RendererInitialiser::getIC().getGpu(), __vk_RendererInitialiser::getDrawCaller().getComPool(),
-                __vk_RendererInitialiser::getIC().getQFF().graphics_queue);
+                __vk_RendererInitialiser::getIC().getQFF().graphics_queue, __vk_RendererInitialiser::getDrawCaller().flight_fences);
 
             if(!is_realloc) {
                 // Copy all available assets to the main buffer

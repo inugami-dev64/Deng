@@ -93,11 +93,11 @@ workspace "deng"
     -- Enable debug symbols if specified
     filter "configurations:Debug"
         symbols "On"
-        optimize "Off"
+        optimize "Debug"
 
     filter "configurations:Release"
         symbols "Off"
-        optimize "On"
+        optimize "Speed"
     filter {}
 
 --!!! Add new options to use !!!--

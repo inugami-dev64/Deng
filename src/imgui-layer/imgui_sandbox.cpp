@@ -79,7 +79,7 @@ namespace deng {
         bindings.ch_vcp = deng_CreateInputMask(1, DENG_MOUSE_BTN_2);
         m_cam.setBindings(bindings);
 
-        // Load demo assets
+        // Load viking asset with its texture
         das_Texture viking_tex = {};
         das_LoadTexture(&viking_tex, "textures/viking_room.tga");
         
@@ -97,9 +97,11 @@ namespace deng {
 
     /// General run method
     void ImGUIApplication::run() {
-        m_rend.update();
+        //m_rend.update();
         m_ui_man = std::make_unique<UIManager>(m_rend);
         while(deng_IsRunning()) {
+            // Measure time consomed for renderer current frame
+            auto t1 = std::chrono::high_resolution_clock::now();
             m_ui_man->updateIO(m_win);
             char buf[128] = { 0 };
             float fl = 0;
@@ -110,6 +112,7 @@ namespace deng {
                     ImGui::Text("This button click prints out appropriate message regarding the button click");
                     if(ImGui::Button("Test"))
                         LOG("You just clicked a test button");
+                    ImGui::Text("Framerate: %f FPS\n", m_ui_man->getIO()->Framerate);
                 ImGui::End();
 
                 // Use this to test functionality
@@ -126,6 +129,9 @@ namespace deng {
             m_rend.update();
 
             std::this_thread::sleep_for(std::chrono::microseconds(50));
+            auto t2 = std::chrono::high_resolution_clock::now();
+
+            m_ui_man->setTime(t1, t2);
         }
 
         ImGui::DestroyContext();

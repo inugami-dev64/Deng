@@ -99,7 +99,7 @@ namespace deng {
         void __vk_RuntimeUpdater::updateAssetData(const dengMath::vec2<deng_ui32_t> &bounds) {
             // Check if reallocation is needed
             const deng_bool_t is_realloc = m_rm.reallocCheck(m_ic.getDev(), m_ic.getGpu(), m_dc.getComPool(), 
-                m_ic.getQFF().graphics_queue);
+                m_ic.getQFF().graphics_queue, m_dc.flight_fences);
 
             if(!is_realloc) {
                 m_rm.cpyAssetsToBuffer(m_ic.getDev(), m_ic.getGpu(), m_dc.getComPool(), 
@@ -112,7 +112,7 @@ namespace deng {
         void __vk_RuntimeUpdater::updateUIData(const dengMath::vec4<deng_vec_t> &background) {
             // Check if reallocation is needed
             const deng_bool_t is_realloc = m_rm.reallocCheck(m_ic.getDev(), m_ic.getGpu(), m_dc.getComPool(), 
-                m_ic.getQFF().graphics_queue);
+                m_ic.getQFF().graphics_queue, m_dc.flight_fences);
 
             //// Copy UI element data to buffer, if no reallocation occured
             if(!is_realloc) {
@@ -159,7 +159,8 @@ namespace deng {
         /// Reallocate main buffer and copy all asset to it
         /// NOTE: Vulkan renderer must be idled
         void __vk_RuntimeUpdater::checkForReallocation() {
-            m_rm.reallocCheck(m_ic.getDev(), m_ic.getGpu(), m_dc.getComPool(), m_ic.getQFF().graphics_queue);
+            m_rm.reallocCheck(m_ic.getDev(), m_ic.getGpu(), m_dc.getComPool(), m_ic.getQFF().graphics_queue, 
+                m_dc.flight_fences);
         }
     }
 }

@@ -67,12 +67,6 @@ namespace deng {
     namespace vulkan {
         extern deng_ui32_t __max_frame_c;
 
-        /*************************************/
-        /*************************************/
-        /********** __vk_DrawCaller **********/
-        /*************************************/
-        /*************************************/
-
         __vk_DrawCaller::__vk_DrawCaller (
             VkDevice device,
             __vk_QueueManager qff,
@@ -327,6 +321,7 @@ namespace deng {
 
                             vkCmdSetScissor(m_cmd_bufs.at(i), 0, 1, &sc_rect);
                             vkCmdDrawIndexed(m_cmd_bufs.at(i), m_p_ui_data->entities[j].ind_c, 1, 0, 0, 0);
+                            LOG("Index count: " + std::to_string(m_p_ui_data->entities[j].ind_c));
                         }
                     }
 

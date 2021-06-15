@@ -147,6 +147,8 @@ namespace deng {
                 m_buffer_data.asset_size += asset.vertices.v2d.pn * 
                     sizeof(das_ObjPosData2D);
 
+                /// Round the asset size to 
+                m_buffer_data.asset_size += ZERO_MOD_CEIL_REM(m_buffer_data.asset_size, sizeof(deng_idx_t));
                 asset.offsets.ind_offset = m_buffer_data.asset_size;
                 m_buffer_data.asset_size += asset.indices.n * sizeof(deng_ui32_t);
                 break;
@@ -162,6 +164,7 @@ namespace deng {
                 m_buffer_data.asset_size += asset.vertices.v2d.pn * sizeof(das_ObjPosData2D) + 
                     asset.vertices.v2d.tn * sizeof(das_ObjTextureData);
 
+                m_buffer_data.asset_size += ZERO_MOD_CEIL_REM(m_buffer_data.asset_size, sizeof(deng_idx_t));
                 asset.offsets.ind_offset = m_buffer_data.asset_size;
                 m_buffer_data.asset_size += 2 * asset.indices.n * sizeof(deng_ui32_t);
                 break;
@@ -177,6 +180,7 @@ namespace deng {
                 m_buffer_data.asset_size += asset.vertices.v3d.pn * sizeof(das_ObjPosData) +
                 asset.vertices.v3d.nn * sizeof(das_ObjNormalData);
 
+                m_buffer_data.asset_size += ZERO_MOD_CEIL_REM(m_buffer_data.asset_size, sizeof(deng_idx_t));
                 asset.offsets.ind_offset = m_buffer_data.asset_size;
                 m_buffer_data.asset_size += 2 * asset.indices.n * sizeof(deng_ui32_t);
                 break;
@@ -195,6 +199,7 @@ namespace deng {
                     asset.vertices.v3d.tn * sizeof(das_ObjTextureData) + 
                     asset.vertices.v3d.nn * sizeof(das_ObjNormalData);
 
+                m_buffer_data.asset_size += ZERO_MOD_CEIL_REM(m_buffer_data.asset_size, sizeof(deng_idx_t));
                 asset.offsets.ind_offset = m_buffer_data.asset_size;
                 m_buffer_data.asset_size += 3 * asset.indices.n * sizeof(deng_ui32_t);
                 break;
@@ -212,8 +217,9 @@ namespace deng {
             // For each command data vector element, calculate its offset from the beginning of the ui memory area
             for(size_t i = 0; i < m_p_imgui_data->cmd_data.size(); i++) {
                 m_p_imgui_data->cmd_data[i].offset = m_buffer_data.ui_size;
-                m_buffer_data.ui_size += m_p_imgui_data->cmd_data[i].vert_c * sizeof(ImDrawVert) +
-                    m_p_imgui_data->cmd_data[i].ind_c * sizeof(ImDrawIdx);
+                m_buffer_data.ui_size += m_p_imgui_data->cmd_data[i].vert_c * sizeof(ImDrawVert);
+                m_buffer_data.ui_size += ZERO_MOD_CEIL_REM(m_buffer_data.ui_size, sizeof(ImDrawIdx));
+                m_buffer_data.ui_size += m_p_imgui_data->cmd_data[i].ind_c * sizeof(ImDrawIdx);
             }
         }
 
@@ -226,37 +232,37 @@ namespace deng {
             // For each asset in bounds check the size and find the largest one
             for(size_t i = bounds.first; i < bounds.second; i++) {
                 // Retrieve assets from the registry
-                RegType &reg_asset = m_reg.retrieve (
-                    m_assets[i],
-                    DENG_SUPPORTED_REG_TYPE_ASSET,
-                    NULL
-                );
+                RegType &reg_asset = m_reg.retrieve(m_assets[i], DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
 
                 // Check how much memory the asset consumes by checking their mode, which
                 // they used to allocate memory for the vertex buffer
                 switch(reg_asset.asset.asset_mode) {
                 case DAS_ASSET_MODE_2D_UNMAPPED:
                     cur_size = reg_asset.asset.vertices.v2d.pn * sizeof(das_ObjPosData);
-                    cur_size += reg_asset.asset.indices.n * sizeof(deng_ui32_t);
+                    cur_size += ZERO_MOD_CEIL_REM(cur_size, sizeof(deng_idx_t));
+                    cur_size += reg_asset.asset.indices.n * sizeof(deng_idx_t);
                     break;
 
                 case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
                     cur_size = reg_asset.asset.vertices.v2d.pn * sizeof(das_ObjPosData) +
                         reg_asset.asset.vertices.v2d.tn * sizeof(das_ObjTextureData);
-                    cur_size += 2 * reg_asset.asset.indices.n * sizeof(deng_ui32_t);
+                    cur_size += ZERO_MOD_CEIL_REM(cur_size, sizeof(deng_idx_t));
+                    cur_size += 2 * reg_asset.asset.indices.n * sizeof(deng_idx_t);
                     break;
 
                 case DAS_ASSET_MODE_3D_UNMAPPED:
                     cur_size = reg_asset.asset.vertices.v3d.pn * sizeof(das_ObjPosData) +
                         reg_asset.asset.vertices.v3d.nn * sizeof(das_ObjNormalData);
-                    cur_size += 2 * reg_asset.asset.indices.n * sizeof(deng_ui32_t);
+                    cur_size += ZERO_MOD_CEIL_REM(cur_size, sizeof(deng_idx_t));
+                    cur_size += 2 * reg_asset.asset.indices.n * sizeof(deng_idx_t);
                     break;
 
                 case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
                     cur_size = reg_asset.asset.vertices.v3d.pn * sizeof(das_ObjPosData) +
                         reg_asset.asset.vertices.v3d.tn * sizeof(das_ObjTextureData) +
                         reg_asset.asset.vertices.v3d.nn * sizeof(das_ObjNormalData);
-                    cur_size += 3 * reg_asset.asset.indices.n * sizeof(deng_ui32_t);
+                    cur_size += ZERO_MOD_CEIL_REM(cur_size, sizeof(deng_idx_t));
+                    cur_size += 3 * reg_asset.asset.indices.n * sizeof(deng_idx_t);
                     break;
 
                 default:
@@ -282,11 +288,13 @@ namespace deng {
 
 
         /// Check if buffer reallocation is needed for assets and gui elements and reallocate if needed
-        deng_bool_t __vk_BufferManager::reallocCheck(VkDevice device, VkPhysicalDevice gpu, VkCommandPool cmd_pool, VkQueue g_queue) {
-            // Save the old capacity values
-            const VkDeviceSize prev_asset_cap = m_buffer_data.asset_cap;
-            const VkDeviceSize prev_ui_cap = m_buffer_data.ui_cap;
-            
+        deng_bool_t __vk_BufferManager::reallocCheck (
+            VkDevice device, 
+            VkPhysicalDevice gpu, 
+            VkCommandPool cmd_pool, 
+            VkQueue g_queue,
+            const std::vector<VkFence> &fences
+        ) {
             // For each asset add its size to total asset size and calculate asset offsets
             m_buffer_data.asset_size = 0;
             for(size_t i = 0; i < m_assets.size(); i++) {
@@ -305,8 +313,13 @@ namespace deng {
             const deng_bool_t asset_realloc = assetCapCheck();
             const deng_bool_t ui_realloc = uiCapCheck();
 
+            LOG("New asset cap / size: " + std::to_string(m_buffer_data.asset_cap) + ", " + std::to_string(m_buffer_data.asset_size));
+            LOG("New ui cap / size: " + std::to_string(m_buffer_data.ui_cap) + ", " + std::to_string(m_buffer_data.ui_size));
+
             // Check if any reallocation should be done
             if(asset_realloc || ui_realloc) {
+                vkWaitForFences(device, static_cast<deng_ui32_t>(fences.size()), fences.data(), VK_TRUE, UINT64_MAX);
+
                 // Destroy previous buffer instance 
                 vkFreeMemory(device, m_buffer_data.main_buffer_memory, NULL);
                 vkDestroyBuffer(device, m_buffer_data.main_buffer, NULL);
@@ -326,8 +339,11 @@ namespace deng {
             if(m_buffer_data.asset_size < m_buffer_data.asset_cap) return false;
 
             // Scale the current or required capacity by a factor of 1.5 and set it as a new capacity
-            m_buffer_data.asset_cap = m_buffer_data.asset_cap * 3 / 2 <= m_buffer_data.asset_size ? 
-                m_buffer_data.asset_size * 3 / 2 : m_buffer_data.asset_cap * 3 / 2;
+            m_buffer_data.asset_cap = (m_buffer_data.asset_cap * 3 / 2 <= m_buffer_data.asset_size ? 
+                m_buffer_data.asset_size * 3 / 2 : m_buffer_data.asset_cap * 3 / 2);
+
+            // Round asset capacity to the nearest multiple of index size 
+            m_buffer_data.asset_cap += ZERO_MOD_CEIL_REM(m_buffer_data.asset_cap, sizeof(deng_idx_t));
 
             return true;
         }
@@ -341,6 +357,7 @@ namespace deng {
             m_buffer_data.ui_cap = m_buffer_data.ui_cap * 3 / 2 <= m_buffer_data.ui_size ? 
                 m_buffer_data.ui_size * 3 / 2 : m_buffer_data.ui_cap * 3 / 2;
 
+            m_buffer_data.ui_cap += ZERO_MOD_CEIL_REM(m_buffer_data.ui_cap, sizeof(deng_idx_t));
             return true;
         }
 
@@ -351,6 +368,8 @@ namespace deng {
             VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer(device, gpu, m_buffer_data.asset_cap + m_buffer_data.ui_cap, 
                 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
                 m_buffer_data.main_buffer);
+
+            LOG("Allocating buffer with: " + std::to_string(mem_req.size));
 
             // Allocate memory for the buffer instance
             __vk_BufferCreator::allocateMemory(device, gpu, mem_req.size, m_buffer_data.main_buffer_memory, 
@@ -447,6 +466,7 @@ namespace deng {
             vkUnmapMemory(device, m_buffer_data.staging_buffer_memory);
 
 
+            LOG("Current asset offset is " + std::to_string(m_buffer_data.asset_cap));
             // Copy staging buffer to the main buffer
             __vk_BufferCreator::cpyBufferToBuffer(device, cmd_pool, g_queue, m_buffer_data.staging_buffer,
                 m_buffer_data.main_buffer, m_buffer_data.ui_size, 0, m_buffer_data.asset_cap);

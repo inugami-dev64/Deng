@@ -106,10 +106,8 @@ namespace deng {
         Renderer m_rend;
         std::unique_ptr<UIManager> m_ui_man;
 
-        // Texture atlas variables
+        // ImGui related variables
         das_Texture m_imgui_atlas = {};
-        ImGuiIO *m_p_io = NULL;
-
         __ImGuiData m_imgui_data = {};
 
     public:
