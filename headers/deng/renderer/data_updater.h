@@ -70,6 +70,7 @@
 
 
 #ifdef __DATA_UPDATER_CPP
+    #include <array>
     #include <vector>
     #include <memory>
     #include <chrono>

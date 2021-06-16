@@ -89,8 +89,14 @@ typedef int64_t deng_px_t;
 typedef float deng_vec_t;
 
 typedef deng_ui32_t deng_idx_t;
-#define true 1
-#define false 0
+
+
+// MSVC C++ compiler does not allow redefining true and false keywords C4005
+// GCC does allow it
+#ifndef __cplusplus
+    #define true 1
+    #define false 0
+#endif
 
 
 /// Universal DENG identifier type

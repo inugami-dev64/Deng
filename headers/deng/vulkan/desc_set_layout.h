@@ -70,6 +70,7 @@
 
 #ifdef __DESC_SET_LAYOUT_CPP
     #include <vector>
+    #include <string>
     #include <vulkan/vulkan.h>
     
     #include <common/base_types.h>

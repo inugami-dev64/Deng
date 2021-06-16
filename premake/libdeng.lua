@@ -62,9 +62,9 @@
 local libdeng = {}
 
 -- Build libdeng library
-function libdeng.build(build_static)
+function libdeng.build()
     project "deng"
-        if build_static then
+        if os.istarget("windows") then
             kind "StaticLib"
         else
             kind "SharedLib"

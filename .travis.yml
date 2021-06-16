@@ -29,5 +29,5 @@ script:
   - cd ~
   - git clone https://github.com/inugami-dev64/deng
   - cd deng
-  - premake5 --use-modules --sandbox-mode=VKR gmake
+  - premake5 --use-modules --sandbox-mode=imgui gmake
   - make config=debug_linux

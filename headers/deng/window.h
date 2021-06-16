@@ -76,6 +76,7 @@
 #endif
 
 
+#define NOMINMAX
 #include <deng/surface/surface_window.h>
 #include <deng/vulkan/surface.h>
 

@@ -74,14 +74,14 @@
  *  - Total count of drawn vertices
  */
 void __dam_ListAsset(dam_ListInfo li) {
-    das_INFO_HDR inf_hdr = {};
-    das_VERT_HDR vert_hdr = {};
-    das_INDX_HDR indx_hdr = {};
+    das_INFO_HDR inf_hdr = { 0 };
+    das_VERT_HDR vert_hdr = { 0 };
+    das_INDX_HDR indx_hdr = { 0 };
 
     // Specific vertex header reading
-    das_VPOS_HDR vpos_hdr = {};
-    das_VTEX_HDR vtex_hdr = {};
-    das_VNOR_HDR vnor_hdr = {};
+    das_VPOS_HDR vpos_hdr = { 0 };
+    das_VTEX_HDR vtex_hdr = { 0 };
+    das_VNOR_HDR vnor_hdr = { 0 };
 
     __das_ReadAssetFile(li.file_name);
     __das_ReadINFO_HDR(&inf_hdr, li.file_name);

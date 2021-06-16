@@ -70,8 +70,10 @@
 
 
 #ifdef __UBM_CPP
+    #include <array>
     #include <vector>
     #include <mutex>
+    #include <string>
     #include <vulkan/vulkan.h>
 
     #include <common/base_types.h>

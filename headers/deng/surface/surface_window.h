@@ -135,7 +135,8 @@ extern "C" {
         GC gc;
     } deng_SurfaceX11;
 
-#elif _WIN32
+#elif defined(_WIN32)
+    #define NOMINMAX
     #include <windows.h>
     #include <synchapi.h>    
     #include <stdio.h>

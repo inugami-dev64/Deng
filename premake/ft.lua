@@ -109,7 +109,6 @@ function ft.build()
 		files { "modules/freetype/builds/unix/ftsystem.c" }
 
 	filter "platforms:Win32"
-		removefiles { "modules/freetype/src/base/ftdebug.c" }
 		files { "modules/freetype/builds/windows/ftsystem.c" }
 end
 

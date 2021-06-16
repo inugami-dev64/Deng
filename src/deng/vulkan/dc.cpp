@@ -129,6 +129,11 @@ namespace deng {
             // Vertex normal binding number variable, since it can change according to the asset mode
             deng_ui32_t nor_bind_nr = 1;
 
+            LOG("Asset position offset: " + std::to_string(asset.offsets.pos_offset));
+            LOG("Asset texture offset: " + std::to_string(asset.offsets.tex_offset));
+            LOG("Asset normal offset: " + std::to_string(asset.offsets.nor_offset));
+            LOG("Asset indices offset: " + std::to_string(asset.offsets.ind_offset));
+
             // Bind the position vertex location in buffer
             vkCmdBindVertexBuffers(cur_buf, 0, 1, &bd.main_buffer, &asset.offsets.pos_offset);
 
@@ -220,10 +225,10 @@ namespace deng {
             VkQueue g_queue, 
             VkRenderPass renderpass, 
             VkExtent2D ext,
-            dengMath::vec4<deng_vec_t> background,
+            const dengMath::vec4<deng_vec_t> &background,
             const __vk_BufferData &bd
         ) {
-            m_cmd_bufs.resize(m_framebuffers.size());
+            m_cmd_bufs.resize(__max_frame_c);
 
             // Set up commandbuffer allocate info
             VkCommandBufferAllocateInfo cmd_buf_alloc_info{};
@@ -235,8 +240,6 @@ namespace deng {
             // Allocate command buffers
             if(vkAllocateCommandBuffers(device, &cmd_buf_alloc_info, m_cmd_bufs.data())) 
                 VK_DRAWCMD_ERR("failed to allocate command buffers");
-            
-            m_cmd_bufs.resize(__max_frame_c);
         }
 
 
@@ -248,12 +251,13 @@ namespace deng {
             const __vk_BufferData &bd
         ) {
             // Record each command buffer
+            LOG("Cmd buffer size: " + std::to_string(m_cmd_bufs.size()));
             for(size_t i = 0; i < m_cmd_bufs.size(); i++) {
                 VkCommandBufferBeginInfo cmd_buf_info{};
                 cmd_buf_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
                 // Begin recording command buffer
-                if(vkBeginCommandBuffer(m_cmd_bufs.at(i), &cmd_buf_info) != VK_SUCCESS)
+                if(vkBeginCommandBuffer(m_cmd_bufs[i], &cmd_buf_info) != VK_SUCCESS)
                     VK_DRAWCMD_ERR("failed to begin recording command buffers");
 
                 // Set up renderpass begin info
@@ -275,12 +279,11 @@ namespace deng {
                 clear_values[1].depthStencil = {1.0f, 0};
 
                 // Add clear values to renderpass begin info
-                renderpass_begininfo.clearValueCount = 
-                static_cast<deng_ui32_t>(clear_values.size());
+                renderpass_begininfo.clearValueCount = static_cast<deng_ui32_t>(clear_values.size());
                 renderpass_begininfo.pClearValues = clear_values.data();
                 
                 // Start a new render pass for recording asset draw commands
-                vkCmdBeginRenderPass(m_cmd_bufs.at(i), &renderpass_begininfo, VK_SUBPASS_CONTENTS_INLINE);
+                vkCmdBeginRenderPass(m_cmd_bufs[i], &renderpass_begininfo, VK_SUBPASS_CONTENTS_INLINE);
 
                     // Iterate through every asset, bind resources and issue an index draw to commandbuffer
                     for(size_t j = 0; j < m_assets.size(); j++) {
@@ -291,13 +294,13 @@ namespace deng {
                             DENG_SUPPORTED_REG_TYPE_VK_ASSET, NULL);
 
                         if(reg_asset.asset.is_shown) {
-                            __bindAssetResources(reg_asset.asset, m_cmd_bufs.at(i), bd);
-                            VkPipelineLayout *p_pl_layout = __bindAssetPipeline(reg_asset.asset, m_cmd_bufs.at(i));
+                            __bindAssetResources(reg_asset.asset, m_cmd_bufs[i], bd);
+                            VkPipelineLayout *p_pl_layout = __bindAssetPipeline(reg_asset.asset, m_cmd_bufs[i]);
 
-                            vkCmdBindDescriptorSets(m_cmd_bufs.at(i), VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            vkCmdBindDescriptorSets(m_cmd_bufs[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 *p_pl_layout, 0, 1, &reg_vk_asset.vk_asset.desc_sets[i], 0, NULL);
 
-                            vkCmdDrawIndexed(m_cmd_bufs.at(i), static_cast<deng_ui32_t>(reg_asset.asset.indices.n), 
+                            vkCmdDrawIndexed(m_cmd_bufs[i], static_cast<deng_ui32_t>(reg_asset.asset.indices.n), 
                                 1, 0, 0, 0);
                         }
                     }
@@ -305,12 +308,12 @@ namespace deng {
                     // Check if ui elements should be drawn
                     if(m_p_ui_data) {
                         for(deng_i64_t j = 0; j < m_p_ui_data->entities.size(); j++) {
-                            __bindUIElementResources(&m_p_ui_data->entities[j], m_cmd_bufs.at(i), bd);
+                            __bindUIElementResources(&m_p_ui_data->entities[j], m_cmd_bufs[i], bd);
 
-                            vkCmdBindPipeline(m_cmd_bufs.at(i), VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            vkCmdBindPipeline(m_cmd_bufs[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 m_pl_data[UI_I].pipeline);
 
-                            vkCmdBindDescriptorSets(m_cmd_bufs.at(i), VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            vkCmdBindDescriptorSets(m_cmd_bufs[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 *m_pl_data[UI_I].p_pipeline_layout, 0, 1, &m_ui_sets[i], 0, NULL);
 
                             // Convert scissor coordinates to VkRect2D structure
@@ -319,17 +322,17 @@ namespace deng {
                                 VkExtent2D { m_p_ui_data->entities.at(j).sc_rec_size.first, m_p_ui_data->entities.at(j).sc_rec_size.second }
                             };
 
-                            vkCmdSetScissor(m_cmd_bufs.at(i), 0, 1, &sc_rect);
-                            vkCmdDrawIndexed(m_cmd_bufs.at(i), m_p_ui_data->entities[j].ind_c, 1, 0, 0, 0);
+                            vkCmdSetScissor(m_cmd_bufs[i], 0, 1, &sc_rect);
+                            vkCmdDrawIndexed(m_cmd_bufs[i], m_p_ui_data->entities[j].ind_c, 1, 0, 0, 0);
                             LOG("Index count: " + std::to_string(m_p_ui_data->entities[j].ind_c));
                         }
                     }
 
                 // End render pass
-                vkCmdEndRenderPass(m_cmd_bufs.at(i));
+                vkCmdEndRenderPass(m_cmd_bufs[i]);
                 
                 // Stop recording commandbuffer
-                if(vkEndCommandBuffer(m_cmd_bufs.at(i)) != VK_SUCCESS)
+                if(vkEndCommandBuffer(m_cmd_bufs[i]) != VK_SUCCESS)
                     VK_DRAWCMD_ERR("failed to end recording command buffer");
             }
         }

@@ -72,6 +72,7 @@
     #include <vector>
     #include <array>
     #include <mutex>
+    #include <string>
     #include <memory>
     #include <queue>
     #include <vulkan/vulkan.h>

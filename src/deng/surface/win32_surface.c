@@ -63,9 +63,7 @@
 #define __DENG_SURFACE_C
 #include <deng/surface/surface_window.h>
 
-/* 
- * WIN32 message callback function 
- */
+/// WIN32 message callback function 
 static LRESULT CALLBACK __deng_Win32MessageHandler (
     HWND hwnd, 
     UINT msg, 
@@ -77,9 +75,7 @@ static LRESULT CALLBACK __deng_Win32MessageHandler (
 static HCURSOR __old_cursor = NULL;
 
 
-/*
- * Create new platform independant deng_SurfaceWindow instance for vulkan
- */
+/// Create new platform independant deng_SurfaceWindow instance for vulkan
 deng_SurfaceWindow *deng_InitVKSurfaceWindow (
     deng_i32_t width,
     deng_i32_t height, 
@@ -181,9 +177,7 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
 }
 
 
-/*
- * WIN32 messenger callback
- */
+/// WIN32 messenger callback
 static LRESULT CALLBACK __deng_Win32MessageHandler (
    HWND hwnd, 
    UINT msg, 
@@ -274,10 +268,8 @@ static LRESULT CALLBACK __deng_Win32MessageHandler (
 }
 
 
-/*
- * Update window events and key arrays
- * This function is meant to be called with every loop iteration 
- */
+/// Update window events and key arrays
+/// This function is meant to be called with every loop iteration 
 void deng_UpdateWindow(deng_SurfaceWindow *p_win) {
     // Find the scroll event status
     deng_bool_t is_scr_up = __deng_FindKeyStatus(

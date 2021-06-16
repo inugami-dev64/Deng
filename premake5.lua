@@ -58,15 +58,6 @@
 -- reproduction, and distribution of the Work otherwise complies with
 -- the conditions stated in this License.
 
--- Available options are following
--- [[ use-modules -- build all submodules with DENG
---                   It is recommended in Windows but usually not in GNU/Linux systems
--- [[ build-static -- build static library instead of dynamic library
---                    Recommended for micro optimization purposes, otherwise prefer dynamc libraries
--- [[ no-sandbox -- do not build any sandbox applications
---
-
---local helpers = require("modules/premake_helpers/helpers")
 workspace "deng"
     configurations { "Debug", "Release" }
     platforms { "Win32", "Linux" }
@@ -164,14 +155,8 @@ function vksdkoptcheck()
     elseif not os.istarget("windows") and _OPTIONS["vk-sdk-path"] then
         print("Vulkan SDK path should only be specified for Windows builds")
         os.exit()
-    end
-end
-
-
--- Check if static build is allowed if requested
-function staticbuildcheck() 
-    if _OPTIONS["build-static"] and not os.target("windows") then
-        print("Static builds are only allowed for Windows builds")
+    elseif os.istarget("windows") and not _OPTIONS["vk-sdk-path"] then
+        print("Please specify Vulkan SDK path with vk-sdk-path flag")
         os.exit()
     end
 end
@@ -181,7 +166,6 @@ end
 function optcheck()
     cleanoptcheck()
     vksdkoptcheck()
-    staticbuildcheck()
 end
 
 

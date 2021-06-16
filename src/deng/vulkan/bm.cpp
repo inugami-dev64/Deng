@@ -369,7 +369,7 @@ namespace deng {
                 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
                 m_buffer_data.main_buffer);
 
-            LOG("Allocating buffer with: " + std::to_string(mem_req.size));
+            LOG("Allocating buffer with size of: " + std::to_string(mem_req.size) + " bytes");
 
             // Allocate memory for the buffer instance
             __vk_BufferCreator::allocateMemory(device, gpu, mem_req.size, m_buffer_data.main_buffer_memory, 

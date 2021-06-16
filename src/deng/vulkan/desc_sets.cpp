@@ -470,7 +470,7 @@ namespace deng {
             RegType &reg_asset = m_reg.retrieve(asset.base_id,
                 DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
 
-            // Texture entry pointer
+            // Texture entry pointer that is going to have an appropriate value according to the given texture id
             RegType *p_reg_vk_tex = NULL;
 
             // Retrieve the asset texture if it exists, otherwise retrieve missing texture texture
@@ -508,7 +508,7 @@ namespace deng {
             asset.desc_sets = (VkDescriptorSet*) calloc(asset.desc_c,
                 sizeof(VkDescriptorSet));
 
-            VkDescriptorSetAllocateInfo allocinfo{};
+            VkDescriptorSetAllocateInfo allocinfo = {};
             allocinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
             allocinfo.descriptorPool = __vk_DescriptorPoolCreator::getDescPool(assetModeToPipelineType(reg_asset.asset.asset_mode));
             allocinfo.descriptorSetCount = static_cast<deng_ui32_t>(set_layouts.size());

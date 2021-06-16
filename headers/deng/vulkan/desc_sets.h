@@ -65,6 +65,7 @@
 
 #ifdef __DESC_SETS_CPP
     #include <vector>
+    #include <string>
     #include <array>
 
     #include <vulkan/vulkan.h>

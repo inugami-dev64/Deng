@@ -69,6 +69,7 @@
     #include <chrono>
     #include <mutex>
     #include <queue>
+    #include <string>
     #include <memory>
     #include <array>
     

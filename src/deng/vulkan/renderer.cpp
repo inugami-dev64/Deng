@@ -477,6 +477,7 @@ namespace deng {
 
             // Copy all available assets to the main buffer, if no reallocation occured
             if(!is_realloc) {
+                LOG("No reallocation occured");
                 __vk_RendererInitialiser::getResMan().cpyAssetsToBuffer(__vk_RendererInitialiser::getIC().getDev(), 
                     __vk_RendererInitialiser::getIC().getGpu(), __vk_RendererInitialiser::getDrawCaller().getComPool(),
                     __vk_RendererInitialiser::getIC().getQFF().graphics_queue, false, { 0, static_cast<deng_ui32_t>(__vk_RendererInitialiser::m_assets.size()) });

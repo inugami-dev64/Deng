@@ -94,15 +94,8 @@ namespace deng {
         dengMath::vec3<deng_vec_t> m_origin;
 
     public:
-        __EditorCamera (
-            deng_vec_t zoom_step,
-            const dengMath::vec3<deng_vec_t> &origin,
-            const dengMath::vec2<deng_f64_t> &mouse_sens,
-            deng_vec_t FOV,
-            deng_vec_t near_plane,
-            deng_vec_t far_plane,
-            Window *p_ww
-        );
+        __EditorCamera(deng_vec_t zoom_step, const dengMath::vec3<deng_vec_t> &origin, const dengMath::vec2<deng_f64_t> &mouse_sens, 
+            deng_vec_t FOV, deng_vec_t near_plane, deng_vec_t far_plane, Window *p_ww );
         
 
         /// Move origin point in world coordinate system by delta_mov

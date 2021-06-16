@@ -85,7 +85,7 @@ extern "C" {
     #include <deng/surface/key_definitions.h>
     #include <deng/surface/surface_window.h>
     #ifdef _WIN32
-        #include <vulkan/win32.h>
+        #include <vulkan/vulkan_win32.h>
     #endif
 #endif 
 

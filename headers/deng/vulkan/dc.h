@@ -148,7 +148,7 @@ namespace deng {
 
             /// Allocate enough memory for command buffers
             void allocateCmdBuffers(VkDevice device, VkQueue g_queue, VkRenderPass renderpass, 
-                VkExtent2D ext, dengMath::vec4<deng_vec_t> background, const __vk_BufferData &bd);
+                VkExtent2D ext, const dengMath::vec4<deng_vec_t> &background, const __vk_BufferData &bd);
 
 
             /// Record command buffers for drawing assets and optionally ui elements

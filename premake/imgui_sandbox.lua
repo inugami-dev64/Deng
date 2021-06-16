@@ -71,7 +71,6 @@ function imgui_sandbox.build()
 
         files { "src/imgui-layer/imgui_sandbox.cpp" }
         links { "deng", "imgui" }
-        optimize "On"
 end
 
 

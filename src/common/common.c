@@ -168,10 +168,10 @@ deng_ui64_t cm_RandI64() {
         if(!res) FILE_ERR("/dev/urandom");
         fclose(file);
     #elif defined(_WIN32)
-		HCRYPTPROV crypt_prov;
-        if (!CryptAcquireContext(&crypt_prov, NULL, NULL, PROV_RSA_FULL, 0))
-            RUN_ERR("cm_randi64()", "Failed to retrieve WIN32 cryptographic context");
-        if (!CryptGenRandom(crypt_prov, sizeof(deng_ui64_t), (BYTE*) &out))
+		HCRYPTPROV crypt_prov = { 0 };
+        if (!CryptAcquireContext(&crypt_prov, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
+            RUN_ERR("cm_randi64()", "Failed to acquire WIN32 cryptographic context");
+        if(!CryptGenRandom(crypt_prov, sizeof(deng_ui64_t), (BYTE*) &out))
             RUN_ERR("cm_randi64()", "Failed to generate random cryptgraphically secure number");
 	#endif
 
