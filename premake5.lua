@@ -112,10 +112,10 @@ newoption {
     value = "MODE",
     description = "Select sandbox application mode",
     allowed = {
-        { "vulkan", "Build an application for testing the vulkan renderer by loading assets" },
         { "deng", "Build an application for testing the renderer by loading assets" },
         { "imgui", "Build an application for testing ImGui with DENG renderer" },
         { "none", "Do not build any sandbox applications (default)" }
+        { "all", "Build all sandbox applications" }
     }
 }
 
@@ -210,12 +210,12 @@ function buildcfg()
     dam.build()
 
     -- Sandbox application build configuration
-    if _OPTIONS["sandbox-mode"] == "deng" then
-        local sandbox = require("premake/dengbox")
-        sandbox.build()
-    elseif _OPTIONS["sandbox-mode"] == "imgui" then
-        local sandbox = require("premake/imgui_sandbox")
-        sandbox.build()
+    if _OPTIONS["sandbox-mode"] == "deng" or _OPTIONS["sandbox-mode"] == "all" then
+        local dengbox = require("premake/dengbox")
+        dengbox.build()
+    elseif _OPTIONS["sandbox-mode"] == "imgui" or _OPTIONS["sandbox-mode"] == "all" then
+        local imgui_sandbox = require("premake/imgui_sandbox")
+        imgui_sandbox.build()
     end
 end
 

@@ -72,6 +72,7 @@
     #include <vector>
     #include <utility>
     #include <stdlib.h>
+    #include <cstring>
     #include <string>
     #include <vulkan/vulkan.h>
 

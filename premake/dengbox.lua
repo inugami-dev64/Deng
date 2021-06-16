@@ -69,8 +69,8 @@ function dengbox.build()
         language "C++"
         cppdialect "C++14"
         files {
-            "src/main/vulkan/vulkan_sandbox.h",
-            "src/main/vulkan/vulkan_sandbox.cpp"
+            "src/sandbox/dengbox/dengbox.h",
+            "src/sandbox/dengbox/dengbox.cpp"
         }
 
 		libdirs { "build" }
