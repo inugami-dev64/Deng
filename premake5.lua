@@ -114,7 +114,7 @@ newoption {
     allowed = {
         { "deng", "Build an application for testing the renderer by loading assets" },
         { "imgui", "Build an application for testing ImGui with DENG renderer" },
-        { "none", "Do not build any sandbox applications (default)" }
+        { "none", "Do not build any sandbox applications (default)" },
         { "all", "Build all sandbox applications" }
     }
 }
