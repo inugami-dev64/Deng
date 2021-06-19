@@ -69,21 +69,20 @@ namespace deng {
 
         __vk_DrawCaller::__vk_DrawCaller (
             VkDevice device,
-            __vk_QueueManager qff,
+            const __vk_QueueManager &qff,
             const std::vector<deng_Id> &assets,
             const std::vector<deng_Id> &textures,
             const std::vector<VkDescriptorSet> &ui_sets,
             deng::__GlobalRegistry &reg
-        ) : m_assets(assets), m_textures(textures), m_ui_sets(ui_sets), m_reg(reg) 
+        ) : m_assets(assets), m_textures(textures), m_ui_sets(ui_sets), m_reg(reg), m_qff(qff)
         {
-            m_qff = qff;
             __mkSynchronisation(device);
         }
 
 
         /// Create command pool
         void __vk_DrawCaller::mkCommandPool(VkDevice device) {
-            VkCommandPoolCreateInfo cmd_pool_createinfo{};
+            VkCommandPoolCreateInfo cmd_pool_createinfo = {};
             cmd_pool_createinfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
             cmd_pool_createinfo.queueFamilyIndex = m_qff.getGraphicsQFIndex();
             cmd_pool_createinfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
@@ -100,10 +99,10 @@ namespace deng {
             image_available_semaphore_set.resize(__max_frame_c);
             render_finished_semaphore_set.resize(__max_frame_c);
             flight_fences.resize(__max_frame_c);
-            VkSemaphoreCreateInfo semaphore_info{};
+            VkSemaphoreCreateInfo semaphore_info = {};
             semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-            VkFenceCreateInfo fence_createInfo{};
+            VkFenceCreateInfo fence_createInfo = {};
             fence_createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
             fence_createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
@@ -157,8 +156,7 @@ namespace deng {
             }
 
             // Bind the position indices location in buffer
-            vkCmdBindIndexBuffer(cur_buf, bd.main_buffer, 
-                asset.offsets.ind_offset, VK_INDEX_TYPE_UINT32);
+            vkCmdBindIndexBuffer(cur_buf, bd.main_buffer, asset.offsets.ind_offset, VK_INDEX_TYPE_UINT32);
         }
 
 
@@ -228,16 +226,17 @@ namespace deng {
             const dengMath::vec4<deng_vec_t> &background,
             const __vk_BufferData &bd
         ) {
-            m_cmd_bufs.resize(__max_frame_c);
+            m_cmd_bufs.resize(m_framebuffers.size());
 
             // Set up commandbuffer allocate info
-            VkCommandBufferAllocateInfo cmd_buf_alloc_info{};
+            VkCommandBufferAllocateInfo cmd_buf_alloc_info = {};
             cmd_buf_alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
             cmd_buf_alloc_info.commandPool = m_cmd_pool;
             cmd_buf_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
             cmd_buf_alloc_info.commandBufferCount = static_cast<deng_ui32_t>(m_cmd_bufs.size());
 
             // Allocate command buffers
+			printf("cmd_buffer address: 0x%p\n", m_cmd_bufs.data());
             if(vkAllocateCommandBuffers(device, &cmd_buf_alloc_info, m_cmd_bufs.data())) 
                 VK_DRAWCMD_ERR("failed to allocate command buffers");
         }
@@ -251,9 +250,8 @@ namespace deng {
             const __vk_BufferData &bd
         ) {
             // Record each command buffer
-            LOG("Cmd buffer size: " + std::to_string(m_cmd_bufs.size()));
             for(size_t i = 0; i < m_cmd_bufs.size(); i++) {
-                VkCommandBufferBeginInfo cmd_buf_info{};
+                VkCommandBufferBeginInfo cmd_buf_info = {};
                 cmd_buf_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
                 // Begin recording command buffer
@@ -261,7 +259,7 @@ namespace deng {
                     VK_DRAWCMD_ERR("failed to begin recording command buffers");
 
                 // Set up renderpass begin info
-                VkRenderPassBeginInfo renderpass_begininfo{};
+                VkRenderPassBeginInfo renderpass_begininfo = {};
                 renderpass_begininfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
                 renderpass_begininfo.renderPass = renderpass;
                 renderpass_begininfo.framebuffer = m_framebuffers[i];
@@ -271,17 +269,17 @@ namespace deng {
                 // Set up clear values
                 std::array<VkClearValue, 2> clear_values;
                 clear_values[0].color = {{
-                    background.first, 
-                    background.second, 
-                    background.third, 
+                    background.first,
+                    background.second,
+                    background.third,
                     background.fourth
                 }};
-                clear_values[1].depthStencil = {1.0f, 0};
+                clear_values[1].depthStencil = { 1.0f, 0 };
 
                 // Add clear values to renderpass begin info
                 renderpass_begininfo.clearValueCount = static_cast<deng_ui32_t>(clear_values.size());
                 renderpass_begininfo.pClearValues = clear_values.data();
-                
+
                 // Start a new render pass for recording asset draw commands
                 vkCmdBeginRenderPass(m_cmd_bufs[i], &renderpass_begininfo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -329,11 +327,13 @@ namespace deng {
                     }
 
                 // End render pass
+				printf("test\n");
                 vkCmdEndRenderPass(m_cmd_bufs[i]);
                 
+				printf("test\n");
                 // Stop recording commandbuffer
                 if(vkEndCommandBuffer(m_cmd_bufs[i]) != VK_SUCCESS)
-                    VK_DRAWCMD_ERR("failed to end recording command buffer");
+					VK_DRAWCMD_ERR("failed to end recording command buffer");
             }
         }
 

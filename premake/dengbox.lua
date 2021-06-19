@@ -76,7 +76,6 @@ function dengbox.build()
 		libdirs { "build" }
         links { "deng" }
 
-        optimize "On"
         filter "configurations:Debug"
             symbols "On"
         filter "configurations:Release"

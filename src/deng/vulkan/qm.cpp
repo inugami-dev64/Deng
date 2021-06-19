@@ -74,7 +74,7 @@ namespace deng {
          * This method checks for all queue families available on given physical 
          * device and searches for one that supports graphics queues.
          */
-        deng_bool_t __vk_QueueManager::findGraphicsFamily(const VkPhysicalDevice &gpu) {
+        deng_bool_t __vk_QueueManager::findGraphicsFamily(VkPhysicalDevice gpu) {
             deng_ui32_t index;
             // Get the total count of queue families
             deng_ui32_t family_count = 0;
@@ -148,9 +148,9 @@ namespace deng {
         }
 
 
-        /* Graphics queuefamily getter method */
-        deng_ui32_t __vk_QueueManager::getGraphicsQFIndex() { return m_graphics_family_index; }
-        /* Present queue family getter method */
-        deng_ui32_t __vk_QueueManager::getPresentQFIndex() { return m_present_family_index; }
+        /// Graphics queuefamily getter method
+        deng_ui32_t __vk_QueueManager::getGraphicsQFIndex() const { return m_graphics_family_index; }
+        /// Present queue family getter method
+        deng_ui32_t __vk_QueueManager::getPresentQFIndex() const { return m_present_family_index; }
     }
 }

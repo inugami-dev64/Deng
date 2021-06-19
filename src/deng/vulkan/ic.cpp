@@ -73,14 +73,13 @@ namespace deng {
 
         __vk_InstanceCreator::__vk_InstanceCreator (
             deng::Window &win, 
-            deng_bool_t enable_vl
+            const deng_bool_t enable_vl
         ) : __vk_DeviceInfo(win) {
             m_required_extension_names.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
             __mkInstance(enable_vl);
             __mkWindowSurface();
-            if(enable_vl)
-                __mkDebugMessenger();
+            if(enable_vl) __mkDebugMessenger();
             
             __selectPhysicalDevice();
             __findSupportedProperties();
@@ -89,7 +88,7 @@ namespace deng {
 
 
         /// Create new vulkan instance for renderer 
-        void __vk_InstanceCreator::__mkInstance(deng_bool_t &enable_vl) {
+        void __vk_InstanceCreator::__mkInstance(const deng_bool_t enable_vl) {
             // Set up Vulkan application info
             VkApplicationInfo appinfo{};
             appinfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -107,19 +106,13 @@ namespace deng {
             // Get all required extensions
             deng_ui32_t ext_c;
             
-            const char **extensions = (const char**) m_win.findVulkanSurfaceExtensions (
-                &ext_c,
-                enable_vl
-            );
+            const char **extensions = (const char**) m_win.findVulkanSurfaceExtensions(&ext_c, enable_vl);
 
             instance_createinfo.enabledExtensionCount = ext_c;
             instance_createinfo.ppEnabledExtensionNames = extensions;
-            LOG (
-                "Required extensions count is: " + 
-                std::to_string(instance_createinfo.enabledExtensionCount)
-            );
-            
-            VkDebugUtilsMessengerCreateInfoEXT debug_createinfo{};
+            LOG("Required extensions count is: " + std::to_string(instance_createinfo.enabledExtensionCount));
+
+            VkDebugUtilsMessengerCreateInfoEXT debug_createinfo = {};
             
             // Check for validatation layer support
             if(enable_vl && !__checkValidationLayerSupport())
@@ -152,7 +145,7 @@ namespace deng {
 
 
         /// Check if Vulkan validation layers are available 
-        deng_bool_t __vk_InstanceCreator::__checkValidationLayerSupport() {
+        const deng_bool_t __vk_InstanceCreator::__checkValidationLayerSupport() {
             deng_ui32_t layer_count;
             vkEnumerateInstanceLayerProperties(&layer_count, NULL);
 
@@ -255,7 +248,7 @@ namespace deng {
 
         
         /// Create logical Vulkan device 
-        void __vk_InstanceCreator::__mkLogicalDevice(deng_bool_t &enable_vl) {
+        void __vk_InstanceCreator::__mkLogicalDevice(const deng_bool_t enable_vl) {
             if (
                 !m_qff.findGraphicsFamily(m_gpu) || 
                 !m_qff.findPresentSupportFamily(m_gpu, m_surface)
@@ -301,19 +294,8 @@ namespace deng {
             if(vkCreateDevice(m_gpu, &logical_device_createinfo, NULL, &m_device) != VK_SUCCESS)
                 VK_INSTANCE_ERR("failed to create logical device!");
 
-            vkGetDeviceQueue (
-                m_device, 
-                m_qff.getGraphicsQFIndex(), 
-                0, 
-                &m_qff.graphics_queue
-            );
-            
-            vkGetDeviceQueue (
-                m_device, 
-                m_qff.getPresentQFIndex(), 
-                0, 
-                &m_qff.present_queue
-            );
+            vkGetDeviceQueue(m_device, m_qff.getGraphicsQFIndex(), 0, &m_qff.graphics_queue );
+            vkGetDeviceQueue(m_device, m_qff.getPresentQFIndex(), 0, &m_qff.present_queue );
         }
 
         

@@ -213,7 +213,9 @@ function buildcfg()
     if _OPTIONS["sandbox-mode"] == "deng" or _OPTIONS["sandbox-mode"] == "all" then
         local dengbox = require("premake/dengbox")
         dengbox.build()
-    elseif _OPTIONS["sandbox-mode"] == "imgui" or _OPTIONS["sandbox-mode"] == "all" then
+    end
+
+    if _OPTIONS["sandbox-mode"] == "imgui" or _OPTIONS["sandbox-mode"] == "all" then
         local imgui_sandbox = require("premake/imgui_sandbox")
         imgui_sandbox.build()
     end

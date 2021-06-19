@@ -104,7 +104,6 @@ namespace deng {
     void __AssetManager::submitTexture(das_Texture &texture) {
         RegType reg_tex = { { 0 } };
         reg_tex.tex = texture;
-        LOG("Pushing atlas with id: " + std::string(reg_tex.tex.uuid));
         m_reg.push(reg_tex.tex.uuid, DENG_SUPPORTED_REG_TYPE_TEXTURE, reg_tex);
         m_texture_queue.push(reg_tex.tex.uuid);
     }

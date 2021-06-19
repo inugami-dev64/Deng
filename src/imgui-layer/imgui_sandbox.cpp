@@ -69,7 +69,7 @@ namespace deng {
         m_win(1280, 720, "ImGUI demo"),
         m_cam(DENG_CAMERA_TYPE_EDITOR, static_cast<deng_vec_t>(dengMath::Conversion::degToRad(65.0)), 
             {0.1f, -25.0f}, {0.7f, 0.7f, 0.7f}, {0.3f, 0.3f}, false, &m_win),
-        m_rend(DENG_RENDERER_HINT_API_VULKAN | DENG_RENDERER_HINT_ENABLE_API_DEBUGGING | DENG_RENDERER_HINT_MSAA_2, 
+        m_rend(DENG_RENDERER_HINT_API_VULKAN | DENG_RENDERER_HINT_MSAA_2, 
             dengMath::vec4<deng_vec_t>{0.0f, 0.0f, 0.0f, 1.0f})
     { 
         // Set bindings
@@ -81,13 +81,13 @@ namespace deng {
 
         // Load viking asset with its texture
         das_Texture viking_tex = {};
-        das_LoadTexture(&viking_tex, "textures/viking_room.tga");
+        das_LoadTexture(&viking_tex, "textures\\viking_room.tga");
         
         das_Asset viking = {};
         das_LoadAsset(&viking, DAS_ASSET_MODE_UNDEFINED, das_ObjColorData{1.0f, 1.0f, 1.0f, 1.0f}, 
-            false, viking_tex.uuid, (char*) "assets/viking.das");
+            false, viking_tex.uuid, (char*) "assets\\viking.das");
 
-        // Submit assets to the renderer
+        Submit assets to the renderer
         m_rend.submitAsset(viking);
         m_rend.submitTexture(viking_tex);
 

@@ -103,12 +103,12 @@ namespace deng {
             const char *m_p_validation_layer = "VK_LAYER_KHRONOS_validation";
 
         private:
-            void __mkInstance(deng_bool_t &enable_vl);
-            deng_bool_t __checkValidationLayerSupport();
+            void __mkInstance(const deng_bool_t enable_vl);
+            const deng_bool_t __checkValidationLayerSupport();
             void __findSupportedProperties();
             void __mkDebugMessenger();
             void __selectPhysicalDevice();
-            void __mkLogicalDevice(deng_bool_t &enable_vl);
+            void __mkLogicalDevice(const deng_bool_t enable_vl);
             void __mkWindowSurface();
 
             
@@ -125,15 +125,8 @@ namespace deng {
             );
 
         public:
-            __vk_InstanceCreator (
-                Window &win, 
-                deng_bool_t enable_vl
-            );
-
-            static void destroyDebugUtils (
-                VkInstance instance,
-                VkDebugUtilsMessengerEXT messenger
-            );
+            __vk_InstanceCreator(Window &win, const deng_bool_t enable_vl );
+            static void destroyDebugUtils(VkInstance instance, VkDebugUtilsMessengerEXT messenger);
 
         public:
             deng_bool_t getLFSupport();

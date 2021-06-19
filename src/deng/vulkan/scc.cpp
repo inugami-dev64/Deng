@@ -292,7 +292,7 @@ namespace deng {
             subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
             subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-            std::array<VkAttachmentDescription, 3> attachments = {color_attachment, depth_attachment, color_attachment_resolve};
+            std::array<VkAttachmentDescription, 3> attachments = { color_attachment, depth_attachment, color_attachment_resolve };
             VkRenderPassCreateInfo renderpass_createinfo{};
             renderpass_createinfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
             renderpass_createinfo.attachmentCount = static_cast<deng_ui32_t>(attachments.size());
@@ -305,6 +305,8 @@ namespace deng {
 
             if(vkCreateRenderPass(m_device, &renderpass_createinfo, NULL, &m_renderpass) != VK_SUCCESS)
                 VK_SWAPCHAIN_ERR("failed to create render pass!");
+
+			std::cout << "wait" << std::endl;
         }
 
 

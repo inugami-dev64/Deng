@@ -90,20 +90,17 @@ namespace deng {
              * This method checks for all queue families available on given physical 
              * device and searches for one that supports graphics queues.
              */
-            deng_bool_t findGraphicsFamily(const VkPhysicalDevice &gpu);
+			deng_bool_t findGraphicsFamily(VkPhysicalDevice gpu);
 
             /*
              * Search for queue family that supports present queues
              * This method checks for all queue families available on given physical 
              * device and searches for one that supports present queues
              */
-            deng_bool_t findPresentSupportFamily (
-                const VkPhysicalDevice &gpu, 
-                const VkSurfaceKHR &surface
-            );
+            deng_bool_t findPresentSupportFamily(const VkPhysicalDevice &gpu, const VkSurfaceKHR &surface);
 
-            deng_ui32_t getGraphicsQFIndex();
-            deng_ui32_t getPresentQFIndex();
+            deng_ui32_t getGraphicsQFIndex() const;
+            deng_ui32_t getPresentQFIndex() const;
         };
     }
 }

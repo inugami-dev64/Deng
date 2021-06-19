@@ -87,6 +87,7 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
     // wchar_t *win_title = cm_ToWideString(title);
     // printf("title: 0x%p\n", title);
     // printf("win_title: 0x%p\n", win_title);
+	wchar_t *w_title = L"Test title";
 
 
     win.width = width;
@@ -123,20 +124,8 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
         break;
     }
     
-    win.win32_handler.hwnd = CreateWindowEx (
-        0, 
-        win_class, 
-        title,
-        window_style, 
-        CW_USEDEFAULT, 
-        CW_USEDEFAULT, 
-        win.width, 
-        win.height, 
-        NULL, 
-        NULL, 
-        win.win32_handler.win.hInstance, 
-        NULL
-    );
+    win.win32_handler.hwnd = CreateWindowEx(0, win_class, w_title, window_style, CW_USEDEFAULT, 
+        CW_USEDEFAULT, win.width, win.height, NULL, NULL, win.win32_handler.win.hInstance, NULL );
 
     if(!win.win32_handler.hwnd) {
         printf("%s\n", "Failed to initialize win32 window!");

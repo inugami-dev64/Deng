@@ -186,8 +186,6 @@ namespace deng {
                 break;
 
             case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-                // Set all vertices' offsets and the vertices that are not available mark as
-                // UINT64_MAX
                 asset.offsets.pos_offset = m_buffer_data.asset_size;
                 asset.offsets.tex_offset = m_buffer_data.asset_size +
                     asset.vertices.v3d.pn * sizeof(das_ObjPosData);
@@ -202,6 +200,8 @@ namespace deng {
                 m_buffer_data.asset_size += ZERO_MOD_CEIL_REM(m_buffer_data.asset_size, sizeof(deng_idx_t));
                 asset.offsets.ind_offset = m_buffer_data.asset_size;
                 m_buffer_data.asset_size += 3 * asset.indices.n * sizeof(deng_ui32_t);
+				LOG("Offsets (pos, tex, nor, ind): " + std::to_string(asset.offsets.pos_offset) + ", " + std::to_string(asset.offsets.tex_offset) + ", " + std::to_string(asset.offsets.nor_offset) + 
+					", " + std::to_string(asset.offsets.ind_offset));
                 break;
             
             default:

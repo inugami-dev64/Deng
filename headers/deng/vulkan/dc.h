@@ -103,7 +103,7 @@ namespace deng {
             deng::__GlobalRegistry &m_reg;
             std::vector<VkFramebuffer> m_framebuffers;
             std::array<__vk_PipelineData, PIPELINE_C> m_pl_data;
-            __vk_QueueManager m_qff;
+            const __vk_QueueManager &m_qff;
 
             // Commandpools and commandbuffers
             VkCommandPool m_cmd_pool;
@@ -136,7 +136,7 @@ namespace deng {
             std::vector<VkSemaphore> render_finished_semaphore_set;
 
         public:
-            __vk_DrawCaller(VkDevice device, __vk_QueueManager qff,
+            __vk_DrawCaller(VkDevice device, const __vk_QueueManager &qff,
                 const std::vector<deng_Id> &assets, const std::vector<deng_Id> &textures,
                 const std::vector<VkDescriptorSet> &ui_sets, deng::__GlobalRegistry &reg);
             
