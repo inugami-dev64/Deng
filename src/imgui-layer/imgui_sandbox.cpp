@@ -87,7 +87,7 @@ namespace deng {
         das_LoadAsset(&viking, DAS_ASSET_MODE_UNDEFINED, das_ObjColorData{1.0f, 1.0f, 1.0f, 1.0f}, 
             false, viking_tex.uuid, (char*) "assets\\viking.das");
 
-        Submit assets to the renderer
+        // Submit assets to the renderer
         m_rend.submitAsset(viking);
         m_rend.submitTexture(viking_tex);
 

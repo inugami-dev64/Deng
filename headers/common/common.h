@@ -97,9 +97,7 @@ extern "C" {
     #define __SECONDS_IN_FEBRUARY 2419200
     #define __SECONDS_IN_LEAP_YEAR_FEBRUARY 2505600
 
-    /*
-     * Substring finder algorithm core function
-     */
+    /// Substring finder algorithm core function
     void __cm_SubstrAl (
         char *str,
         size_t str_len,

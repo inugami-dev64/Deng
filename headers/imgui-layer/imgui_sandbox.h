@@ -73,6 +73,7 @@
     #include <array>
     #include <string>
     #include <thread>
+    #include <iostream>
     #include <queue>
     #include <memory>
 
