@@ -24,13 +24,14 @@ Features that are not yet implemented but are coming soon are following:
 
 
 ## Getting started
-DENG can be built using [premake5](https://github.com/premake/premake-core) 
+DENG build files can be generated with [premake5](https://github.com/premake/premake-core). Before generating any
+build file, make sure that all submodules are initialised. For that either git clone the repo with `--recursive` flag or
+initialise and update submodules using `$ git submodule init` and `$ git submodule update` accordingly.
 
-Additional premake flags for DENG are following:  
+Possible premake flags for DENG are following:  
 | Flag          | Possible values       | Description                                                                   |
 | :---          | :--------------       | ----------:                                                                   |
-| use-modules   | \-                    | Build all dependencies from source instead of searching for their binaries    |
-| sandbox-mode  | all, deng, imgui      | Sandbox test application mode                                                 |
+| sandbox-mode  | all, deng, imgui      | Sandbox test application modes                                                |
 | vk-sdk-path   | [PATH_TO_VULKAN_SDK]  | Specify the Vulkan SDK path (Required for Windows)                            |
 
 ### GNU/Linux or potentially other Unix like operating systems excluding MacOS
@@ -38,7 +39,6 @@ Additional premake flags for DENG are following:
 #### Prerequisites
 * Gnu toolchain (gcc, make)  
 * Vulkan headers  
-* Freetype library and headers (optional / can be built from source as a GIT submodule)  
 * Xlib
 * XCursor
 * Premake5
@@ -50,14 +50,13 @@ Generating Makefiles using premake is pretty straight forward:
 
 After generating the Makefiles make sure that `config` variable is specifed as either `debug_linux` or `release_linux`.
 Build command should now look something like this:  
-`make config=debug_linux [-jN]` for debug build or  
-`make config=release_linux [-jN]` for release build
+`$ make config=debug_linux [-jN]` for debug build or  
+`$ make config=release_linux [-jN]` for release build
 
 
 ### Microsoft Windows
 
-When using Windows to build DENG please make sure that submodules are initialized. For that you can use `git submodule init` and `git submodule update`.  
-NOTE: Currently only static library builds have been tested on Windows. Please keep that in mind.
+NOTE: In Windows the DENG runtime library is built as a static library for now.  
 
 #### Prerequisites
 * Visual Studio  
@@ -65,7 +64,6 @@ NOTE: Currently only static library builds have been tested on Windows. Please k
 * Premake5  
 
 #### Building
-Generating Visual Studio solution files using premake requires some additional flags, namely `use-modules`, `build-static` and `vk-sdk-path`.  
 Premake command to generate solution files should now look something like this:  
 `premake5 --use-modules --vk-sdk-path=<PATH_TO_VULKAN_SDK>`  
 

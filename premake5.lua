@@ -92,13 +92,6 @@ workspace "deng"
     filter {}
 
 --!!! Add new options to use !!!--
--- Create an option to compile all dependencies from source
-newoption {
-    trigger = "use-all-modules",
-    description = "Compile all dependencies from source (all git submodules must be initialised)"
-}
-
-
 -- Create an option to specify vulkan sdk library location (Windows only)
 newoption {
 	trigger = "vk-sdk-path",
@@ -174,15 +167,6 @@ function modcheck()
     -- These modules are going to be built no matter what
     local imgui = require("premake/imgui")
     imgui.build()
-
-    -- Check if all submodule build configs should be created
-    if _OPTIONS["use-all-modules"] then
-        local ft = require("premake/ft")
-        ft.build()
-    elseif os.istarget("windows") then
-        print("Please use use-all-modules option on Windows builds!")
-        os.exit()
-    end
 end
 
 
