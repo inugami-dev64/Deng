@@ -1,5 +1,4 @@
-/*    ____         ________     __      _        ______  
- *   |  _ \_      |  ______|   |  \    | |     _/  ____\
+/*    ____         ________     __      _        ______  |  _ \_      |  ______|   |  \    | |     _/  ____\
  *   | | \_ \_    |  |         |   \   | |    /  _/   
  *   | |   \  |   |  |_____    | |\ \  | |   |  |   _____ 
  *   | |    | |   |  ______|   | | \ \ | |   |  |  |___  | 
@@ -522,8 +521,6 @@ void __das_LoadTGAImage(das_Texture *p_asset, const char *file_name) {
     p_asset->pixel_data.width = info_header.width;
     p_asset->pixel_data.height = info_header.height;
     p_asset->pixel_data.size = (size_t) (info_header.height * info_header.width * 4);
-    printf("Width, height, size, bit count: %d %d %ld %d\n", info_header.width, info_header.height,
-        p_asset->pixel_data.size, info_header.bit_count   );
 
     p_asset->pixel_data.pixel_data = (deng_ui8_t*) calloc(p_asset->pixel_data.size, sizeof(deng_ui8_t));
     

@@ -78,6 +78,7 @@ static Atom __atom_kill;
 static Cursor __hidden_cur;
 static Cursor __default_cur;
 
+
 deng_SurfaceWindow *deng_InitVKSurfaceWindow (
     deng_i32_t width, 
     deng_i32_t height, 
@@ -101,102 +102,42 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
 
     XSizeHints size_hints;
 
-    /*
-     * Set flags for creating a fixed window
-     * however it is up to windows manager to decide if the size hint flag
-     * is respected or not
-     */
+    /// Set flags for creating a fixed window
+    /// however it is up to windows manager to decide if the size hint flag
+    /// is respected or not
     if(window_mode == DENG_WINDOW_MODE_FIXED) {
         size_hints.flags |= (PMinSize | PMaxSize);
         size_hints.min_width = size_hints.max_width =  win.width;
         size_hints.min_height = size_hints.max_height = win.height;   
     }    
 
-    win.x11_handler.window = XCreateSimpleWindow (
-        win.x11_handler.p_display, 
-        DefaultRootWindow(win.x11_handler.p_display), 
-        0, 
-        0, 
-        width, 
-        height, 
-        __DENG_DEFAULT_WINDOW_BORDER, 
-        WhitePixel (
-            win.x11_handler.p_display, 
-            win.x11_handler.screen
-        ), 
-        BlackPixel (
-            win.x11_handler.p_display, 
-            win.x11_handler.screen
-        )
-    );
+    win.x11_handler.window = XCreateSimpleWindow(win.x11_handler.p_display, DefaultRootWindow(win.x11_handler.p_display), 
+        0, 0, width, height, __DENG_DEFAULT_WINDOW_BORDER, WhitePixel(win.x11_handler.p_display, win.x11_handler.screen), 
+        BlackPixel(win.x11_handler.p_display, win.x11_handler.screen));
 
-    XSetStandardProperties (
-        win.x11_handler.p_display, 
-        win.x11_handler.window, 
-        title, 
-        title, 
-        None, 
-        NULL, 
-        0, 
-        NULL
-    );
+    // Set standard properties needed for x11 window creation
+    XSetStandardProperties(win.x11_handler.p_display, win.x11_handler.window, title, 
+        title, None, NULL, 0, NULL);
 
-    XSetWMNormalHints (
-        win.x11_handler.p_display, 
-        win.x11_handler.window, 
-        &size_hints
-    );
+    // Set the window manager size hints
+    XSetWMNormalHints(win.x11_handler.p_display, win.x11_handler.window, &size_hints);
 
-    XSelectInput (
-        win.x11_handler.p_display, 
-        win.x11_handler.window, 
-        EVENT_MASKS
-    );
+    XSelectInput(win.x11_handler.p_display, win.x11_handler.window, EVENT_MASKS);
+    win.x11_handler.gc = XCreateGC(win.x11_handler.p_display, 
+        win.x11_handler.window, 0, 0);
+    XSetBackground(win.x11_handler.p_display, win.x11_handler.gc, 
+        BlackPixel(win.x11_handler.p_display, win.x11_handler.screen));
 
-    win.x11_handler.gc = XCreateGC (
-        win.x11_handler.p_display, 
-        win.x11_handler.window, 
-        0, 
-        0
-    );
+    XSetForeground(win.x11_handler.p_display, win.x11_handler.gc, 
+        WhitePixel(win.x11_handler.p_display, win.x11_handler.screen));
 
-    XSetBackground (
-        win.x11_handler.p_display, 
-        win.x11_handler.gc, 
-        BlackPixel (
-            win.x11_handler.p_display, 
-            win.x11_handler.screen
-        )
-    );
-
-    XSetForeground (
-        win.x11_handler.p_display, 
-        win.x11_handler.gc, 
-        WhitePixel (
-            win.x11_handler.p_display, 
-            win.x11_handler.screen
-        )
-    );
-
+    // Check if keyboard autorepeat is enabled
     Bool supported;
-    if
-    (
-        !XkbSetDetectableAutoRepeat (
-            win.x11_handler.p_display, 
-            True, 
-            &supported
-        )
-    ) exit(EXIT_FAILURE);
+    if(!XkbSetDetectableAutoRepeat(win.x11_handler.p_display, True, &supported))
+        RUN_ERR("deng_InitVKSurfaceWindow", "Detectable auto repeat is not supported on this system");
 
-    XClearWindow (
-        win.x11_handler.p_display, 
-        win.x11_handler.window
-    );
-
-    XMapRaised (
-        win.x11_handler.p_display, 
-        win.x11_handler.window
-    );
+    XClearWindow(win.x11_handler.p_display, win.x11_handler.window);
+    XMapRaised(win.x11_handler.p_display, win.x11_handler.window);
 
     __is_running = true;
     win.mode = X11_WINDOW;
@@ -284,23 +225,11 @@ void deng_SetMouseCoords (
     deng_px_t x, 
     deng_px_t y
 ) {
-    XWarpPointer (
-        p_win->x11_handler.p_display, 
-        None, 
-        p_win->x11_handler.window, 
-        0, 
-        0, 
-        0, 
-        0, 
-        x, 
-        y
-    );
+    XWarpPointer(p_win->x11_handler.p_display, None, p_win->x11_handler.window, 0, 0, 0, 0, x, y);
 }
 
 
-/*
- * Synchronise mouse position in deng_SurfaceWindow
- */
+/// Synchronise mouse position in deng_SurfaceWindow
 void deng_GetMousePos (
     deng_SurfaceWindow *p_win, 
     deng_bool_t init_vc
@@ -309,33 +238,15 @@ void deng_GetMousePos (
     Window return_window;
     int win_x, win_y, x, y;
     unsigned int mask;
-    XQueryPointer (
-        p_win->x11_handler.p_display, 
-        p_win->x11_handler.window, 
-        &return_window, 
-        &return_window, 
-        &win_x, 
-        &win_y, 
-        &x, 
-        &y, 
-        &mask
-    );
+    XQueryPointer(p_win->x11_handler.p_display, p_win->x11_handler.window, &return_window, &return_window, 
+        &win_x, &win_y, &x, &y, &mask);
 
     if(p_win->vc_data.is_enabled && !init_vc) {
         deng_f64_t movement_x = (deng_f64_t) ((deng_px_t) x - p_win->vc_data.orig_x);
         deng_f64_t movement_y = (deng_f64_t) ((deng_px_t) y - p_win->vc_data.orig_y);
 
-        if
-        (
-            x != p_win->vc_data.orig_x || 
-            y != p_win->vc_data.orig_y
-        ) {
-            deng_SetMouseCoords (
-                p_win, 
-                p_win->vc_data.orig_x, 
-                p_win->vc_data.orig_y
-            );
-        }
+        if(x != p_win->vc_data.orig_x || y != p_win->vc_data.orig_y)
+            deng_SetMouseCoords(p_win, p_win->vc_data.orig_x, p_win->vc_data.orig_y);
 
         // Check for overflow on x position
         if(p_win->vc_data.x + movement_x >= (deng_f64_t) __max_vc_x) {
@@ -369,21 +280,11 @@ void deng_GetMousePos (
     else {
         p_win->mx = (deng_px_t) x;
         p_win->my = (deng_px_t) y;
-
-        /*if(init_vc) {*/
-            /*deng_SetMouseCoords (*/
-                /*p_win, */
-                /*p_win->vc_data.orig_x,*/
-                /*p_win->vc_data.orig_y*/
-            /*);*/
-        /*}*/
     }
 }
 
 
-/*
- * Currently only mouse hidden and mouse shown are supported 
- */
+/// Currently only mouse hidden and mouse shown are supported 
 static void __deng_XSetCursor (
     deng_SurfaceWindow *p_win,
     deng_bool_t hide
@@ -405,9 +306,7 @@ static void __deng_XSetCursor (
 }
 
 
-/*
- * Switch mouse cursor behaviour within the DENG window 
- */
+/// Switch mouse cursor behaviour within the DENG window 
 void deng_SetMouseCursorMode (
     deng_SurfaceWindow *p_win, 
     deng_MouseMode mouse_mode
@@ -415,30 +314,15 @@ void deng_SetMouseCursorMode (
     switch(mouse_mode) 
     {
     case DENG_MOUSE_MODE_INVISIBLE:
-        __deng_XSetCursor (
-            p_win, 
-            false
-        );
+        __deng_XSetCursor(p_win, false);
         p_win->vc_data.is_enabled = false;
-        deng_GetMousePos (
-            p_win, 
-            true
-        );
-
-        deng_SetMouseCoords (
-            p_win,
-            p_win->vc_data.orig_x, 
-            p_win->vc_data.orig_y
-        );
-
+        deng_GetMousePos(p_win, true);
+        deng_SetMouseCoords(p_win, p_win->vc_data.orig_x, p_win->vc_data.orig_y);
         p_win->vc_data.is_enabled = true;
         break;
 
     case DENG_MOUSE_MODE_CURSOR_VISIBLE: 
-        __deng_XSetCursor (
-            p_win, 
-            true
-        );
+        __deng_XSetCursor(p_win, true);
         p_win->vc_data.is_enabled = false;
         break;
 
@@ -448,53 +332,29 @@ void deng_SetMouseCursorMode (
 }
 
 
-/*
- * Update window events and key arrays
- * This function is meant to be called with every loop iteration 
- */
+/// Update window events and key arrays
+/// This function is meant to be called with every loop iteration 
 void deng_UpdateWindow(deng_SurfaceWindow *p_win) {
     // Check for exit event
-    if
-    (
-        XCheckTypedWindowEvent (
-            p_win->x11_handler.p_display,
-            p_win->x11_handler.window, 
-            ClientMessage, 
-            &p_win->x11_handler.event
-        )
-    ) {
-        printf("Closing window");
+    if(XCheckTypedWindowEvent(p_win->x11_handler.p_display, p_win->x11_handler.window, 
+       ClientMessage, &p_win->x11_handler.event)) {
         __is_running = false;
         return;
     }
 
     __deng_UnreleaseKeys();
     
-    if
-    (
-        XCheckWindowEvent (
-            p_win->x11_handler.p_display, 
-            p_win->x11_handler.window, 
-            KeyPressMask | KeyReleaseMask, 
-            &p_win->x11_handler.event
-        )
-    ) __deng_XHandleKeyEvents(p_win);
+    if(XCheckWindowEvent(p_win->x11_handler.p_display, p_win->x11_handler.window, 
+       KeyPressMask | KeyReleaseMask, &p_win->x11_handler.event)) 
+        __deng_XHandleKeyEvents(p_win);
     
-    if
-    (
-        XCheckWindowEvent (
-            p_win->x11_handler.p_display, 
-            p_win->x11_handler.window, 
-            ButtonPressMask | ButtonReleaseMask, 
-            &p_win->x11_handler.event
-        )
-    ) __deng_XHandleMouseEvents(p_win);
+    if(XCheckWindowEvent(p_win->x11_handler.p_display, p_win->x11_handler.window, 
+       ButtonPressMask | ButtonReleaseMask, &p_win->x11_handler.event)) 
+        __deng_XHandleMouseEvents(p_win);
 }
 
 
-/*
- * Destroy window instance and free all resources that were used
- */
+/// Destroy window instance and free all resources that were used
 void deng_DestroyWindow(deng_SurfaceWindow *p_win) {
     XFreeGC (
         p_win->x11_handler.p_display, 
@@ -509,10 +369,8 @@ void deng_DestroyWindow(deng_SurfaceWindow *p_win) {
 }
 
 
-/*
- * Limit the largest and smallest virtual cursor position that can be achieved using 
- * virtual mouse positioning
- */
+/// Limit the largest and smallest virtual cursor position that can be achieved using 
+/// virtual mouse positioning
 void deng_LimitVirtualPos (
     deng_px_t max_x,        
     deng_px_t min_x,        
@@ -526,10 +384,8 @@ void deng_LimitVirtualPos (
 }
 
 
-/*
- * Set virtual mouse position overflow actions that specify what
- * should happen if virtual mouse position limit has been reached
- */
+/// Set virtual mouse position overflow actions that specify what
+/// should happen if virtual mouse position limit has been reached
 void deng_SetOverflowAction (
     deng_VCPOverflowAction x_overflow_act,
     deng_VCPOverflowAction y_overflow_act
@@ -539,9 +395,7 @@ void deng_SetOverflowAction (
 }
 
 
-/*
- * Check if window is still running and no close events have happened
- */
+/// Check if window is still running and no close events have happened
 deng_bool_t deng_IsRunning() {
     return __is_running;
 }

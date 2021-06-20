@@ -97,7 +97,6 @@ void tmpLog(das_Asset *p_asset) {
     }
 
     // Log every face
-    printf("ind_c: %ld\n", p_asset->indices.n);
     for(size_t i = 0; i < p_asset->indices.n; i += 3) {
         memset(buf, 0, 512);
         sprintf(buf, "f %d/%d/%d %d/%d/%d %d/%d/%d", p_asset->indices.pos[i] + 1, 
@@ -112,9 +111,7 @@ void tmpLog(das_Asset *p_asset) {
 }
 
 
-/* 
- * Read .das binary asset file into das_Asset instance
- */
+/// Read .das binary asset file into das_Asset instance
 void das_LoadAsset (
     das_Asset *p_asset, 
     das_AssetMode dst_mode,
@@ -172,19 +169,14 @@ void das_LoadAsset (
 }
 
 
-/*
- * Get all the metadata which was read from the last read_meta specified
- * das_LoadAsset call
- */
+/// Get all the metadata which was read from the last read_meta specified das_LoadAsset call
 char **das_GetMeta(size_t *p_meta_c) {
     *p_meta_c = __meta_c;
     return __meta_infos;
 }
 
 
-/*
- * Clean all memory allocated for meta data
- */
+/// Clean all memory allocated for meta data
 void das_CleanMeta() {
     for(size_t i = 0; i < __meta_c; i++)
         free(__meta_infos[i]);
@@ -202,9 +194,7 @@ void das_CleanMeta() {
 /**********************************************/
 
 
-/*
- * Read generic of data from __cbuf with bounds checking
- */
+/// Read generic of data from __cbuf with bounds checking
 void __das_DataRead(void *buf, size_t chunk_size, size_t n, char *file_name) {
     das_ErrBufferReadCheck(chunk_size * n, __buf_size, file_name);
     memcpy(buf, __cbuf + __offset, chunk_size * n);
@@ -212,9 +202,7 @@ void __das_DataRead(void *buf, size_t chunk_size, size_t n, char *file_name) {
 }
 
 
-/* 
- * Read asset information from INFO_HDR
- */
+/// Read asset information from INFO_HDR
 void __das_ReadINFO_HDR(das_INFO_HDR *out_hdr, char *file_name) {
     // INFO_HDR is always the first header in .das file
     __das_DataRead(out_hdr, sizeof(das_INFO_HDR), 1, file_name);
@@ -233,9 +221,7 @@ void __das_ReadINFO_HDR(das_INFO_HDR *out_hdr, char *file_name) {
 }
 
 
-/*
- * Verify that all custom headers are skipped from reading
- */
+/// Verify that all custom headers are skipped from reading
 void __das_SkipMetaHeaders(char *file_name) {
     deng_ui32_t *indices;
     deng_ui32_t ind_c = 0; 
@@ -265,10 +251,8 @@ void __das_SkipMetaHeaders(char *file_name) {
 }
 
 
-/*
- * Read meta information contained between BEG_HDR and END_HDR
- * This function returns pointer to heap allocated memory, manual cleanup is necessary
- */
+/// Read meta information contained between BEG_HDR and END_HDR
+/// This function returns pointer to heap allocated memory, manual cleanup is necessary
 void __das_ReadMeta(char *file_name) {
     // Check if previous metadata has been allocated and if it has 
     // then perform cleanup
@@ -314,9 +298,7 @@ void __das_ReadMeta(char *file_name) {
 }
 
 
-/*
- * Read asset information from VERT_HDR
- */
+/// Read asset information from VERT_HDR
 void __das_ReadVERT_HDR (
     das_VERT_HDR *out_hdr,
     char *file_name
@@ -337,9 +319,7 @@ void __das_ReadVERT_HDR (
 }
 
 
-/*
- * Read information about one vertex element header type
- */
+/// Read information about one vertex element header type
 void __das_ReadGenVertHdr (
     __das_VertTemplate *out_hdr,
     char *hdr_name,
@@ -355,9 +335,7 @@ void __das_ReadGenVertHdr (
 }
 
 
-/*
- * Read asset information from INDX_HDR
- */
+/// Read asset information from INDX_HDR
 void __das_ReadINDX_HDR (
     das_INDX_HDR *out_hdr,
     char *file_name
@@ -367,15 +345,12 @@ void __das_ReadINDX_HDR (
     strncpy(pad_hdr, out_hdr->hdr_name, 8);
 
     // Check if header name is correct
-    printf("INDX_HDR: %s\n", pad_hdr);
     if(strcmp(pad_hdr, __DAS_INDICES_HEADER_NAME)) 
         __DAS_READ_CORRUPT_ERROR(file_name);
 }
 
 
-/*
- * Read all data from asset file into buffer for reading
- */
+/// Read all data from asset file into buffer for reading
 void __das_ReadAssetFile(char *file_name) {
     FILE *file;
     __offset = 0;
@@ -399,17 +374,13 @@ void __das_ReadAssetFile(char *file_name) {
 }
 
 
-/*
- * Free all resources allocated in asset reading 
- */
+/// Free all resources allocated in asset reading 
 void __das_ReadCleanup() {
     free(__cbuf);
 }
 
 
-/*
- * Copy asset vertices from buffer to out_vert
- */
+/// Copy asset vertices from buffer to out_vert
 void __das_CopyVertices (
     das_Asset *p_asset,
     char *file_name
@@ -429,8 +400,6 @@ void __das_CopyVertices (
     // Read position vertices
     __das_DataRead(p_asset->vertices.v3d.pos, sizeof(das_ObjPosData), p_asset->vertices.v3d.pn, file_name);
 
-    printf("p_asset->asset_mode: %d\n", p_asset->asset_mode);
-    
     // Check if vertex textures should be read
     if(p_asset->asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED ||
        p_asset->asset_mode == __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR || 
@@ -441,7 +410,6 @@ void __das_CopyVertices (
 
         // Allocate memory for texture vertices
         p_asset->vertices.v3d.tn = tex_hdr.vert_c;
-        printf("Tex vert count: %d\n", tex_hdr.vert_c);
         p_asset->vertices.v3d.tex = (das_ObjTextureData*) malloc(cm_ToPow2I64(p_asset->vertices.v3d.tn * 
             sizeof(das_ObjTextureData)));
 
@@ -459,7 +427,6 @@ void __das_CopyVertices (
 
         // Allocate memory for vertex normals
         p_asset->vertices.v3d.nn = nor_hdr.vert_c;
-        printf("Vertex normal vert count: %d\n", nor_hdr.vert_c);
         p_asset->vertices.v3d.norm = (das_ObjNormalData*) malloc(cm_ToPow2I64(p_asset->vertices.v3d.nn) *
             sizeof(das_ObjNormalData));
 
@@ -469,11 +436,7 @@ void __das_CopyVertices (
 }
 
 
-/*
- * Copy all indices from buffer to p_out_ind
- * This function allocates memory and copies 
- * the data from file buffer to *p_out_ind
- */
+/// Copy all indices from buffer to p_out_ind. This function allocates memory and copies the data from file buffer to *p_out_ind
 void __das_CopyIndices (
     das_Asset *p_asset,
     deng_ui32_t ind_c,
@@ -503,9 +466,7 @@ void __das_CopyIndices (
 }
 
 
-/*
- * Increment the reading offset by n bytes
- */
+/// Increment the reading offset by n bytes
 void __das_IncrementOffset(size_t n) {
     __offset += n;
 }

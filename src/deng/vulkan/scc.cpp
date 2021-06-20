@@ -67,6 +67,7 @@ namespace deng {
     namespace vulkan {
 
         deng_ui32_t __max_frame_c;
+
         /******************************************************/
         /******************************************************/
         /************ __vk_SwapChainCreator class *************/
@@ -305,8 +306,6 @@ namespace deng {
 
             if(vkCreateRenderPass(m_device, &renderpass_createinfo, NULL, &m_renderpass) != VK_SUCCESS)
                 VK_SWAPCHAIN_ERR("failed to create render pass!");
-
-			std::cout << "wait" << std::endl;
         }
 
 

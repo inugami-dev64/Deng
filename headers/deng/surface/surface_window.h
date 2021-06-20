@@ -79,6 +79,7 @@ extern "C" {
     #include <limits.h>
     #include <vulkan/vulkan.h>
     #include <common/base_types.h>
+    #include <common/cerr_def.h>
 
     #include <deng/surface/key_definitions.h>
     #include <deng/surface/key_ev.h>

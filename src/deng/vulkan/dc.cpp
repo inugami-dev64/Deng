@@ -231,7 +231,6 @@ namespace deng {
             cmd_buf_alloc_info.commandBufferCount = static_cast<deng_ui32_t>(m_cmd_bufs.size());
 
             // Allocate command buffers
-			printf("cmd_buffer address: 0x%p\n", m_cmd_bufs.data());
             if(vkAllocateCommandBuffers(device, &cmd_buf_alloc_info, m_cmd_bufs.data())) 
                 VK_DRAWCMD_ERR("failed to allocate command buffers");
         }
