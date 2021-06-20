@@ -27,7 +27,7 @@ script:
   - sudo cp *.so /usr/lib/
   - sudo cp premake5 /usr/bin
   - cd ~
-  - git clone https://github.com/inugami-dev64/deng
+  - git clone --recursive https://github.com/inugami-dev64/deng
   - cd deng
   - premake5 --sandbox-mode=all gmake
   - make config=debug_linux
