@@ -89,13 +89,65 @@ namespace deng {
         imgui_atlas.no_reg_cleanup = true;
 
         das_RealignPixelData(&imgui_atlas, DAS_PIXEL_FORMAT_R8G8B8A8);
-        das_LogTexture(&imgui_atlas, "imgui-tex.log");
         
         // Set the texture ID
         m_p_io->Fonts->SetTexID((void*) imgui_atlas.uuid);
 
         m_rend.pushTexture(imgui_atlas);
         m_rend.setUIDataPtr(&m_gui_data);
+        __mapIOKeys();
+    }
+
+
+    /// Map IO keys according to DENG keymap
+    void UIManager::__mapIOKeys() {
+        m_p_io->KeyMap[ImGuiKey_Tab] = DENG_KEY_TAB;
+        m_p_io->KeyMap[ImGuiKey_LeftArrow] = DENG_KEY_LEFT;
+        m_p_io->KeyMap[ImGuiKey_RightArrow] = DENG_KEY_RIGHT;
+        m_p_io->KeyMap[ImGuiKey_UpArrow] = DENG_KEY_UP;
+        m_p_io->KeyMap[ImGuiKey_DownArrow] = DENG_KEY_DOWN;
+        m_p_io->KeyMap[ImGuiKey_PageDown] = DENG_KEY_PAGE_DOWN;
+        m_p_io->KeyMap[ImGuiKey_PageUp] = DENG_KEY_PAGE_UP;
+        m_p_io->KeyMap[ImGuiKey_Home] = DENG_KEY_HOME;
+        m_p_io->KeyMap[ImGuiKey_End] = DENG_KEY_END;
+        m_p_io->KeyMap[ImGuiKey_Delete] = DENG_KEY_DELETE;
+        m_p_io->KeyMap[ImGuiKey_Backspace] = DENG_KEY_BACKSPACE;
+        m_p_io->KeyMap[ImGuiKey_Space] = DENG_KEY_SPACE;
+        m_p_io->KeyMap[ImGuiKey_Enter] = DENG_KEY_ENTER;
+        m_p_io->KeyMap[ImGuiKey_Escape] = DENG_KEY_ESCAPE;
+        m_p_io->KeyMap[ImGuiKey_KeyPadEnter] = DENG_KEY_NP_ENTER;
+        m_p_io->KeyMap[ImGuiKey_A] = DENG_KEY_A;
+        m_p_io->KeyMap[ImGuiKey_C] = DENG_KEY_C;
+        m_p_io->KeyMap[ImGuiKey_V] = DENG_KEY_V;
+        m_p_io->KeyMap[ImGuiKey_X] = DENG_KEY_X;
+        m_p_io->KeyMap[ImGuiKey_Y] = DENG_KEY_Y;
+        m_p_io->KeyMap[ImGuiKey_Z] = DENG_KEY_Z;
+    }
+
+
+    /// Update IO key status
+    void UIManager::__updateIOKeys() {
+        m_p_io->KeysDown[DENG_KEY_TAB]          = deng_FindKeyStatus(DENG_KEY_TAB, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_LEFT]         = deng_FindKeyStatus(DENG_KEY_LEFT, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_RIGHT]        = deng_FindKeyStatus(DENG_KEY_RIGHT, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_UP]           = deng_FindKeyStatus(DENG_KEY_UP, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_DOWN]         = deng_FindKeyStatus(DENG_KEY_DOWN, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_PAGE_DOWN]    = deng_FindKeyStatus(DENG_KEY_PAGE_DOWN, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_PAGE_UP]      = deng_FindKeyStatus(DENG_KEY_PAGE_UP, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_HOME]         = deng_FindKeyStatus(DENG_KEY_HOME, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_END]          = deng_FindKeyStatus(DENG_KEY_END, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_DELETE]       = deng_FindKeyStatus(DENG_KEY_DELETE, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_BACKSPACE]    = deng_FindKeyStatus(DENG_KEY_BACKSPACE, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_SPACE]        = deng_FindKeyStatus(DENG_KEY_SPACE, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_ENTER]        = deng_FindKeyStatus(DENG_KEY_ENTER, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_ESCAPE]       = deng_FindKeyStatus(DENG_KEY_ESCAPE, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_NP_ENTER]     = deng_FindKeyStatus(DENG_KEY_NP_ENTER, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_A]            = deng_FindKeyStatus(DENG_KEY_A, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_C]            = deng_FindKeyStatus(DENG_KEY_C, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_V]            = deng_FindKeyStatus(DENG_KEY_V, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_X]            = deng_FindKeyStatus(DENG_KEY_X, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_Y]            = deng_FindKeyStatus(DENG_KEY_Y, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->KeysDown[DENG_KEY_Z]            = deng_FindKeyStatus(DENG_KEY_Z, DENG_INPUT_EVENT_TYPE_ACTIVE);
     }
 
 
@@ -108,10 +160,47 @@ namespace deng {
         m_p_io->MousePos.y = static_cast<deng_vec_t>(win.getMPos().second);
         m_p_io->WantCaptureMouse = true;
 
-        m_p_io->MouseDown[0] = m_p_io->MouseClicked[0] = __deng_FindKeyStatus(DENG_KEY_UNKNOWN, DENG_MOUSE_BTN_1, DENG_INPUT_TYPE_MOUSE,
-            DENG_INPUT_EVENT_TYPE_ACTIVE);
-        m_p_io->MouseDown[1] = m_p_io->MouseClicked[1] = __deng_FindKeyStatus(DENG_KEY_UNKNOWN, DENG_MOUSE_BTN_2, DENG_INPUT_TYPE_MOUSE,
-            DENG_INPUT_EVENT_TYPE_ACTIVE);
+        // Check if mouse wheel event should be recorded
+        if(deng_FindKeyStatus(DENG_MOUSE_SCROLL_UP, DENG_INPUT_EVENT_TYPE_ACTIVE))
+            m_p_io->MouseWheel = 0.5f;
+        else if(deng_FindKeyStatus(DENG_MOUSE_SCROLL_DOWN, DENG_INPUT_EVENT_TYPE_ACTIVE))
+            m_p_io->MouseWheel = -0.5f;
+        
+        
+        // Check if any input characters should be added
+        char in;
+        auto tp = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<deng_vec_t> delta_time = tp - m_key_pt;
+        if((in = deng_GetActiveInput()) && (m_prev_in != in || (m_is_first_key_press ? delta_time.count() > DENG_IMGUI_INITIAL_KEYPRESS_DELAY :
+           delta_time.count() > DENG_IMGUI_REPEATED_KEYPRESS_DELAY))) {
+            m_p_io->AddInputCharacter(static_cast<deng_ui32_t>(in));
+            m_key_pt = std::chrono::high_resolution_clock::now();
+
+            // Check if the initial keystroke was made
+            if(m_prev_in != in) m_is_first_key_press = true;
+            else m_is_first_key_press = false;
+
+            m_prev_in = in;
+        }
+
+        // Update all keyboard key events 
+        __updateIOKeys();
+
+        // Check modifier key presses
+        m_p_io->KeyCtrl =  deng_FindKeyStatus(DENG_KEY_LEFT_CTRL, DENG_INPUT_EVENT_TYPE_ACTIVE) || 
+            deng_FindKeyStatus(DENG_KEY_RIGHT_CTRL, DENG_INPUT_EVENT_TYPE_ACTIVE);
+
+        m_p_io->KeyShift =  deng_FindKeyStatus(DENG_KEY_LEFT_SHIFT, DENG_INPUT_EVENT_TYPE_ACTIVE) || 
+            deng_FindKeyStatus(DENG_KEY_RIGHT_SHIFT, DENG_INPUT_EVENT_TYPE_ACTIVE);
+
+        m_p_io->KeyAlt =  deng_FindKeyStatus(DENG_KEY_LEFT_ALT, DENG_INPUT_EVENT_TYPE_ACTIVE) || 
+            deng_FindKeyStatus(DENG_KEY_RIGHT_ALT, DENG_INPUT_EVENT_TYPE_ACTIVE);
+
+        m_p_io->KeySuper =  deng_FindKeyStatus(DENG_KEY_LEFT_SUPER, DENG_INPUT_EVENT_TYPE_ACTIVE) || 
+            deng_FindKeyStatus(DENG_KEY_RIGHT_SUPER, DENG_INPUT_EVENT_TYPE_ACTIVE);
+
+        m_p_io->MouseDown[0] = m_p_io->MouseClicked[0] = deng_FindKeyStatus(DENG_MOUSE_BTN_1, DENG_INPUT_EVENT_TYPE_ACTIVE);
+        m_p_io->MouseDown[1] = m_p_io->MouseClicked[1] = deng_FindKeyStatus(DENG_MOUSE_BTN_2, DENG_INPUT_EVENT_TYPE_ACTIVE);
     }
 
 

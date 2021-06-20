@@ -71,7 +71,7 @@
 #ifdef __SC_ED_CPP
     #include <deng/deng.h>
     #include <deng/ui.h>
-    #include <imgui-layer/scene_editor/sc_ed_ui.h>
+    #include <imgui-layer/scene_editor/sc_ed_entity_panel.h>
 #endif
 
 
@@ -81,7 +81,7 @@
 
 namespace dengEditor {
 
-    class SceneEditor3D : SceneEditorUI {
+    class SceneEditor3D : SceneEditor3DEntityPanel {
     private:
         deng::Window m_win;
         deng::Camera3D m_cam;

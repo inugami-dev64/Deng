@@ -137,9 +137,9 @@ namespace deng {
     // Render backend getter and setter methods
     public:
         void setUIDataPtr(__ImGuiData *p_data);
-        std::shared_ptr<vulkan::__vk_Renderer> getVkRenderer();
-        __GlobalRegistry &getRegistry();
-        deng_RendererHintBits getCurApiBackend();
+        const std::vector<deng_Id> &getAssets();
+        const std::vector<deng_Id> &getTextures();
+        deng::__GlobalRegistry &getRegistry();
     };
 }
 

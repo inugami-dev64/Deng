@@ -58,91 +58,49 @@
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
  * ----------------------------------------------------------------
- *  Name: ui_manager - handle ImGui draw data structures 
- *  Purpose: Provide abstract class for rendering ImGui data
+ *  Name: sc_ed_entity_panel - scene panel ImGui handler
+ *  Purpose: Provide a class interface for handling entity panel and its actions
  *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __IMGUI_RENDERER_H
-#define __IMGUI_RENDERER_H
+#ifndef __SC_ED_ENTITY_PANEL_H
+#define __SC_ED_ENTITY_PANEL_H
 
-
-#ifdef __IMGUI_RENDERER_CPP
-    #include <vector>
-    #include <array>
-    #include <string>
-    #include <memory>
-    #include <thread>
-    #include <queue>
-    #include <vulkan/vulkan.h>
-
-    #include <common/base_types.h>
-    #include <common/err_def.h>
-    #include <common/hashmap.h>
-    #include <common/uuid.h>
-    #include <common/err_def.h>
-    #include <data/assets.h>
-    #include <data/tex_loader.h>
-
-    #include <math/deng_math.h>
-    #include <imgui-layer/imgui_entity.h>
-
-    #include <deng/registry/registry.h>
-    #include <deng/window.h>
-    #include <utils/font.h>
-    #include <deng/camera.h>
-    #include <deng/renderer/renderer.h>
-
-
-    #define DENG_IMGUI_ENTITY_RESERV                16
-    #define DENG_IMGUI_INITIAL_KEYPRESS_DELAY       0.25f // seconds
-    #define DENG_IMGUI_REPEATED_KEYPRESS_DELAY      0.07f // seconds
+#ifdef __SC_ED_ENTITY_PANEL_CPP
+    #include <deng/deng.h>
+    #include <deng/ui.h>
 #endif
 
-namespace deng {
+namespace dengEditor {
 
-
-    class UIManager {
+    class SceneEditor3DEntityPanel {
     private:
-        deng::Renderer &m_rend;
-        deng_Id m_imgui_atlas = NULL;
-        ImGuiIO *m_p_io;
-        deng::__ImGuiData m_gui_data = {};
-        char m_prev_in = 0;
-        deng_bool_t m_is_first_key_press = false;
-
-        std::chrono::duration<deng_vec_t, std::milli> m_frame_dur = std::chrono::milliseconds(0);
-        std::chrono::time_point<std::chrono::high_resolution_clock> m_key_pt = std::chrono::high_resolution_clock::now();
+        /// Boolean flags for handling user input
+        bool m_new_scene = false;
+        bool m_open_scene = false;
+        bool m_import = false;
+        bool m_save_scene = false;
+        bool m_preferences = false;
+        
 
     private:
-        /// Map IO keys according to DENG keymap
-        void __mapIOKeys();
+        /// Upper elements
+        void __mkEntityPanelMenuBar();
+        void __mkEntityPanelAssetList(const std::vector<deng_Id> &assets, deng::__GlobalRegistry &reg);
+        void __mkEntityPanelTextureList(const std::vector<deng_Id> &textures, deng::__GlobalRegistry &reg);
 
-
-        /// Update IO key status
-        void __updateIOKeys();
-
-    public:
-        UIManager(Renderer &rend);
-
-        /// Create a new ui form in ImGui
-        //void spawnForm();
-
-        /// Update IO device input
-        void updateIO(const deng::Window &win);
-
-        /// Render ImGui data to screen
-        void render(ImDrawData *p_draw_data, const Window &win);
+        /// Entity panel headers
+        void __mkLightingHeader();
+        void __mkAntiAliasingHeader();
+        void __mkAudioHeader();
+        void __mkMaterialPropertyHeader();
+        void __mkCameraHeader();
 
     public:
-        ImGuiIO *getIO();
-
-        /// Set new time points to measure framerate
-        void setTime(std::chrono::time_point<std::chrono::high_resolution_clock> t1, 
-            std::chrono::time_point<std::chrono::high_resolution_clock> t2);
+        /// Create entity panel instance for current frame
+        void spawnEntityPanel(deng::Renderer &rend);
     };
 }
-
 
 #endif

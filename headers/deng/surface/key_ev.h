@@ -68,7 +68,7 @@ extern "C" {
 #endif
 
 #ifdef __KEY_EV_C
-    #include <stdlib.h> // malloc()
+    #include <stdlib.h>
     #include <stdarg.h>   
     #include <math.h>
 
@@ -90,8 +90,9 @@ extern "C" {
 
 
     /// Key event registry arrays
-    deng_bool_t active_ev[DENG_INPUT_EV_COUNT] = {0};
-    deng_bool_t released_ev[DENG_INPUT_EV_COUNT] = {0};
+    static char input_ch = 0x00;
+    deng_bool_t active_ev[DENG_INPUT_EV_COUNT] = { 0 };
+    deng_bool_t released_ev[DENG_INPUT_EV_COUNT] = { 0 };
 #endif
 
 
@@ -119,12 +120,11 @@ void __deng_UnreleaseKeys();
 
 
 /// Find given key or mouse button status from specified event array
-deng_bool_t __deng_FindKeyStatus (
-    deng_Key key, 
-    deng_MouseButton btn, 
-    deng_InputType in_type, 
-    deng_InputEventType ev_type
-);
+const deng_bool_t deng_FindKeyStatus(deng_ui8_t key, deng_InputEventType ev_type);
+
+
+/// Find the active ascii input key
+const char deng_GetActiveInput();
 
 #ifdef __cplusplus
 }

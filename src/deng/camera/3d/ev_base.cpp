@@ -203,16 +203,14 @@ namespace deng {
 
             // Check if the key status is active for certain event to occur 
             else if(evs[i].key <= DENG_KEY_LAST && evs[i].key >= DENG_KEY_FIRST) {
-                if(!__deng_FindKeyStatus(evs[i].key, DENG_MOUSE_BTN_UNKNOWN, DENG_INPUT_TYPE_KB,
-                   DENG_INPUT_EVENT_TYPE_ACTIVE)) {
+                if(!deng_FindKeyStatus(evs[i].key, DENG_INPUT_EVENT_TYPE_ACTIVE)) {
                     out = false; 
                     break;
                 }
             }
 
             else if(evs[i].btn <= DENG_MOUSE_BTN_LAST && evs[i].btn >= DENG_MOUSE_BTN_FIRST) {
-                if(!__deng_FindKeyStatus(DENG_KEY_UNKNOWN, evs[i].btn, DENG_INPUT_TYPE_MOUSE,
-                   DENG_INPUT_EVENT_TYPE_ACTIVE)) {
+                if(!deng_FindKeyStatus(evs[i].btn, DENG_INPUT_EVENT_TYPE_ACTIVE)) {
                     out = false;
                     break;
                 }

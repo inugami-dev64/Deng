@@ -70,15 +70,12 @@
 #ifdef __SC_ED_UI_CPP
     #include <deng/deng.h>
     #include <deng/ui.h>
+    #include <imgui-layer/scene_editor/sc_ed_entity_panel.h>
 #endif
 
 namespace dengEditor {
 
-    class SceneEditorUI {
-    private:
-        /// Main entity panel spawn method
-        void __spawnEntityPanel();
-        
+    class SceneEditorUI : private SceneEditor3DEntityPanel {
     public:
         /// Render windows for new frame
         void newFrame();

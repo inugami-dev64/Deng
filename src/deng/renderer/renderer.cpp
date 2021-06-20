@@ -157,7 +157,7 @@ namespace deng {
     }
 
 
-    std::shared_ptr<vulkan::__vk_Renderer> Renderer::getVkRenderer() { return m_vk_rend; }
+    const std::vector<deng_Id> &Renderer::getAssets() { return m_assets; }
+    const std::vector<deng_Id> &Renderer::getTextures() { return m_textures; }
     __GlobalRegistry &Renderer::getRegistry() { return m_reg; }
-    deng_RendererHintBits Renderer::getCurApiBackend() { return m_api_bits; }
 } 

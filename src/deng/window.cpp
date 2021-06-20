@@ -87,16 +87,12 @@ namespace deng {
     /// Set virtual cursor mode that locks real cursor to the center of the window
     void Window::toggleVCMode() {    
         if(!m_p_surface->vc_data.is_enabled) {
-            deng_SetMouseCursorMode(m_p_surface,
-                DENG_MOUSE_MODE_INVISIBLE);
-
+            deng_SetMouseCursorMode(m_p_surface, DENG_MOUSE_MODE_INVISIBLE);
             m_p_surface->vc_data.is_enabled = true;
         } 
 
         else { 
-            deng_SetMouseCursorMode(m_p_surface,
-                DENG_MOUSE_MODE_CURSOR_VISIBLE);
-
+            deng_SetMouseCursorMode(m_p_surface, DENG_MOUSE_MODE_CURSOR_VISIBLE);
             m_p_surface->vc_data.is_enabled = false;
         }
         m_is_vc = !m_is_vc;
@@ -107,15 +103,8 @@ namespace deng {
     void Window::changeVCMode(deng_bool_t is_vc) {
         if(m_is_vc == is_vc) return;
         m_is_vc = is_vc;
-        if(is_vc) {
-            deng_SetMouseCursorMode(m_p_surface,
-                DENG_MOUSE_MODE_INVISIBLE);
-        }
-
-        else {
-            deng_SetMouseCursorMode(m_p_surface,
-                DENG_MOUSE_MODE_CURSOR_VISIBLE);
-        }
+        if(is_vc) deng_SetMouseCursorMode(m_p_surface, DENG_MOUSE_MODE_INVISIBLE);
+        else deng_SetMouseCursorMode(m_p_surface, DENG_MOUSE_MODE_CURSOR_VISIBLE);
     }
     
 
@@ -159,11 +148,7 @@ namespace deng {
         VkInstance &instance,
         VkSurfaceKHR &surface
     ) {
-        return  deng_InitVKSurface (
-                    m_p_surface,
-                    &instance,
-                    &surface
-                );
+        return  deng_InitVKSurface(m_p_surface, &instance, &surface);
     }
 
 

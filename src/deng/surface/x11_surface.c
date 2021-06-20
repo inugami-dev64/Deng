@@ -201,41 +201,23 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
     __is_running = true;
     win.mode = X11_WINDOW;
 
-    __atom_kill = XInternAtom (
-        win.x11_handler.p_display,
-        "WM_DELETE_WINDOW",
-        True
-    );
-
-    XSetWMProtocols (
-        win.x11_handler.p_display, 
-        win.x11_handler.window, 
-        &__atom_kill, 
-        True
-    );
-    
+    __atom_kill = XInternAtom(win.x11_handler.p_display, "WM_DELETE_WINDOW", True);
+    XSetWMProtocols(win.x11_handler.p_display, win.x11_handler.window, &__atom_kill, True);
     __deng_XInitCursors(&win);
     return &win;
 }
 
 
-/*
- * Initialise all cursors to use with xlib
- */
+/// Initialise all cursors to use with xlib
 static void __deng_XInitCursors(deng_SurfaceWindow *p_win) {
     __hidden_cur = None;
 
     // Load default cursor
-    __default_cur = XcursorLibraryLoadCursor (
-        p_win->x11_handler.p_display,
-        __DENG_XLIB_DEFAULT_CURSOR
-    );
+    __default_cur = XcursorLibraryLoadCursor(p_win->x11_handler.p_display, __DENG_XLIB_DEFAULT_CURSOR);
 }
 
 
-/* 
- * Destroy all cursors used in DENG
- */
+/// Destroy all cursors used in DENG
 static void __deng_XFreeCursors(deng_SurfaceWindow *p_win) {
     XFreeCursor (
         p_win->x11_handler.p_display, 
@@ -249,47 +231,22 @@ static void __deng_XFreeCursors(deng_SurfaceWindow *p_win) {
 }
 
 
-/*
- * Unlike WIN32 api X11 doesn't have a callback system on events, which
- * means that key events must be checked manually on every frame update 
- */
+/// Unlike WIN32 api X11 doesn't have a callback system on events, which
+/// means that key events must be checked manually on every frame update 
 static void __deng_XHandleKeyEvents(deng_SurfaceWindow *p_win) {
     deng_Key key;
-    switch (p_win->x11_handler.event.type)
-    {
+    switch (p_win->x11_handler.event.type) {
     case KeyPress: {
-        key = translateX11Key (
-            XLookupKeysym (
-                &p_win->x11_handler.event.xkey, 
-                0
-            )
-        );
-
-        __deng_RegisterKeyEvent (
-            key, 
-            DENG_MOUSE_BTN_UNKNOWN, 
-            DENG_INPUT_TYPE_KB, 
-            DENG_INPUT_EVENT_TYPE_ACTIVE 
-        );
-
+        key = translateX11Key(XLookupKeysym(&p_win->x11_handler.event.xkey, 0));
+        __deng_RegisterKeyEvent(key, DENG_MOUSE_BTN_UNKNOWN, DENG_INPUT_TYPE_KB, DENG_INPUT_EVENT_TYPE_ACTIVE);
         break;
     }
         
     case KeyRelease: {
         if(XEventsQueued(p_win->x11_handler.p_display, QueuedAfterReading)) {
-            key = translateX11Key (
-                XLookupKeysym (
-                    &p_win->x11_handler.event.xkey, 
-                    0
-                )
-            );
-
-            __deng_RegisterKeyEvent (
-                key,
-                DENG_MOUSE_BTN_UNKNOWN,
-                DENG_INPUT_TYPE_KB,
-                DENG_INPUT_EVENT_TYPE_RELEASED
-            );
+            key = translateX11Key(XLookupKeysym(&p_win->x11_handler.event.xkey, 0));
+            __deng_RegisterKeyEvent(key, DENG_MOUSE_BTN_UNKNOWN, DENG_INPUT_TYPE_KB,
+                DENG_INPUT_EVENT_TYPE_RELEASED);
         }
         break;
     }
@@ -300,34 +257,19 @@ static void __deng_XHandleKeyEvents(deng_SurfaceWindow *p_win) {
 } 
 
 
-/*
- * Check for any mouse button events
- */
+/// Check for any mouse button events
 static void __deng_XHandleMouseEvents(deng_SurfaceWindow *p_win) {
     deng_MouseButton btn = DENG_MOUSE_BTN_UNKNOWN;
-    switch (p_win->x11_handler.event.type)
-    {
+    switch (p_win->x11_handler.event.type) {
     case ButtonPress: {
         btn = translateX11Btn(p_win->x11_handler.event.xbutton.button);
-        __deng_RegisterKeyEvent (
-            DENG_KEY_UNKNOWN, 
-            btn, 
-            DENG_INPUT_TYPE_MOUSE, 
-            DENG_INPUT_EVENT_TYPE_ACTIVE
-        );
-        
+        __deng_RegisterKeyEvent(DENG_KEY_UNKNOWN, btn, DENG_INPUT_TYPE_MOUSE, DENG_INPUT_EVENT_TYPE_ACTIVE);
         break;
     }
     
     case ButtonRelease:
         btn = translateX11Btn(p_win->x11_handler.event.xbutton.button);
-        
-        __deng_RegisterKeyEvent (
-            DENG_KEY_UNKNOWN,
-            btn,
-            DENG_INPUT_TYPE_MOUSE,
-            DENG_INPUT_EVENT_TYPE_RELEASED
-        );
+        __deng_RegisterKeyEvent(DENG_KEY_UNKNOWN, btn, DENG_INPUT_TYPE_MOUSE, DENG_INPUT_EVENT_TYPE_RELEASED);
         break;
 
     default:
@@ -336,9 +278,7 @@ static void __deng_XHandleMouseEvents(deng_SurfaceWindow *p_win) {
 }
 
 
-/*
- * Force mouse cursor to certain location on window
- */
+/// Force mouse cursor to certain location on window
 void deng_SetMouseCoords (
     deng_SurfaceWindow *p_win, 
     deng_px_t x, 

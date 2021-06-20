@@ -87,8 +87,6 @@
     #include <deng/camera.h>
     #include <deng/registry/registry.h>
     #include <imgui-layer/imgui_entity.h>
-
-    #include <utils/font.h>
     #include <deng/vulkan/renderer.h>
 #endif
 

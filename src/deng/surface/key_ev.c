@@ -119,9 +119,51 @@ void __deng_RegisterKeyEvent (
     deng_InputType in_type, 
     deng_InputEventType ev_type
 ) {
+    input_ch = 0x00;
     if(in_type == DENG_INPUT_TYPE_KB) {
         if(key == DENG_KEY_UNKNOWN) return;
         if(ev_type == DENG_INPUT_EVENT_TYPE_ACTIVE) {
+            // Check if the input char should be recorded
+            if(key >= DENG_KEY_A && key <= DENG_KEY_Z) {
+                if(active_ev[DENG_KEY_LEFT_SHIFT] || active_ev[DENG_KEY_RIGHT_SHIFT])
+                    input_ch = key - DENG_KEY_A + 'A';
+                else input_ch = key - DENG_KEY_A + 'a';
+            }
+            else if(key >= DENG_KEY_0 && key <= DENG_KEY_9)
+                input_ch = key - DENG_KEY_0 + '0';
+            else if(key >= DENG_KEY_NP_0 && key <= DENG_KEY_NP_9)
+                input_ch = key - DENG_KEY_NP_0 + '0';
+            else if(!active_ev[DENG_KEY_LEFT_SHIFT] && !active_ev[DENG_KEY_RIGHT_SHIFT]) {
+                // More direct key value to ascii translation
+                switch(key) {
+                case DENG_KEY_SPACE: 
+                    input_ch = ' ';
+                    break;
+                case DENG_KEY_APOSTROPHE:
+                    input_ch = '\'';
+                    break;
+                case DENG_KEY_COMMA:
+                    input_ch = ',';
+                    break;
+                case DENG_KEY_DOT:
+                    input_ch = '.';
+                    break;
+                case DENG_KEY_SLASH:
+                    input_ch = '/';
+                    break;
+                case DENG_KEY_MINUS:
+                    input_ch = '-';
+                    break;
+                case DENG_KEY_SEMICOLON:
+                    input_ch = ';';
+                    break;
+                case DENG_KEY_EQUAL:
+                    input_ch = '=';
+                    break;
+                default: break;
+                }
+            }
+            
             active_ev[key] = true;
             released_ev[key] = false;
         }
@@ -146,31 +188,15 @@ void __deng_RegisterKeyEvent (
 
 
 /// Find given key or mouse button status from specified event array
-deng_bool_t __deng_FindKeyStatus (
-    deng_Key key, 
-    deng_MouseButton btn, 
-    deng_InputType in_type, 
+const deng_bool_t deng_FindKeyStatus (
+    deng_ui8_t index, 
     deng_InputEventType ev_type
 ) {
     deng_bool_t stat = false;
-    if(in_type == DENG_INPUT_TYPE_KB) {
-        if(key == DENG_KEY_UNKNOWN)
-            return false;
-        if(ev_type == DENG_INPUT_EVENT_TYPE_ACTIVE)
-            stat = active_ev[key];
-        else if(ev_type == DENG_INPUT_EVENT_TYPE_RELEASED)
-            stat = released_ev[key];
-    }
-
-    else if(in_type == DENG_INPUT_TYPE_MOUSE) {
-        if(btn == DENG_MOUSE_BTN_UNKNOWN)
-            return false;
-        if(ev_type == DENG_INPUT_EVENT_TYPE_ACTIVE)
-            stat = active_ev[btn];
-        else if(ev_type == DENG_INPUT_EVENT_TYPE_RELEASED)
-            stat = released_ev[btn];
-    }
-
+    if(ev_type == DENG_INPUT_EVENT_TYPE_ACTIVE)
+        stat = active_ev[index];
+    else if(ev_type == DENG_INPUT_EVENT_TYPE_RELEASED)
+        stat = released_ev[index];
     return stat;
 }
 
@@ -180,3 +206,6 @@ void __deng_UnreleaseKeys() {
     memset(released_ev, 0x00, C_ARR_SIZE(released_ev));
     memset(released_ev, 0x00, C_ARR_SIZE(released_ev));
 }
+
+
+const char deng_GetActiveInput() { return input_ch; }

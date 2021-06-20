@@ -261,14 +261,14 @@ static LRESULT CALLBACK __deng_Win32MessageHandler (
 /// This function is meant to be called with every loop iteration 
 void deng_UpdateWindow(deng_SurfaceWindow *p_win) {
     // Find the scroll event status
-    deng_bool_t is_scr_up = __deng_FindKeyStatus(
+    deng_bool_t is_scr_up = deng_FindKeyStatus(
         DENG_KEY_UNKNOWN,
         DENG_MOUSE_SCROLL_UP,
         DENG_INPUT_TYPE_MOUSE,
         DENG_INPUT_EVENT_TYPE_ACTIVE
     );
 
-    deng_bool_t is_scr_down = __deng_FindKeyStatus(
+    deng_bool_t is_scr_down = deng_FindKeyStatus(
         DENG_KEY_UNKNOWN,
         DENG_MOUSE_SCROLL_DOWN,
         DENG_INPUT_TYPE_MOUSE,
@@ -294,14 +294,9 @@ void deng_UpdateWindow(deng_SurfaceWindow *p_win) {
         );
     }
     __deng_UnreleaseKeys();
-    ShowWindow (
-        p_win->win32_handler.hwnd, 
-        SW_NORMAL
-    );
+    ShowWindow(p_win->win32_handler.hwnd, SW_NORMAL);
 
-    if (__mouse_mode == DENG_MOUSE_MODE_INVISIBLE)
-        SetCursor(0);
-
+    if (__mouse_mode == DENG_MOUSE_MODE_INVISIBLE) SetCursor(0);
     if (!__is_running) return;
     while(PeekMessageW(&p_win->win32_handler.message, NULL, 0, 0, PM_REMOVE)) {
         TranslateMessage(&p_win->win32_handler.message);
@@ -310,17 +305,13 @@ void deng_UpdateWindow(deng_SurfaceWindow *p_win) {
 }
 
 
-/*
- * Destroy window instance and free all resources that were used
- */
+/// Destroy window instance and free all resources that were used
 void deng_DestroyWindow(deng_SurfaceWindow *p_win) {
     DestroyWindow(p_win->win32_handler.hwnd);
 }
 
 
-/*
- * Check if window is still running and no close events have happened
- */
+/// Check if window is still running and no close events have happened
 deng_bool_t deng_IsRunning() {
     return __is_running;
 }
@@ -329,16 +320,13 @@ deng_bool_t deng_IsRunning() {
 /****** Input device communication ******/
 /****************************************/
 
-/*
- * Switch mouse cursor behaviour within the DENG window 
- */
+/// Switch mouse cursor behaviour within the DENG window 
 void deng_SetMouseCursorMode (
     deng_SurfaceWindow *p_win, 
     deng_MouseMode mouse_mode
 ) {
     __mouse_mode = mouse_mode;
-    switch(mouse_mode) 
-    {
+    switch(mouse_mode) {
     case DENG_MOUSE_MODE_INVISIBLE:
         __old_cursor = SetCursor(0);
         deng_GetMousePos(p_win, true);
@@ -355,10 +343,8 @@ void deng_SetMouseCursorMode (
 }
 
 
-/*
- * Set mouse coordinates to certain position
- * This function is used to force set mouse cursor position
- */
+/// Set mouse coordinates to certain position
+/// This function is used to force set mouse cursor position
 void deng_SetMouseCoords (
     deng_SurfaceWindow *p_win, 
     deng_px_t x, 
@@ -383,11 +369,7 @@ void deng_GetMousePos (
     POINT point;
     
     // Check if GetCursorPos and ScreenToClient calls are successful and update original positions
-    if
-    (
-        GetCursorPos(&point) && 
-        ScreenToClient(p_win->win32_handler.hwnd, &point)
-    ) {
+    if(GetCursorPos(&point) && ScreenToClient(p_win->win32_handler.hwnd, &point)) {
         p_win->mx = point.x;
         p_win->my = point.y;
     }
@@ -403,11 +385,7 @@ void deng_GetMousePos (
         deng_px_t movement_y = (point.y - p_win->vc_data.orig_y);
 
         // Check if cursor should be set to the origin position
-        if
-        (
-            point.x  != (LONG) p_win->vc_data.orig_x || 
-            point.y  != (LONG) p_win->vc_data.orig_y
-        ) {
+        if(point.x  != (LONG) p_win->vc_data.orig_x || point.y  != (LONG) p_win->vc_data.orig_y) {
             deng_SetMouseCoords (
                 p_win, 
                 p_win->vc_data.orig_x, 
@@ -456,10 +434,8 @@ void deng_GetMousePos (
 }
 
 
-/*
- * Limit the largest and smallest virtual cursor position that can be achieved using 
- * virtual mouse positioning
- */
+/// Limit the largest and smallest virtual cursor position that can be achieved using 
+/// virtual mouse positioning
 void deng_LimitVirtualPos(
     deng_px_t max_x,
     deng_px_t min_x,
@@ -473,10 +449,8 @@ void deng_LimitVirtualPos(
 }
 
 
-/*
- * Set virtual mouse position overflow actions that specify what
- * should happen if virtual mouse position limit has been reached
- */
+/// Set virtual mouse position overflow actions that specify what
+/// should happen if virtual mouse position limit has been reached
 void deng_SetOverflowAction(
     deng_VCPOverflowAction x_overflow_act,
     deng_VCPOverflowAction y_overflow_act

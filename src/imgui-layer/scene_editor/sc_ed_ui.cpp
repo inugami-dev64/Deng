@@ -60,21 +60,9 @@
  */ 
 
 
-#include "imgui.h"
 #define __SC_ED_UI_CPP
 #include <imgui-layer/scene_editor/sc_ed_ui.h>
 
 
 namespace dengEditor {
-
-    void SceneEditorUI::__spawnEntityPanel() {
-        ImGui::ShowDemoWindow();
-    }
-
-
-    /// Render windows for new frame
-    void SceneEditorUI::newFrame() {
-        // Spawn entity panel
-        __spawnEntityPanel();
-    }
 }
