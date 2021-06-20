@@ -10,34 +10,38 @@ endif
 
 ifeq ($(config),debug_win32)
   imgui_config = debug_win32
-  deng_config = debug_win32
-  dam_config = debug_win32
   dengbox_config = debug_win32
   imgui_sandbox_config = debug_win32
+  deng_config = debug_win32
+  dam_config = debug_win32
+  dengsc_config = debug_win32
 endif
 ifeq ($(config),debug_linux)
   imgui_config = debug_linux
-  deng_config = debug_linux
-  dam_config = debug_linux
   dengbox_config = debug_linux
   imgui_sandbox_config = debug_linux
+  deng_config = debug_linux
+  dam_config = debug_linux
+  dengsc_config = debug_linux
 endif
 ifeq ($(config),release_win32)
   imgui_config = release_win32
-  deng_config = release_win32
-  dam_config = release_win32
   dengbox_config = release_win32
   imgui_sandbox_config = release_win32
+  deng_config = release_win32
+  dam_config = release_win32
+  dengsc_config = release_win32
 endif
 ifeq ($(config),release_linux)
   imgui_config = release_linux
-  deng_config = release_linux
-  dam_config = release_linux
   dengbox_config = release_linux
   imgui_sandbox_config = release_linux
+  deng_config = release_linux
+  dam_config = release_linux
+  dengsc_config = release_linux
 endif
 
-PROJECTS := imgui deng dam dengbox imgui_sandbox
+PROJECTS := imgui dengbox imgui_sandbox deng dam dengsc
 
 .PHONY: all clean help $(PROJECTS) 
 
@@ -47,18 +51,6 @@ imgui:
 ifneq (,$(imgui_config))
 	@echo "==== Building imgui ($(imgui_config)) ===="
 	@${MAKE} --no-print-directory -C . -f imgui.make config=$(imgui_config)
-endif
-
-deng: imgui
-ifneq (,$(deng_config))
-	@echo "==== Building deng ($(deng_config)) ===="
-	@${MAKE} --no-print-directory -C . -f deng.make config=$(deng_config)
-endif
-
-dam:
-ifneq (,$(dam_config))
-	@echo "==== Building dam ($(dam_config)) ===="
-	@${MAKE} --no-print-directory -C . -f dam.make config=$(dam_config)
 endif
 
 dengbox: deng
@@ -73,12 +65,31 @@ ifneq (,$(imgui_sandbox_config))
 	@${MAKE} --no-print-directory -C . -f imgui_sandbox.make config=$(imgui_sandbox_config)
 endif
 
+deng: imgui
+ifneq (,$(deng_config))
+	@echo "==== Building deng ($(deng_config)) ===="
+	@${MAKE} --no-print-directory -C . -f deng.make config=$(deng_config)
+endif
+
+dam:
+ifneq (,$(dam_config))
+	@echo "==== Building dam ($(dam_config)) ===="
+	@${MAKE} --no-print-directory -C . -f dam.make config=$(dam_config)
+endif
+
+dengsc: deng imgui
+ifneq (,$(dengsc_config))
+	@echo "==== Building dengsc ($(dengsc_config)) ===="
+	@${MAKE} --no-print-directory -C . -f dengsc.make config=$(dengsc_config)
+endif
+
 clean:
 	@${MAKE} --no-print-directory -C . -f imgui.make clean
-	@${MAKE} --no-print-directory -C . -f deng.make clean
-	@${MAKE} --no-print-directory -C . -f dam.make clean
 	@${MAKE} --no-print-directory -C . -f dengbox.make clean
 	@${MAKE} --no-print-directory -C . -f imgui_sandbox.make clean
+	@${MAKE} --no-print-directory -C . -f deng.make clean
+	@${MAKE} --no-print-directory -C . -f dam.make clean
+	@${MAKE} --no-print-directory -C . -f dengsc.make clean
 
 help:
 	@echo "Usage: make [config=name] [target]"
@@ -93,9 +104,10 @@ help:
 	@echo "   all (default)"
 	@echo "   clean"
 	@echo "   imgui"
-	@echo "   deng"
-	@echo "   dam"
 	@echo "   dengbox"
 	@echo "   imgui_sandbox"
+	@echo "   deng"
+	@echo "   dam"
+	@echo "   dengsc"
 	@echo ""
 	@echo "For more information, see https://github.com/premake/premake-core/wiki"

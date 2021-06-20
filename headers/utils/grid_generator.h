@@ -74,28 +74,34 @@
     #include <math/deng_math.h>
 #endif
 
-#define DENG_DEFAULT_GRID_COLOR {0.8f, 0.8f, 0.8f, 1.0f}
-#define DENG_GRID_THICKNESS 0.005f
+#define DENG_DEFAULT_GRID_COLOR             dengMath::vec4<deng_vec_t>{0.8f, 0.8f, 0.8f, 1.0f}
+#define DENG_DEFAULT_GRID_RAY_LEN           50.0f    
+#define DENG_DEFAULT_GRID_ROW_C             100
+#define DENG_GRID_THICKNESS                 0.005f
 
 namespace dengUtils {
     
-    /*
-     * This class is used to create new grid for editors
-     */
-    class GridGenerator {
+    /// This class is used to create new grid for editors
+    class Grid {
     private:
-        dengMath::vec4<deng_vec_t> m_color;
-        deng_vec_t m_grid_len;
-        deng_ui32_t m_row_c;
-        das_Asset m_asset;
+        const das_ObjNormalData m_vert_normal = das_ObjNormalData{0.0f, -1.0f, 0.0f};
+        dengMath::vec4<deng_vec_t> m_color = DENG_DEFAULT_GRID_COLOR;
+        deng_vec_t m_grid_len = DENG_DEFAULT_GRID_RAY_LEN;
+        deng_ui32_t m_row_c = DENG_DEFAULT_GRID_ROW_C;
+        das_Asset m_asset = {};
 
     public:
-        GridGenerator (
-            dengMath::vec4<deng_vec_t> color, 
-            deng_vec_t len,
-            deng_ui32_t row_c
-        );
-        das_Asset &getGrid();
+        Grid(const dengMath::vec4<deng_vec_t> &color, deng_vec_t len, deng_ui32_t row_c);
+
+        /// Calculate vertices and indices for the grid 
+        void calc();
+
+    /// Setters and getters
+    public:
+        das_Asset &getGridAsAnAsset();
+        void setColor(das_ObjColorData &color);
+        void setRowCountPerLine(deng_ui32_t row_c);
+        void setLineLength(deng_vec_t ray_len);
     };
 }
 

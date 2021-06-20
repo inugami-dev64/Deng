@@ -200,8 +200,6 @@ namespace deng {
                 m_buffer_data.asset_size += ZERO_MOD_CEIL_REM(m_buffer_data.asset_size, sizeof(deng_idx_t));
                 asset.offsets.ind_offset = m_buffer_data.asset_size;
                 m_buffer_data.asset_size += 3 * asset.indices.n * sizeof(deng_ui32_t);
-				LOG("Offsets (pos, tex, nor, ind): " + std::to_string(asset.offsets.pos_offset) + ", " + std::to_string(asset.offsets.tex_offset) + ", " + std::to_string(asset.offsets.nor_offset) + 
-					", " + std::to_string(asset.offsets.ind_offset));
                 break;
             
             default:
@@ -313,9 +311,6 @@ namespace deng {
             const deng_bool_t asset_realloc = assetCapCheck();
             const deng_bool_t ui_realloc = uiCapCheck();
 
-            LOG("New asset cap / size: " + std::to_string(m_buffer_data.asset_cap) + ", " + std::to_string(m_buffer_data.asset_size));
-            LOG("New ui cap / size: " + std::to_string(m_buffer_data.ui_cap) + ", " + std::to_string(m_buffer_data.ui_size));
-
             // Check if any reallocation should be done
             if(asset_realloc || ui_realloc) {
                 vkWaitForFences(device, static_cast<deng_ui32_t>(fences.size()), fences.data(), VK_TRUE, UINT64_MAX);
@@ -368,8 +363,6 @@ namespace deng {
             VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer(device, gpu, m_buffer_data.asset_cap + m_buffer_data.ui_cap, 
                 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
                 m_buffer_data.main_buffer);
-
-            LOG("Allocating buffer with size of: " + std::to_string(mem_req.size) + " bytes");
 
             // Allocate memory for the buffer instance
             __vk_BufferCreator::allocateMemory(device, gpu, mem_req.size, m_buffer_data.main_buffer_memory, 
@@ -465,8 +458,6 @@ namespace deng {
                 // Unmap buffer memory area
             vkUnmapMemory(device, m_buffer_data.staging_buffer_memory);
 
-
-            LOG("Current asset offset is " + std::to_string(m_buffer_data.asset_cap));
             // Copy staging buffer to the main buffer
             __vk_BufferCreator::cpyBufferToBuffer(device, cmd_pool, g_queue, m_buffer_data.staging_buffer,
                 m_buffer_data.main_buffer, m_buffer_data.ui_size, 0, m_buffer_data.asset_cap);

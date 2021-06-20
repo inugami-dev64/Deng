@@ -128,11 +128,6 @@ namespace deng {
             // Vertex normal binding number variable, since it can change according to the asset mode
             deng_ui32_t nor_bind_nr = 1;
 
-            LOG("Asset position offset: " + std::to_string(asset.offsets.pos_offset));
-            LOG("Asset texture offset: " + std::to_string(asset.offsets.tex_offset));
-            LOG("Asset normal offset: " + std::to_string(asset.offsets.nor_offset));
-            LOG("Asset indices offset: " + std::to_string(asset.offsets.ind_offset));
-
             // Bind the position vertex location in buffer
             vkCmdBindVertexBuffers(cur_buf, 0, 1, &bd.main_buffer, &asset.offsets.pos_offset);
 
@@ -322,15 +317,12 @@ namespace deng {
 
                             vkCmdSetScissor(m_cmd_bufs[i], 0, 1, &sc_rect);
                             vkCmdDrawIndexed(m_cmd_bufs[i], m_p_ui_data->entities[j].ind_c, 1, 0, 0, 0);
-                            LOG("Index count: " + std::to_string(m_p_ui_data->entities[j].ind_c));
                         }
                     }
 
                 // End render pass
-				printf("test\n");
                 vkCmdEndRenderPass(m_cmd_bufs[i]);
                 
-				printf("test\n");
                 // Stop recording commandbuffer
                 if(vkEndCommandBuffer(m_cmd_bufs[i]) != VK_SUCCESS)
 					VK_DRAWCMD_ERR("failed to end recording command buffer");

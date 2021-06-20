@@ -57,41 +57,24 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
- * ----------------------------------------------------------------
- *  Name: sc_ed - scene editor program for DENG
- *  Purpose: Provide an standalone executable for editing scenes
- *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __SC_ED_H
-#define __SC_ED_H
+#include "imgui.h"
+#define __SC_ED_UI_CPP
+#include <imgui-layer/scene_editor/sc_ed_ui.h>
 
-
-#ifdef __SC_ED_CPP
-    #include <deng/deng.h>
-    #include <deng/ui.h>
-    #include <imgui-layer/scene_editor/sc_ed_ui.h>
-#endif
-
-
-/// Some settings definitions
-#define WIDTH               1280
-#define HEIGHT              720
 
 namespace dengEditor {
 
-    class SceneEditor3D : SceneEditorUI {
-    private:
-        deng::Window m_win;
-        deng::Camera3D m_cam;
-        deng::Renderer m_rend;
-        std::unique_ptr<deng::UIManager> m_ui_man;
+    void SceneEditorUI::__spawnEntityPanel() {
+        ImGui::ShowDemoWindow();
+    }
 
-    public:
-        SceneEditor3D(deng_RendererHintBits hints);
-        void run();
-    };
+
+    /// Render windows for new frame
+    void SceneEditorUI::newFrame() {
+        // Spawn entity panel
+        __spawnEntityPanel();
+    }
 }
-
-#endif

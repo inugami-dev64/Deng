@@ -196,19 +196,6 @@ function buildcfg()
         sandbox_data.dataset();
     end
 
-
-    -- Check if static libdeng build should be made
-    local libdeng = require("premake/libdeng")
-    if _OPTIONS["build-static"] then
-        libdeng.build(true)
-    else 
-        libdeng.build(false)
-    end
-
-    -- DENG asset manager build configuration
-    local dam = require("premake/dam")
-    dam.build()
-
     -- Sandbox application build configuration
     if _OPTIONS["sandbox-mode"] == "deng" or _OPTIONS["sandbox-mode"] == "all" then
         local dengbox = require("premake/dengbox")
@@ -219,6 +206,19 @@ function buildcfg()
         local imgui_sandbox = require("premake/imgui_sandbox")
         imgui_sandbox.build()
     end
+
+
+    -- Build DENG runtime library
+    local libdeng = require("premake/libdeng")
+    libdeng.build()
+
+    -- Build DENG asset manager application
+    local dam = require("premake/dam")
+    dam.build()
+
+    -- Build DENG scene editor
+    local scene_ed = require("premake/scene_ed")
+    scene_ed.build()
 end
 
 

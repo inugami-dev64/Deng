@@ -65,16 +65,12 @@
 
 namespace dengUtils {
 
-    GridGenerator::GridGenerator (
-        dengMath::vec4<deng_vec_t> color,
-        deng_vec_t len,
-        deng_ui32_t row_c
-    ) {
+    Grid::Grid(const dengMath::vec4<deng_vec_t> &color, deng_vec_t len, deng_ui32_t row_c) {
         m_color = color;
         m_grid_len = len;
         m_row_c = row_c;
         
-        deng_vec_t step = len / (deng_vec_t) row_c;
+        const deng_vec_t step = len / (deng_vec_t) row_c;
 
         // Set the asset mode and its uuid
         m_asset.asset_mode = DAS_ASSET_MODE_3D_UNMAPPED;
@@ -85,11 +81,14 @@ namespace dengUtils {
         m_asset.vertices.v3d.pos = (das_ObjPosData*) calloc (
             m_asset.vertices.v3d.pn, sizeof(das_ObjPosData));
 
+        m_asset.vertices.v3d.nn = 1;
+        m_asset.vertices.v3d.norm = (das_ObjNormalData*) &m_vert_normal;
+
         // Allocate memory for indices
         m_asset.indices.n = m_asset.vertices.v3d.pn;
-        m_asset.indices.pos = (deng_ui32_t*) calloc (
-            m_asset.indices.n , sizeof(deng_ui32_t));
-        
+        m_asset.indices.pos = (deng_ui32_t*) calloc(m_asset.indices.n, sizeof(deng_ui32_t));
+        m_asset.indices.norm = (deng_ui32_t*) calloc(m_asset.indices.n, sizeof(deng_ui32_t));
+
         // Set the temporary color data instance
         das_ObjColorData tmp_col;
         tmp_col.col_r = m_color.first;
@@ -150,5 +149,5 @@ namespace dengUtils {
         das_MkAssetNormals(&m_asset);
     }
 
-    das_Asset &GridGenerator::getGrid() { return m_asset; }
+    das_Asset &Grid::getGridAsAnAsset() { return m_asset; }
 }

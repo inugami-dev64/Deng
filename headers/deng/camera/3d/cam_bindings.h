@@ -87,6 +87,14 @@ namespace deng {
         deng_InputBits mov_z = DENG_KEY_UNKNOWN;
         deng_InputBits mov_nz = DENG_KEY_UNKNOWN;
 
+        // Origin movements according to the camera's coordinate system
+        deng_InputBits mov_ori_u = DENG_KEY_UNKNOWN;
+        deng_InputBits mov_ori_w = DENG_KEY_UNKNOWN;
+
+        // Origin movements according to the world coordinate system
+        deng_InputBits mov_ori_x = DENG_KEY_UNKNOWN;
+        deng_InputBits mov_ori_z = DENG_KEY_UNKNOWN;
+
         // Rotations according to camera coordinate system (pitch, yaw roll)
         deng_InputBits rot_u = DENG_KEY_UNKNOWN;
         deng_InputBits rot_nu = DENG_KEY_UNKNOWN;
@@ -95,7 +103,7 @@ namespace deng {
         deng_InputBits rot_w = DENG_KEY_UNKNOWN;
         deng_InputBits rot_nw = DENG_KEY_UNKNOWN;
 
-        // Rotations according to origin point (default word origin)
+        // Rotations according to origin point
         deng_InputBits rot_x = DENG_KEY_UNKNOWN;
         deng_InputBits rot_nx = DENG_KEY_UNKNOWN;
         deng_InputBits rot_y = DENG_KEY_UNKNOWN;

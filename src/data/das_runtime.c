@@ -64,10 +64,8 @@
 #include <data/das_runtime.h>
 
 
-/*
- * Attempt to create vertex normals for unnormalised vertices
- * This function works for 3D assets only
- */
+/// Attempt to create vertex normals for unnormalised vertices
+/// This function works for 3D assets only
 void das_MkAssetNormals(das_Asset *p_asset) {
     // Small error check to make sure that the indices count is divisible by 3
     if(p_asset->indices.n % 3) 

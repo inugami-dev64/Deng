@@ -97,16 +97,16 @@ namespace deng {
 
     /// General run method
     void ImGUIApplication::run() {
-        //m_rend.update();
+        // Initialise the gui manager class instance
         m_ui_man = std::make_unique<UIManager>(m_rend);
         while(deng_IsRunning()) {
-            // Measure time consomed for renderer current frame
+            // Measure time consumed for renderer current frame
             auto t1 = std::chrono::high_resolution_clock::now();
             m_ui_man->updateIO(m_win);
             char buf[128] = { 0 };
             float fl = 0;
 
-            ImGui ::NewFrame();
+            ImGui::NewFrame();
                 // This is a custom test window sample
                 ImGui::Begin("Test window", NULL, ImGuiWindowFlags_MenuBar);
                     ImGui::Text("This button click prints out appropriate message regarding the button click");
