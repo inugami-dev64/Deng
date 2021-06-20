@@ -99,7 +99,7 @@ namespace dengEditor {
 
     void SceneEditor3DEntityPanel::__mkEntityPanelAssetList(const std::vector<deng_Id> &assets, deng::__GlobalRegistry &reg) {
         if(ImGui::BeginTable("Loaded assets", 1, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY | 
-           ImGuiTableFlags_ScrollX, ImVec2{400.0f, 400.0f})) {
+           ImGuiTableFlags_ScrollX, ImVec2{400.0f, 300.0f})) {
 
             // For each asset retrieve its information and create a table row entry
             for(size_t i = 0; i < assets.size(); i++) {
@@ -117,7 +117,7 @@ namespace dengEditor {
 
     void SceneEditor3DEntityPanel::__mkEntityPanelTextureList(const std::vector<deng_Id> &textures, deng::__GlobalRegistry &reg) {
         if(ImGui::BeginTable("Loaded textures", 1, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY |
-           ImGuiTableFlags_ScrollX, ImVec2(400.0f, 400.0f))) {
+           ImGuiTableFlags_ScrollX, ImVec2(400.0f, 300.0f))) {
             
             // For each texture instance retrieve its information and create a table row entry
             for(size_t i = 0; i < textures.size(); i++) {
