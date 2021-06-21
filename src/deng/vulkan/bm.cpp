@@ -60,7 +60,7 @@
  */ 
 
 
-#define __BM_CPP
+#define __VK_BM_CPP
 #include <deng/vulkan/bm.h>
 
 

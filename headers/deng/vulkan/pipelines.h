@@ -64,8 +64,8 @@
  */ 
 
 
-#ifndef __PIPELINES_H
-#define __PIPELINES_H
+#ifndef __VK_PIPELINES_H
+#define __VK_PIPELINES_H
 
 // Pipeline indices
 #define UM2D_I          0
@@ -76,7 +76,7 @@
 #define PIPELINE_C      5
 
 
-#ifdef __PIPELINES_CPP
+#ifdef __VK_PIPELINES_CPP
     #include <array>
     #include <vector>
     #include <vulkan/vulkan.h>

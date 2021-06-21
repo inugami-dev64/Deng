@@ -60,11 +60,11 @@
  */ 
 
 
-#ifndef __DC_H
-#define __DC_H
+#ifndef __VK_DC_H
+#define __VK_DC_H
 
 
-#ifdef __DC_CPP
+#ifdef __VK_DC_CPP
     #include <vector>
     #include <array>
     #include <queue>

@@ -60,12 +60,12 @@
  */ 
 
 
-#ifndef __RESOURCES_H
-#define __RESOURCES_H
+#ifndef __VK_RESOURCES_H
+#define __VK_RESOURCES_H
 
 #define DENG_MAX_GPU_NAME_SIZE 256
 
-#ifdef __RESOURCES_CPP
+#ifdef __VK_RESOURCES_CPP
     #include <vector>
     #include <string>
     #include <string.h>

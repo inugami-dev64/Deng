@@ -65,10 +65,10 @@
  */ 
 
 
-#ifndef __PIPELINE_CI_GEN_H
-#define __PIPELINE_CI_GEN_H
+#ifndef __VK_PIPELINE_CI_GEN_H
+#define __VK_PIPELINE_CI_GEN_H
 
-#ifdef __PIPELINE_CI_GEN_CPP
+#ifdef __VK_PIPELINE_CI_GEN_CPP
     #include <vector>
     #include <array>
     #include <string>

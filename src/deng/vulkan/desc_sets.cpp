@@ -60,7 +60,7 @@
  */ 
 
 
-#define __DESC_SETS_CPP
+#define __VK_DESC_SETS_CPP
 #include <deng/vulkan/desc_sets.h>
 
 namespace deng {

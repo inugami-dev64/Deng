@@ -60,10 +60,10 @@
  */ 
 
 
-#ifndef __QM_H
-#define __QM_H
+#ifndef __VK_QM_H
+#define __VK_QM_H
 
-#ifdef __QM_CPP
+#ifdef __VK_QM_CPP
     #include <vector>
     #include <vulkan/vulkan.h>
     #include <common/base_types.h>

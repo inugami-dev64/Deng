@@ -58,7 +58,7 @@
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
  * ----------------------------------------------------------------
- *  Name: assets - Vulkan asset and texture structures
+ *  Name: vk_assets - Vulkan asset and texture structures
  *  Purpose: Provide structures for Vulkan assets and textures
  *  Author: Karl-Mihkel Ott
  */ 

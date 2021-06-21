@@ -59,16 +59,17 @@
  * the conditions stated in this License.
  *
  * ----------------------------------------------------------------
+ * Name: vk_asset_cpy - asset copying class for Vulkan
  * Purpose: Provide abstracted bindings for copying asset data over to the specified buffer as
  * well as merging staging buffer, created for single asset, with the main buffer.
  * Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __ASSET_CPY_H
-#define __ASSET_CPY_H
+#ifndef __VK_ASSET_CPY_H
+#define __VK_ASSET_CPY_H
 
-#ifdef __ASSET_CPY_CPP
+#ifdef __VK_ASSET_CPY_CPP
     #include <vector>
     #include <string>
     #include <common/err_def.h>

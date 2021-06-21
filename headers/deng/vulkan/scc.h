@@ -60,10 +60,10 @@
  */ 
 
 
-#ifndef __SCC_H
-#define __SCC_H
+#ifndef __VK_SCC_H
+#define __VK_SCC_H
 
-#ifdef __SCC_CPP
+#ifdef __VK_SCC_CPP
     #include <vector>
     #include <array>
 

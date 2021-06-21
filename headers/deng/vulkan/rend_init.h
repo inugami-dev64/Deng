@@ -57,14 +57,18 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: vk_rend_init - vulkan initialisation class
+ *  Purpose: Provide a class to handle all Vulkan renderer initialisation steps
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __REND_INIT_H
-#define __REND_INIT_H
+#ifndef __VK_REND_INIT_H
+#define __VK_REND_INIT_H
 
 
-#ifdef __REND_INIT_CPP
+#ifdef __VK_REND_INIT_CPP
     #include <mutex>
     #include <vector>
     #include <queue>
@@ -114,8 +118,6 @@ namespace deng {
             VkSampleCountFlagBits msaa_sample_count = VK_SAMPLE_COUNT_1_BIT;
             deng_bool_t enable_vsync = false;
             deng_bool_t enable_validation_layers = false;
-            deng_bool_t gui_count_fps = false;
-            deng_bool_t cli_count_fps = false;
             dengMath::vec4<deng_vec_t> background = {0.0f, 0.0f, 0.0f, 1.0f};
             deng::Camera3D *p_cam;
             deng::Window *p_win;

@@ -60,7 +60,7 @@
  */ 
 
 
-#define __QM_CPP
+#define __VK_QM_CPP
 #include <deng/vulkan/qm.h>
 
 namespace deng {

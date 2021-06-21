@@ -60,7 +60,7 @@
  */ 
 
 
-#define __SURFACE_C
+#define __VK_SURFACE_C
 #include <deng/vulkan/surface.h>
 
 void deng_GetRequiredVKSurfaceExt (
@@ -84,21 +84,14 @@ void deng_GetRequiredVKSurfaceExt (
     **p_exts = (char*) calloc(32, sizeof(char));
     strcpy(**p_exts, DENG_VK_WSI_EXT_NAME);
 
-    switch (p_win->mode)
-    {
-    case X11_WINDOW:
+    #if defined(__linux__)
         *(*p_exts + 1) = (char*) calloc(32, sizeof(char));
         strcpy(*(*p_exts + 1), DENG_VK_XLIB_SURFACE_EXT_NAME);
-        break;
 
-    case WIN32_WINDOW:
+    #elif defined(_WIN32)
         *(*p_exts + 1) = (char*) calloc(32, sizeof(char));
         strcpy(*(*p_exts + 1), DENG_VK_WIN32_SURFACE_EXT_NAME);
-        break;
-    
-    default:
-        break;
-    }   
+    #endif
 }
 
 VkResult deng_InitVKSurface (

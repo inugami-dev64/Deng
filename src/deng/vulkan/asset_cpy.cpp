@@ -60,7 +60,7 @@
  */ 
 
 
-#define __ASSET_CPY_CPP
+#define __VK_ASSET_CPY_CPP
 #include <deng/vulkan/asset_cpy.h>
 
 

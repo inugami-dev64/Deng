@@ -60,8 +60,8 @@
  */ 
 
 
-#ifndef __PIPELINE_DATA_H
-#define __PIPELINE_DATA_H
+#ifndef __VK_PIPELINE_DATA_H
+#define __VK_PIPELINE_DATA_H
 
 namespace deng {
     namespace vulkan {

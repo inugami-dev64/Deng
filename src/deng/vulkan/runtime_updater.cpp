@@ -64,7 +64,7 @@
  */ 
 
 
-#define __RUNTIME_UPDATE_CPP
+#define __VK_RUNTIME_UPDATE_CPP
 #include <deng/vulkan/runtime_updater.h>
 
 

@@ -60,8 +60,8 @@
  */ 
 
 
-#ifndef __SURFACE_H
-#define __SURFACE_H
+#ifndef __VK_SURFACE_H
+#define __VK_SURFACE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -72,7 +72,7 @@ extern "C" {
 #define DENG_VK_WIN32_SURFACE_EXT_NAME "VK_KHR_win32_surface"
 #define DENG_VK_DEBUG_UTILS_EXT_NAME "VK_EXT_debug_utils"
 
-#ifdef __SURFACE_C
+#ifdef __VK_SURFACE_C
     #include <string.h> // strlen(), strcpy()
     #include <stdlib.h> // malloc(), calloc()
 

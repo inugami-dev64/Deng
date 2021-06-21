@@ -58,18 +58,18 @@
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
  * ----------------------------------------------------------------
- *  Name: tm - Texture manager for Vulkan resource manager
+ *  Name: vk_tm - Texture manager for Vulkan resource manager
  *  Purpose: Provide a parent class for creating resource manager, which
  *  handles all operations done on textures.
  *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __TM_H
-#define __TM_H
+#ifndef __VK_TM_H
+#define __VK_TM_H
 
 
-#ifdef __TM_CPP
+#ifdef __VK_TM_CPP
     #include <vector>
     #include <array>
     #include <queue>

@@ -60,10 +60,10 @@
  */ 
 
 
-#ifndef __DESC_SETS_H
-#define __DESC_SETS_H
+#ifndef __VK_DESC_SETS_H
+#define __VK_DESC_SETS_H
 
-#ifdef __DESC_SETS_CPP
+#ifdef __VK_DESC_SETS_CPP
     #include <vector>
     #include <string>
     #include <array>

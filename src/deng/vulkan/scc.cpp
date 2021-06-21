@@ -60,7 +60,7 @@
  */ 
 
 
-#define __SCC_CPP
+#define __VK_SCC_CPP
 #include <deng/vulkan/scc.h>
 
 namespace deng {

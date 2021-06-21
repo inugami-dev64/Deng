@@ -60,7 +60,7 @@
  */ 
 
 
-#define __PIPELINES_CPP
+#define __VK_PIPELINES_CPP
 #include <deng/vulkan/pipelines.h>
 
 

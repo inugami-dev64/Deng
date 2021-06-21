@@ -60,7 +60,7 @@
  */ 
 
 
-#define __DC_CPP
+#define __VK_DC_CPP
 #include <deng/vulkan/dc.h>
 
 namespace deng {

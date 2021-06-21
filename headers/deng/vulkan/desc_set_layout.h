@@ -64,11 +64,11 @@
  */ 
 
 
-#ifndef __DESC_SET_LAYOUT_H
-#define __DESC_SET_LAYOUT_H
+#ifndef __VK_DESC_SET_LAYOUT_H
+#define __VK_DESC_SET_LAYOUT_H
 
 
-#ifdef __DESC_SET_LAYOUT_CPP
+#ifdef __VK_DESC_SET_LAYOUT_CPP
     #include <vector>
     #include <string>
     #include <vulkan/vulkan.h>

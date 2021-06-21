@@ -60,7 +60,7 @@
  */ 
 
 
-#define __TM_CPP
+#define __VK_TM_CPP
 #include <deng/vulkan/tm.h>
 
 namespace deng {

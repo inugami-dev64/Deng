@@ -65,11 +65,11 @@
  */ 
 
 
-#ifndef __UBM_H
-#define __UBM_H
+#ifndef __VK_UBM_H
+#define __VK_UBM_H
 
 
-#ifdef __UBM_CPP
+#ifdef __VK_UBM_CPP
     #include <array>
     #include <vector>
     #include <mutex>

@@ -59,10 +59,10 @@
  * the conditions stated in this License.
  */ 
 
-#ifndef __IC_H
-#define __IC_H
+#ifndef __VK_IC_H
+#define __VK_IC_H
 
-#ifdef __IC_CPP
+#ifdef __VK_IC_CPP
     #include <vector>
     #include <array>   
 	#include <string>

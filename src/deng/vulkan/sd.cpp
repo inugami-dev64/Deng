@@ -60,7 +60,7 @@
  */ 
 
 
-#define __SD_CPP
+#define __VK_SD_CPP
 #include <deng/vulkan/sd.h>
 
 namespace deng {

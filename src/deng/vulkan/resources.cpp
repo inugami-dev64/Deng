@@ -60,7 +60,7 @@
  */ 
 
 
-#define __RESOURCES_CPP
+#define __VK_RESOURCES_CPP
 #include <deng/vulkan/resources.h>
 
 namespace deng {

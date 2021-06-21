@@ -60,8 +60,8 @@
  */ 
 
 
-#ifndef __REND_INFOS_H
-#define __REND_INFOS_H
+#ifndef __VK_REND_INFOS_H
+#define __VK_REND_INFOS_H
 
 
 namespace deng {

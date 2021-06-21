@@ -60,7 +60,7 @@
  */ 
 
 
-#define __DESC_POOL_C_CPP
+#define __VK_DESC_POOL_C_CPP
 #include <deng/vulkan/desc_pool.h>
 
 

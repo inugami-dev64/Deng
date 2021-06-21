@@ -58,11 +58,15 @@
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
  * ----------------------------------------------------------------
- *  Name: ubo - Uniform buffer objects
+ *  Name: vk_ubo - Uniform buffer objects
  *  Purpose: Provide structures for uniform buffer data to align them for
  *  shaders
  *  Author: Karl-Mihkel Ott
  */ 
+
+
+#ifndef __VK_UBO
+#define __VK_UBO
 
 namespace deng {
     namespace vulkan {
@@ -127,3 +131,5 @@ namespace deng {
 
     }
 }
+
+#endif

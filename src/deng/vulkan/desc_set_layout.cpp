@@ -60,7 +60,7 @@
  */ 
 
 
-#define __DESC_SET_LAYOUT_CPP
+#define __VK_DESC_SET_LAYOUT_CPP
 #include <deng/vulkan/desc_set_layout.h>
 
 

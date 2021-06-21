@@ -58,7 +58,7 @@
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
  * ----------------------------------------------------------------
- *  Name: bm - Buffer manager for Vulkan resource manager
+ *  Name: vk_bm - buffer manager for Vulkan resource manager
  *  Purpose: Provide a parent class for resource manager, which handles
  *  all buffer related operations such as allocations, reallocations and
  *  data writings.
@@ -66,10 +66,10 @@
  */ 
 
 
-#ifndef __BM_H
-#define __BM_H
+#ifndef __VK_BM_H
+#define __VK_BM_H
 
-#ifdef __BM_CPP
+#ifdef __VK_BM_CPP
     #include <vector>
     #include <string>
     #include <mutex>

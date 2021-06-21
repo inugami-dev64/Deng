@@ -64,10 +64,10 @@
  */ 
 
 
-#ifndef __RUNTIME_UPDATER_H
-#define __RUNTIME_UPDATER_H
+#ifndef __VK_RUNTIME_UPDATER_H
+#define __VK_RUNTIME_UPDATER_H
 
-#ifdef __RUNTIME_UPDATE_CPP
+#ifdef __VK_RUNTIME_UPDATE_CPP
     #include <vector>
     #include <array>
     #include <chrono>

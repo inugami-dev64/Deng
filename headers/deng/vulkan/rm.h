@@ -65,10 +65,10 @@
  */ 
 
 
-#ifndef __RM_H
-#define __RM_H
+#ifndef __VK_RM_H
+#define __VK_RM_H
 
-#ifdef __RM_CPP
+#ifdef __VK_RM_CPP
     #include <vector>
     #include <array>
     #include <queue>

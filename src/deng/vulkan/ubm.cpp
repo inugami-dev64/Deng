@@ -60,7 +60,7 @@
  */ 
 
 
-#define __UBM_CPP
+#define __VK_UBM_CPP
 #include <deng/vulkan/ubm.h>
 
 

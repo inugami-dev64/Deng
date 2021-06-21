@@ -60,8 +60,7 @@
  */ 
 
 
-#include <vulkan/vulkan_core.h>
-#define __PIPELINE_CI_GEN_CPP
+#define __VK_PIPELINE_CI_GEN_CPP
 #include <deng/vulkan/pipeline_ci_gen.h>
 
 namespace deng {

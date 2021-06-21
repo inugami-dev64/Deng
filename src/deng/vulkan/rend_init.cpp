@@ -60,7 +60,7 @@
  */ 
 
 
-#define __REND_INIT_CPP
+#define __VK_REND_INIT_CPP
 #include <deng/vulkan/rend_init.h>
 
 

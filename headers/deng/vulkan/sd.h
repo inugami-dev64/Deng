@@ -60,10 +60,10 @@
  */ 
 
 
-#ifndef __SD_H
-#define __SD_H
+#ifndef __VK_SD_H
+#define __VK_SD_H
 
-#ifdef __SD_CPP
+#ifdef __VK_SD_CPP
     #include <vector>
     #include <stdexcept>
     #include <vulkan/vulkan.h>

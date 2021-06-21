@@ -60,7 +60,7 @@
  */ 
 
 
-#define __IC_CPP
+#define __VK_IC_CPP
 #include <deng/vulkan/ic.h>
 
 namespace deng {

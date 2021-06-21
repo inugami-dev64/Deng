@@ -64,11 +64,11 @@
  */ 
 
 
-#ifndef __DESC_POOL_C_H
-#define __DESC_POOL_C_H
+#ifndef __VK_DESC_POOL_C_H
+#define __VK_DESC_POOL_C_H
 
 
-#ifdef __DESC_POOL_C_CPP
+#ifdef __VK_DESC_POOL_C_CPP
     #include <array>
     #include <vector>
     #include <vulkan/vulkan.h>

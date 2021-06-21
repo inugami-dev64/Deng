@@ -60,7 +60,7 @@
  */ 
 
 
-#define __RM_CPP
+#define __VK_RM_CPP
 #include <deng/vulkan/rm.h>
 
 namespace deng {
