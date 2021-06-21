@@ -92,9 +92,6 @@ namespace deng {
             m_vk_vars->background = m_env_color,
             m_vk_vars->p_cam = &main_cam;
             m_vk_vars->p_win = &main_win;
-                
-            m_vk_vars->cli_count_fps = (m_hints & DENG_RENDERER_HINT_SHOW_CMD_FPS_COUNTER) > 1 ? 1 : m_hints & DENG_RENDERER_HINT_SHOW_CMD_FPS_COUNTER,
-            m_vk_vars->gui_count_fps = (m_hints & DENG_RENDERER_HINT_SHOW_GUI_FPS_COUNTER) > 1 ? 1 : m_hints & DENG_RENDERER_HINT_SHOW_GUI_FPS_COUNTER,
             m_vk_vars->enable_validation_layers = (m_hints & DENG_RENDERER_HINT_ENABLE_API_DEBUGGING) > 1 ? 1 : m_hints & DENG_RENDERER_HINT_ENABLE_API_DEBUGGING,
 
             // Create a new renderer instance

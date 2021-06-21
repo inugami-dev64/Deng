@@ -108,6 +108,8 @@ function libdeng.build()
                 "vulkan",
                 "pthread",
                 "X11",
+                "GL",
+                "GLU",
                 "Xcursor",
                 "dl"
             }

@@ -107,6 +107,7 @@ newoption {
     allowed = {
         { "deng", "Build an application for testing the renderer by loading assets" },
         { "imgui", "Build an application for testing ImGui with DENG renderer" },
+        { "opengl", "Build a test application for testing OpenGL functionality" },
         { "none", "Do not build any sandbox applications (default)" },
         { "all", "Build all sandbox applications" }
     }
@@ -189,6 +190,11 @@ function buildcfg()
     if _OPTIONS["sandbox-mode"] == "imgui" or _OPTIONS["sandbox-mode"] == "all" then
         local imgui_sandbox = require("premake/imgui_sandbox")
         imgui_sandbox.build()
+    end
+
+    if _OPTIONS["sandbox-mode"] == "opengl" or _OPTIONS["sandbox-mode"] == "all" then
+        local opengl_sandbox = require("premake/opengl_sandbox")
+        opengl_sandbox.build()
     end
 
 

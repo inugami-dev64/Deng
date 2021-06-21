@@ -67,7 +67,7 @@
 namespace Sandbox {
 
     DengBox::DengBox() : 
-        m_win(1200, 1000, "DENG game"),
+        m_win(1200, 1000, DENG_RENDERER_HINT_API_VULKAN, "DENG game"),
         m_cam(DENG_CAMERA_TYPE_EDITOR, static_cast<deng_vec_t>(dengMath::Conversion::degToRad(65.0)),
             {0.1f, -25.0f}, {0.7f, 0.7f, 0.7f}, {0.3f, 0.3f}, false, &m_win),
         m_light_man(m_reg) {
@@ -99,12 +99,12 @@ namespace Sandbox {
         m_assets.back().tex_uuid = m_textures[2].uuid;
 
         #ifndef __DEBUG
-            m_rend.reset(new deng::Renderer(DENG_RENDERER_HINT_API_VULKAN | DENG_RENDERER_HINT_ENABLE_API_DEBUGGING | 
+            m_rend = std::make_unique<deng::Renderer>(DENG_RENDERER_HINT_API_VULKAN | DENG_RENDERER_HINT_ENABLE_API_DEBUGGING | 
                 DENG_RENDERER_HINT_MIPMAP_ENABLE | DENG_RENDERER_HINT_MSAA_4,
-                dengMath::vec4<deng_vec_t>{ 0.0f, 0.0f, 0.0f, 1.0f }));
+                dengMath::vec4<deng_vec_t>{ 0.0f, 0.0f, 0.0f, 1.0f });
         #else 
-            m_rend.reset(new deng::Renderer(DENG_RENDERER_HINT_API_VULKAN | DENG_RENDERER_HINT_MIPMAP_ENABLE | DENG_RENDERER_HINT_MSAA_4,
-                dengMath::vec4<deng_vec_t>{ 0.0f, 0.0f, 0.0f, 1.0f }));
+            m_rend = std::make_unique<deng::Renderer>(DENG_RENDERER_HINT_API_VULKAN | DENG_RENDERER_HINT_MIPMAP_ENABLE | DENG_RENDERER_HINT_MSAA_4,
+                dengMath::vec4<deng_vec_t>{ 0.0f, 0.0f, 0.0f, 1.0f });
         #endif
 
         // Submit all assets and textures to renderer

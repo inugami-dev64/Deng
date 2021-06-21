@@ -67,11 +67,6 @@
 extern "C" {
 #endif
 
-#define DENG_REFRESH_INTERVAL 1 // microseconds
-#define MAX_MOUSE_PTR_DISTANCE_FROM_BORDER 100 
-
-#define X11_WINDOW 0x01
-#define WIN32_WINDOW 0x02 
 
 #ifdef __DENG_SURFACE_C
     #include <stdlib.h>
@@ -110,10 +105,8 @@ extern "C" {
 
 
 #ifdef __linux__
-    #define EVENT_MASKS KeyPressMask | \
-    KeyReleaseMask | ButtonPressMask | \
-    ButtonReleaseMask | LeaveWindowMask | \
-    FocusChangeMask | PointerMotionMask
+    #define EVENT_MASKS KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | LeaveWindowMask | \
+        FocusChangeMask | PointerMotionMask | StructureNotifyMask
     
     //#define DENG_CURSOR_HIDDEN (char*) "xcursor/invisible"
     //#define DENG_CURSOR_DEFAULT (char*) "default"
@@ -124,6 +117,9 @@ extern "C" {
     // X11 includes 
     #include <X11/Xutil.h>
     #include <X11/Xos.h>
+    #include <GL/gl.h>
+    #include <GL/glx.h>
+    #include <GL/glu.h>
     #include <X11/Xcursor/Xcursor.h>
     #include <vulkan/vulkan_xlib.h>
 
@@ -133,6 +129,7 @@ extern "C" {
         deng_i32_t screen;
         Window window;
         XEvent event;
+        XVisualInfo *vi;
         GC gc;
     } deng_SurfaceX11;
 
@@ -151,12 +148,7 @@ extern "C" {
         UINT raw_input_size;
     } deng_SurfaceWIN32;
 
-
-    #ifndef __DENG_API_CORE
-        #define DENG_WIN32_CLASS_NAME L"DENG_WINDOW"
-    #else 
-        #define DENG_WIN32_CLASS_NAME "DENG_WINDOW"
-    #endif
+    #define DENG_WIN32_CLASS_NAME L"DENG_WINDOW"
 #endif
 
 
@@ -179,7 +171,7 @@ typedef enum deng_SurfaceWindowMode {
  * position of mouse cursor.
  */
 typedef struct deng_VCData {
-    deng_bool_t is_enabled;
+   deng_bool_t is_enabled;
     #ifdef __linux__
         char *cursor;
         deng_bool_t is_lib_cur;
@@ -202,7 +194,7 @@ typedef struct deng_SurfaceWindow {
     deng_px_t mx;
     deng_px_t my;
     deng_SurfaceWindowMode window_mode;
-    deng_i32_t mode;
+    deng_bool_t is_opengl;
     deng_VCData vc_data;
 
     #ifdef __linux__
@@ -217,10 +209,11 @@ typedef struct deng_SurfaceWindow {
 
 /// Create new platform independant deng_SurfaceWindow instance for vulkan
 /// This functions uses either Xlib or WIN32 api to create window depending on the operating system
-deng_SurfaceWindow *deng_InitVKSurfaceWindow (
+deng_SurfaceWindow *deng_InitSurfaceWindow (
     deng_i32_t width, 
     deng_i32_t height, 
-    char *title, 
+    deng_RendererHintBits api_bits,
+    const char *title, 
     deng_SurfaceWindowMode window_mode
 );
 

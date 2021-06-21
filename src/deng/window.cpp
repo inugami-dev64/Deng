@@ -64,19 +64,9 @@
 #include <deng/window.h>
 
 namespace deng {
-    Window::Window(deng_i32_t x, deng_i32_t y, const char *title) {
-        m_title = (char*) title;
-        m_p_surface = deng_InitVKSurfaceWindow(x, y, m_title, DENG_WINDOW_MODE_FIXED);
-
-        m_size = dengMath::vec2<deng_ui32_t> {
-            static_cast<deng_ui32_t>(m_p_surface->width),
-            static_cast<deng_ui32_t>(m_p_surface->height) 
-        };
-
-        m_pixel_size = dengMath::vec2<deng_vec_t> {
-            static_cast<deng_vec_t>(m_size.first),
-            static_cast<deng_vec_t>(m_size.second)
-        };
+    Window::Window(deng_i32_t x, deng_i32_t y, deng_RendererHintBits api, const char *title) {
+        m_title = title;
+        m_p_surface = deng_InitSurfaceWindow(x, y, api, m_title, DENG_WINDOW_MODE_FIXED);
     }
 
     Window::~Window() {
@@ -209,13 +199,23 @@ namespace deng {
 
 
     /// Get the vector size for one pixel in surface
-    dengMath::vec2<deng_vec_t> Window::getPixelSize() const { return m_pixel_size; }
+    dengMath::vec2<deng_vec_t> Window::getPixelSize() const { 
+        return dengMath::vec2<deng_vec_t> {
+            2.0f / static_cast<deng_vec_t>(m_p_surface->width),
+            2.0f / static_cast<deng_vec_t>(m_p_surface->height)
+        }; 
+    }
 
     /// Get the title of the window
     const char *Window::getTitle() const { return m_title; }
 
     /// Get the size of the window
-    dengMath::vec2<deng_ui32_t> Window::getSize() const { return m_size; }
+    dengMath::vec2<deng_ui32_t> Window::getSize() const { 
+        return dengMath::vec2<deng_ui32_t> {
+            static_cast<deng_ui32_t>(m_p_surface->width),
+            static_cast<deng_ui32_t>(m_p_surface->height)
+        }; 
+    }
 
     /// Check if virtual cursor mode is enabled
     deng_bool_t Window::isVCP() { return m_is_vc; }

@@ -61,12 +61,12 @@
 
 
 #define __IMGUI_SANDBOX_CPP
-#include <imgui-layer/imgui_sandbox.h>
+#include <../src/sandbox/imgui_sandbox/imgui_sandbox.h>
 
 namespace deng {
 
     ImGUIApplication::ImGUIApplication() : 
-        m_win(1280, 720, "ImGUI demo"),
+        m_win(1280, 720, DENG_RENDERER_HINT_API_VULKAN, "ImGUI demo"),
         m_cam(DENG_CAMERA_TYPE_EDITOR, static_cast<deng_vec_t>(dengMath::Conversion::degToRad(65.0)), 
             {0.1f, -25.0f}, {0.7f, 0.7f, 0.7f}, {0.3f, 0.3f}, false, &m_win),
         m_rend(DENG_RENDERER_HINT_API_VULKAN | DENG_RENDERER_HINT_MSAA_2, 

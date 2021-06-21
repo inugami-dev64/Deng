@@ -69,7 +69,10 @@ function imgui_sandbox.build()
         language "C++"
         cppdialect "C++14"
 
-        files { "src/imgui-layer/imgui_sandbox.cpp" }
+        files { 
+            "src/sandbox/imgui_sandbox/imgui_sandbox.cpp",
+            "src/sandbox/imgui_sandbox/imgui_sandbox.h"
+        }
         links { "deng", "imgui" }
 end
 

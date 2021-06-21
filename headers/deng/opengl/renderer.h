@@ -57,62 +57,53 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: gl_renderer - OpenGL renderer class for DENG
+ *  Purpose: Provide a high level class for abstracting OpenGL calls
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
-
-#define __SC_ED_CPP
-#include <imgui-layer/scene_editor/sc_ed.h>
-
-
-namespace dengEditor {
-
-    SceneEditor3D::SceneEditor3D(deng_RendererHintBits hints) : 
-        m_win(WIDTH, HEIGHT, DENG_RENDERER_HINT_API_VULKAN, "DENG - Scene editor"),
-        m_cam(DENG_CAMERA_TYPE_EDITOR, static_cast<deng_vec_t>(dengMath::Conversion::degToRad(65.0)),
-            {-0.1f, -25.0f}, {0.7f, 0.7f, 0.7f}, {0.3f, 0.3f}, false, &m_win),
-        m_rend(hints, dengMath::vec4<deng_vec_t>{0.0f, 0.0f, 0.0f, 1.0f})
-    {
-        deng::Camera3DBindings bindings = {};
-        bindings.mov_w = deng_CreateInputMask(1, DENG_MOUSE_SCROLL_UP);
-        bindings.mov_nw = deng_CreateInputMask(1, DENG_MOUSE_SCROLL_UP);
-        bindings.ch_vcp = deng_CreateInputMask(1, DENG_MOUSE_BTN_2);
-        m_cam.setBindings(bindings);
-
-        // Setup the renderer
-        m_rend.setup(m_cam, m_win);
-    }
+#ifndef __GL_RENDERER_H
+#define __GL_RENDERER_H
 
 
-    void SceneEditor3D::run() {
-        m_ui_man = std::make_unique<deng::UIManager>(m_rend);
+#ifdef __GL_RENDERER_CPP
+    #include <vector>
+    #include <chrono>
+    #include <GL/gl.h>
+    #include <GL/glu.h>
+    #include <vulkan/vulkan.h>
+    #include <common/base_types.h>
+    #include <common/hashmap.h>
+    #include <data/assets.h>
+    
+    #include <math/deng_math.h>
+    #include <deng/window.h>
+    #include <deng/registry/registry.h>
+    #include <deng/camera.h>
+    #include <deng/opengl/cfg_vars.h>
+#endif
 
-        // Main loop
-        while(deng_IsRunning()) {
-            // Start measuring time for FPS counter 
-            auto t1 = std::chrono::high_resolution_clock::now();
+namespace deng {
+    namespace opengl {
 
-            // Update the UI manager io data
-            m_ui_man->updateIO(m_win);
+        class __gl_Renderer {
+        private:
+            __gl_ConfigVars m_cfg_vars;
+            deng::__GlobalRegistry &m_reg;
+            std::vector<deng_Id> &m_assets;
+            std::vector<deng_Id> &m_textures;
 
-            ImGui::NewFrame();
-                SceneEditor3DEntityPanel::spawnEntityPanel(m_rend);
-            ImGui::EndFrame();
-            ImGui::Render();
-
-            ImDrawData *p_draw_data = ImGui::GetDrawData();
-            m_ui_man->render(p_draw_data, m_win);
-            m_rend.update();
-
-            auto t2 = std::chrono::high_resolution_clock::now();
-            m_ui_man->setTime(t1, t2);
-        }
+        public:
+            __gl_Renderer(__gl_ConfigVars &cfg, deng::__GlobalRegistry &reg, std::vector<deng_Id> &assets,
+                std::vector<deng_Id> &textures);
+            
+            
+            // Main frame updating function
+            void makeFrame();
+        };
     }
 }
 
-
-int main() {
-    dengEditor::SceneEditor3D sc(DENG_RENDERER_HINT_MSAA_2 | DENG_RENDERER_HINT_API_VULKAN);
-    sc.run();
-    return 0;
-}
+#endif

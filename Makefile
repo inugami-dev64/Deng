@@ -12,6 +12,7 @@ ifeq ($(config),debug_win32)
   imgui_config = debug_win32
   dengbox_config = debug_win32
   imgui_sandbox_config = debug_win32
+  opengl_sandbox_config = debug_win32
   deng_config = debug_win32
   dam_config = debug_win32
   dengsc_config = debug_win32
@@ -20,6 +21,7 @@ ifeq ($(config),debug_linux)
   imgui_config = debug_linux
   dengbox_config = debug_linux
   imgui_sandbox_config = debug_linux
+  opengl_sandbox_config = debug_linux
   deng_config = debug_linux
   dam_config = debug_linux
   dengsc_config = debug_linux
@@ -28,6 +30,7 @@ ifeq ($(config),release_win32)
   imgui_config = release_win32
   dengbox_config = release_win32
   imgui_sandbox_config = release_win32
+  opengl_sandbox_config = release_win32
   deng_config = release_win32
   dam_config = release_win32
   dengsc_config = release_win32
@@ -36,12 +39,13 @@ ifeq ($(config),release_linux)
   imgui_config = release_linux
   dengbox_config = release_linux
   imgui_sandbox_config = release_linux
+  opengl_sandbox_config = release_linux
   deng_config = release_linux
   dam_config = release_linux
   dengsc_config = release_linux
 endif
 
-PROJECTS := imgui dengbox imgui_sandbox deng dam dengsc
+PROJECTS := imgui dengbox imgui_sandbox opengl_sandbox deng dam dengsc
 
 .PHONY: all clean help $(PROJECTS) 
 
@@ -63,6 +67,12 @@ imgui_sandbox: deng imgui
 ifneq (,$(imgui_sandbox_config))
 	@echo "==== Building imgui_sandbox ($(imgui_sandbox_config)) ===="
 	@${MAKE} --no-print-directory -C . -f imgui_sandbox.make config=$(imgui_sandbox_config)
+endif
+
+opengl_sandbox: deng
+ifneq (,$(opengl_sandbox_config))
+	@echo "==== Building opengl_sandbox ($(opengl_sandbox_config)) ===="
+	@${MAKE} --no-print-directory -C . -f opengl_sandbox.make config=$(opengl_sandbox_config)
 endif
 
 deng: imgui
@@ -87,6 +97,7 @@ clean:
 	@${MAKE} --no-print-directory -C . -f imgui.make clean
 	@${MAKE} --no-print-directory -C . -f dengbox.make clean
 	@${MAKE} --no-print-directory -C . -f imgui_sandbox.make clean
+	@${MAKE} --no-print-directory -C . -f opengl_sandbox.make clean
 	@${MAKE} --no-print-directory -C . -f deng.make clean
 	@${MAKE} --no-print-directory -C . -f dam.make clean
 	@${MAKE} --no-print-directory -C . -f dengsc.make clean
@@ -106,6 +117,7 @@ help:
 	@echo "   imgui"
 	@echo "   dengbox"
 	@echo "   imgui_sandbox"
+	@echo "   opengl_sandbox"
 	@echo "   deng"
 	@echo "   dam"
 	@echo "   dengsc"

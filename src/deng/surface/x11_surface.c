@@ -68,30 +68,37 @@ static void __deng_XInitCursors(deng_SurfaceWindow *p_win);
 static void __deng_XFreeCursors(deng_SurfaceWindow *p_win);
 static void __deng_XHandleKeyEvents(); 
 static void __deng_XHandleMouseEvents(); 
+static void __deng_XHandleResize(deng_SurfaceWindow *p_win);
 static void __deng_XSetCursor (
     deng_SurfaceWindow *p_win,
     deng_bool_t hide
 );
 
-static Atom __atom_kill;
 
+static void __deng_CreateVkWindow(deng_SurfaceWindow *p_win);
+static void __deng_CreateGlWindow(deng_SurfaceWindow *p_win);
+static XSizeHints __deng_SetSizeHints(deng_SurfaceWindow *p_win);
+static Atom __atom_kill;
 static Cursor __hidden_cur;
 static Cursor __default_cur;
 
 
-deng_SurfaceWindow *deng_InitVKSurfaceWindow (
+deng_SurfaceWindow *deng_InitSurfaceWindow (
     deng_i32_t width, 
     deng_i32_t height, 
-    char *title, 
+    deng_RendererHintBits api_bits,
+    const char *title, 
     deng_SurfaceWindowMode window_mode
 ) {
     static deng_SurfaceWindow win;
 
+    // Fill the window structure
     win.width = width;
     win.height = height;
     win.window_title = title;
 
     win.vc_data.is_enabled = 0;
+    win.window_mode = window_mode;
     win.vc_data.orig_x = (deng_vec_t) width / 2;
     win.vc_data.orig_y = (deng_vec_t) height / 2;
     win.vc_data.x = 0;
@@ -100,52 +107,105 @@ deng_SurfaceWindow *deng_InitVKSurfaceWindow (
     win.x11_handler.p_display = XOpenDisplay(NULL);
     win.x11_handler.screen = DefaultScreen(win.x11_handler.p_display);
 
-    XSizeHints size_hints;
+    // Check the requested API and create a window instance accordingly
+    switch(api_bits) {
+    case DENG_RENDERER_HINT_API_VULKAN:
+        win.is_opengl = false;
+        __deng_CreateVkWindow(&win);
+        break;
 
-    /// Set flags for creating a fixed window
-    /// however it is up to windows manager to decide if the size hint flag
-    /// is respected or not
-    if(window_mode == DENG_WINDOW_MODE_FIXED) {
-        size_hints.flags |= (PMinSize | PMaxSize);
-        size_hints.min_width = size_hints.max_width =  win.width;
-        size_hints.min_height = size_hints.max_height = win.height;   
-    }    
+    case DENG_RENDERER_HINT_API_OPENGL:
+        win.is_opengl = true;
+        __deng_CreateGlWindow(&win);
+        break;
 
-    win.x11_handler.window = XCreateSimpleWindow(win.x11_handler.p_display, DefaultRootWindow(win.x11_handler.p_display), 
-        0, 0, width, height, __DENG_DEFAULT_WINDOW_BORDER, WhitePixel(win.x11_handler.p_display, win.x11_handler.screen), 
-        BlackPixel(win.x11_handler.p_display, win.x11_handler.screen));
+    default: RUN_ERR("deng_InitSurfaceWindow", "Invalid backend api bits specified");
+    }
+    return &win;
+}
+
+
+/// Create a simple X window to act as a Vulkan surface
+static void __deng_CreateVkWindow(deng_SurfaceWindow *p_win) {
+
+    p_win->x11_handler.window = XCreateSimpleWindow(p_win->x11_handler.p_display, DefaultRootWindow(p_win->x11_handler.p_display), 
+        0, 0, p_win->width, p_win->height, __DENG_DEFAULT_WINDOW_BORDER, WhitePixel(p_win->x11_handler.p_display, p_win->x11_handler.screen), 
+        BlackPixel(p_win->x11_handler.p_display, p_win->x11_handler.screen));
 
     // Set standard properties needed for x11 window creation
-    XSetStandardProperties(win.x11_handler.p_display, win.x11_handler.window, title, 
-        title, None, NULL, 0, NULL);
+    XSetStandardProperties(p_win->x11_handler.p_display, p_win->x11_handler.window, p_win->window_title, 
+        p_win->window_title, None, NULL, 0, NULL);
 
     // Set the window manager size hints
-    XSetWMNormalHints(win.x11_handler.p_display, win.x11_handler.window, &size_hints);
+    XSizeHints hints = __deng_SetSizeHints(p_win);
+    XSetWMNormalHints(p_win->x11_handler.p_display, p_win->x11_handler.window, &hints);
 
-    XSelectInput(win.x11_handler.p_display, win.x11_handler.window, EVENT_MASKS);
-    win.x11_handler.gc = XCreateGC(win.x11_handler.p_display, 
-        win.x11_handler.window, 0, 0);
-    XSetBackground(win.x11_handler.p_display, win.x11_handler.gc, 
-        BlackPixel(win.x11_handler.p_display, win.x11_handler.screen));
+    XSelectInput(p_win->x11_handler.p_display, p_win->x11_handler.window, EVENT_MASKS);
+    p_win->x11_handler.gc = XCreateGC(p_win->x11_handler.p_display, 
+        p_win->x11_handler.window, 0, 0);
+    XSetBackground(p_win->x11_handler.p_display, p_win->x11_handler.gc, 
+        BlackPixel(p_win->x11_handler.p_display, p_win->x11_handler.screen));
 
-    XSetForeground(win.x11_handler.p_display, win.x11_handler.gc, 
-        WhitePixel(win.x11_handler.p_display, win.x11_handler.screen));
+    XSetForeground(p_win->x11_handler.p_display, p_win->x11_handler.gc, 
+        WhitePixel(p_win->x11_handler.p_display, p_win->x11_handler.screen));
 
     // Check if keyboard autorepeat is enabled
     Bool supported;
-    if(!XkbSetDetectableAutoRepeat(win.x11_handler.p_display, True, &supported))
+    if(!XkbSetDetectableAutoRepeat(p_win->x11_handler.p_display, True, &supported))
         RUN_ERR("deng_InitVKSurfaceWindow", "Detectable auto repeat is not supported on this system");
 
-    XClearWindow(win.x11_handler.p_display, win.x11_handler.window);
-    XMapRaised(win.x11_handler.p_display, win.x11_handler.window);
+    XClearWindow(p_win->x11_handler.p_display, p_win->x11_handler.window);
+    XMapRaised(p_win->x11_handler.p_display, p_win->x11_handler.window);
 
     __is_running = true;
-    win.mode = X11_WINDOW;
 
-    __atom_kill = XInternAtom(win.x11_handler.p_display, "WM_DELETE_WINDOW", True);
-    XSetWMProtocols(win.x11_handler.p_display, win.x11_handler.window, &__atom_kill, True);
-    __deng_XInitCursors(&win);
-    return &win;
+    __atom_kill = XInternAtom(p_win->x11_handler.p_display, "WM_DELETE_WINDOW", True);
+    XSetWMProtocols(p_win->x11_handler.p_display, p_win->x11_handler.window, &__atom_kill, True);
+    __deng_XInitCursors(p_win);
+}
+
+
+static void __deng_CreateGlWindow(deng_SurfaceWindow *p_win) {
+    // Array of OpenGL attributes
+    GLint attributes[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
+    p_win->x11_handler.vi = glXChooseVisual(p_win->x11_handler.p_display, 0, attributes);
+
+    XSetWindowAttributes swa = { 0 };
+    Window root = DefaultRootWindow(p_win->x11_handler.p_display);
+    swa.colormap = XCreateColormap(p_win->x11_handler.p_display, root, p_win->x11_handler.vi->visual, AllocNone);
+    swa.event_mask = EVENT_MASKS;
+
+    // Create a new window instance for OpenGL renderer targets
+    p_win->x11_handler.window = XCreateWindow(p_win->x11_handler.p_display, root, 0, 0, p_win->width, p_win->height,
+        0, p_win->x11_handler.vi->depth, InputOutput, p_win->x11_handler.vi->visual, CWColormap | CWEventMask, &swa);
+
+    XMapWindow(p_win->x11_handler.p_display, p_win->x11_handler.window);
+    XStoreName(p_win->x11_handler.p_display, p_win->x11_handler.window, p_win->window_title);
+
+    GLXContext glc = glXCreateContext(p_win->x11_handler.p_display, p_win->x11_handler.vi, NULL, GL_TRUE);
+    glXMakeCurrent(p_win->x11_handler.p_display, p_win->x11_handler.window, glc);
+    glEnable(GL_DEPTH_TEST);
+
+    __is_running = true;
+    __atom_kill = XInternAtom(p_win->x11_handler.p_display, "WM_DELETE_WINDOW", True);
+    XSetWMProtocols(p_win->x11_handler.p_display, p_win->x11_handler.window, &__atom_kill, True);
+    /*__deng_XInitCursors(p_win);*/
+}
+
+
+/// Set size hints according to the specified window mode
+static XSizeHints __deng_SetSizeHints(deng_SurfaceWindow *p_win) {
+    /// Set flags for creating a fixed window
+    /// however it is up to windows manager to decide if the size hint flag
+    /// is respected or not
+    XSizeHints size_hints = { 0 };
+    if(p_win->window_mode == DENG_WINDOW_MODE_FIXED) {
+        size_hints.flags |= (PMinSize | PMaxSize);
+        size_hints.min_width = size_hints.max_width = p_win->width;
+        size_hints.min_height = size_hints.max_height = p_win->height;   
+    }
+
+    return size_hints;
 }
 
 
@@ -160,15 +220,8 @@ static void __deng_XInitCursors(deng_SurfaceWindow *p_win) {
 
 /// Destroy all cursors used in DENG
 static void __deng_XFreeCursors(deng_SurfaceWindow *p_win) {
-    XFreeCursor (
-        p_win->x11_handler.p_display, 
-        __default_cur
-    );
-
-    XFreeCursor (
-        p_win->x11_handler.p_display,
-        __hidden_cur
-    );
+    XFreeCursor(p_win->x11_handler.p_display, __default_cur);
+    XFreeCursor(p_win->x11_handler.p_display, __hidden_cur);
 }
 
 
@@ -183,14 +236,13 @@ static void __deng_XHandleKeyEvents(deng_SurfaceWindow *p_win) {
         break;
     }
         
-    case KeyRelease: {
+    case KeyRelease:
         if(XEventsQueued(p_win->x11_handler.p_display, QueuedAfterReading)) {
             key = translateX11Key(XLookupKeysym(&p_win->x11_handler.event.xkey, 0));
             __deng_RegisterKeyEvent(key, DENG_MOUSE_BTN_UNKNOWN, DENG_INPUT_TYPE_KB,
                 DENG_INPUT_EVENT_TYPE_RELEASED);
         }
         break;
-    }
 
     default:
         break;
@@ -202,11 +254,10 @@ static void __deng_XHandleKeyEvents(deng_SurfaceWindow *p_win) {
 static void __deng_XHandleMouseEvents(deng_SurfaceWindow *p_win) {
     deng_MouseButton btn = DENG_MOUSE_BTN_UNKNOWN;
     switch (p_win->x11_handler.event.type) {
-    case ButtonPress: {
+    case ButtonPress:
         btn = translateX11Btn(p_win->x11_handler.event.xbutton.button);
         __deng_RegisterKeyEvent(DENG_KEY_UNKNOWN, btn, DENG_INPUT_TYPE_MOUSE, DENG_INPUT_EVENT_TYPE_ACTIVE);
         break;
-    }
     
     case ButtonRelease:
         btn = translateX11Btn(p_win->x11_handler.event.xbutton.button);
@@ -216,6 +267,14 @@ static void __deng_XHandleMouseEvents(deng_SurfaceWindow *p_win) {
     default:
         break;
     }
+}
+
+
+/// Set new width and height from the recieved event
+static void __deng_XHandleResize(deng_SurfaceWindow *p_win) {
+    p_win->width = p_win->x11_handler.event.xconfigure.width;
+    p_win->height = p_win->x11_handler.event.xconfigure.height;
+    printf("width, height: %d, %d\n", p_win->width, p_win->height);
 }
 
 
@@ -289,20 +348,9 @@ static void __deng_XSetCursor (
     deng_SurfaceWindow *p_win,
     deng_bool_t hide
 ) {
-    if(hide) {
-        XDefineCursor (
-            p_win->x11_handler.p_display,
-            p_win->x11_handler.window,
-            __hidden_cur
-        );
-    }
-    else {
-        XDefineCursor (
-            p_win->x11_handler.p_display, 
-            p_win->x11_handler.window, 
-            __default_cur
-        );
-    }
+    if(hide)
+        XDefineCursor(p_win->x11_handler.p_display, p_win->x11_handler.window, __hidden_cur);
+    else XDefineCursor(p_win->x11_handler.p_display, p_win->x11_handler.window, __default_cur);
 }
 
 
@@ -311,8 +359,7 @@ void deng_SetMouseCursorMode (
     deng_SurfaceWindow *p_win, 
     deng_MouseMode mouse_mode
 ) {
-    switch(mouse_mode) 
-    {
+    switch(mouse_mode) {
     case DENG_MOUSE_MODE_INVISIBLE:
         __deng_XSetCursor(p_win, false);
         p_win->vc_data.is_enabled = false;
@@ -351,21 +398,24 @@ void deng_UpdateWindow(deng_SurfaceWindow *p_win) {
     if(XCheckWindowEvent(p_win->x11_handler.p_display, p_win->x11_handler.window, 
        ButtonPressMask | ButtonReleaseMask, &p_win->x11_handler.event)) 
         __deng_XHandleMouseEvents(p_win);
+
+    if(XCheckWindowEvent(p_win->x11_handler.p_display, p_win->x11_handler.window, 
+       StructureNotifyMask, &p_win->x11_handler.event))
+        __deng_XHandleResize(p_win);
+
+    // Check if the window is used as in OpenGL context
+    if(p_win->is_opengl)
+        glXSwapBuffers(p_win->x11_handler.p_display, p_win->x11_handler.window);
 }
 
 
 /// Destroy window instance and free all resources that were used
 void deng_DestroyWindow(deng_SurfaceWindow *p_win) {
-    XFreeGC (
-        p_win->x11_handler.p_display, 
-        p_win->x11_handler.gc
-    );
-    XDestroyWindow (
-        p_win->x11_handler.p_display, 
-        p_win->x11_handler.window
-    );
-
-    __deng_XFreeCursors(p_win);
+    if(!p_win->is_opengl) {
+        XFreeGC(p_win->x11_handler.p_display, p_win->x11_handler.gc);
+        __deng_XFreeCursors(p_win);
+    }
+    XDestroyWindow(p_win->x11_handler.p_display, p_win->x11_handler.window);
 }
 
 
