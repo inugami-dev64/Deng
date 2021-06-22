@@ -73,8 +73,9 @@ namespace deng {
             VkQueue g_queue,
             std::vector<deng_Id> &textures,
             deng::__GlobalRegistry &reg,
-            __vk_BufferData &bd
-        ) : m_textures(textures), m_bd(bd), m_reg(reg)
+            __vk_BufferData &bd,
+            deng::BufferSectionInfo &buf_sec
+        ) : m_textures(textures), m_bd(bd), m_buf_sec(buf_sec), m_reg(reg)
         {
             // Create missing texture instance
             __mkMissingTex(device, gpu, cmd_pool, g_queue);
@@ -92,11 +93,11 @@ namespace deng {
             deng::RegType missing_base_tex = { { 0 } };
             missing_base_tex.tex.name = (char*) "missing_base_tex";
             missing_base_tex.tex.uuid = uuid_Generate();
-            missing_base_tex.tex.pixel_data.width = __DEFAULT_TEX_WIDTH;
-            missing_base_tex.tex.pixel_data.height = __DEFAULT_TEX_HEIGHT;
-            missing_base_tex.tex.pixel_data.size = __DEFAULT_TEX_SIZE;
-            missing_base_tex.tex.pixel_data.pixel_data = reinterpret_cast<deng_ui8_t*>(malloc(__DEFAULT_TEX_SIZE));
-            memset(missing_base_tex.tex.pixel_data.pixel_data, 255, __DEFAULT_TEX_SIZE);
+            missing_base_tex.tex.pixel_data.width = DENG_DEF_TEX_WIDTH;
+            missing_base_tex.tex.pixel_data.height = DENG_DEF_TEX_HEIGHT;
+            missing_base_tex.tex.pixel_data.size = DENG_DEF_TEX_SIZE;
+            missing_base_tex.tex.pixel_data.pixel_data = reinterpret_cast<deng_ui8_t*>(malloc(DENG_DEF_TEX_SIZE));
+            memset(missing_base_tex.tex.pixel_data.pixel_data, 255, DENG_DEF_TEX_SIZE);
 
             // Make Vulkan texture
             deng::RegType missing_vk_tex = { { 0 } };
@@ -244,7 +245,7 @@ namespace deng {
             VkDeviceSize size
         ) {
             size = cm_ToPow2I64(size);
-            m_bd.img_memory_cap = size + 1;
+            m_buf_sec.img_cap = size + 1;
 
             // Allocate new memory for new texture image buffer
             __vk_BufferCreator::allocateMemory ( device, gpu, size, m_bd.img_memory,
@@ -284,7 +285,7 @@ namespace deng {
             deng_bool_t is_lf,
             deng_ui32_t mip_levels
         ) {
-            min_size = min_size < 2 * m_bd.img_memory_cap ? 2 * m_bd.img_memory_cap : min_size;
+            min_size = min_size < 2 * m_buf_sec.img_cap ? 2 * m_buf_sec.img_cap : min_size;
             min_size = cm_ToPow2I64(min_size);
 
             std::queue<deng_Id> realloc_queue;
@@ -433,10 +434,10 @@ namespace deng {
             if(set_default_mem_req) m_tex_mem_bits = mem_req.memoryTypeBits;
             
             // Check if image memory needs to be allocated
-            if(!ignore_mem_check && m_bd.img_memory_offset + mem_req.size > m_bd.img_memory_cap) {
+            if(!ignore_mem_check && m_buf_sec.img_size + mem_req.size > m_buf_sec.img_cap) {
                 VkDeviceSize req_size = 0;
-                if(!m_bd.img_memory_cap) {
-                    req_size = __DEFAULT_TEX_MEM_CAP > mem_req.size ? __DEFAULT_TEX_MEM_CAP : mem_req.size;
+                if(!m_buf_sec.img_cap) {
+                    req_size = DENG_DEF_TEX_MEM_CAP > mem_req.size ? DENG_DEF_TEX_MEM_CAP : mem_req.size;
                     __allocateTexMemory(device, gpu, cmd_pool, g_queue, req_size);
                 }
                 else __reallocTexMemory(device, gpu, cmd_pool, g_queue, req_size, is_lf, mip_levels);
@@ -446,8 +447,8 @@ namespace deng {
             RegType &reg_tex = m_reg.retrieve(tex.base_id, DENG_SUPPORTED_REG_TYPE_TEXTURE, NULL);
 
             // Check if the image memory location should be appended to the end of image memory area
-            reg_tex.tex.pixel_data.memory_offset = m_bd.img_memory_offset;
-            m_bd.img_memory_offset += mem_req.size;
+            reg_tex.tex.pixel_data.memory_offset = m_buf_sec.img_size;
+            m_buf_sec.img_size += mem_req.size;
             
             // Bind the image to its memory with correct offsets
             vkBindImageMemory(device, tex.image, m_bd.img_memory, reg_tex.tex.pixel_data.memory_offset);

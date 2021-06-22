@@ -71,7 +71,7 @@
 namespace deng {
 
     __OffsetFinder::__OffsetFinder(std::vector<deng_Id> &assets, __GlobalRegistry &reg) : 
-        m_assets(assets), m_reg(reg) {}
+        m_assets(assets), m_reg(reg), m_buf_sec_info() {}
 
 
     /// Find offsets for the current asset
@@ -219,5 +219,5 @@ namespace deng {
 
     
     void __OffsetFinder::setUIData(__ImGuiData *p_gui) { m_p_imgui_data = p_gui; }
-    const BufferSectionInfo &__OffsetFinder::getSectionInfo() { return m_buf_sec_info; }
+    BufferSectionInfo &__OffsetFinder::getSectionInfo() { return m_buf_sec_info; }
 }

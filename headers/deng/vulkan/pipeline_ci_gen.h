@@ -80,10 +80,10 @@
     #include <common/base_types.h>
     #include <common/hashmap.h>
     #include <common/err_def.h>
-    #include <common/shader_def.h>
 
     #include <data/assets.h>
     #include <math/deng_math.h>
+    #include <deng/cross_api/shader_def.h>
     #include <deng/vulkan/qm.h>
     #include <deng/vulkan/pipeline_data.h>
     #include <deng/vulkan/resources.h>

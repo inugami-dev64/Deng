@@ -85,6 +85,7 @@
     #include <data/assets.h>
 
     #include <math/deng_math.h>
+    #include <deng/cross_api/gpu_mem.h>
     #include <deng/window.h>
     #include <deng/camera.h>
 
@@ -94,8 +95,10 @@
     #include <deng/vulkan/resources.h>
     #include <deng/vulkan/rend_infos.h>
 
+    #include <imgui-layer/imgui_entity.h>
     #include <deng/lighting/light_srcs.h>
     #include <deng/registry/registry.h>
+    #include <deng/cross_api/offset_finder.h>
     #include <imgui-layer/imgui_entity.h>
 
     #include <deng/vulkan/ubm.h>

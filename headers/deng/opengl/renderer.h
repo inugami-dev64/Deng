@@ -79,16 +79,18 @@
     #include <common/base_types.h>
     #include <common/hashmap.h>
     #include <common/err_def.h>
-    #include <common/shader_def.h>
     #include <data/assets.h>
     
     #include <math/deng_math.h>
     #include <deng/window.h>
     #include <deng/registry/registry.h>
+    #include <imgui-layer/imgui_entity.h>
     #include <deng/camera.h>
 
+    #include <deng/cross_api/cross_api.h>
     #include <deng/opengl/cfg_vars.h>
     #include <deng/opengl/shader_loader.h>
+    #include <deng/opengl/buffers.h>
 #endif
 
 namespace deng {
@@ -104,7 +106,8 @@ namespace deng {
             deng_ui32_t m_vert_buffer;
 
             // Helper objects
-            std::unique_ptr<__gl_ShaderLoader> m_shader_loader;
+            std::shared_ptr<__gl_ShaderLoader> m_shader_loader;
+            std::shared_ptr<__gl_BufferManager> m_buf_manager;
 
             
         private:

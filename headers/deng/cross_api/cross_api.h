@@ -58,78 +58,18 @@
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
  * ----------------------------------------------------------------
- *  Name: vk_ubo - Uniform buffer objects
- *  Purpose: Provide structures for uniform buffer data to align them for
- *  shaders
+ *  Name: cross_api - meta header to include all cross api functionality
+ *  Purpose: Provide a meta header for easily including cross api functionality`
  *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __VK_UBO
-#define __VK_UBO
+#ifndef __CROSS_API_H
+#define __CROSS_API_H
 
-namespace deng {
-    namespace vulkan {
-        
-        /// Structure for passing uniform lighting data right to the shader
-        struct __vk_UniformLightSource {
-            dengMath::vec4<deng_vec_t> pos;
-            deng_vec_t intensity;
-
-            // Padding
-            deng_ui32_t pad[3];
-        };
-
-
-        /// Structure for containing information about 3D transformations
-        struct __vk_UniformObjectTransform {
-            dengMath::mat4<deng_vec_t> transform;
-            dengMath::mat4<deng_vec_t> view;
-        };
- 
-
-        /// Structure for containing information about 2D transformations
-        struct __vk_UniformObjectTransform2D {
-            dengMath::mat4<deng_vec_t> view;
-        };
-
-
-        /// Structure for storing material and transformation information 
-        /// about the asset
-        struct __vk_UniformAssetData {
-            dengMath::vec4<deng_vec_t> diffuse;
-            dengMath::vec4<deng_vec_t> ambient;
-            dengMath::vec4<deng_vec_t> specular;
-            deng_vec_t phong_exp;
-            deng_ui32_t ignore_transform;
-            deng_ui32_t is_unmapped;
-            
-            // Padding
-            deng_ui32_t pad;
-        };
-
-
-        /// Uniform color data for 2D assets
-        struct __vk_UniformAssetData2D {
-            dengMath::vec4<deng_vec_t> color;
-            deng_ui32_t is_transform;
-            deng_ui32_t is_unmapped;
-
-            // Padding
-            dengMath::vec2<deng_vec_t> pad;
-        };
-
-
-        /// Light data uniform structure
-        struct __vk_UniformLightData {
-            __vk_UniformLightSource light_srcs[__DENG_MAX_LIGHT_SRC_COUNT];
-            deng_ui32_t light_src_c;
-
-            // Padding needed for glsl uniforms
-            deng_ui32_t pad[3];
-        };
-
-    }
-}
+#include <deng/cross_api/ubo.h>
+#include <deng/cross_api/shader_def.h>
+#include <deng/cross_api/gpu_mem.h>
+#include <deng/cross_api/offset_finder.h>
 
 #endif

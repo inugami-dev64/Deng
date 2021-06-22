@@ -87,11 +87,11 @@ namespace deng {
             const VkPhysicalDeviceLimits &gpu_limits) : 
             __vk_BufferManager(device, gpu, gpu_limits, assets, reg),
             __vk_TextureManager(device, gpu, cmd_pool, g_queue, 
-                textures, reg, m_buffer_data) 
+                textures, reg, m_buffer_data, __vk_BufferManager::__OffsetFinder::getSectionInfo()) 
         {
             m_sample_c = sample_c;
             // Allocate memory for new uniform buffers
-            initUniformBuffer(device, gpu, cmd_pool, g_queue);
+            initUniformBuffer(device, gpu, cmd_pool, g_queue, __vk_BufferManager::getSectionInfo());
 
             // Create new color and depth resources
             __mkColorResources(device, gpu, extent, sc_color_format);

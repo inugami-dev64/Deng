@@ -67,8 +67,8 @@
 namespace deng {
     namespace opengl {
 
-        __gl_BufferManager::__gl_BufferManager(std::vector<deng_Id> &assets, __GlobalRegistry &reg) :
-            m_assets(assets), m_reg(reg) 
+        __gl_BufferManager::__gl_BufferManager(std::vector<deng_Id> &assets, std::shared_ptr<__gl_ShaderLoader> shader_loader, __GlobalRegistry &reg) :
+            __OffsetFinder(assets, reg), m_assets(assets), m_reg(reg), m_shader_loader(shader_loader)
         {
             // Generate new buffers for vertices, indices and uniform data
             glGenBuffers(1, &m_vert_buffer);
@@ -82,6 +82,26 @@ namespace deng {
 
             /// Allocate the initial amount of memory for buffers
             allocateBufferMemory();
+
+            /// Initialise uniform buffer for storing asset data
+            initUniformBuffer();
+        }
+
+
+        /// Allocate ui_cap + asset_cap amount of memory for the buffer
+        void __gl_BufferManager::allocateBufferMemory() {
+            // Allocate memory for vertex buffer
+            glBufferData(GL_ARRAY_BUFFER, __OffsetFinder::getSectionInfo().asset_cap + 
+                __OffsetFinder::getSectionInfo().ui_cap, NULL, GL_DYNAMIC_DRAW);
+
+            // Allocate memory for indices buffer
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, __OffsetFinder::getSectionInfo().indices_cap, 
+                NULL, GL_DYNAMIC_DRAW);
+        }
+
+
+        void __gl_BufferManager::initUniformBuffer() {
+            m_shader_loader->getShaderProgram(UM2D_I);          
         }
     }
 }

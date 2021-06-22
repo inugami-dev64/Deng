@@ -91,7 +91,7 @@ namespace deng {
 
             // Record new commandbuffers
             m_dc.recordCmdBuffers(m_scc.getRp(), m_scc.getExt(),
-                background, m_rm.getBD());
+                background, m_rm.getBD(), m_rm.getSectionInfo());
         }
 
 

@@ -87,8 +87,8 @@
     #include <deng/registry/registry.h>
 #endif
 
-#include <common/shader_def.h>
 #include <imgui-layer/imgui_entity.h>
+#include <deng/cross_api/cross_api.h>
 #include <deng/vulkan/renderer.h>
 #include <deng/renderer/asset_man.h>
 #include <deng/renderer/data_updater.h>

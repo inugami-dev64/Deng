@@ -74,10 +74,11 @@
     #include <common/base_types.h>
     #include <common/hashmap.h>
     #include <common/err_def.h>
-    #include <common/shader_def.h>
     #include <data/assets.h>
 
     #include <math/deng_math.h>
+    #include <deng/cross_api/gpu_mem.h>
+    #include <deng/cross_api/shader_def.h>
     #include <deng/window.h>
     #include <deng/vulkan/sd.h>
     #include <deng/vulkan/qm.h>
@@ -117,12 +118,12 @@ namespace deng {
 
             /// Bind asset resources to command buffers
             void __bindAssetResources(das_Asset &asset, VkCommandBuffer cur_buf,
-                const __vk_BufferData &bd);
+                const __vk_BufferData &bd, const deng::BufferSectionInfo &buf_sec);
 
 
             /// Bind ImGui resources to command buffers
             void __bindUIElementResources(__ImGuiEntity *ent, VkCommandBuffer cur_buf, 
-                const __vk_BufferData &bd);
+                const __vk_BufferData &bd, const deng::BufferSectionInfo &buf_sec);
 
             
             /// Bind asset pipeline and return its pipeline layout
@@ -148,12 +149,14 @@ namespace deng {
 
             /// Allocate enough memory for command buffers
             void allocateCmdBuffers(VkDevice device, VkQueue g_queue, VkRenderPass renderpass, 
-                VkExtent2D ext, const dengMath::vec4<deng_vec_t> &background, const __vk_BufferData &bd);
+                VkExtent2D ext, const dengMath::vec4<deng_vec_t> &background, const __vk_BufferData &bd,
+                const deng::BufferSectionInfo &buf_sec);
 
 
             /// Record command buffers for drawing assets and optionally ui elements
             void recordCmdBuffers(VkRenderPass renderpass, VkExtent2D ext,
-                const dengMath::vec4<deng_vec_t> &background, const __vk_BufferData &bd);
+                const dengMath::vec4<deng_vec_t> &background, const __vk_BufferData &bd,
+                const deng::BufferSectionInfo &buf_sec);
         
         public:
             VkCommandPool getComPool();

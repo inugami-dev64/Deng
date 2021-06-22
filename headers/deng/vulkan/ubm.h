@@ -83,12 +83,13 @@
     #include <data/assets.h>
 
     #include <math/deng_math.h>
+    #include <deng/cross_api/gpu_mem.h>
     #include <deng/window.h>
     #include <deng/camera.h>
 
     #include <deng/lighting/light_srcs.h>
     #include <deng/vulkan/resources.h>
-    #include <deng/vulkan/ubo.h>
+    #include <deng/cross_api/ubo.h>
     #include <deng/lighting/light_srcs.h>
     #include <deng/registry/registry.h>
 
@@ -112,17 +113,17 @@ namespace deng {
             /// WARNING: This method call expects that uniform buffer and its memory
             /// have been freed or are not initialised previously
             void __mkUniformBuffer(VkDevice device, VkPhysicalDevice gpu,
-                VkCommandPool cmd_pool, VkQueue g_queue, deng_ui64_t asset_cap);
+                VkCommandPool cmd_pool, VkQueue g_queue, deng_ui64_t asset_cap, deng::BufferSectionInfo &buf_sec);
 
             
             /// Reallocate memory for uniform buffer and copy previous data to
             /// newly allocated buffer instance
             void __reallocUniformBufferMemory(VkDevice device, VkPhysicalDevice gpu,
-                VkCommandPool cmd_pool, VkQueue g_queue, deng_ui64_t req_cap);
+                VkCommandPool cmd_pool, VkQueue g_queue, deng_ui64_t req_cap, deng::BufferSectionInfo &buf_sec);
 
             
             /// Reset uniform buffer size to first asset color data instance
-            void __resetUboBufferSize();
+            void __resetUboBufferSize(deng::BufferSectionInfo &buf_sec);
 
         public:
             __vk_UniformBufferManager(std::vector<deng_Id> &assets,
@@ -132,7 +133,7 @@ namespace deng {
 
             /// Reserve a uniform data memory location for Vulkan asset
             void mapUniformBufferArea(VkDevice device, VkPhysicalDevice gpu,
-                VkCommandPool cmd_pool, VkQueue g_queue, __vk_Asset &asset);
+                VkCommandPool cmd_pool, VkQueue g_queue, __vk_Asset &asset, deng::BufferSectionInfo &buf_sec);
             
 
             /// Update uniform transformation data for the frame according to 
@@ -159,7 +160,7 @@ namespace deng {
 
             /// Initialise uniform buffer for storing data
             void initUniformBuffer(VkDevice device, VkPhysicalDevice gpu,
-                VkCommandPool cmd_pool, VkQueue g_queue);
+                VkCommandPool cmd_pool, VkQueue g_queue, deng::BufferSectionInfo &buf_sec);
 
         /// Getter methods
         public:

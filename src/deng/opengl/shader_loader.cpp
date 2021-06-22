@@ -75,6 +75,8 @@ namespace deng {
             // For each pipeline type create a set of shader objects
             for(size_t i = 0; i < m_programs.size(); i++)
                 __compileShadersToProgram(static_cast<deng_ui32_t>(i));
+
+            __prepareUniformBindings();
         }
 
 
@@ -110,6 +112,45 @@ namespace deng {
             // Delete all shader objects
             glDeleteShader(shaders.first);
             glDeleteShader(shaders.second);
+        }
+
+
+        /// Prepare bindings for uniform data
+        void __gl_ShaderLoader::__prepareUniformBindings() {
+            // 2D unmapped assets
+            deng_ui32_t index;
+            index = glGetUniformBlockIndex(m_programs[UM2D_I], "UniformData");
+            glUniformBlockBinding(m_programs[UM2D_I], index, 0);
+
+            index = glGetUniformBlockIndex(m_programs[UM2D_I], "ColorData");
+            glUniformBlockBinding(m_programs[UM2D_I], index, 1);
+
+            // 2D texture mapped assets
+            index = glGetUniformBlockIndex(m_programs[UM2D_I], "UniformData");
+            glUniformBlockBinding(m_programs[TM2D_I], index, 0);
+
+            index = glGetUniformBlockIndex(m_programs[UM2D_I], "ColorData");
+            glUniformBlockBinding(m_programs[TM2D_I], index, 1);
+
+            // 3D unmapped assets
+            index = glGetUniformBlockIndex(m_programs[UM2D_I], "UniformData");
+            glUniformBlockBinding(m_programs[TM2D_I], index, 0);
+
+            index = glGetUniformBlockIndex(m_programs[UM2D_I], "ColorData");
+            glUniformBlockBinding(m_programs[TM2D_I], index, 1);
+
+            index = glGetUniformBlockIndex(m_programs[UM3D_I], "LightData");
+            glUniformBlockBinding(m_programs[UM3D_I], index, 2);
+
+            // 3D texture mapped assets
+            index = glGetUniformBlockIndex(m_programs[UM2D_I], "UniformData");
+            glUniformBlockBinding(m_programs[TM2D_I], index, 0);
+
+            index = glGetUniformBlockIndex(m_programs[UM2D_I], "ColorData");
+            glUniformBlockBinding(m_programs[TM2D_I], index, 1);
+
+            index = glGetUniformBlockIndex(m_programs[UM3D_I], "LightData");
+            glUniformBlockBinding(m_programs[UM3D_I], index, 2);
         }
 
 

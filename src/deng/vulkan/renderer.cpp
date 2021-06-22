@@ -499,11 +499,13 @@ namespace deng {
             // Allocate memory for commandbuffers
             __vk_RendererInitialiser::getDrawCaller().allocateCmdBuffers(__vk_RendererInitialiser::getIC().getDev(), 
                 __vk_RendererInitialiser::getIC().getQFF().graphics_queue, __vk_RendererInitialiser::getSCC().getRp(),
-                __vk_RendererInitialiser::getSCC().getExt(), m_config.background, __vk_RendererInitialiser::getResMan().getBD());
+                __vk_RendererInitialiser::getSCC().getExt(), m_config.background, __vk_RendererInitialiser::getResMan().getBD(),
+                __vk_RendererInitialiser::getResMan().getSectionInfo());
 
             // Record commandbuffers with initial draw commands
             __vk_RendererInitialiser::getDrawCaller().recordCmdBuffers(__vk_RendererInitialiser::getSCC().getRp(),
-                __vk_RendererInitialiser::getSCC().getExt(), m_config.background, __vk_RendererInitialiser::getResMan().getBD());
+                __vk_RendererInitialiser::getSCC().getExt(), m_config.background, __vk_RendererInitialiser::getResMan().getBD(),
+                __vk_RendererInitialiser::getResMan().getSectionInfo());
 
             // Set the running flag as true
             m_is_init = true;

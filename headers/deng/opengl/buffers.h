@@ -70,17 +70,18 @@
 
 #ifdef __GL_BUFFERS_CPP
     #include <vector>
+    #include <memory>
     #include <glad/glad.h>
     #include <vulkan/vulkan.h>
     #include <common/base_types.h>
     #include <common/hashmap.h>
-    #include <common/gpu_memprops.h>
     #include <data/assets.h>
 
     #include <math/deng_math.h>
     #include <deng/registry/registry.h>
     #include <imgui-layer/imgui_entity.h>
-    #include <deng/cross_api/gpu_mem.h>
+    #include <deng/cross_api/cross_api.h>
+    #include <deng/opengl/shader_loader.h>
 #endif
 
 namespace deng {
@@ -92,15 +93,20 @@ namespace deng {
             __ImGuiData *m_p_imgui_data;
             __GlobalRegistry &m_reg;
 
+            std::shared_ptr<__gl_ShaderLoader> m_shader_loader;
             deng_ui32_t m_vert_buffer;
             deng_ui32_t m_index_buffer;
             deng_ui32_t m_ubo_buffer;
 
         public:
-            __gl_BufferManager(std::vector<deng_Id> &assets, __GlobalRegistry &reg);
+            __gl_BufferManager(std::vector<deng_Id> &assets, std::shared_ptr<__gl_ShaderLoader> sloader, __GlobalRegistry &reg);
 
-            /// Check the asset 
+            /// Allocate ui_cap + asset_cap amount of memory for the buffers
             void allocateBufferMemory();
+
+
+            /// Initialise uniform buffers for 
+            void initUniformBuffer();
         };
     }
 }

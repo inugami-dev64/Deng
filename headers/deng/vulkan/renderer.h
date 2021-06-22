@@ -75,7 +75,6 @@
     #include <common/base_types.h>
     #include <common/hashmap.h>
     #include <common/uuid.h>
-    #include <common/shader_def.h>
     #include <common/err_def.h>
     #include <data/assets.h>
 
@@ -86,6 +85,9 @@
     #include <deng/lighting/light_srcs.h>
     #include <deng/registry/registry.h>
     #include <imgui-layer/imgui_entity.h>
+    #include <deng/cross_api/gpu_mem.h>
+    #include <deng/cross_api/shader_def.h>
+    #include <deng/cross_api/offset_finder.h>
 #endif
 
 

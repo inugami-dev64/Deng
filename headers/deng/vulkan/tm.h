@@ -87,6 +87,7 @@
     #include <data/assets.h>
     #include <math/deng_math.h>
 
+    #include <deng/cross_api/gpu_mem.h>
     #include <deng/window.h>
     #include <deng/vulkan/sd.h>
     #include <deng/vulkan/qm.h>
@@ -107,6 +108,7 @@ namespace deng {
             deng_ui32_t m_tex_mem_bits = 0;
             deng_Id m_missing_tex_uuid;
             __vk_BufferData &m_bd;
+            deng::BufferSectionInfo &m_buf_sec;
             deng::__GlobalRegistry &m_reg;
 
         private:
@@ -167,7 +169,7 @@ namespace deng {
         public:
             __vk_TextureManager(VkDevice device, VkPhysicalDevice gpu, VkCommandPool cmd_pool,
                 VkQueue g_queue, std::vector<deng_Id> &textures, deng::__GlobalRegistry &reg,
-                __vk_BufferData &bd);
+                __vk_BufferData &bd, deng::BufferSectionInfo &buf_sec);
 
 
             /// Create new Vulkan texture from texture specified via id

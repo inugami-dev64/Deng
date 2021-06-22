@@ -87,21 +87,7 @@ namespace deng {
 
 
             // Load all shaders into OpenGL
-            m_shader_loader = std::make_unique<__gl_ShaderLoader>();
-        }
-
-
-        /// Create a new buffer and copy data to it
-        void __gl_Renderer::__mkBuffers() {
-            const das_ObjPosData2D verts[] = {
-                { -0.5f, -0.5f },
-                { 0.0f, 0.5f },
-                { 0.5f, -0.5f }
-            };
-
-            glGenBuffers(1, &m_vert_buffer);
-            glBindBuffer(GL_ARRAY_BUFFER, m_vert_buffer);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+            m_shader_loader = std::make_shared<__gl_ShaderLoader>();
         }
 
 

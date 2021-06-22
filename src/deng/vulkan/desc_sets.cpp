@@ -68,9 +68,7 @@ namespace deng {
         extern deng_ui32_t __max_frame_c;
 
         /********************************************************/
-        /********************************************************/
         /********** __vk_DescriptorSetsCreator class ************/
-        /********************************************************/
         /********************************************************/
 
         __vk_DescriptorSetsCreator::__vk_DescriptorSetsCreator (
@@ -234,12 +232,12 @@ namespace deng {
             case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
                 buf_info.resize(2);
                 buf_info[0].buffer = bd.uniform_buffer;
-                buf_info[0].offset = cur_frame * ubo_chunk_size + cm_FindChunkSize(min_align, sizeof(__vk_UniformObjectTransform));
-                buf_info[0].range = sizeof(__vk_UniformObjectTransform2D);
+                buf_info[0].offset = cur_frame * ubo_chunk_size + cm_FindChunkSize(min_align, sizeof(__UniformObjectTransform));
+                buf_info[0].range = sizeof(__UniformObjectTransform2D);
 
                 buf_info[1].buffer = bd.uniform_buffer;
-                buf_info[1].offset = asset.offsets.ubo_offset + cur_frame * cm_FindChunkSize(min_align, sizeof(__vk_UniformAssetData));
-                buf_info[1].range = sizeof(__vk_UniformAssetData);
+                buf_info[1].offset = asset.offsets.ubo_offset + cur_frame * cm_FindChunkSize(min_align, sizeof(__UniformAssetData));
+                buf_info[1].range = sizeof(__UniformAssetData);
                 break;
 
             case DAS_ASSET_MODE_3D_UNMAPPED:
@@ -247,16 +245,16 @@ namespace deng {
                 buf_info.resize(3);
                 buf_info[0].buffer = bd.uniform_buffer;
                 buf_info[0].offset = cur_frame * ubo_chunk_size;
-                buf_info[0].range = sizeof(__vk_UniformObjectTransform);
+                buf_info[0].range = sizeof(__UniformObjectTransform);
 
                 buf_info[1].buffer = bd.uniform_buffer;
-                buf_info[1].offset = asset.offsets.ubo_offset + cur_frame * cm_FindChunkSize(min_align, sizeof(__vk_UniformAssetData));
-                buf_info[1].range = sizeof(__vk_UniformAssetData);
+                buf_info[1].offset = asset.offsets.ubo_offset + cur_frame * cm_FindChunkSize(min_align, sizeof(__UniformAssetData));
+                buf_info[1].range = sizeof(__UniformAssetData);
 
                 buf_info[2].buffer = bd.uniform_buffer;
-                buf_info[2].offset = cur_frame * ubo_chunk_size + cm_FindChunkSize(min_align, sizeof(__vk_UniformObjectTransform)) +
-                    cm_FindChunkSize(min_align, sizeof(__vk_UniformObjectTransform2D));
-                buf_info[2].range = sizeof(__vk_UniformLightData);
+                buf_info[2].offset = cur_frame * ubo_chunk_size + cm_FindChunkSize(min_align, sizeof(__UniformObjectTransform)) +
+                    cm_FindChunkSize(min_align, sizeof(__UniformObjectTransform2D));
+                buf_info[2].range = sizeof(__UniformLightData);
                 break;
 
             default:

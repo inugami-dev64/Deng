@@ -113,7 +113,7 @@ namespace deng {
     // Setters and getters
     public:
         void setUIData(__ImGuiData *p_gui);
-        const BufferSectionInfo &getSectionInfo();
+        BufferSectionInfo &getSectionInfo();
     };
 }
 

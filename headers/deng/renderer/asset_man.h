@@ -80,14 +80,15 @@
     #include <common/base_types.h>
     #include <common/err_def.h>
     #include <common/hashmap.h>
-    #include <common/shader_def.h>
     #include <data/assets.h>
     #include <math/deng_math.h>
-    
+
     #include <deng/window.h>
     #include <deng/camera.h>
     #include <deng/registry/registry.h>
     #include <imgui-layer/imgui_entity.h>
+    
+    #include <deng/cross_api/cross_api.h>
     #include <deng/vulkan/renderer.h>
 #endif
 

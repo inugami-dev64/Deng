@@ -79,26 +79,44 @@
 namespace deng {
 
     struct BufferSectionInfo {
+        BufferSectionInfo() {
+            asset_cap = DENG_DEF_ASSET_CAP;
+            asset_size = 0;
+
+            indices_cap = DENG_DEF_ASSET_CAP;
+            indices_size = 0;
+            
+            img_cap = 0;
+            img_size = 0;
+
+            ui_cap = DENG_DEF_UI_CAP;
+            ui_size = 0;
+
+            ubo_cap = 0;
+            ubo_size = 0;
+            ubo_asset_cap = 0;
+        }
+
         // Asset size information
-        deng_ui64_t asset_cap = DENG_DEF_ASSET_CAP; 
-        deng_ui64_t asset_size = 0;
+        deng_ui64_t asset_cap;
+        deng_ui64_t asset_size;
 
         // Indices size information
-        deng_ui64_t indices_cap = DENG_DEF_ASSET_CAP;
-        deng_ui64_t indices_size = 0;
+        deng_ui64_t indices_cap;
+        deng_ui64_t indices_size;
 
         // Image data size information
-        deng_ui64_t img_cap = 0;
-        deng_ui64_t img_size = 0;
+        deng_ui64_t img_cap;
+        deng_ui64_t img_size;
 
         // UI data size information
-        deng_ui64_t ui_cap = DENG_DEF_UI_CAP;
-        deng_ui64_t ui_size = 0;
+        deng_ui64_t ui_cap;
+        deng_ui64_t ui_size;
 
         // Uniform buffer data size information
-        deng_ui64_t ubo_size = 0;
-        deng_ui64_t ubo_cap = 0;
-        deng_ui64_t ubo_asset_cap = 0;
+        deng_ui64_t ubo_cap;
+        deng_ui64_t ubo_size;
+        deng_ui64_t ubo_asset_cap;
     };
 }
 

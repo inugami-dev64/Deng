@@ -123,7 +123,8 @@ namespace deng {
         void __vk_DrawCaller::__bindAssetResources (
             das_Asset &asset, 
             VkCommandBuffer cur_buf,
-            const __vk_BufferData &bd
+            const __vk_BufferData &bd,
+            const deng::BufferSectionInfo &buf_sec
         ) {
             // Vertex normal binding number variable, since it can change according to the asset mode
             deng_ui32_t nor_bind_nr = 1;
@@ -156,10 +157,15 @@ namespace deng {
 
 
         /// Bind ImGui resources to command buffers
-        void __vk_DrawCaller::__bindUIElementResources(__ImGuiEntity *ent, VkCommandBuffer cur_buf, const __vk_BufferData &bd) {
-            VkDeviceSize vert_offset = bd.asset_cap + m_p_ui_data->cmd_data[ent->cmd_list_ind].offset;
+        void __vk_DrawCaller::__bindUIElementResources (
+            __ImGuiEntity *ent, 
+            VkCommandBuffer cur_buf, 
+            const __vk_BufferData &bd,
+            const deng::BufferSectionInfo &buf_sec
+        ) {
+            VkDeviceSize vert_offset = buf_sec.asset_cap + m_p_ui_data->cmd_data[ent->cmd_list_ind].offset;
             vkCmdBindVertexBuffers(cur_buf, 0, 1, &bd.main_buffer, &vert_offset);
-            vkCmdBindIndexBuffer(cur_buf, bd.main_buffer, bd.asset_cap + ent->buf_offset, VK_INDEX_TYPE_UINT32);
+            vkCmdBindIndexBuffer(cur_buf, bd.main_buffer, buf_sec.asset_cap + ent->buf_offset, VK_INDEX_TYPE_UINT32);
         }
 
 
@@ -219,7 +225,8 @@ namespace deng {
             VkRenderPass renderpass, 
             VkExtent2D ext,
             const dengMath::vec4<deng_vec_t> &background,
-            const __vk_BufferData &bd
+            const __vk_BufferData &bd,
+            const deng::BufferSectionInfo &buf_sec
         ) {
             m_cmd_bufs.resize(m_framebuffers.size());
 
@@ -241,7 +248,8 @@ namespace deng {
             VkRenderPass renderpass,
             VkExtent2D ext,
             const dengMath::vec4<deng_vec_t> &background,
-            const __vk_BufferData &bd
+            const __vk_BufferData &bd,
+            const deng::BufferSectionInfo &buf_sec
         ) {
             // Record each command buffer
             for(size_t i = 0; i < m_cmd_bufs.size(); i++) {
@@ -286,7 +294,7 @@ namespace deng {
                             DENG_SUPPORTED_REG_TYPE_VK_ASSET, NULL);
 
                         if(reg_asset.asset.is_shown) {
-                            __bindAssetResources(reg_asset.asset, m_cmd_bufs[i], bd);
+                            __bindAssetResources(reg_asset.asset, m_cmd_bufs[i], bd, buf_sec);
                             VkPipelineLayout *p_pl_layout = __bindAssetPipeline(reg_asset.asset, m_cmd_bufs[i]);
 
                             vkCmdBindDescriptorSets(m_cmd_bufs[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -300,7 +308,7 @@ namespace deng {
                     // Check if ui elements should be drawn
                     if(m_p_ui_data) {
                         for(deng_i64_t j = 0; j < m_p_ui_data->entities.size(); j++) {
-                            __bindUIElementResources(&m_p_ui_data->entities[j], m_cmd_bufs[i], bd);
+                            __bindUIElementResources(&m_p_ui_data->entities[j], m_cmd_bufs[i], bd, buf_sec);
 
                             vkCmdBindPipeline(m_cmd_bufs[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 m_pl_data[UI_I].pipeline);

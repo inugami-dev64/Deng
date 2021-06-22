@@ -83,24 +83,22 @@
     #include <data/assets.h>
 
     #include <math/deng_math.h>
-    #include <deng/cross_api/gpu_mem.h>
 	#include <deng/window.h>
     #include <deng/camera.h>
     #include <deng/lighting/light_srcs.h>
     #include <deng/vulkan/resources.h>
     #include <deng/registry/registry.h>
-    #include <deng/vulkan/ubo.h>
+    #include <imgui-layer/imgui_entity.h>
+    #include <deng/cross_api/cross_api.h>
+
     #include <deng/vulkan/ubm.h>
     #include <deng/vulkan/asset_cpy.h>
-
-    #include <imgui-layer/imgui_entity.h>
-    #include <deng/cross_api/offset_finder.h>
 #endif
 
 namespace deng {
     namespace vulkan {
 
-        class __vk_BufferManager : private __OffsetFinder, public __vk_UniformBufferManager {
+        class __vk_BufferManager : public __OffsetFinder, public __vk_UniformBufferManager {
         private:
             std::vector<deng_Id> &m_assets;
             const VkPhysicalDeviceLimits &m_gpu_limits;

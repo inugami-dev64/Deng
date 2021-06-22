@@ -93,7 +93,7 @@ namespace deng {
             VkDeviceSize cpy_offset
         ) {
             // Create and allocate memory for staging buffer
-            VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer(device, gpu, __OffsetFinder::getSectionInfo().asset_size, 
+            VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer(device, gpu, __OffsetFinder::getSectionInfo().asset_cap, 
                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_buffer_data.staging_buffer);
 
             __vk_BufferCreator::allocateMemory(device, gpu, mem_req.size,
@@ -127,7 +127,7 @@ namespace deng {
                 
                 // Check if new uniform data memory area needs to be mapped
                 if(!reg_vk_asset.vk_asset.is_desc)
-                    mapUniformBufferArea(device, gpu, cmd_pool, g_queue, reg_vk_asset.vk_asset);
+                    mapUniformBufferArea(device, gpu, cmd_pool, g_queue, reg_vk_asset.vk_asset, __OffsetFinder::getSectionInfo());
             }
         }
 
@@ -151,7 +151,7 @@ namespace deng {
 
             // Calculate the total required memory for ui elements
             if(m_p_imgui_data) {
-                m_buffer_data.ui_size = 0;
+                __OffsetFinder::getSectionInfo().ui_size = 0;
                 __findGuiEntitiesOffsets();
             }
 
@@ -178,14 +178,14 @@ namespace deng {
 
         /// Check if the current capacity is enough for assets and if it isn't resize the capacity and return true
         deng_bool_t __vk_BufferManager::assetCapCheck() {
-            if(m_buffer_data.asset_size < m_buffer_data.asset_cap) return false;
+            if(__OffsetFinder::getSectionInfo().asset_size < __OffsetFinder::getSectionInfo().asset_cap) return false;
 
             // Scale the current or required capacity by a factor of 1.5 and set it as a new capacity
-            m_buffer_data.asset_cap = (m_buffer_data.asset_cap * 3 / 2 <= m_buffer_data.asset_size ? 
-                m_buffer_data.asset_size * 3 / 2 : m_buffer_data.asset_cap * 3 / 2);
+            __OffsetFinder::getSectionInfo().asset_cap = (__OffsetFinder::getSectionInfo().asset_cap * 3 / 2 <= __OffsetFinder::getSectionInfo().asset_size ? 
+                __OffsetFinder::getSectionInfo().asset_size * 3 / 2 : __OffsetFinder::getSectionInfo().asset_cap * 3 / 2);
 
             // Round asset capacity to the nearest multiple of index size 
-            m_buffer_data.asset_cap += ZERO_MOD_CEIL_REM(m_buffer_data.asset_cap, sizeof(deng_idx_t));
+            __OffsetFinder::getSectionInfo().asset_cap += ZERO_MOD_CEIL_REM(__OffsetFinder::getSectionInfo().asset_cap, sizeof(deng_idx_t));
 
             return true;
         }
@@ -193,13 +193,13 @@ namespace deng {
 
         /// Check if the current capacity is enough for ImGui elements and if it isn't resize the capacity and return true
         deng_bool_t __vk_BufferManager::uiCapCheck() {
-            if(m_buffer_data.ui_size < m_buffer_data.ui_cap) return false;
+            if(__OffsetFinder::getSectionInfo().ui_size < __OffsetFinder::getSectionInfo().ui_cap) return false;
 
             // Scale the current or required capacity by a factor of 1.5 and set it as a new capacity
-            m_buffer_data.ui_cap = m_buffer_data.ui_cap * 3 / 2 <= m_buffer_data.ui_size ? 
-                m_buffer_data.ui_size * 3 / 2 : m_buffer_data.ui_cap * 3 / 2;
+            __OffsetFinder::getSectionInfo().ui_cap = __OffsetFinder::getSectionInfo().ui_cap * 3 / 2 <= __OffsetFinder::getSectionInfo().ui_size ? 
+                __OffsetFinder::getSectionInfo().ui_size * 3 / 2 : __OffsetFinder::getSectionInfo().ui_cap * 3 / 2;
 
-            m_buffer_data.ui_cap += ZERO_MOD_CEIL_REM(m_buffer_data.ui_cap, sizeof(deng_idx_t));
+            __OffsetFinder::getSectionInfo().ui_cap += ZERO_MOD_CEIL_REM(__OffsetFinder::getSectionInfo().ui_cap, sizeof(deng_idx_t));
             return true;
         }
 
@@ -207,7 +207,7 @@ namespace deng {
         /// Allocate the reserved memory
         void __vk_BufferManager::allocateMainBufferMemory(VkDevice device, VkPhysicalDevice gpu) {
             // Create a new buffer instance
-            VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer(device, gpu, m_buffer_data.asset_cap + m_buffer_data.ui_cap, 
+            VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer(device, gpu, __OffsetFinder::getSectionInfo().asset_cap + __OffsetFinder::getSectionInfo().ui_cap, 
                 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
                 m_buffer_data.main_buffer);
 
@@ -234,7 +234,7 @@ namespace deng {
 
             // Find the total required buffer size and set correct offsets if required
             if(!no_offset_calc) {
-                m_buffer_data.asset_size = 0;
+                __OffsetFinder::getSectionInfo().asset_size = 0;
                 for(size_t i = 0; i < m_assets.size(); i++) {
                     RegType &reg_asset = m_reg.retrieve(m_assets[i], DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
                     
@@ -249,7 +249,7 @@ namespace deng {
             // Copy data from staging buffer to main buffer
             __vk_BufferCreator::cpyBufferToBuffer(device, cmd_pool, g_queue, 
                 m_buffer_data.staging_buffer, m_buffer_data.main_buffer, 
-                m_buffer_data.asset_cap, 0, 0);
+                __OffsetFinder::getSectionInfo().asset_cap, 0, 0);
 
             // Perform staging buffer cleanup
             vkDestroyBuffer(device, m_buffer_data.staging_buffer, NULL);
@@ -271,12 +271,12 @@ namespace deng {
 
             // Calculate offsets and required size 
             if(!no_offset_calc) {
-                m_buffer_data.ui_size = 0;
+                __OffsetFinder::getSectionInfo().ui_size = 0;
                 __findGuiEntitiesOffsets();
             }
 
             // Create staging buffer for UI data
-            VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer(device, gpu, m_buffer_data.ui_size,
+            VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer(device, gpu, __OffsetFinder::getSectionInfo().ui_size,
                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_buffer_data.staging_buffer);
 
             // Allocate memory for staging buffer
@@ -288,7 +288,7 @@ namespace deng {
 
             // Copy data to staging buffer
             void *data = NULL;
-            vkMapMemory(device, m_buffer_data.staging_buffer_memory, 0, m_buffer_data.ui_size, 0, &data);
+            vkMapMemory(device, m_buffer_data.staging_buffer_memory, 0, __OffsetFinder::getSectionInfo().ui_size, 0, &data);
                 VkDeviceSize offset = 0;
                 
                 // For each command list copy its vertices and indices to the buffer
@@ -307,7 +307,7 @@ namespace deng {
 
             // Copy staging buffer to the main buffer
             __vk_BufferCreator::cpyBufferToBuffer(device, cmd_pool, g_queue, m_buffer_data.staging_buffer,
-                m_buffer_data.main_buffer, m_buffer_data.ui_size, 0, m_buffer_data.asset_cap);
+                m_buffer_data.main_buffer, __OffsetFinder::getSectionInfo().ui_size, 0, __OffsetFinder::getSectionInfo().asset_cap);
 
             // Destroy stagin buffer and free its memory
             vkDestroyBuffer(device, m_buffer_data.staging_buffer, NULL);
@@ -315,6 +315,9 @@ namespace deng {
         }
 
 
-        void __vk_BufferManager::setUIDataPtr(__ImGuiData *p_gui) { m_p_imgui_data = p_gui; }
+        void __vk_BufferManager::setUIDataPtr(__ImGuiData *p_gui) { 
+            m_p_imgui_data = p_gui; 
+            __OffsetFinder::setUIData(p_gui);
+        }
     }
 }

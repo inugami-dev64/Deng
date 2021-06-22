@@ -76,11 +76,11 @@
 
     #include <glad/glad.h>
     #include <common/base_types.h>
-    #include <common/shader_def.h>
     #include <common/err_def.h>
     #include <data/assets.h>
      
     #include <math/deng_math.h>
+    #include <deng/cross_api/shader_def.h>
 #endif
 
 namespace deng {
@@ -105,6 +105,10 @@ namespace deng {
 
             /// Compile shader files at given index to shader programs
             void __compileShadersToProgram(const deng_ui32_t index);
+
+
+            /// Prepare bindings for uniform data
+            void __prepareUniformBindings();
 
         public:
             __gl_ShaderLoader();
