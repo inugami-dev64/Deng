@@ -4,3 +4,6 @@
 [submodule "modules/freetype"]
 	path = modules/freetype
 	url = https://git.savannah.gnu.org/git/freetype/freetype2.git/
+[submodule "modules/glad"]
+	path = modules/glad
+	url = https://github.com/inugami-dev64/glad

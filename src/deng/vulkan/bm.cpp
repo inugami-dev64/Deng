@@ -75,11 +75,11 @@ namespace deng {
             std::vector<deng_Id> &assets,
             deng::__GlobalRegistry &reg
         ) : __vk_UniformBufferManager(assets, gpu_limits.minUniformBufferOffsetAlignment,
-                reg, m_buffer_data),
+                reg, m_buffer_data), __OffsetFinder(assets, reg),
             m_assets(assets), m_gpu_limits(gpu_limits), m_reg(reg)
         {
             // Allocate initial amount of memory for the renderer
-            __setupMainBuffer(device, gpu);
+            allocateMainBufferMemory(device, gpu);
         }
 
 
@@ -93,7 +93,7 @@ namespace deng {
             VkDeviceSize cpy_offset
         ) {
             // Create and allocate memory for staging buffer
-            VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer(device, gpu, m_buffer_data.asset_cap, 
+            VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer(device, gpu, __OffsetFinder::getSectionInfo().asset_size, 
                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_buffer_data.staging_buffer);
 
             __vk_BufferCreator::allocateMemory(device, gpu, mem_req.size,
@@ -130,159 +130,6 @@ namespace deng {
                     mapUniformBufferArea(device, gpu, cmd_pool, g_queue, reg_vk_asset.vk_asset);
             }
         }
-        
-        
-        /// Find the offset of the current asset
-        void __vk_BufferManager::__findAssetOffsets(das_Asset &asset) {
-            // In each case increment the buffer size and find correct and vertices and 
-            // indices' offsets
-            switch (asset.asset_mode) {
-            case DAS_ASSET_MODE_2D_UNMAPPED:
-                // Set all vertices' offsets and the vertices that are not available mark as
-                // UINT64_MAX
-                asset.offsets.pos_offset = m_buffer_data.asset_size;
-                asset.offsets.tex_offset = UINT64_MAX;
-                asset.offsets.nor_offset = UINT64_MAX;
-
-                m_buffer_data.asset_size += asset.vertices.v2d.pn * 
-                    sizeof(das_ObjPosData2D);
-
-                /// Round the asset size to 
-                m_buffer_data.asset_size += ZERO_MOD_CEIL_REM(m_buffer_data.asset_size, sizeof(deng_idx_t));
-                asset.offsets.ind_offset = m_buffer_data.asset_size;
-                m_buffer_data.asset_size += asset.indices.n * sizeof(deng_ui32_t);
-                break;
-            
-            case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
-                // Set all vertices' offsets and the vertices that are not available mark as
-                // UINT64_MAX
-                asset.offsets.pos_offset = m_buffer_data.asset_size;
-                asset.offsets.tex_offset = m_buffer_data.asset_size +
-                    asset.vertices.v2d.pn * sizeof(das_ObjPosData2D);
-                asset.offsets.nor_offset = UINT64_MAX;
-
-                m_buffer_data.asset_size += asset.vertices.v2d.pn * sizeof(das_ObjPosData2D) + 
-                    asset.vertices.v2d.tn * sizeof(das_ObjTextureData);
-
-                m_buffer_data.asset_size += ZERO_MOD_CEIL_REM(m_buffer_data.asset_size, sizeof(deng_idx_t));
-                asset.offsets.ind_offset = m_buffer_data.asset_size;
-                m_buffer_data.asset_size += 2 * asset.indices.n * sizeof(deng_ui32_t);
-                break;
-
-            case DAS_ASSET_MODE_3D_UNMAPPED:
-                // Set all vertices' offsets and the vertices that are not available mark as
-                // UINT64_MAX
-                asset.offsets.pos_offset = m_buffer_data.asset_size;
-                asset.offsets.tex_offset = UINT64_MAX;
-                asset.offsets.nor_offset = m_buffer_data.asset_size + 
-                    asset.vertices.v3d.pn * sizeof(das_ObjPosData);
-
-                m_buffer_data.asset_size += asset.vertices.v3d.pn * sizeof(das_ObjPosData) +
-                asset.vertices.v3d.nn * sizeof(das_ObjNormalData);
-
-                m_buffer_data.asset_size += ZERO_MOD_CEIL_REM(m_buffer_data.asset_size, sizeof(deng_idx_t));
-                asset.offsets.ind_offset = m_buffer_data.asset_size;
-                m_buffer_data.asset_size += 2 * asset.indices.n * sizeof(deng_ui32_t);
-                break;
-
-            case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-                asset.offsets.pos_offset = m_buffer_data.asset_size;
-                asset.offsets.tex_offset = m_buffer_data.asset_size +
-                    asset.vertices.v3d.pn * sizeof(das_ObjPosData);
-                asset.offsets.nor_offset = m_buffer_data.asset_size +
-                    asset.vertices.v3d.pn * sizeof(das_ObjPosData) + 
-                    asset.vertices.v3d.tn * sizeof(das_ObjTextureData);
-
-                m_buffer_data.asset_size += asset.vertices.v3d.pn * sizeof(das_ObjPosData) +
-                    asset.vertices.v3d.tn * sizeof(das_ObjTextureData) + 
-                    asset.vertices.v3d.nn * sizeof(das_ObjNormalData);
-
-                m_buffer_data.asset_size += ZERO_MOD_CEIL_REM(m_buffer_data.asset_size, sizeof(deng_idx_t));
-                asset.offsets.ind_offset = m_buffer_data.asset_size;
-                m_buffer_data.asset_size += 3 * asset.indices.n * sizeof(deng_ui32_t);
-                break;
-            
-            default:
-                RUN_ERR("deng::vulkan::__vk_ResourceManager::mkBuffers()", 
-                    "Invalid asset vertices format for asset " + std::string(asset.uuid));
-                break;
-            }
-        }
-
-
-        /// Find offsets for all ImGui entities 
-        void __vk_BufferManager::__findGuiEntitiesOffsets() {
-            // For each command data vector element, calculate its offset from the beginning of the ui memory area
-            for(size_t i = 0; i < m_p_imgui_data->cmd_data.size(); i++) {
-                m_p_imgui_data->cmd_data[i].offset = m_buffer_data.ui_size;
-                m_buffer_data.ui_size += m_p_imgui_data->cmd_data[i].vert_c * sizeof(ImDrawVert);
-                m_buffer_data.ui_size += ZERO_MOD_CEIL_REM(m_buffer_data.ui_size, sizeof(ImDrawIdx));
-                m_buffer_data.ui_size += m_p_imgui_data->cmd_data[i].ind_c * sizeof(ImDrawIdx);
-            }
-        }
-
-        
-        /// Find the largest asset size
-        deng_ui64_t __vk_BufferManager::__findMaxAssetSize(const dengMath::vec2<deng_ui32_t> &bounds) {
-            VkDeviceSize max_size = 0;
-            VkDeviceSize cur_size = 0;
-
-            // For each asset in bounds check the size and find the largest one
-            for(size_t i = bounds.first; i < bounds.second; i++) {
-                // Retrieve assets from the registry
-                RegType &reg_asset = m_reg.retrieve(m_assets[i], DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
-
-                // Check how much memory the asset consumes by checking their mode, which
-                // they used to allocate memory for the vertex buffer
-                switch(reg_asset.asset.asset_mode) {
-                case DAS_ASSET_MODE_2D_UNMAPPED:
-                    cur_size = reg_asset.asset.vertices.v2d.pn * sizeof(das_ObjPosData);
-                    cur_size += ZERO_MOD_CEIL_REM(cur_size, sizeof(deng_idx_t));
-                    cur_size += reg_asset.asset.indices.n * sizeof(deng_idx_t);
-                    break;
-
-                case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
-                    cur_size = reg_asset.asset.vertices.v2d.pn * sizeof(das_ObjPosData) +
-                        reg_asset.asset.vertices.v2d.tn * sizeof(das_ObjTextureData);
-                    cur_size += ZERO_MOD_CEIL_REM(cur_size, sizeof(deng_idx_t));
-                    cur_size += 2 * reg_asset.asset.indices.n * sizeof(deng_idx_t);
-                    break;
-
-                case DAS_ASSET_MODE_3D_UNMAPPED:
-                    cur_size = reg_asset.asset.vertices.v3d.pn * sizeof(das_ObjPosData) +
-                        reg_asset.asset.vertices.v3d.nn * sizeof(das_ObjNormalData);
-                    cur_size += ZERO_MOD_CEIL_REM(cur_size, sizeof(deng_idx_t));
-                    cur_size += 2 * reg_asset.asset.indices.n * sizeof(deng_idx_t);
-                    break;
-
-                case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-                    cur_size = reg_asset.asset.vertices.v3d.pn * sizeof(das_ObjPosData) +
-                        reg_asset.asset.vertices.v3d.tn * sizeof(das_ObjTextureData) +
-                        reg_asset.asset.vertices.v3d.nn * sizeof(das_ObjNormalData);
-                    cur_size += ZERO_MOD_CEIL_REM(cur_size, sizeof(deng_idx_t));
-                    cur_size += 3 * reg_asset.asset.indices.n * sizeof(deng_idx_t);
-                    break;
-
-                default:
-                    break;
-                }
-
-                // Perform maximum required memory check for the asset
-                if(cur_size > max_size)
-                    max_size = cur_size;
-            }
-
-            return max_size;
-        }
-
-
-        /// Allocate an initial amount of memory for the main buffer
-        void __vk_BufferManager::__setupMainBuffer(VkDevice device, VkPhysicalDevice gpu) {
-            m_buffer_data.asset_cap = DEF_ASSET_CAP;
-            m_buffer_data.ui_cap = DEF_UI_CAP;
-
-            allocateMainBufferMemory(device, gpu);
-        }
 
 
         /// Check if buffer reallocation is needed for assets and gui elements and reallocate if needed
@@ -294,7 +141,7 @@ namespace deng {
             const std::vector<VkFence> &fences
         ) {
             // For each asset add its size to total asset size and calculate asset offsets
-            m_buffer_data.asset_size = 0;
+            __OffsetFinder::getSectionInfo().asset_size = 0;
             for(size_t i = 0; i < m_assets.size(); i++) {
                 // Retrieve the asset from registry
                 RegType &reg_asset = m_reg.retrieve(m_assets[i], DENG_SUPPORTED_REG_TYPE_ASSET, NULL);

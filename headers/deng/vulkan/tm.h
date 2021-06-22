@@ -95,11 +95,6 @@
     
     #include <deng/lighting/light_srcs.h>
     #include <deng/registry/registry.h>
-
-    #define __DEFAULT_TEX_WIDTH     512
-    #define __DEFAULT_TEX_HEIGHT    512
-    #define __DEFAULT_TEX_SIZE      1048576 // bytes
-    #define __DEFAULT_TEX_MEM_CAP   8388608 // bytes
 #endif
 
 

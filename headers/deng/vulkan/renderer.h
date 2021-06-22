@@ -75,6 +75,7 @@
     #include <common/base_types.h>
     #include <common/hashmap.h>
     #include <common/uuid.h>
+    #include <common/shader_def.h>
     #include <common/err_def.h>
     #include <data/assets.h>
 

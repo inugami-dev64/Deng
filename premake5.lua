@@ -64,8 +64,7 @@ workspace "deng"
     includedirs { 
         "./headers",
         "./modules/imgui",
-        "./modules/freetype/include/",
-        "./modules/freetype/include/freetype"
+        "./modules/glad/include"
     }
 
 	architecture "x86_64"

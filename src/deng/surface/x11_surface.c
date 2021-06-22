@@ -274,7 +274,6 @@ static void __deng_XHandleMouseEvents(deng_SurfaceWindow *p_win) {
 static void __deng_XHandleResize(deng_SurfaceWindow *p_win) {
     p_win->width = p_win->x11_handler.event.xconfigure.width;
     p_win->height = p_win->x11_handler.event.xconfigure.height;
-    printf("width, height: %d, %d\n", p_win->width, p_win->height);
 }
 
 

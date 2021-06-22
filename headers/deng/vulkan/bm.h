@@ -83,7 +83,7 @@
     #include <data/assets.h>
 
     #include <math/deng_math.h>
-    #include <deng/surface/key_definitions.h>
+    #include <deng/cross_api/gpu_mem.h>
 	#include <deng/window.h>
     #include <deng/camera.h>
     #include <deng/lighting/light_srcs.h>
@@ -94,15 +94,13 @@
     #include <deng/vulkan/asset_cpy.h>
 
     #include <imgui-layer/imgui_entity.h>
-
-    #define DEF_ASSET_CAP       65536   // Initialise with 64KB of memory for assets
-    #define DEF_UI_CAP          32768   // Initialise with 32KB of memory for ui elements
+    #include <deng/cross_api/offset_finder.h>
 #endif
 
 namespace deng {
     namespace vulkan {
 
-        class __vk_BufferManager : public __vk_UniformBufferManager {
+        class __vk_BufferManager : private __OffsetFinder, public __vk_UniformBufferManager {
         private:
             std::vector<deng_Id> &m_assets;
             const VkPhysicalDeviceLimits &m_gpu_limits;
@@ -114,28 +112,13 @@ namespace deng {
             __vk_BufferData m_buffer_data;
 
         private:
-            void __setupMainBuffer(VkDevice device, VkPhysicalDevice gpu);
-
-
             /// Create staging buffers for all asset data between bounds
             void __stageAssets(VkDevice device, VkPhysicalDevice gpu, VkCommandPool cmd_pool, VkQueue g_queue, 
                 const dengMath::vec2<deng_ui32_t> &bounds, VkDeviceSize cpy_offset);
 
-
-            /// Find offsets for the current asset
-            void __findAssetOffsets(das_Asset &asset);
-
-
-            /// Find offsets for all ImGui entities 
-            void __findGuiEntitiesOffsets();
-
-
         protected:
             __vk_BufferManager(VkDevice device, VkPhysicalDevice gpu, const VkPhysicalDeviceLimits &gpu_limits, 
                 std::vector<deng_Id> &assets, deng::__GlobalRegistry &reg);
-
-            deng_ui64_t __findMaxAssetSize(const dengMath::vec2<deng_ui32_t> &bounds);
-
 
         public:
             /// Check if buffer reallocation is needed for assets and gui elements

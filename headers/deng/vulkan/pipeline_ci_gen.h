@@ -80,6 +80,8 @@
     #include <common/base_types.h>
     #include <common/hashmap.h>
     #include <common/err_def.h>
+    #include <common/shader_def.h>
+
     #include <data/assets.h>
     #include <math/deng_math.h>
     #include <deng/vulkan/qm.h>
@@ -90,43 +92,6 @@
     #include <imgui-layer/imgui_entity.h>
 #endif
 
-
-
-#ifdef __linux__
-    // UI system shaders
-    #define UI_VERT_SHADER                      "./shaders/bin/2d/UIV.spv"
-    #define UI_FRAG_SHADER                      "./shaders/bin/2d/UIF.spv"
-
-    // 2D asset shaders
-    #define UNMAPPED_VERT_SHADER_2D             "./shaders/bin/2d/UV.spv"
-    #define UNMAPPED_FRAG_SHADER_2D             "./shaders/bin/2d/UF.spv"
-    #define TEXTURE_MAPPED_VERT_SHADER_2D       "./shaders/bin/2d/TMV.spv"
-    #define TEXTURE_MAPPED_FRAG_SHADER_2D       "./shaders/bin/2d/TMF.spv"
-
-    // 3D asset shaders
-    #define UNMAPPED_VERT_SHADER_3D             "./shaders/bin/3d/UV.spv"
-    #define UNMAPPED_FRAG_SHADER_3D             "./shaders/bin/3d/UF.spv"
-    #define TEXTURE_MAPPED_VERT_SHADER_3D       "./shaders/bin/3d/TMV.spv"
-    #define TEXTURE_MAPPED_FRAG_SHADER_3D       "./shaders/bin/3d/TMF.spv"
-#endif
-
-#ifdef _WIN32
-    // UI system shaders
-    #define UI_VERT_SHADER                      ".\\shaders\\bin\\2d\\UIV.spv"
-    #define UI_FRAG_SHADER                      ".\\shaders\\bin\\2d\\UIF.spv"
-
-    // 2D asset shaders
-    #define UNMAPPED_VERT_SHADER_2D             ".\\shaders\\bin\\2d\\UV.spv"
-    #define UNMAPPED_FRAG_SHADER_2D             ".\\shaders\\bin\\2d\\UF.spv"
-    #define TEXTURE_MAPPED_VERT_SHADER_2D       ".\\shaders\\bin\\2d\\TMV.spv"
-    #define TEXTURE_MAPPED_FRAG_SHADER_2D       ".\\shaders\\bin\\2d\\TMF.spv"
-
-    // 3D asset shaders
-    #define UNMAPPED_VERT_SHADER_3D             ".\\shaders\\bin\\3d\\UV.spv"
-    #define UNMAPPED_FRAG_SHADER_3D             ".\\shaders\\bin\\3d\\UF.spv"
-    #define TEXTURE_MAPPED_VERT_SHADER_3D       ".\\shaders\\bin\\3d\\TMV.spv"
-    #define TEXTURE_MAPPED_FRAG_SHADER_3D       ".\\shaders\\bin\\3d\\TMF.spv"
-#endif
 
 namespace deng {
     namespace vulkan {

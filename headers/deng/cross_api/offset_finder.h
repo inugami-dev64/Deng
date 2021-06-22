@@ -57,92 +57,64 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
+ * ----------------------------------------------------------------
+ *  Name: offset_finder - asset and gui data offset finder  
+ *  Purpose: Provide a base class for calculating asset and gui offsets
+ *  Author: Karl-Mihkel Ott
  */ 
 
 
-#ifndef __RENDERER_H
-#define __RENDERER_H
+#ifndef __OFFSET_FINDER_H
+#define __OFFSET_FINDER_H
 
-#ifdef __RENDERER_CPP
+
+#ifdef __OFFSET_FINDER_CPP
     #include <vector>
-    #include <thread>
-    #include <chrono>
-    #include <mutex>
-    #include <queue>
     #include <string>
-    #include <memory>
-    #include <array>
-    
     #include <vulkan/vulkan.h>
+
     #include <common/base_types.h>
+    #include <common/common.h>
     #include <common/hashmap.h>
-    #include <common/uuid.h>
     #include <common/err_def.h>
     #include <data/assets.h>
 
     #include <math/deng_math.h>
-    #include <deng/window.h>
-    #include <deng/camera.h>
-
     #include <deng/registry/registry.h>
+    #include <deng/cross_api/gpu_mem.h>
+    #include <imgui-layer/imgui_entity.h>
 #endif
 
-#include <common/shader_def.h>
-#include <imgui-layer/imgui_entity.h>
-#include <deng/vulkan/renderer.h>
-#include <deng/renderer/asset_man.h>
-#include <deng/renderer/data_updater.h>
-
-#define DENG_DEFAULT_NEAR_PLANE 0.1f
-#define DENG_DEFAULT_FAR_PLANE 25.0f
-#define DENG_FRAME_INTERVAL 50 // microseconds
 
 namespace deng {
 
-    // Frame renderer type
-    class Renderer;
-    typedef void(*PCustomRunFunc)(Renderer&);
-
-
-    /// Main renderer class
-    class Renderer : public __DataUpdater {   
+    class __OffsetFinder {
     private:
-        std::shared_ptr<vulkan::__vk_ConfigVars> m_vk_vars;
-        std::shared_ptr<vulkan::__vk_Renderer> m_vk_rend;   
-        dengMath::vec4<deng_vec_t> m_env_color;
-        deng_RendererHintBits m_hints;
-        deng_RendererHintBits m_api_bits;
-        deng_bool_t m_is_init;
+        std::vector<deng_Id> &m_assets;
+        __GlobalRegistry &m_reg;
+        __ImGuiData *m_p_imgui_data = NULL;
+        BufferSectionInfo m_buf_sec_info;
 
-        Window *m_p_win;
-        Camera3D *m_p_cam;
+    protected:
+        /// Find offsets for the current asset
+        void __findAssetOffsets(das_Asset &asset);
+
+
+        /// Find offsets for all ImGui entities 
+        void __findGuiEntitiesOffsets();
+
+
+        /// Find the largest memory size required by a single asset 
+        deng_ui64_t __findMaxAssetSize(const dengMath::vec2<deng_ui32_t> &bounds);
 
     public:
-        Renderer(deng_RendererHintBits hints, const dengMath::vec4<deng_vec_t> &env_color);
+        __OffsetFinder(std::vector<deng_Id> &assets, __GlobalRegistry &reg);
 
-        /// Setup graphics api specific renderer from the hints given in the constructor
-        void setup(Camera3D &main_cam, Window &main_win);
-
-
-        /// Update data, before creating new frame
-        void update();
-
-
-        /// Begin the rendering loop
-        void run();        
-
-
-        /// idle the renderer 
-        void idle();
-
-    // Render backend getter and setter methods
+    // Setters and getters
     public:
-        void setUIDataPtr(__ImGuiData *p_data);
-        const std::vector<deng_Id> &getAssets();
-        const std::vector<deng_Id> &getTextures();
-        deng::__GlobalRegistry &getRegistry();
+        void setUIData(__ImGuiData *p_gui);
+        const BufferSectionInfo &getSectionInfo();
     };
 }
-
 
 #endif

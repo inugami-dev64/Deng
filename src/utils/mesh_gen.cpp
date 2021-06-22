@@ -114,9 +114,7 @@ namespace dengUtils {
     }
 
 
-    /*
-     * Construct transformation matrix based on given parameters
-     */
+    /// Construct transformation matrix based on given parameters
     dengMath::mat4<deng_vec_t> CubeGenerator::__mkTransformMatrix (
         const dengMath::vec3<deng_vec_t> &pos,
         const dengMath::vec3<deng_vec_t> &size,

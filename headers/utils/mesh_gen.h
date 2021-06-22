@@ -65,10 +65,6 @@
 
 
 #ifdef __MESH_GEN_CPP
-    #define __CUBE_INDICES_C            36
-    #define __CUBE_VERT_C               8
-    #define __CUBE_TEX_MAP_VERT_C       14
-
     #include <array>
     #include <vector>
     #include <string.h>
@@ -82,11 +78,13 @@
     #include <math/deng_math.h>
 #endif
 
+#define __CUBE_INDICES_C            36
+#define __CUBE_VERT_C               8
+#define __CUBE_TEX_MAP_VERT_C       14
+
 namespace dengUtils {
 
-    /*
-     * This struct contains all methods for generic cube generation
-     */
+    /// This struct contains all methods for generic cube generation
     class CubeGenerator {
     private:
         std::array<dengMath::vec4<deng_vec_t>, __CUBE_VERT_C> m_base_cube_verts;
@@ -95,9 +93,7 @@ namespace dengUtils {
 
     private:
 
-        /*
-         * Construct transformation matrix based on given parameters
-         */
+        /// Construct transformation matrix based on given parameters
         dengMath::mat4<deng_vec_t> __mkTransformMatrix (
             const dengMath::vec3<deng_vec_t> &pos,
             const dengMath::vec3<deng_vec_t> &size,
@@ -107,10 +103,7 @@ namespace dengUtils {
     public:
         CubeGenerator();
 
-        /*
-         * Generate unmapped cube with position, size, origin and color
-         * parameters
-         */
+        /// Generate unmapped cube with position, size, origin and color parameters
         void generateUnmappedCube (
             const dengMath::vec3<deng_vec_t> &pos,
             const dengMath::vec3<deng_vec_t> &size,
@@ -120,9 +113,7 @@ namespace dengUtils {
         );
 
 
-        /*
-         * Generate texture mapped cube with position, size and origin parameters
-         */
+        /// Generate texture mapped cube with position, size and origin parameters
         void generateMappedCube (
             const dengMath::vec3<deng_vec_t> &pos,
             const dengMath::vec3<deng_vec_t> &size,
@@ -134,9 +125,7 @@ namespace dengUtils {
         );
 
         
-        /*
-         * Create new unmapped cube asset
-         */
+        /// Create new unmapped cube asset
         das_Asset generateUnmappedCubeAsset (
             const dengMath::vec3<deng_vec_t> &pos,
             const dengMath::vec3<deng_vec_t> &size,
@@ -144,9 +133,7 @@ namespace dengUtils {
         );
 
         
-        /*
-         * Generate texture mapped cube asset
-         */
+        /// Generate texture mapped cube asset
         das_Asset generateMappedCubeAsset (
             const dengMath::vec3<deng_vec_t> &pos,
             const dengMath::vec3<deng_vec_t> &size,

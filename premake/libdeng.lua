@@ -83,7 +83,8 @@ function libdeng.build()
             "src/math/conversion.cpp",
             "src/math/projection_mat.cpp",
             "src/math/transformer.cpp",
-            "src/utils/*.cpp"
+            "src/utils/*.cpp",
+            "modules/glad/src/glad.c"
         }
 
         removefiles { "src/deng/renderer.cpp" }

@@ -74,6 +74,7 @@
     #include <common/base_types.h>
     #include <common/hashmap.h>
     #include <common/err_def.h>
+    #include <common/shader_def.h>
     #include <data/assets.h>
 
     #include <math/deng_math.h>
@@ -84,7 +85,6 @@
     
     #include <deng/vulkan/rend_infos.h>
     #include <deng/vulkan/pipeline_data.h>
-    #include <deng/vulkan/pipelines.h>
     #include <deng/lighting/light_srcs.h>
     #include <deng/registry/registry.h>
 

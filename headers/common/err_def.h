@@ -64,6 +64,7 @@
 #define ERR_DEF_H
 
 // Console loggers
+#include <assert.h>
 #include <iostream>
 
 #ifdef __DEBUG
@@ -81,10 +82,11 @@
 #define DIR_ERR(dir)                        throw std::runtime_error(std::string("Failed to open directory: ") + dir)
 #define MATH_ERR(x)                         throw std::runtime_error(std::string("Math error: ") + x)
 #define FONT_ERR(x)                         throw std::runtime_error(std::string("Font rasterisation error: ") + x)
-#define RUN_ERR(method, x)                  throw std::runtime_error(std::string(method) + ": " + std::string(x))
 #define INVALID_ASSET_TEX(asset, uuid)      throw std::runtime_error(std::string("Invalid texture specified on asset: ") + asset + ", " + uuid) 
 #define INVALID_ASSET(asset, uuid)          throw std::runtime_error(std::string("Invalid asset: ") + asset + ", " + uuid)
 #define UNDEFINED_ASSET_MODE(asset, uuid)   throw std::runtime_error(std::string("Unknown asset mode for asset: ") + asset + ", " + uuid)
+#define RUN_ERR(method, x)                  throw std::runtime_error(std::string(method) + ": " + std::string(x))
+#define DENG_ASSERT(msg, cond)              (!cond ? throw std::runtime_error(std::string(__FILE__) + std::string(", ") + std::to_string(__LINE__) + std::string(": ") + std::string(msg)) : NULL)
 
 
 // Vulkan related

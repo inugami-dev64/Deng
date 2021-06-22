@@ -78,9 +78,7 @@
     #include <common/common.h>
 #endif
 
-/*
- * Main stack like data structure
- */
+/// Main stack like data structure
 typedef struct Stack {
     size_t cap;
     size_t item_c;
@@ -88,28 +86,20 @@ typedef struct Stack {
 } Stack;
 
 
-/*
- * Create a new stack instance with capacity of cap
- */
+/// Create a new stack instance with capacity of cap
 void newStack(Stack *p_st, size_t cap);
 
 
-/*
- * Push a new pointer to stack and if needed reallocate memory
- * for stack items
- */
+/// Push a new pointer to stack and if needed reallocate memory
+/// for stack items
 void pushToStack(Stack *p_st, void *item);
 
 
-/*
- * Pop the last element from stack
- */
+/// Pop the last element from stack
 void *popFromStack(Stack *p_st);
 
 
-/*
- * Free all memory used for the stack data structure
- */
+/// Free all memory used for the stack data structure
 void *destroyStack(Stack *p_st);
 
 #endif

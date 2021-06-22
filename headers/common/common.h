@@ -138,22 +138,15 @@ extern "C" {
 deng_ui32_t cm_FindLineCount(char *str, size_t rlen);
 
 
-/*
- * Make all the chars into upper case letters
- */
+/// Make all the chars into upper case letters
 char *cm_MakeUpperCase(const char *str); 
 
 
-/*
- * Make all chars into lower case
- */
+/// Make all chars into lower case
 char *cm_MakeLowerCase(const char *str);
 
 
-/*
- * Replace all instances of find_ch in str
- * with rep_ch
- */
+/// Replace all instances of find_ch in str with rep_ch
 char *cm_StrReplaceCh (
     const char *str,
     char find_ch,
@@ -161,15 +154,11 @@ char *cm_StrReplaceCh (
 );
 
 
-/* 
- * Extract the file name from the file path
- */
+/// Extract the file name from the file path
 char *cm_ExtractFileName(char *path);
 
 
-/* 
- * Get the file extension from file name
- */
+/// Get the file extension from file name
 char *cm_ExtractFileExtName(char *file_name);
 
 
@@ -177,9 +166,7 @@ char *cm_ExtractFileExtName(char *file_name);
 /************* Universally applicable algorithms *********/
 /*********************************************************/
 
-/*
- * Specify information about date formating
- */
+/// Specify information about date formating
 typedef enum DateFormat {
     // The style Japanese and Chinese use
     DATE_FORMAT_YMD_SP_FULL_STOP    = 0,
@@ -201,9 +188,7 @@ typedef enum DateFormat {
 } DateFormat;
 
 
-/*
- * Specify information about time formating
- */
+/// Specify information about time formating
 typedef enum TimeFormat {
     TIME_FORMAT_24_HOUR_SP_FULL_STOP    = 0,
     TIME_FORMAT_24_HOUR_SP_COLON        = 1,
@@ -212,9 +197,7 @@ typedef enum TimeFormat {
 } TimeFormat;
 
 
-/*
- * Store information about date and time
- */
+/// Store information about date and time
 typedef struct TimeInfo {
     deng_ui16_t days;
     deng_ui16_t months;
@@ -226,60 +209,43 @@ typedef struct TimeInfo {
 } TimeInfo;
 
 
-/*
- * Convert time from epoch into TimeInfo struct
- */
+/// Convert time from epoch into TimeInfo struct
 void cm_ConvertTime (
     deng_i64_t epocht,
     TimeInfo *p_out_info
 );
 
 
-/*
- * This function calculates the total chuck size from the required memory size
- */
+/// This function calculates the total chuck size from the required memory size
 deng_ui64_t cm_FindChunkSize(deng_ui64_t chunk, deng_ui64_t req_mem);
 
 
-/*
- * The following functions are used to get nearest number which has power of 2
- */
+/// The following functions are used to get nearest number which has power of 2
 deng_ui64_t cm_ToPow2I64(deng_ui64_t n);
 deng_ui32_t cm_ToPow2I32(deng_ui32_t n);
 deng_ui16_t cm_ToPow2I16(deng_ui16_t n);
 deng_ui8_t cm_ToPow2I8(deng_ui8_t n);
 
 
-/*
- * The following functions are used to generate cryptographically secure
- * random numbers
- */
+/// The following functions are used to generate cryptographically secure random numbers
 deng_ui64_t cm_RandI64();
 deng_ui32_t cm_RandI32();
 deng_ui16_t cm_RandI16();
 deng_ui8_t cm_RandI8();
 
 
-/*
- * Convert regular ASCII string into wide UTF-16 string
- * This method allocates memory on heap, manual cleanup is necessary
- */
+/// Convert regular ASCII string into wide UTF-16 string
+/// This method allocates memory on heap, manual cleanup is necessary
 wchar_t *cm_ToWideString(char *str);
 
 
-/*
- * Convert wide string into regular string
- * This functions reads first 8 least significant bits of the wide string
- */
+/// Convert wide string into regular string
+/// This functions reads first 8 least significant bits of the wide string
 char *cm_ToRegularString(wchar_t *wstr);
 
 
-/*
- * Find all instances of sub_str from str and
- * put their character positions into postions array
- * This function uses heap allocation on dereferenced p_ind
- * argument. That memory has to be freed afterwards
- */
+/// Find all instances of sub_str from str and put their character positions into postions array
+/// This function uses heap allocation on dereferenced p_ind argument. That memory has to be freed afterwards
 void cm_FindAllSubstrings (
     char *str, 
     char *sub_str,
@@ -288,12 +254,8 @@ void cm_FindAllSubstrings (
 );
 
 
-/*
- * Find all instances of sub_str from str while reading maximum of str_len character from str
- * and substr_len from sub_str.
- * This function uses heap allocation on dereferenced p_ind
- * argument. That memory has to be freed afterwards
- */
+/// Find all instances of sub_str from str while reading maximum of str_len character from str and substr_len from sub_str.
+/// This function uses heap allocation on dereferenced p_ind argument. That memory has to be freed afterwards
 void cm_FindnAllSubstrings (
     char *str,
     size_t str_len,
@@ -304,12 +266,8 @@ void cm_FindnAllSubstrings (
 );
 
 
-/* 
- * Format time from epoch according to the specified
- * DateFormat and TimeFormat. Time from epoch is measured
- * in seconds. Output strings need to be valid pointers to
- * char buffer memory
- */
+/// Format time from epoch according to the specified DateFormat and TimeFormat. Time from epoch is measured
+/// in seconds. Output strings need to be valid pointers to char buffer memory
 void cm_FormatTimeFromEpoch (
     DateFormat date_format,
     TimeFormat time_format,

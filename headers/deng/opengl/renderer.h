@@ -71,18 +71,24 @@
 #ifdef __GL_RENDERER_CPP
     #include <vector>
     #include <chrono>
-    #include <GL/gl.h>
-    #include <GL/glu.h>
+    #include <array>
+    #include <memory>
+    #include <glad/glad.h>
     #include <vulkan/vulkan.h>
+
     #include <common/base_types.h>
     #include <common/hashmap.h>
+    #include <common/err_def.h>
+    #include <common/shader_def.h>
     #include <data/assets.h>
     
     #include <math/deng_math.h>
     #include <deng/window.h>
     #include <deng/registry/registry.h>
     #include <deng/camera.h>
+
     #include <deng/opengl/cfg_vars.h>
+    #include <deng/opengl/shader_loader.h>
 #endif
 
 namespace deng {
@@ -95,11 +101,23 @@ namespace deng {
             std::vector<deng_Id> &m_assets;
             std::vector<deng_Id> &m_textures;
 
+            deng_ui32_t m_vert_buffer;
+
+            // Helper objects
+            std::unique_ptr<__gl_ShaderLoader> m_shader_loader;
+
+            
+        private:
+            void __mkBuffers();
+
         public:
             __gl_Renderer(__gl_ConfigVars &cfg, deng::__GlobalRegistry &reg, std::vector<deng_Id> &assets,
                 std::vector<deng_Id> &textures);
+
+            // Setup the initial OpenGL renderer
+            void setup();
             
-            
+
             // Main frame updating function
             void makeFrame();
         };

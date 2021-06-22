@@ -57,92 +57,49 @@
  * for any such Derivative Works as a whole, provided Your use,
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
- */ 
+ * ----------------------------------------------------------------
+ *  Name: gpu_mem - gpu memory handling structures and default values
+ *  Purpose: Provide some cross api memory handling structures and default values
+ *  Author: Karl-Mihkel Ott
+ */
 
 
-#ifndef __RENDERER_H
-#define __RENDERER_H
+#ifndef __GPU_MEMPROPS_H
+#define __GPU_MEMPROPS_H
 
-#ifdef __RENDERER_CPP
-    #include <vector>
-    #include <thread>
-    #include <chrono>
-    #include <mutex>
-    #include <queue>
-    #include <string>
-    #include <memory>
-    #include <array>
-    
-    #include <vulkan/vulkan.h>
-    #include <common/base_types.h>
-    #include <common/hashmap.h>
-    #include <common/uuid.h>
-    #include <common/err_def.h>
-    #include <data/assets.h>
+#define DENG_DEF_ASSET_CAP      65536   // Initialise with 64KB of memory for assets
+#define DENG_DEF_UI_CAP         32768   // Initialise with 32KB of memory for ui elements
 
-    #include <math/deng_math.h>
-    #include <deng/window.h>
-    #include <deng/camera.h>
 
-    #include <deng/registry/registry.h>
-#endif
-
-#include <common/shader_def.h>
-#include <imgui-layer/imgui_entity.h>
-#include <deng/vulkan/renderer.h>
-#include <deng/renderer/asset_man.h>
-#include <deng/renderer/data_updater.h>
-
-#define DENG_DEFAULT_NEAR_PLANE 0.1f
-#define DENG_DEFAULT_FAR_PLANE 25.0f
-#define DENG_FRAME_INTERVAL 50 // microseconds
+#define DENG_DEF_TEX_WIDTH      512
+#define DENG_DEF_TEX_HEIGHT     512
+#define DENG_DEF_TEX_SIZE       1048576 // bytes
+#define DENG_DEF_TEX_MEM_CAP    8388608 // bytes
 
 namespace deng {
 
-    // Frame renderer type
-    class Renderer;
-    typedef void(*PCustomRunFunc)(Renderer&);
+    struct BufferSectionInfo {
+        // Asset size information
+        deng_ui64_t asset_cap = DENG_DEF_ASSET_CAP; 
+        deng_ui64_t asset_size = 0;
 
+        // Indices size information
+        deng_ui64_t indices_cap = DENG_DEF_ASSET_CAP;
+        deng_ui64_t indices_size = 0;
 
-    /// Main renderer class
-    class Renderer : public __DataUpdater {   
-    private:
-        std::shared_ptr<vulkan::__vk_ConfigVars> m_vk_vars;
-        std::shared_ptr<vulkan::__vk_Renderer> m_vk_rend;   
-        dengMath::vec4<deng_vec_t> m_env_color;
-        deng_RendererHintBits m_hints;
-        deng_RendererHintBits m_api_bits;
-        deng_bool_t m_is_init;
+        // Image data size information
+        deng_ui64_t img_cap = 0;
+        deng_ui64_t img_size = 0;
 
-        Window *m_p_win;
-        Camera3D *m_p_cam;
+        // UI data size information
+        deng_ui64_t ui_cap = DENG_DEF_UI_CAP;
+        deng_ui64_t ui_size = 0;
 
-    public:
-        Renderer(deng_RendererHintBits hints, const dengMath::vec4<deng_vec_t> &env_color);
-
-        /// Setup graphics api specific renderer from the hints given in the constructor
-        void setup(Camera3D &main_cam, Window &main_win);
-
-
-        /// Update data, before creating new frame
-        void update();
-
-
-        /// Begin the rendering loop
-        void run();        
-
-
-        /// idle the renderer 
-        void idle();
-
-    // Render backend getter and setter methods
-    public:
-        void setUIDataPtr(__ImGuiData *p_data);
-        const std::vector<deng_Id> &getAssets();
-        const std::vector<deng_Id> &getTextures();
-        deng::__GlobalRegistry &getRegistry();
+        // Uniform buffer data size information
+        deng_ui64_t ubo_size = 0;
+        deng_ui64_t ubo_cap = 0;
+        deng_ui64_t ubo_asset_cap = 0;
     };
 }
-
 
 #endif

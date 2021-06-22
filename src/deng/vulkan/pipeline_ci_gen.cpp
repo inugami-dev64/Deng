@@ -117,38 +117,38 @@ namespace deng {
             // Check which shaders to read according to the pipeline type
             switch(pt) {
             case DENG_PIPELINE_TYPE_UNMAPPED_2D:
-                LOG("Pipeline type unmapped 2d, using files: " + std::string(UNMAPPED_VERT_SHADER_2D) + " " + 
-                    std::string(UNMAPPED_FRAG_SHADER_2D));
-                *p_vert = __readBinShader(UNMAPPED_VERT_SHADER_2D, vert_c);
-                *p_frag = __readBinShader(UNMAPPED_FRAG_SHADER_2D, frag_c);
+                LOG("Pipeline type unmapped 2d, using files: " + std::string(SPIR_V_UNMAPPED_VERT_SHADER_2D) + " " + 
+                    std::string(SPIR_V_UNMAPPED_FRAG_SHADER_2D));
+                *p_vert = __readBinShader(SPIR_V_UNMAPPED_VERT_SHADER_2D, vert_c);
+                *p_frag = __readBinShader(SPIR_V_UNMAPPED_FRAG_SHADER_2D, frag_c);
                 break;
 
             case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_2D:
-                LOG("Pipeline type texture mapped 2d, using files: " + std::string(TEXTURE_MAPPED_VERT_SHADER_2D) + " " + 
-                    std::string(TEXTURE_MAPPED_FRAG_SHADER_2D));
-                *p_vert = __readBinShader(TEXTURE_MAPPED_VERT_SHADER_2D, vert_c);
-                *p_frag = __readBinShader(TEXTURE_MAPPED_FRAG_SHADER_2D, frag_c);
+                LOG("Pipeline type texture mapped 2d, using files: " + std::string(SPIR_V_TEXTURE_MAPPED_VERT_SHADER_2D) + " " + 
+                    std::string(SPIR_V_TEXTURE_MAPPED_FRAG_SHADER_2D));
+                *p_vert = __readBinShader(SPIR_V_TEXTURE_MAPPED_VERT_SHADER_2D, vert_c);
+                *p_frag = __readBinShader(SPIR_V_TEXTURE_MAPPED_FRAG_SHADER_2D, frag_c);
                 break;
 
             case DENG_PIPELINE_TYPE_UNMAPPED_3D:
-                LOG("Pipeline type unmapped 3d, using files: " + std::string(UNMAPPED_VERT_SHADER_3D) + " " + 
-                    std::string(UNMAPPED_FRAG_SHADER_3D));
-                *p_vert = __readBinShader(UNMAPPED_VERT_SHADER_3D, vert_c);
-                *p_frag = __readBinShader(UNMAPPED_FRAG_SHADER_3D, frag_c);
+                LOG("Pipeline type unmapped 3d, using files: " + std::string(SPIR_V_UNMAPPED_VERT_SHADER_3D) + " " + 
+                    std::string(SPIR_V_UNMAPPED_FRAG_SHADER_3D));
+                *p_vert = __readBinShader(SPIR_V_UNMAPPED_VERT_SHADER_3D, vert_c);
+                *p_frag = __readBinShader(SPIR_V_UNMAPPED_FRAG_SHADER_3D, frag_c);
                 break;
 
             case DENG_PIPELINE_TYPE_TEXTURE_MAPPED_3D:
-                LOG("Pipeline type texture mapped 3d, using files: " + std::string(TEXTURE_MAPPED_VERT_SHADER_3D) + " " + 
-                    std::string(TEXTURE_MAPPED_FRAG_SHADER_3D));
-                *p_vert = __readBinShader(TEXTURE_MAPPED_VERT_SHADER_3D, vert_c);
-                *p_frag = __readBinShader(TEXTURE_MAPPED_FRAG_SHADER_3D, frag_c);
+                LOG("Pipeline type texture mapped 3d, using files: " + std::string(SPIR_V_TEXTURE_MAPPED_VERT_SHADER_3D) + " " + 
+                    std::string(SPIR_V_TEXTURE_MAPPED_FRAG_SHADER_3D));
+                *p_vert = __readBinShader(SPIR_V_TEXTURE_MAPPED_VERT_SHADER_3D, vert_c);
+                *p_frag = __readBinShader(SPIR_V_TEXTURE_MAPPED_FRAG_SHADER_3D, frag_c);
                 break;
 
             case DENG_PIPELINE_TYPE_UI:
-                LOG("Pipeline type ui, using files: " + std::string(UI_VERT_SHADER) + " " + 
-                    std::string(UI_FRAG_SHADER));
-                *p_vert = __readBinShader(UI_VERT_SHADER, vert_c);
-                *p_frag = __readBinShader(UI_FRAG_SHADER, frag_c);
+                LOG("Pipeline type ui, using files: " + std::string(SPIR_V_UI_VERT_SHADER) + " " + 
+                    std::string(SPIR_V_UI_FRAG_SHADER));
+                *p_vert = __readBinShader(SPIR_V_UI_VERT_SHADER, vert_c);
+                *p_frag = __readBinShader(SPIR_V_UI_FRAG_SHADER, frag_c);
                 break;
 
             default:

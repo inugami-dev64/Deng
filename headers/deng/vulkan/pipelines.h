@@ -67,21 +67,13 @@
 #ifndef __VK_PIPELINES_H
 #define __VK_PIPELINES_H
 
-// Pipeline indices
-#define UM2D_I          0
-#define TM2D_I          1
-#define UM3D_I          2
-#define TM3D_I          3
-#define UI_I            4
-#define PIPELINE_C      5
-
-
 #ifdef __VK_PIPELINES_CPP
     #include <array>
     #include <vector>
     #include <vulkan/vulkan.h>
 
     #include <common/base_types.h>
+    #include <common/shader_def.h>
     #include <data/assets.h>
     #include <common/err_def.h>
 

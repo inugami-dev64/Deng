@@ -60,7 +60,6 @@
  */ 
 
 
-
 #define __GL_RENDERER_CPP
 #include <deng/opengl/renderer.h>
 
@@ -75,6 +74,34 @@ namespace deng {
             std::vector<deng_Id> &textures
         ) : m_reg(reg), m_assets(assets), m_textures(textures) {
             m_cfg_vars = cfg;
+            
+            // Load all OpenGL functions
+            #ifdef __linux__
+                int status = gladLoadGLLoader((GLADloadproc) glXGetProcAddress);
+            #endif
+            LOG("Status: " + std::to_string(status));
+            DENG_ASSERT("Failed to load OpenGL process loader", status);
+
+            status = gladLoadGL();
+            DENG_ASSERT("Failed to load OpenGL functions", status);
+
+
+            // Load all shaders into OpenGL
+            m_shader_loader = std::make_unique<__gl_ShaderLoader>();
+        }
+
+
+        /// Create a new buffer and copy data to it
+        void __gl_Renderer::__mkBuffers() {
+            const das_ObjPosData2D verts[] = {
+                { -0.5f, -0.5f },
+                { 0.0f, 0.5f },
+                { 0.5f, -0.5f }
+            };
+
+            glGenBuffers(1, &m_vert_buffer);
+            glBindBuffer(GL_ARRAY_BUFFER, m_vert_buffer);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
         }
 
 
@@ -83,13 +110,6 @@ namespace deng {
             glClearColor(m_cfg_vars.background.first, m_cfg_vars.background.second, m_cfg_vars.background.third,
                 m_cfg_vars.background.fourth);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            // TEMPORARY
-            glBegin(GL_TRIANGLES);
-                glColor3f(1.0f, 0.0f, 0.0f); glVertex3f(-0.5f, 0.5f, 0.0f);
-                glColor3f(0.0f, 1.0f, 0.0f); glVertex3f(0.0f, -0.5f, 0.0f);
-                glColor3f(0.0f, 0.0f, 1.0f); glVertex3f(0.5f, 0.5f, 0.0f);
-            glEnd();
         }
     }
 }
