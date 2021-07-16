@@ -67,10 +67,6 @@
 namespace deng {
     namespace vulkan {
 
-        // This is a fucking war crime
-        extern deng_ui32_t __max_frame_c;
-
-
         __vk_UniformBufferManager::__vk_UniformBufferManager (
             std::vector<deng_Id> &assets,
             const deng_ui64_t min_align, 
@@ -80,7 +76,7 @@ namespace deng {
             m_buffer_data(buf_data) {}
 
 
-        /// Create new uniform buffer instance and allocate memory for it.
+        /// Create a new uniform buffer instance and allocate memory for it.
         /// WARNING: This method call expects that uniform buffer and its memory
         /// have been freed or are not initialised previously
         void __vk_UniformBufferManager::__mkUniformBuffer (
@@ -94,26 +90,17 @@ namespace deng {
             buf_sec.ubo_asset_cap = asset_cap;
 
             // Calculate the chunk size for uniform data
-            m_ubo_chunk_size = cm_FindChunkSize(m_min_align,
+            m_global_ubo_chunk_size = cm_FindChunkSize(m_min_align,
                 sizeof(__UniformObjectTransform)) + cm_FindChunkSize(
                 m_min_align, sizeof(__UniformObjectTransform2D)) +
                 cm_FindChunkSize(m_min_align, sizeof(__UniformLightData));
 
-            LOG("__UniformObjectTransform size: " + std::to_string(cm_FindChunkSize(m_min_align, 
-                sizeof(__UniformObjectTransform))) + ", real: " + std::to_string(sizeof(__UniformObjectTransform)));
-
-            LOG("__UniformObjectTransform2D size: " + std::to_string(cm_FindChunkSize(m_min_align, 
-                sizeof(__UniformObjectTransform2D))) + ", real: " + std::to_string(sizeof(__UniformObjectTransform2D)));
-
-            LOG("__UniformLightData size: " + std::to_string(cm_FindChunkSize(m_min_align, 
-                sizeof(__UniformLightData))) + ", real: " + std::to_string(sizeof(__UniformLightData)));
-
-            LOG("Ubo chunk size, min_align: " + std::to_string(m_ubo_chunk_size) + ", " + std::to_string(m_min_align));
+            buf_sec.ubo_non_asset_size = __max_frame_c * m_global_ubo_chunk_size;
             
-            // Calculate the initial uniform buffer capacity 
+            // Calculate the initial asset uniform data size and overall asset data capacity
             // Data is stored like this: fc * (Transform + Transform2D + LightData) + n * ColorData
-            buf_sec.ubo_cap = __max_frame_c * (m_ubo_chunk_size + asset_cap * 
-                cm_FindChunkSize(m_min_align, sizeof(__UniformAssetData)));
+            buf_sec.ubo_asset_size = __max_frame_c * (asset_cap * cm_FindChunkSize(m_min_align, std::max(sizeof(__UniformAssetData), sizeof(__UniformAssetData2D))));
+            buf_sec.ubo_cap = buf_sec.ubo_non_asset_size + buf_sec.ubo_asset_size;
             
             // Create a new uniform buffer instance
             VkMemoryRequirements mem_req = __vk_BufferCreator::makeBuffer(device, gpu, 
@@ -173,7 +160,7 @@ namespace deng {
 
         /// Reset uniform buffer size to first asset color data instance
         void __vk_UniformBufferManager::__resetUboBufferSize(deng::BufferSectionInfo &buf_sec) {
-            buf_sec.ubo_size = __max_frame_c * m_ubo_chunk_size;
+            buf_sec.ubo_asset_size = __max_frame_c * m_global_ubo_chunk_size;
         }
 
 
@@ -189,26 +176,26 @@ namespace deng {
             // Retrieve the base asset and set its ubo offset
             RegType &reg_asset = m_reg.retrieve(asset.base_id, 
                 DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
-            reg_asset.asset.offsets.ubo_offset = buf_sec.ubo_size;
+            reg_asset.asset.offsets.ubo_offset = buf_sec.ubo_asset_size;
 
             // Increase the used size by required margin 
             if(reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_UNMAPPED || 
                reg_asset.asset.asset_mode == DAS_ASSET_MODE_2D_TEXTURE_MAPPED) {
                 LOG("Mapping ubo data for 2D assets");
-                buf_sec.ubo_size += __max_frame_c * cm_FindChunkSize(m_min_align,
+                buf_sec.ubo_asset_size += __max_frame_c * cm_FindChunkSize(m_min_align,
                     sizeof(__UniformAssetData2D));
             }
 
             else {
-                buf_sec.ubo_size += __max_frame_c * cm_FindChunkSize(m_min_align,
+                buf_sec.ubo_asset_size += __max_frame_c * cm_FindChunkSize(m_min_align,
                     sizeof(__UniformAssetData));
             }
 
             // Check if buffer reallocation is needed 
-            if(buf_sec.ubo_size > buf_sec.ubo_cap) {
-                // Capcity is either twice the current capacity or twice the required capacity
-                __reallocUniformBufferMemory(device, gpu, cmd_pool, g_queue, 
-                    std::max(buf_sec.ubo_asset_cap << 1, cm_ToPow2I64(buf_sec.ubo_size << 1)), buf_sec);
+            if(buf_sec.ubo_asset_size > buf_sec.ubo_cap) {
+                // Capcity is either 1.5x the current capacity or 1.5x the required capacity
+                const deng_ui64_t req_size = std::max(buf_sec.ubo_asset_cap * 3 / 2, buf_sec.ubo_asset_size * 3 / 2) + buf_sec.ubo_non_asset_size;
+                __reallocUniformBufferMemory(device, gpu, cmd_pool, g_queue, req_size, buf_sec);
             }
 
             // Copy the data to reserved memory area in the buffer
@@ -229,7 +216,7 @@ namespace deng {
             ubo.view = p_cam->getViewMat();
 
             __vk_BufferCreator::cpyToBufferMem(device, sizeof(__UniformObjectTransform),
-                &ubo, m_buffer_data.uniform_buffer_mem, current_image * m_ubo_chunk_size);
+                &ubo, m_buffer_data.uniform_buffer_mem, current_image * m_global_ubo_chunk_size);
         }
 
 
@@ -239,7 +226,6 @@ namespace deng {
             deng_ui32_t current_image, 
             __vk_Asset &asset
         ) {
-
             // Retrieve base asset from the registry
             RegType &reg_asset = m_reg.retrieve(asset.base_id, 
                 DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
@@ -296,7 +282,7 @@ namespace deng {
 
                 deng_SupportedRegType type = {};
                 // Retrieve the current light source
-                RegType reg_light = m_reg.retrieve(light_srcs[i],
+                RegType &reg_light = m_reg.retrieve(light_srcs[i],
                     DENG_SUPPORTED_REG_TYPE_PT_LIGHT | DENG_SUPPORTED_REG_TYPE_SUN_LIGHT |
                     DENG_SUPPORTED_REG_TYPE_DIR_LIGHT, &type);
 
@@ -315,7 +301,7 @@ namespace deng {
 
             CPY:
             __vk_BufferCreator::cpyToBufferMem(device, sizeof(__UniformLightData),
-                &ubo, m_buffer_data.uniform_buffer_mem, current_image * m_ubo_chunk_size +
+                &ubo, m_buffer_data.uniform_buffer_mem, current_image * m_global_ubo_chunk_size +
                 cm_FindChunkSize(m_min_align, sizeof(__UniformObjectTransform)) + 
                 cm_FindChunkSize(m_min_align, sizeof(__UniformObjectTransform2D)));
 
@@ -336,6 +322,6 @@ namespace deng {
 
         
         /// Getter methods
-        deng_ui64_t __vk_UniformBufferManager::getUboChunkSize() { return m_ubo_chunk_size; }
+        deng_ui64_t __vk_UniformBufferManager::getUboChunkSize() { return m_global_ubo_chunk_size; }
     }
 }

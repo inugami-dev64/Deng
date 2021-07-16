@@ -84,6 +84,12 @@ extern "C" {
     #include <common/cerr_def.h>
 
     #include <data/assets.h>
+
+    /// Asset mode specific index buffer merging algorithms
+    void das_MergeUM2DIndexBuffers(das_Asset *p_asset);
+    void das_MergeTM2DIndexBuffers(das_Asset *p_asset);
+    void das_MergeUM3DIndexBuffers(das_Asset *p_asset);
+    void das_MergeTM3DIndexBuffers(das_Asset *p_asset);
 #endif
 
 
@@ -101,6 +107,10 @@ void das_MkAssetNormals(das_Asset *p_asset);
  */
 das_Asset *das_CreateNewAsset(das_ObjPosData *pd, size_t pd_c, das_ObjTextureData *td,
     size_t td_c, das_ObjNormalData *nd, size_t nd_c, das_IndicesDynamic *idyn, size_t ind_c);
+
+
+/// Merge multiple index buffers into single index buffer and duplicate associated vertex attributes if needed
+void das_MergeIndexBuffers(das_Asset *p_asset);
 
 
 #ifdef __cplusplus

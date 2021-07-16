@@ -69,6 +69,9 @@
 
 /// Universal asset element offset container struct 
 typedef struct das_OffsetData {
+    // Merged vertex data offset
+    deng_ui64_t mer_offset;
+
     // Vertices offsets
     deng_ui64_t pos_offset;
     deng_ui64_t tex_offset;
@@ -122,23 +125,62 @@ typedef struct das_ObjColorData {
 } das_ObjColorData;
 
 
+/// Vertex data types for OpenGL
+typedef struct das_GL3DVertex {
+    das_ObjPosData pos;
+    das_ObjTextureData tex;
+    das_ObjNormalData norm;
+} das_GL3DVertex;
+
+
+typedef struct das_GL3DVertexUnmapped {
+    das_ObjPosData pos;
+    das_ObjNormalData norm;
+} das_GL3DVertexUnmapped;
+
+
+typedef struct das_GL2DVertex {
+    das_ObjPosData2D pos;
+    das_ObjTextureData tex;
+} das_GL2DVertex;
+
+
+typedef das_ObjPosData2D das_GL2DVertexUnmapped;
+
+
 /// Dynamic vertices structures
 typedef struct __das_VertDynamic3D {
-    das_ObjPosData *pos;
-    size_t pn;
-    das_ObjTextureData *tex;
-    size_t tn;
-    das_ObjNormalData *norm;
-    size_t nn;
+    struct {
+        das_ObjPosData *pos;
+        size_t pn;
+        das_ObjTextureData *tex;
+        size_t tn;
+        das_ObjNormalData *norm;
+        size_t nn;
+    } mul;
+
+    struct {
+        das_GL3DVertex *vert;
+        das_GL3DVertexUnmapped *uvert;
+        size_t n;
+    } mer;
 } __das_VertDynamic3D;
 
 
-typedef struct __das_VertDynamic2D {
-    das_ObjPosData2D *pos;
-    size_t pn;
-    das_ObjTextureData *tex;
-    size_t tn;
-    deng_ui32_t hier;
+typedef union __das_VertDynamic2D {
+    struct {
+        das_ObjPosData2D *pos;
+        size_t pn;
+        das_ObjTextureData *tex;
+        size_t tn;
+        deng_ui32_t hier;
+    } mul;
+
+    struct {
+        das_GL2DVertex *vert;
+        das_GL2DVertexUnmapped *uvert;
+        size_t n;
+    } mer;
 } __das_VertDynamic2D;
 
 
@@ -151,9 +193,10 @@ typedef union das_VertDynamic {
 
 /// Structure for universal heap allocated indices data storage
 typedef struct das_IndicesDynamic {
-    deng_ui32_t *pos;
-    deng_ui32_t *tex;
-    deng_ui32_t *norm;
+    deng_idx_t *pos;
+    deng_idx_t *tex;
+    deng_idx_t *norm;
+    deng_idx_t *gl;
     size_t n;
 } das_IndicesDynamic;
 
@@ -200,6 +243,7 @@ typedef struct das_Asset {
     das_AssetMode asset_mode;   // Asset mode specifier
     deng_bool_t is_shown;       // False if asset is ignored from draw calls, otherwise True
     deng_bool_t is_transformed; // Toggle transformation on and off
+    deng_bool_t is_opengl;      // Flag to determine if the asset is rendered in OpenGL backend renderer 
     deng_bool_t force_unmap;    // Force the asset not to use texture image and texture mapping
     das_VertDynamic vertices;   // All asset vertices that will be passed to command buffers
     das_IndicesDynamic indices; // All asset indices that will be passed to command buffers

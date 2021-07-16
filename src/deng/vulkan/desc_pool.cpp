@@ -66,8 +66,6 @@
 
 namespace deng {
     namespace vulkan {
-        /// Maximum frame in flight count specifier
-        extern deng_ui32_t __max_frame_c;
 
         void __vk_DescriptorPoolCreator::__mk2DUnmappedDescPool(VkDevice device) {
             std::array<VkDescriptorPoolSize, 2> desc_pool_sizes;

@@ -67,17 +67,8 @@
 
 namespace dengMath {
 
-    /*********************************************/
-    /*********************************************/
-    /********* vec4 operators and methods ********/
-    /*********************************************/
-    /*********************************************/
-
-    /*
-     * Add all vector coordinate members to members of another vector
-     */
     template<typename T>
-    vec4<T> vec4<T>::operator+(const vec4<T> &vec) const {
+    const vec4<T> vec4<T>::operator+(const vec4<T> &vec) const {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             vec4<T> out = {
                 first + vec.first,
@@ -91,11 +82,8 @@ namespace dengMath {
     }
 
 
-    /*
-     * Add all vector coordinate members with to a constant
-     */
     template<typename T>
-    vec4<T> vec4<T>::operator+(const T &c) const {
+    const vec4<T> vec4<T>::operator+(const T c) const {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             vec4<T> out = {
                 first + c,
@@ -111,11 +99,8 @@ namespace dengMath {
     }
 
 
-    /*
-     * Substract all vector coordinate members with members of another vector
-     */
     template<typename T>
-    vec4<T> vec4<T>::operator-(const vec4<T> &vec) const {
+    const vec4<T> vec4<T>::operator-(const vec4<T> &vec) const {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             vec4<T> out = {
                 first - vec.first,
@@ -131,11 +116,8 @@ namespace dengMath {
     }
 
 
-    /*
-     * Substract all vector coordinate members with a constant
-     */
     template<typename T>
-    vec4<T> vec4<T>::operator-(const T &c) const {
+    const vec4<T> vec4<T>::operator-(const T c) const {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             vec4<T> out = {
                 first - c,
@@ -151,20 +133,10 @@ namespace dengMath {
     }
 
 
-    /*
-     * Find the dot product between current vector instance and the
-     * vector given as an argument
-     */
     template<typename T>
-    T vec4<T>::operator*(const vec4<T> &vec) const {
+    const T vec4<T>::operator*(const vec4<T> &vec) const {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
-            T out = (
-                first * vec.first +
-                second * vec.second +
-                third * vec.third +
-                fourth * vec.fourth
-            );
-
+            T out = (first * vec.first + second * vec.second + third * vec.third + fourth * vec.fourth);
             return out; 
         }
 
@@ -172,11 +144,8 @@ namespace dengMath {
     }
 
 
-    /*
-     * Multiply all vector coordinate members with a constant
-     */
     template<typename T>
-    vec4<T> vec4<T>::operator*(const T &c) const {
+    const vec4<T> vec4<T>::operator*(const T c) const {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             vec4<T> out = {
                 first * c,
@@ -192,11 +161,8 @@ namespace dengMath {
     }
 
 
-    /*
-     * Divide all vector coordinate members with a constant
-     */
     template<typename T>
-    vec4<T> vec4<T>::operator/(const T &c) const {
+    const vec4<T> vec4<T>::operator/(const T c) const {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             vec4<T> out = {
                 first / c,
@@ -212,12 +178,8 @@ namespace dengMath {
     }
 
 
-    /*
-     * Multiply all vector coordinate members with constant 
-     * and store the value in current vector instance
-     */
     template<typename T>
-    void vec4<T>::operator*=(const T &c) {
+    void vec4<T>::operator*=(const T c) {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             first *= c;
             second *= c;
@@ -227,10 +189,13 @@ namespace dengMath {
     }
 
 
-    /*
-     * Add all vector coordinate members to another vector coordinates
-     * and store the value in current vector instance
-     */
+    template<typename T>
+    void vec4<T>::operator*=(const mat4<T> &mat) {
+        if(std::is_floating_point<T>::value || std::is_integral<T>::value)
+            *this = mat * (*this);
+    }
+
+
     template<typename T>
     void vec4<T>::operator+=(const vec4<T> &vec) {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
@@ -242,12 +207,8 @@ namespace dengMath {
     }
 
 
-    /*
-     * Add all vector coordinate members to a constant
-     * and store the value in current vector instance
-     */
     template<typename T>
-    void vec4<T>::operator+=(const T &c) {
+    void vec4<T>::operator+=(const T c) {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             first += c;
             second += c;
@@ -257,10 +218,6 @@ namespace dengMath {
     }
 
 
-    /*
-     * Substract all vector coordinate members with other vector coordinate members
-     * and store the value in current vector instance
-     */
     template<typename T>
     void vec4<T>::operator-=(const vec4<T> &vec) {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
@@ -272,12 +229,8 @@ namespace dengMath {
     }
 
 
-    /*
-     * Substract all vector coordinate members with a constant
-     * and store the value in current vector instance
-     */
     template<typename T>
-    void vec4<T>::operator-=(const T &c) {
+    void vec4<T>::operator-=(const T c) {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             first -= c;
             second -= c;
@@ -287,12 +240,8 @@ namespace dengMath {
     }
 
 
-    /*
-     * Divide all vector coordinate members with constant c
-     * and store the value in current vector instance
-     */
     template<typename T>
-    void vec4<T>::operator/=(const T &c) {
+    void vec4<T>::operator/=(const T c) {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             first /= c;
             second /= c;
@@ -302,11 +251,8 @@ namespace dengMath {
     }
 
 
-    /*
-     * Check if vector value is equal to other vector's value
-     */
     template<typename T>
-    deng_bool_t vec4<T>::operator==(const vec4<T> &vec) const { 
+    const deng_bool_t vec4<T>::operator==(const vec4<T> &vec) const { 
         return (deng_bool_t) (                
             first == vec.first && 
             second == vec.second && 
@@ -316,23 +262,6 @@ namespace dengMath {
     }
 
 
-    /*
-     * Assign das_ObjColorData instance values to current vector
-     */
-    template<typename T>
-    void vec4<T>::operator=(const das_ObjColorData &color) {
-        if(std::is_floating_point<T>::value) {
-            first = color.col_r;
-            second = color.col_g;
-            third = color.col_b;
-            fourth = color.col_a;
-        }
-    }
-
-
-    /*
-     * Assign das_ObjPosData instance values to current vector
-     */
     template<typename T>
     void vec4<T>::operator=(const das_ObjPosData &vert) {
         if(std::is_floating_point<T>::value) {
@@ -344,9 +273,17 @@ namespace dengMath {
     }
 
 
-    /*
-     * Assign das_ObjNormalData instance values to current vector
-     */
+    template<typename T>
+    void vec4<T>::operator=(const das_ObjPosData2D vert) {
+        if(std::is_floating_point<T>::value) {
+            first = vert.vert_x;
+            second = vert.vert_y;
+            third = 0.0f;
+            fourth = 0.0f;
+        }
+    }
+
+
     template<typename T>
     void vec4<T>::operator=(const das_ObjNormalData &nor) {
         if(std::is_floating_point<T>::value) {
@@ -358,91 +295,82 @@ namespace dengMath {
     }
 
 
-    /*
-     * Assign vec2 vector struct instance values to current vector
-     */
+    template<typename T>
+    void vec4<T>::operator=(const das_ObjColorData &color) {
+        if(std::is_floating_point<T>::value) {
+            first = color.col_r;
+            second = color.col_g;
+            third = color.col_b;
+            fourth = color.col_a;
+        }
+    }
+
+
     template<typename T>
     void vec4<T>::operator=(const vec2<T> &vec) {
-        if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
-            first = vec.first;
-            second = vec.second;
-            third = 0.0f;
-            fourth = 1.0f;
-        }
+        first = vec.first;
+        second = vec.second;
     }
 
 
-    /*
-     * Assign vec3 vector struct instance values to current vector
-     */
     template<typename T>
     void vec4<T>::operator=(const vec3<T> &vec) {
-        if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
-            first = vec.first;
-            second = vec.second;
-            third = vec.third;
-            fourth = 1.0f;
-        }
+        first = vec.first;
+        second = vec.second;
+        third = vec.third;
     }
 
 
-    /*
-     * Check if the vector values are equal to das_ObjColorData values
-     */
     template<typename T>
-    deng_bool_t vec4<T>::operator==(const das_ObjColorData &color) const {
-        if(std::is_floating_point<T>::value) {
-            return (deng_bool_t) (
-                first == color.col_r &&
-                second == color.col_g &&
-                third == color.col_b &&
-                fourth == color.col_a
-            );
-        }
-
+    const deng_bool_t vec4<T>::operator==(const das_ObjPosData &vert) const {
+        if(std::is_floating_point<T>::value)
+            return static_cast<deng_bool_t>(first == vert.vert_x && second == vert.vert_y && third == vert.vert_z);
         else return false;
     }
 
 
-    /*
-     * Check if the vector values are equal to das_ObjPosData values
-     */
     template<typename T>
-    deng_bool_t vec4<T>::operator==(const das_ObjPosData &vert) const {
-        if(std::is_floating_point<T>::value) {
-            return (deng_bool_t) (
-                first == vert.vert_x &&
-                second == vert.vert_y &&
-                third == vert.vert_z
-            );
-        }
-
+    const deng_bool_t vec4<T>::operator==(const das_ObjPosData2D vert) const {
+        if(std::is_floating_point<T>::value)
+            return static_cast<deng_bool_t>(first = vert.vert_x && second == vert.vert_y);
         else return false;
     }
 
 
-    /*
-     * Check if the vector values are equal to das_ObjNormalData values
-     */
-    template<typename T>
-    deng_bool_t vec4<T>::operator==(const das_ObjNormalData &norm) const {
-        if(std::is_floating_point<T>::value) {
-            return (deng_bool_t) (
-                first == norm.nor_x &&
-                second == norm.nor_y &&
-                third == norm.nor_z
-            );
-        }
 
+    template<typename T>
+    const deng_bool_t vec4<T>::operator==(const das_ObjColorData &color) const {
+        if(std::is_floating_point<T>::value)
+            return static_cast<deng_bool_t>(first == color.col_r && second == color.col_g && 
+                third == color.col_b && fourth == color.col_a);
         else return false;
+    }
+
+
+    template<typename T>
+    const deng_bool_t vec4<T>::operator==(const das_ObjNormalData &norm) const {
+        if(std::is_floating_point<T>::value) 
+            return static_cast<deng_bool_t>(first == norm.nor_x && second == norm.nor_y && 
+                third == norm.nor_z);
+        else return false;
+    }
+
+
+    template<typename T>
+    const deng_bool_t vec4<T>::operator==(const vec3<T> &vec) const {
+        return static_cast<deng_bool_t>(first == vec.first && second == vec.second &&
+            third == vec.third);
+    }
+
+
+    template<typename T>
+    const deng_bool_t vec4<T>::operator==(const vec2<T> &vec) const {
+        return static_cast<deng_bool_t>(first == vec.first && second == vec.second);
     }
         
     
-    /*
-     * Get the current length of the vector
-     */
     template<typename T>
-    T vec4<T>::length() const {
+    const T vec4<T>::length() const {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
             return (T) sqrt (
                 first * first +
@@ -456,9 +384,6 @@ namespace dengMath {
     }
 
 
-    /*
-     * Normalise the vector to length 1
-     */
     template<typename T>
     void vec4<T>::norm() {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
@@ -471,15 +396,10 @@ namespace dengMath {
     }
 
 
-    /*
-     * Find the crossproduct of two vectors
-     * PS! Only first three axes are used
-     */
     template<typename T>
-    template<typename CT>
-    vec4<CT> vec4<T>::cross(const vec4<CT> &vec1, const vec4<CT> &vec2) {
+    const vec4<T> vec4<T>::cross(const vec4<T> &vec1, const vec4<T> &vec2) {
         if(std::is_floating_point<T>::value || std::is_integral<T>::value) {
-            vec4<CT> out = (vec4<CT>) {
+            vec4<T> out = (vec4<T>) {
                 vec1.second * vec2.third -
                 vec1.third * vec2.second,
                 vec1.third * vec2.first -
@@ -492,7 +412,7 @@ namespace dengMath {
             return out;
         }
 
-        else return vec4<CT>{};
+        else return vec4<T>{};
     }
 }
 

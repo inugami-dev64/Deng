@@ -89,6 +89,7 @@
 #endif
 
 #include <deng/lighting/light_srcs.h>
+#include <deng/opengl/resources.h>
 #include <deng/vulkan/assets.h>
 
 
@@ -97,9 +98,10 @@ namespace deng {
     /// Data union for all suitable registry types that can be submitted
     union RegType {
         das_Asset asset;
-        vulkan::__vk_Asset vk_asset;
         das_Texture tex;
+        vulkan::__vk_Asset vk_asset;
         vulkan::__vk_Texture vk_tex;
+        opengl::__gl_Texture gl_tex;
         __PtLightSrc pt_light;
         __SunLightSrc sun_light;
         __DirectionLightSrc dir_light;

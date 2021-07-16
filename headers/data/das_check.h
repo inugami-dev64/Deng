@@ -116,28 +116,20 @@ typedef enum das_Error {
 #define das_FrameCountCheck(fc) ( fc <= 0 ? DAS_ERROR_INVALID_ANIMATION_FRAME_COUNT : DAS_ERROR_SUCCESS )
 
 
-/*
- * Check if the requested memory size is available for reading otherwise
- * throw a runtime error
- */
-void das_ErrBufferReadCheck(size_t req_size, size_t max_size, char *file_name);
+/// Check if the requested memory size is available for reading otherwise
+/// throw a runtime error
+void das_ErrBufferReadCheck(size_t req_size, size_t max_size, const char *file_name);
 
 
-/*
- * Check if the given header specifier is valid
- */
-void das_CheckHdrName(char *name, char *exp_name, char *file_name);
+/// Check if the given header specifier is valid
+void das_CheckHdrName(char *name, char *exp_name, const char *file_name);
 
 
-/*
- * Check if provided uuid is valid
- */
+/// Check if provided uuid is valid
 das_Error das_UuidCheck(char *uuid);
 
 
-/*
- * Check if magic number provided is valid or not
- */
+/// Check if magic number provided is valid or not
 das_Error das_MagicNumberCheck(deng_ui64_t num);
 
 #endif

@@ -70,28 +70,28 @@ void tmpLog(das_Asset *p_asset) {
     char buf[512];
 
     // Log every position vertex
-    for(size_t i = 0; i < p_asset->vertices.v3d.pn; i++) {
+    for(size_t i = 0; i < p_asset->vertices.v3d.mul.pn; i++) {
         memset(buf, 0, 512);
-        sprintf(buf, "v %f %f %f", p_asset->vertices.v3d.pos[i].vert_x, 
-            p_asset->vertices.v3d.pos[i].vert_y, p_asset->vertices.v3d.pos[i].vert_z);
+        sprintf(buf, "v %f %f %f", p_asset->vertices.v3d.mul.pos[i].vert_x, 
+            p_asset->vertices.v3d.mul.pos[i].vert_y, p_asset->vertices.v3d.mul.pos[i].vert_z);
 
         cm_LogWrite(buf);
     }
 
     // Log every texture vertex
-    for(size_t i = 0; i < p_asset->vertices.v3d.tn; i++) {
+    for(size_t i = 0; i < p_asset->vertices.v3d.mul.tn; i++) {
         memset(buf, 0, 512);
-        sprintf(buf, "vt %f %f", p_asset->vertices.v3d.tex[i].tex_x, 
-            p_asset->vertices.v3d.tex[i].tex_y);
+        sprintf(buf, "vt %f %f", p_asset->vertices.v3d.mul.tex[i].tex_x, 
+            p_asset->vertices.v3d.mul.tex[i].tex_y);
 
         cm_LogWrite(buf);
     }
 
     // Log every vertex normal
-    for(size_t i = 0; i < p_asset->vertices.v3d.nn; i++) {
+    for(size_t i = 0; i < p_asset->vertices.v3d.mul.nn; i++) {
         memset(buf, 0, 512);
-        sprintf(buf, "vn %f %f %f", p_asset->vertices.v3d.norm[i].nor_x, 
-            p_asset->vertices.v3d.norm[i].nor_y, p_asset->vertices.v3d.norm[i].nor_z);
+        sprintf(buf, "vn %f %f %f", p_asset->vertices.v3d.mul.norm[i].nor_x, 
+            p_asset->vertices.v3d.mul.norm[i].nor_y, p_asset->vertices.v3d.mul.norm[i].nor_z);
 
         cm_LogWrite(buf);
     }
@@ -117,11 +117,11 @@ void das_LoadAsset (
     das_AssetMode dst_mode,
     das_ObjColorData color,
     deng_bool_t read_meta,
-    char *tex_uuid,
-    char *file_name
+    const char *tex_uuid,
+    const char *file_name
 ) {
     p_asset->asset_mode = dst_mode;
-    p_asset->tex_uuid = tex_uuid;
+    p_asset->tex_uuid = (char*) tex_uuid;
     p_asset->diffuse = DAS_DEFAULT_DIFFUSE_COLOR;
     p_asset->ambient = DAS_DEFAULT_AMBIENT_COLOR;
     p_asset->specular = DAS_DEFAULT_SPECULAR_COLOR;
@@ -129,7 +129,7 @@ void das_LoadAsset (
     p_asset->force_unmap = false;
 
     // Write all file contents into a buffer
-    __das_ReadAssetFile((char*) file_name);
+    __das_ReadAssetFile((const char*) file_name);
 
     das_INFO_HDR inf_hdr = { 0 };
     das_VERT_HDR vert_hdr = { 0 };
@@ -195,7 +195,7 @@ void das_CleanMeta() {
 
 
 /// Read generic of data from __cbuf with bounds checking
-void __das_DataRead(void *buf, size_t chunk_size, size_t n, char *file_name) {
+void __das_DataRead(void *buf, size_t chunk_size, size_t n, const char *file_name) {
     das_ErrBufferReadCheck(chunk_size * n, __buf_size, file_name);
     memcpy(buf, __cbuf + __offset, chunk_size * n);
     __offset += chunk_size * n;
@@ -203,7 +203,7 @@ void __das_DataRead(void *buf, size_t chunk_size, size_t n, char *file_name) {
 
 
 /// Read asset information from INFO_HDR
-void __das_ReadINFO_HDR(das_INFO_HDR *out_hdr, char *file_name) {
+void __das_ReadINFO_HDR(das_INFO_HDR *out_hdr, const char *file_name) {
     // INFO_HDR is always the first header in .das file
     __das_DataRead(out_hdr, sizeof(das_INFO_HDR), 1, file_name);
 
@@ -222,7 +222,7 @@ void __das_ReadINFO_HDR(das_INFO_HDR *out_hdr, char *file_name) {
 
 
 /// Verify that all custom headers are skipped from reading
-void __das_SkipMetaHeaders(char *file_name) {
+void __das_SkipMetaHeaders(const char *file_name) {
     deng_ui32_t *indices;
     deng_ui32_t ind_c = 0; 
 
@@ -253,7 +253,7 @@ void __das_SkipMetaHeaders(char *file_name) {
 
 /// Read meta information contained between BEG_HDR and END_HDR
 /// This function returns pointer to heap allocated memory, manual cleanup is necessary
-void __das_ReadMeta(char *file_name) {
+void __das_ReadMeta(const char *file_name) {
     // Check if previous metadata has been allocated and if it has 
     // then perform cleanup
     if(__meta_c && __meta_infos) {
@@ -301,7 +301,7 @@ void __das_ReadMeta(char *file_name) {
 /// Read asset information from VERT_HDR
 void __das_ReadVERT_HDR (
     das_VERT_HDR *out_hdr,
-    char *file_name
+    const char *file_name
 ) {
     if(__offset + sizeof(das_VERT_HDR) >= __buf_size)
         __DAS_READ_CORRUPT_ERROR(file_name);
@@ -323,7 +323,7 @@ void __das_ReadVERT_HDR (
 void __das_ReadGenVertHdr (
     __das_VertTemplate *out_hdr,
     char *hdr_name,
-    char *file_name
+    const char *file_name
 ) {
     __das_DataRead(out_hdr, sizeof(__das_VertTemplate), 1, file_name);
     char pad_hdr[8] = {0};
@@ -338,7 +338,7 @@ void __das_ReadGenVertHdr (
 /// Read asset information from INDX_HDR
 void __das_ReadINDX_HDR (
     das_INDX_HDR *out_hdr,
-    char *file_name
+    const char *file_name
 ) {
     __das_DataRead(out_hdr, sizeof(das_INDX_HDR), 1, file_name);
     char pad_hdr[9] = {0};
@@ -351,7 +351,7 @@ void __das_ReadINDX_HDR (
 
 
 /// Read all data from asset file into buffer for reading
-void __das_ReadAssetFile(char *file_name) {
+void __das_ReadAssetFile(const char *file_name) {
     FILE *file;
     __offset = 0;
     file = fopen(file_name, "rb");
@@ -383,7 +383,7 @@ void __das_ReadCleanup() {
 /// Copy asset vertices from buffer to out_vert
 void __das_CopyVertices (
     das_Asset *p_asset,
-    char *file_name
+    const char *file_name
 ) {
     das_VPOS_HDR pos_hdr = { 0 };
     das_VTEX_HDR tex_hdr = { 0 };
@@ -393,12 +393,12 @@ void __das_CopyVertices (
     __das_DataRead(&pos_hdr, sizeof(das_VPOS_HDR), 1, file_name);
     
     // Allocate enough memory for position vertices
-    p_asset->vertices.v3d.pn = pos_hdr.vert_c;
-    p_asset->vertices.v3d.pos = (das_ObjPosData*) malloc(cm_ToPow2I64(p_asset->vertices.v3d.pn * 
+    p_asset->vertices.v3d.mul.pn = pos_hdr.vert_c;
+    p_asset->vertices.v3d.mul.pos = (das_ObjPosData*) malloc(cm_ToPow2I64(p_asset->vertices.v3d.mul.pn * 
         sizeof(das_ObjPosData)));
 
     // Read position vertices
-    __das_DataRead(p_asset->vertices.v3d.pos, sizeof(das_ObjPosData), p_asset->vertices.v3d.pn, file_name);
+    __das_DataRead(p_asset->vertices.v3d.mul.pos, sizeof(das_ObjPosData), p_asset->vertices.v3d.mul.pn, file_name);
 
     // Check if vertex textures should be read
     if(p_asset->asset_mode == DAS_ASSET_MODE_3D_TEXTURE_MAPPED ||
@@ -409,12 +409,12 @@ void __das_CopyVertices (
         das_CheckHdrName(tex_hdr.hdr_name, __DAS_TEX_POSITION_HEADER_NAME, file_name);
 
         // Allocate memory for texture vertices
-        p_asset->vertices.v3d.tn = tex_hdr.vert_c;
-        p_asset->vertices.v3d.tex = (das_ObjTextureData*) malloc(cm_ToPow2I64(p_asset->vertices.v3d.tn * 
+        p_asset->vertices.v3d.mul.tn = tex_hdr.vert_c;
+        p_asset->vertices.v3d.mul.tex = (das_ObjTextureData*) malloc(cm_ToPow2I64(p_asset->vertices.v3d.mul.tn * 
             sizeof(das_ObjTextureData)));
 
         // Read texture vertices
-        __das_DataRead(p_asset->vertices.v3d.tex, sizeof(das_ObjTextureData), p_asset->vertices.v3d.tn, file_name);
+        __das_DataRead(p_asset->vertices.v3d.mul.tex, sizeof(das_ObjTextureData), p_asset->vertices.v3d.mul.tn, file_name);
     }
 
     // 
@@ -426,12 +426,12 @@ void __das_CopyVertices (
         das_CheckHdrName(nor_hdr.hdr_name, __DAS_NORM_POSITION_HEADER_NAME, file_name);
 
         // Allocate memory for vertex normals
-        p_asset->vertices.v3d.nn = nor_hdr.vert_c;
-        p_asset->vertices.v3d.norm = (das_ObjNormalData*) malloc(cm_ToPow2I64(p_asset->vertices.v3d.nn) *
+        p_asset->vertices.v3d.mul.nn = nor_hdr.vert_c;
+        p_asset->vertices.v3d.mul.norm = (das_ObjNormalData*) malloc(cm_ToPow2I64(p_asset->vertices.v3d.mul.nn) *
             sizeof(das_ObjNormalData));
 
         // Read vertex normals
-        __das_DataRead(p_asset->vertices.v3d.norm, sizeof(das_ObjNormalData), p_asset->vertices.v3d.nn, file_name);
+        __das_DataRead(p_asset->vertices.v3d.mul.norm, sizeof(das_ObjNormalData), p_asset->vertices.v3d.mul.nn, file_name);
     }
 }
 
@@ -440,7 +440,7 @@ void __das_CopyVertices (
 void __das_CopyIndices (
     das_Asset *p_asset,
     deng_ui32_t ind_c,
-    char *file_name
+    const char *file_name
 ) {
     p_asset->indices.n = ind_c;
 

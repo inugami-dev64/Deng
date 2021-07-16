@@ -93,6 +93,8 @@
 
     #include <deng/vulkan/ubm.h>
     #include <deng/vulkan/asset_cpy.h>
+
+    extern deng_ui32_t __max_frame_c;       
 #endif
 
 namespace deng {
@@ -122,14 +124,6 @@ namespace deng {
             /// Check if buffer reallocation is needed for assets and gui elements
             deng_bool_t reallocCheck(VkDevice device, VkPhysicalDevice gpu, VkCommandPool cmd_pool, VkQueue g_queue,
                 const std::vector<VkFence> &fences);
-
-
-            /// Check if the current capacity is enough for assets and if it isn't resize the capacity and return true
-            deng_bool_t assetCapCheck();
-
-
-            /// Check if the current capacity is enough for ImGui elements and if it isn't resize the capacity and return true
-            deng_bool_t uiCapCheck();
 
 
             /// Allocate the reserved memory

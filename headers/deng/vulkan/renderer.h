@@ -88,6 +88,8 @@
     #include <deng/cross_api/gpu_mem.h>
     #include <deng/cross_api/shader_def.h>
     #include <deng/cross_api/offset_finder.h>
+
+    extern deng_ui32_t __max_frame_c;
 #endif
 
 

@@ -94,7 +94,8 @@ namespace deng {
 
     /// Structure for storing data about ImGui draw operations
     struct __ImGuiCmdData {
-        size_t offset;                  // Vertex offset from the beginning of the ui memory area
+        size_t voffset;                  // Vertex offset from the beginning of the ui memory area
+        size_t ioffset;
         const ImDrawVert *verts = NULL;
         size_t vert_c = 0;
         const ImDrawIdx *ind = NULL;

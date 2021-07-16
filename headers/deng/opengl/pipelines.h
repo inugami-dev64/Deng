@@ -64,14 +64,15 @@
  */ 
 
 
-#ifndef __GL_SHADER_LOADER_H
-#define __GL_SHADER_LOADER_H
+#ifndef __GL_PIPELINES_H
+#define __GL_PIPELINES_H
 
 
-#ifdef __GL_SHADER_LOADER_CPP
+#ifdef __GL_PIPELINES_CPP
     #include <stdlib.h>
     #include <stdio.h>
     #include <string>
+    #include <cstring>
     #include <array>
 
     #include <glad/glad.h>
@@ -86,9 +87,10 @@
 namespace deng {
     namespace opengl {
 
-        class __gl_ShaderLoader {
+        class __gl_Pipelines {
         private:
             std::array<deng_ui32_t, PIPELINE_C> m_programs;
+            void (*glErrorCheck)(const std::string &func_name);
 
         private:
             /// Load shader data from file to a buffer
@@ -111,8 +113,15 @@ namespace deng {
             void __prepareUniformBindings();
 
         public:
-            __gl_ShaderLoader();
+            __gl_Pipelines(void (*gl_error_check)(const std::string &func_name));
+
             const deng_ui32_t getShaderProgram(const deng_ui32_t pipeline_id);
+
+            /// Set appropriate asset drawing attributes according to the specified asset mode
+            void setAssetVertAttributes(const das_Asset &asset);
+
+            /// Disable vertex attributes for given asset
+            void disableAssetVertAttributes(const das_Asset &asset);
         };
     }
 }

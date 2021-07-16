@@ -117,10 +117,8 @@ extern "C" {
     // X11 includes 
     #include <X11/Xutil.h>
     #include <X11/Xos.h>
-    #include <GL/gl.h>
-    #include <GL/glx.h>
-    #include <GL/glu.h>
     #include <X11/Xcursor/Xcursor.h>
+    #include <GL/glx.h>
     #include <vulkan/vulkan_xlib.h>
 
     typedef struct deng_SurfaceX11 {

@@ -1,0 +1,77 @@
+DENG consists of following math types: mat2, mat3, mat4, vec2, vec3, vec4
+=========================================================================
+
+
+Specifications
+==============
+OPERATORS: 
+ const vecn<T> operator+(const vecn<T>) const;
+ const vecn<T> operator+(const T) const;
+ const vecn<T> operator-(const vecn<T>) const;
+ const vecn<T> operator-(const T) const;
+ const vecn<T> operator*(const T) const;
+ const T operator*(const vecn<T>) const;
+ const vecn<T> operator/(const T) const;
+ void operator*=(const T);
+ void operator*=(const matn<T> &);
+ void operator+=(const vecn<T> &);
+ void operator+=(const T);
+ void operator-=(const vecn<T> &);
+ void operator-=(const T);
+ void operator/=(const T);
+ const deng_bool_t operator==(const vecn<T>) const;
+
+ VEC2<T> SPECIAL OPERATORS:
+  void operator=(const das_ObjTextureData);
+  void operator=(const das_ObjPosData2D);
+  const deng_bool_t operator==(const das_ObjTextureData) const;
+  const deng_bool_t operator==(const das_PosData2D) const;
+
+ VEC3<T> SPECIAL OPERATORS:
+  void operator=(const das_ObjPosData &);
+  void operator=(const das_ObjPosData2D);
+  void operator=(const das_ObjTextureData);
+  void operator=(const das_ObjNormalData &);
+  void operator=(const vec2<T> &);
+  const deng_bool_t operator==(const das_ObjPosData &) const;
+  const deng_bool_t operator==(const das_ObjTextureData) const;
+  const deng_bool_t operator==(const das_ObjNormalData &) const;
+  const deng_bool_t operator==(const das_PosData2D) const;
+  const deng_bool_t operator==(const vec2<T> &) const;
+ VEC4<T> SPECIAL OPERATORS:
+  void operator=(const das_ObjPosData &);
+  void operator=(const das_ObjPosData2D);
+  void operator=(const das_ObjColorData &);
+  void operator=(const das_ObjNormalData &);
+  void operator=(const vec2<T> &);
+  void operator=(const vec3<T> &);
+  const deng_bool_t operator==(const das_ObjPosData &) const;
+  const deng_bool_t operator==(const das_ObjPosData2D &) const;
+  const deng_bool_t operator==(const das_ObjColorData &) const;
+  const deng_bool_t operator==(const das_ObjNormalData &) const;
+  const deng_bool_t operator==(const vec2<T> &) const;
+  const deng_bool_t operator==(const vec3<T> &) const;
+
+
+MEMBER METHODS:
+ T length();
+ void norm();
+
+ [vec4 only]
+ static vec4<CT> cross(vec<CT>, vec<CT>);
+
+
+Method descriptions
+===================
+
+ dengMath::vecn<T>::length()
+ ===========================
+  Return the length of the current vector
+
+ dengMath::vecn<T>::norm()
+ =========================
+  Normalise vector coordinates
+
+ dengMath::vecn<CT>::cross(vecn<CT>, vecn<CT>) 
+ ============================================
+  Find the cross product of two vectors with same coordinate axis count

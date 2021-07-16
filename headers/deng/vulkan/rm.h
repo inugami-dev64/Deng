@@ -105,6 +105,7 @@
     #include <deng/vulkan/bm.h>
     #include <deng/vulkan/tm.h>
 
+    extern deng_ui32_t __max_frame_c;       
 #endif
 
 

@@ -87,14 +87,14 @@ extern "C" {
     /*
      * Read generic of data from __sbuf with bounds checking
      */
-    void __das_DataRead(void *buf, size_t chunk_size, size_t n, char *file_name);
+    void __das_DataRead(void *buf, size_t chunk_size, size_t n, const char *file_name);
 
     /*
      * Read asset information from INFO_HDR
      */
     void __das_ReadINFO_HDR (
         das_INFO_HDR *out_hdr,
-        char *file_name
+        const char *file_name
     );
 
 
@@ -107,7 +107,7 @@ extern "C" {
     /*
      * Read meta information contained between BEG_HDR and END_HDR
      */
-    void __das_ReadMeta(char *file_name);
+    void __das_ReadMeta(const char *file_name);
 
 
     /*
@@ -115,7 +115,7 @@ extern "C" {
      */
     void __das_ReadVERT_HDR (
         das_VERT_HDR *out_hdr,
-        char *file_name
+        const char *file_name
     );
 
     
@@ -125,7 +125,7 @@ extern "C" {
     void __das_ReadGenVertHdr (
         __das_VertTemplate *out_hdr,
         char *hdr_name,
-        char *file_name
+        const char *file_name
     );
 
 
@@ -134,7 +134,7 @@ extern "C" {
      */
     void __das_ReadINDX_HDR (
         das_INDX_HDR *out_hdr,
-        char *file_name
+        const char *file_name
     );
 
 
@@ -145,7 +145,7 @@ extern "C" {
     /*
      * Read all data from asset file into buffer for reading
      */
-    void __das_ReadAssetFile(char *file_name); 
+    void __das_ReadAssetFile(const char *file_name); 
 
 
     /*
@@ -166,23 +166,19 @@ extern "C" {
      */
     static void __das_CopyVertices (
         das_Asset *p_asset,
-        char *file_name
+        const char *file_name
     );
 
 
-    /*
-     * Copy all indices from buffer to p_out_ind
-     */
+    /// Copy all indices from buffer to p_out_ind
     static void __das_CopyIndices (
         das_Asset *p_asset,
         deng_ui32_t ind_c,
-        char *file_name
+        const char *file_name
     );
 
 
-    /*
-     * Increment the reading offset by n bytes
-     */
+    /// Increment the reading offset by n bytes
     void __das_IncrementOffset(size_t n);
 
 
@@ -217,8 +213,8 @@ void das_LoadAsset (
     das_AssetMode dst_mode,
     das_ObjColorData color,
     deng_bool_t read_meta,
-    char *tex_uuid,
-    char *file_name
+    const char *tex_uuid,
+    const char *file_name
 );
 
 

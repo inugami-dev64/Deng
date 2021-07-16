@@ -244,16 +244,16 @@ namespace dengUtils {
         asset.uuid = uuid_Generate();
 
         // Set vertices sizes
-        asset.vertices.v3d.pn = vert.size();
+        asset.vertices.v3d.mul.pn = vert.size();
         asset.indices.n = ind.size();
 
         // Allocate memory for vertices and indices
-        asset.vertices.v3d.pos = (das_ObjPosData*) malloc(asset.vertices.v3d.pn * sizeof(das_ObjPosData));
+        asset.vertices.v3d.mul.pos = (das_ObjPosData*) malloc(asset.vertices.v3d.mul.pn * sizeof(das_ObjPosData));
         asset.indices.pos = (deng_ui32_t*) malloc(asset.indices.n * sizeof(deng_ui32_t));
 
         // Copy all vertices and indices to the asset
-        memcpy(asset.vertices.v3d.pos, vert.data(),
-            asset.vertices.v3d.pn * sizeof(das_ObjPosData));
+        memcpy(asset.vertices.v3d.mul.pos, vert.data(),
+            asset.vertices.v3d.mul.pn * sizeof(das_ObjPosData));
 
         memcpy(asset.indices.pos, ind.data(),
             asset.indices.n * sizeof(deng_ui32_t));
@@ -288,21 +288,21 @@ namespace dengUtils {
         asset.uuid = uuid_Generate();
 
         // Set the vertices and indices sizes
-        asset.vertices.v3d.pn = pos_vert.size();
-        asset.vertices.v3d.tn = tex_vert.size();
+        asset.vertices.v3d.mul.pn = pos_vert.size();
+        asset.vertices.v3d.mul.tn = tex_vert.size();
         asset.indices.n = pos_ind.size();
 
         // Allocate memory for vertices and indices
-        asset.vertices.v3d.pos = (das_ObjPosData*) malloc(asset.vertices.v3d.pn * sizeof(das_ObjPosData)); 
-        asset.vertices.v3d.tex = (das_ObjTextureData*) malloc(asset.vertices.v3d.tn * sizeof(das_ObjTextureData));
+        asset.vertices.v3d.mul.pos = (das_ObjPosData*) malloc(asset.vertices.v3d.mul.pn * sizeof(das_ObjPosData)); 
+        asset.vertices.v3d.mul.tex = (das_ObjTextureData*) malloc(asset.vertices.v3d.mul.tn * sizeof(das_ObjTextureData));
         asset.indices.pos = (deng_ui32_t*) malloc(asset.indices.n * sizeof(deng_ui32_t));
         asset.indices.tex = (deng_ui32_t*) malloc(asset.indices.n * sizeof(deng_ui32_t));
 
         // Copy all vertices and indices to asset instace
-        memcpy(asset.vertices.v3d.pos, pos_vert.data(),
+        memcpy(asset.vertices.v3d.mul.pos, pos_vert.data(),
             pos_vert.size() * sizeof(das_ObjPosData));
 
-        memcpy(asset.vertices.v3d.tex, tex_vert.data(),
+        memcpy(asset.vertices.v3d.mul.tex, tex_vert.data(),
             tex_vert.size() * sizeof(das_ObjTextureData));
 
         memcpy(asset.indices.pos, pos_ind.data(),

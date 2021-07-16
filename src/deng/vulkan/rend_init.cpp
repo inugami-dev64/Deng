@@ -66,10 +66,6 @@
 
 namespace deng {
     namespace vulkan {
-
-        /// External frame count variable declaration
-        extern deng_ui32_t __max_frame_c;
-
         
         __vk_RendererInitialiser::__vk_RendererInitialiser (
             deng::Window &win, 

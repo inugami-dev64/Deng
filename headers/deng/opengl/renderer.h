@@ -77,9 +77,11 @@
     #include <vulkan/vulkan.h>
 
     #include <common/base_types.h>
+    #include <common/uuid.h>
     #include <common/hashmap.h>
     #include <common/err_def.h>
     #include <data/assets.h>
+    #include <data/das_runtime.h>
     
     #include <math/deng_math.h>
     #include <deng/window.h>
@@ -89,7 +91,11 @@
 
     #include <deng/cross_api/cross_api.h>
     #include <deng/opengl/cfg_vars.h>
-    #include <deng/opengl/shader_loader.h>
+    #include <deng/opengl/pipelines.h>
+    #include <deng/opengl/resources.h>
+    #include <deng/window.h>
+    #include <deng/camera.h>
+    #include <deng/opengl/ubm.h>
     #include <deng/opengl/buffers.h>
 #endif
 
@@ -106,23 +112,36 @@ namespace deng {
             deng_ui32_t m_vert_buffer;
 
             // Helper objects
-            std::shared_ptr<__gl_ShaderLoader> m_shader_loader;
-            std::shared_ptr<__gl_BufferManager> m_buf_manager;
-
+            std::shared_ptr<__gl_Pipelines> m_pipelines;
+            std::unique_ptr<__gl_BufferManager> m_buf_manager;
             
         private:
-            void __mkBuffers();
+            /// OpenGL error checking function
+            static void glErrorCheck(const std::string &func_name);
 
         public:
             __gl_Renderer(__gl_ConfigVars &cfg, deng::__GlobalRegistry &reg, std::vector<deng_Id> &assets,
                 std::vector<deng_Id> &textures);
 
-            // Setup the initial OpenGL renderer
-            void setup();
+
+            /// Update all currently available light sources
+            void setLighting(std::array<deng_Id, __DENG_MAX_LIGHT_SRC_COUNT> &light_srcs);
+
+
+            /// Prepare an asset for OpenGL usage
+            void prepareAssets(const dengMath::vec2<deng_ui32_t> &bounds);
+
+            /// Prepare texture for OpenGL usage
+            void prepareTexture(const deng_Id id);
             
 
             // Main frame updating function
             void makeFrame();
+
+        // Setter and getter methods
+        public:
+            void setUIDataPtr(__ImGuiData *p_data);
+            const deng_bool_t isInit();
         };
     }
 }

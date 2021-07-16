@@ -94,6 +94,8 @@
 
 
 namespace dengMath {
+    template<typename T> struct mat3;
+
     template<typename T>
     struct vec3 {
         T first, second, third;
@@ -102,40 +104,41 @@ namespace dengMath {
         /***** Operator overloads *****/
         /******************************/
 
-        vec3<T> operator+(const vec3<T> &vec) const;
-        vec3<T> operator+(const T &c) const;
-        vec3<T> operator-(const vec3<T> &vec) const;
-        vec3<T> operator-(const T &c) const;
-        vec3<T> operator*(const T &c) const;
-        T operator*(const vec3<T> &vec) const;
-        vec3<T> operator/(const T &c) const;
-        void operator*=(const T &c);
+        const vec3<T> operator+(const vec3<T> &vec) const;
+        const vec3<T> operator+(const T c) const;
+        const vec3<T> operator-(const vec3<T> &vec) const;
+        const vec3<T> operator-(const T c) const;
+        const T operator*(const vec3<T> &vec) const;
+        const vec3<T> operator*(const T c) const;
+        const vec3<T> operator/(const T c) const;
+        void operator*=(const T c);
+        void operator*=(const mat3<T> &m);
         void operator+=(const vec3<T> &vec);
-        void operator+=(const T &c);
+        void operator+=(const T c);
         void operator-=(const vec3<T> &vec);
-        void operator-=(const T &c);
-        void operator/=(const T &c);
-        deng_bool_t operator==(const vec3<T> &vec) const;
+        void operator-=(const T c);
+        void operator/=(const T c);
+        const deng_bool_t operator==(const vec3<T> &vec) const;
 
 
         /// C vertices structure assignment operators
         void operator=(const das_ObjPosData &vert);
+        void operator=(const das_ObjPosData2D vert);
+        void operator=(const das_ObjTextureData tex);
         void operator=(const das_ObjNormalData &nor);
-        void operator=(const das_ObjPosData2D &vert);
-
-
-        /// Smaller vector struct assignment operators
         void operator=(const vec2<T> &vec);
 
 
         /// C vertices structure comparisson operators
-        deng_bool_t operator==(const das_ObjPosData &vert) const;
-        deng_bool_t operator==(const das_ObjNormalData &nor) const;
-        deng_bool_t operator==(const das_ObjPosData2D &vert) const;
+        const deng_bool_t operator==(const das_ObjPosData &vert) const;
+        const deng_bool_t operator==(const das_ObjPosData2D vert) const;
+        const deng_bool_t operator==(const das_ObjTextureData tex) const;
+        const deng_bool_t operator==(const das_ObjNormalData &nor) const;
+        const deng_bool_t operator==(const vec2<T> &vec) const;
 
 
         /// Get the current length of the vector
-        T length() const;
+        const T length() const;
 
 
         /// Normalise the vector to length 1
@@ -143,8 +146,7 @@ namespace dengMath {
 
 
         /// Find the crossproduct of two vectors
-        template<typename CT>
-        static vec3<CT> cross(const vec3<CT> &vec1, const vec3<CT> &vec2);
+        static const vec3<T> cross(const vec3<T> &vec1, const vec3<T> &vec2);
     };
 }
 

@@ -58,30 +58,66 @@
  * reproduction, and distribution of the Work otherwise complies with
  * the conditions stated in this License.
  * ----------------------------------------------------------------
- *  Name: gl_resources - OpenGL resources structure
- *  Purpose: Provide a data structure to store information about structures
+ *  Name: gl_ubm - OpenGL uniform buffer manager class
+ *  Purpose: Provide a class interface for creating and writing to uniform buffers
  *  Author: Karl-Mihkel Ott
  */ 
 
-#ifndef __GL_RESOURCES_H
-#define __GL_RESOURCES_H
+#ifndef __GL_UBM_H
+#define __GL_UBM_H
+
+
+#ifdef __GL_UBM_CPP
+    #include <vector>
+    #include <array>
+    #include <chrono>
+    #include <vulkan/vulkan.h>
+    #include <glad/glad.h>
+
+    #include <common/base_types.h>
+    #include <common/hashmap.h>
+    #include <data/assets.h>
+    #include <math/deng_math.h>
+    #include <imgui-layer/imgui_entity.h>
+
+    #include <deng/lighting/light_srcs.h>
+    #include <deng/registry/registry.h>
+    #include <deng/window.h>
+    #include <deng/opengl/resources.h>
+    #include <deng/cross_api/cross_api.h>
+    #include <deng/camera.h>
+#endif
+
 
 namespace deng {
     namespace opengl {
 
-        struct __gl_Resources {
-            deng_gl_t vert_array;
-            deng_gl_t vert_buffer;
-            deng_gl_t idx_buffer;
-            deng_gl_t ubo_buffer;
-        };
+
+        class __gl_UniformManager : protected __OffsetFinder {
+        private:
+            __GlobalRegistry &m_reg;
+            __gl_Resources &m_resources;
+
+        protected:
+            /// Reserve a uniform data memory location for OpenGL asset
+            void mapUniformBufferArea(das_Asset &asset);
 
 
-        /// OpenGL specific texture data structure
-        struct __gl_Texture {
-            deng_Id base_id;
-            deng_Id uuid;
-            deng_gl_t gl_id;
+        public:
+            __gl_UniformManager(__GlobalRegistry &reg, std::vector<deng_Id> &assets, __gl_Resources &res);
+            
+
+            /// Update uniform transformation data for the frame according to 
+            /// camera's view and projection matrix
+            void updateUboTransform3D(Camera3D *p_cam);
+
+            
+            /// Update asset uniform buffer data
+            void updateAssetUboData(das_Asset &asset);
+
+            
+            /// Update lighting uniform data
+            void updateUboLighting(std::array<deng_Id, __DENG_MAX_LIGHT_SRC_COUNT> &light_srcs);
         };
     }
 }

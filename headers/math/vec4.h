@@ -93,6 +93,7 @@
 
 
 namespace dengMath {
+    template<typename T> struct mat4;
     template<typename T>
     struct vec4 {
         T first, second, third, fourth;
@@ -101,41 +102,43 @@ namespace dengMath {
         /***** Operator overloads *****/
         /******************************/
 
-        vec4<T> operator+(const vec4<T> &vec) const; 
-        vec4<T> operator+(const T &c) const; 
-        vec4<T> operator-(const vec4<T> &vec) const; 
-        vec4<T> operator-(const T &c) const; 
-        T operator*(const vec4<T> &vec) const; 
-        vec4<T> operator*(const T &c) const; 
-        vec4<T> operator/(const T &c) const; 
-        void operator*=(const T &c); 
+        const vec4<T> operator+(const vec4<T> &vec) const; 
+        const vec4<T> operator+(const T c) const; 
+        const vec4<T> operator-(const vec4<T> &vec) const; 
+        const vec4<T> operator-(const T c) const; 
+        const T operator*(const vec4<T> &vec) const; 
+        const vec4<T> operator*(const T c) const; 
+        const vec4<T> operator/(const T c) const; 
+        void operator*=(const T c); 
+        void operator*=(const mat4<T> &m);
         void operator+=(const vec4<T> &vec); 
-        void operator+=(const T &c); 
+        void operator+=(const T c); 
         void operator-=(const vec4<T> &vec); 
-        void operator-=(const T &c); 
-        void operator/=(const T &c); 
-        deng_bool_t operator==(const vec4<T> &vec) const; 
+        void operator-=(const T c); 
+        void operator/=(const T c); 
+        const deng_bool_t operator==(const vec4<T> &vec) const; 
 
 
-        /// C vertices structure assignment operators
-        void operator=(const das_ObjColorData &color); 
+        // Special structure assignment operators
         void operator=(const das_ObjPosData &vert); 
+        void operator=(const das_ObjPosData2D vert); 
+        void operator=(const das_ObjColorData &color); 
         void operator=(const das_ObjNormalData &nor); 
-
-
-        /// Smaller vector struct assignment operators
         void operator=(const vec2<T> &vec);
         void operator=(const vec3<T> &vec);
 
 
         /// C vertices structure comparison operators
-        deng_bool_t operator==(const das_ObjColorData &color) const;
-        deng_bool_t operator==(const das_ObjPosData &vert) const;
-        deng_bool_t operator==(const das_ObjNormalData &norm) const;
+        const deng_bool_t operator==(const das_ObjPosData &vert) const;
+        const deng_bool_t operator==(const das_ObjPosData2D vert) const;
+        const deng_bool_t operator==(const das_ObjColorData &color) const;
+        const deng_bool_t operator==(const das_ObjNormalData &norm) const;
+        const deng_bool_t operator==(const vec2<T> &vec) const;
+        const deng_bool_t operator==(const vec3<T> &vec) const;
 
 
         /// Get the current length of the vector
-        T length() const;
+        const T length() const;
 
         
         /// Normalise the vector to length 1
@@ -144,8 +147,7 @@ namespace dengMath {
         
         /// Find the crossproduct of two vectors
         /// PS! Only first three axes are used
-        template<typename CT>
-        static vec4<CT> cross(const vec4<CT> &vec1, const vec4<CT> &vec2); 
+        static const vec4<T> cross(const vec4<T> &vec1, const vec4<T> &vec2); 
     };
 }
 

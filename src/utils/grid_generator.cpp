@@ -77,15 +77,15 @@ namespace dengUtils {
         m_asset.uuid = uuid_Generate();
 
         // Allocate memory for asset vertices
-        m_asset.vertices.v3d.pn = row_c * 6;
-        m_asset.vertices.v3d.pos = (das_ObjPosData*) calloc (
-            m_asset.vertices.v3d.pn, sizeof(das_ObjPosData));
+        m_asset.vertices.v3d.mul.pn = row_c * 6;
+        m_asset.vertices.v3d.mul.pos = (das_ObjPosData*) calloc (
+            m_asset.vertices.v3d.mul.pn, sizeof(das_ObjPosData));
 
-        m_asset.vertices.v3d.nn = 1;
-        m_asset.vertices.v3d.norm = (das_ObjNormalData*) &m_vert_normal;
+        m_asset.vertices.v3d.mul.nn = 1;
+        m_asset.vertices.v3d.mul.norm = (das_ObjNormalData*) &m_vert_normal;
 
         // Allocate memory for indices
-        m_asset.indices.n = m_asset.vertices.v3d.pn;
+        m_asset.indices.n = m_asset.vertices.v3d.mul.pn;
         m_asset.indices.pos = (deng_ui32_t*) calloc(m_asset.indices.n, sizeof(deng_ui32_t));
         m_asset.indices.norm = (deng_ui32_t*) calloc(m_asset.indices.n, sizeof(deng_ui32_t));
 
@@ -103,17 +103,17 @@ namespace dengUtils {
 
         // For each line in Z-axis find the vertices and indices
         for(i = 0; i < row_c * 3; i += 3) {
-            m_asset.vertices.v3d.pos[i].vert_x = -(len / 2);
-            m_asset.vertices.v3d.pos[i].vert_y = 0;
-            m_asset.vertices.v3d.pos[i].vert_z = cur_pos;
+            m_asset.vertices.v3d.mul.pos[i].vert_x = -(len / 2);
+            m_asset.vertices.v3d.mul.pos[i].vert_y = 0;
+            m_asset.vertices.v3d.mul.pos[i].vert_z = cur_pos;
             
-            m_asset.vertices.v3d.pos[i + 1].vert_x = len / 2;
-            m_asset.vertices.v3d.pos[i + 1].vert_y = 0;
-            m_asset.vertices.v3d.pos[i + 1].vert_z = cur_pos;
+            m_asset.vertices.v3d.mul.pos[i + 1].vert_x = len / 2;
+            m_asset.vertices.v3d.mul.pos[i + 1].vert_y = 0;
+            m_asset.vertices.v3d.mul.pos[i + 1].vert_z = cur_pos;
 
-            m_asset.vertices.v3d.pos[i + 2].vert_x = -(len / 2);
-            m_asset.vertices.v3d.pos[i + 2].vert_y = 0;
-            m_asset.vertices.v3d.pos[i + 2].vert_z = cur_pos + DENG_GRID_THICKNESS;
+            m_asset.vertices.v3d.mul.pos[i + 2].vert_x = -(len / 2);
+            m_asset.vertices.v3d.mul.pos[i + 2].vert_y = 0;
+            m_asset.vertices.v3d.mul.pos[i + 2].vert_z = cur_pos + DENG_GRID_THICKNESS;
             
             m_asset.indices.pos[i] = (deng_ui32_t) i;
             m_asset.indices.pos[i + 1] = (deng_ui32_t) i + 1;
@@ -127,17 +127,17 @@ namespace dengUtils {
 
         // For each line in X-axis find the vertices and indices
         for(i = 0; i < row_c * 3; i += 3, j += 3) {
-            m_asset.vertices.v3d.pos[j].vert_x = cur_pos;
-            m_asset.vertices.v3d.pos[j].vert_y = 0;
-            m_asset.vertices.v3d.pos[j].vert_z = -(len / 2);
+            m_asset.vertices.v3d.mul.pos[j].vert_x = cur_pos;
+            m_asset.vertices.v3d.mul.pos[j].vert_y = 0;
+            m_asset.vertices.v3d.mul.pos[j].vert_z = -(len / 2);
 
-            m_asset.vertices.v3d.pos[j + 1].vert_x = cur_pos;
-            m_asset.vertices.v3d.pos[j + 1].vert_y = 0;
-            m_asset.vertices.v3d.pos[j + 1].vert_z = len / 2;
+            m_asset.vertices.v3d.mul.pos[j + 1].vert_x = cur_pos;
+            m_asset.vertices.v3d.mul.pos[j + 1].vert_y = 0;
+            m_asset.vertices.v3d.mul.pos[j + 1].vert_z = len / 2;
 
-            m_asset.vertices.v3d.pos[j + 2].vert_x = cur_pos + DENG_GRID_THICKNESS;
-            m_asset.vertices.v3d.pos[j + 2].vert_y = 0;
-            m_asset.vertices.v3d.pos[j + 2].vert_z = -(len / 2);
+            m_asset.vertices.v3d.mul.pos[j + 2].vert_x = cur_pos + DENG_GRID_THICKNESS;
+            m_asset.vertices.v3d.mul.pos[j + 2].vert_y = 0;
+            m_asset.vertices.v3d.mul.pos[j + 2].vert_z = -(len / 2);
 
             m_asset.indices.pos[j] = (deng_ui32_t) j;
             m_asset.indices.pos[j + 1 ] = (deng_ui32_t) j + 1;

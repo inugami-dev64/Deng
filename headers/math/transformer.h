@@ -84,16 +84,11 @@
 namespace dengMath {
 
     /*******************************/
-    /*******************************/
     /******** Transformer2D ********/
     /*******************************/
-    /*******************************/
 
-    /*
-     * Perform transformation calculations on 2D assets using CPU
-     */
-    class Transformer2D 
-    {
+    /// Perform transformation calculations on 2D assets using CPU
+    class Transformer2D {
     private: 
         mat3<deng_vec_t> m_rot_mat;
 
@@ -102,37 +97,28 @@ namespace dengMath {
         mat3<deng_vec_t> m_shear_mat;
 
     private:
-        /*
-         * Apply the matrix for each vertex in the asset
-         */
+        /// Apply the matrix for each vertex in the asset
         void __matApply(mat3<deng_vec_t> &mat, das_Asset &asset);
+        void __matApplyMulVert(mat3<deng_vec_t> &mat, das_Asset &asset);
+        void __matApplyMerVert(mat3<deng_vec_t> &mat, das_Asset &asset);
 
     public:
         Transformer2D();
 
-        /*
-         * Rotate the given asset
-         * Rotation must be in radians
-         */
+        /// Rotate the given asset
+        /// NOTE: Rotation must be in radians
         void rotate(deng_vec_t rot, das_Asset &asset);
 
 
-        /*
-         * Scale the given asset
-         */
+        /// Scale the given asset
         void scale(const vec2<deng_vec_t> &scale, das_Asset &asset);
 
 
-        /*
-         * Shear the given asset with the factor of opposite coordinate
-         */
+        /// Shear the given asset with the factor of opposite coordinate
         void shear(const vec2<deng_vec_t> &shear, das_Asset &asset);
 
 
-        /*
-         * Translate the given asset vertices from custom coordinate system into
-         * world coordinate system
-         */
+        /// Translate the given asset vertices from custom coordinate system into world coordinate system
         void translate (
             const vec2<deng_vec_t> &u,
             const vec2<deng_vec_t> &v,
@@ -141,27 +127,19 @@ namespace dengMath {
         );
 
         
-        /*
-         * Set rotation for the class transformation matrix
-         */
+        /// Set rotation for the class transformation matrix
         void setRotation(deng_vec_t rot);
 
 
-        /*
-         * Set scale for class transformation matrix
-         */
+        /// Set scale for class transformation matrix
         void setScale(const vec2<deng_vec_t> &scale);
 
         
-        /*
-         * Set shear for class transformation matrix
-         */
+        /// Set shear for class transformation matrix
         void setShear(const vec2<deng_vec_t> &shear);
 
 
-        /*
-         * Set coordinate translation for class transformation matrix
-         */
+        /// Set coordinate translation for class transformation matrix
         void setTranslation (
             const vec2<deng_vec_t> &u,
             const vec2<deng_vec_t> &v,
@@ -170,15 +148,11 @@ namespace dengMath {
         );
 
 
-        /*
-         * Get the class transformation matrix 
-         */
+        /// Get the class transformation matrix 
         mat3<deng_vec_t> getTransformMat();
 
 
-        /*
-         * Reset all transformations to identity matrices
-         */
+        /// Reset all transformations to identity matrices
         void reset();
     };
 
@@ -189,11 +163,8 @@ namespace dengMath {
     /*******************************/
     /*******************************/
 
-    /*
-     * Perform transformation calculations on 3D assets using CPU
-     */
-    class Transformer3D 
-    {
+    /// Perform transformation calculations on 3D assets using CPU
+    class Transformer3D {
     private:
         mat4<deng_vec_t> m_rot_x_mat;
         mat4<deng_vec_t> m_rot_y_mat;
@@ -203,32 +174,26 @@ namespace dengMath {
         mat4<deng_vec_t> m_scale_mat;
 
     private:
-        /*
-         * Apply the matrix for each vertex in the asset
-         */
+        /// Apply the matrix for each vertex in the asset
         void __matApply(mat4<deng_vec_t> &mat, das_Asset &asset);
+        void __matApplyMulVert(mat4<deng_vec_t> &mat, das_Asset &asset);
+        void __matApplyMerVert(mat4<deng_vec_t> &mat, das_Asset &asset);
 
     public:
         Transformer3D();
 
 
-        /*
-         * Rotate the given asset.
-         * Rotation must be in radians
-         */
+        /// Rotate the given asset.
+        /// NOTE: Rotation must be in radians
         void rotate(const vec3<deng_vec_t> &rot, das_Asset &asset);
 
 
-        /*
-         * Scale the given asset
-         */
+        /// Scale the given asset
         void scale(const vec3<deng_vec_t> &scale, das_Asset &asset);
 
 
-        /*
-         * Translate the given asset vertices from custom coordinate system into
-         * world coordinate system
-         */
+        /// Translate the given asset vertices from custom coordinate system into
+        /// world coordinate system
         void translate (
             const vec3<deng_vec_t> &u,
             const vec3<deng_vec_t> &v,
@@ -238,21 +203,15 @@ namespace dengMath {
         );
 
         
-        /*
-         * Set rotation for the class transformation matrix
-         */
+        /// Set rotation for the class transformation matrix
         void setRotation(const vec3<deng_vec_t> &rot);
 
 
-        /*
-         * Set scale for class transformation matrix
-         */
+        /// Set scale for class transformation matrix
         void setScale(const vec3<deng_vec_t> &scale);
 
 
-        /*
-         * Set coordinate translation for class transformation matrix
-         */
+        /// Set coordinate translation for class transformation matrix
         void setTranslation (
             const vec3<deng_vec_t> &u,
             const vec3<deng_vec_t> &v,
@@ -261,15 +220,11 @@ namespace dengMath {
         );
 
 
-        /*
-         * Get the class transformation matrix 
-         */
+        /// Get the class transformation matrix 
         mat4<deng_vec_t> getTransformMat();
 
 
-        /*
-         * Reset all transformations to identity matrices
-         */
+        /// Reset all transformations to identity matrices
         void reset();
     };
 }

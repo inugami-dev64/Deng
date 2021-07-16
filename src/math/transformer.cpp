@@ -78,29 +78,33 @@ namespace dengMath {
     }
 
 
-    /*
-     * Apply the matrix for each vertex in the asset
-     */
+    /// Apply the matrix for each vertex in the asset
     void Transformer2D::__matApply(mat3<deng_vec_t> &mat, das_Asset &asset) {
-        vec3<deng_vec_t> tmp{};
+        if(asset.is_opengl) __matApplyMerVert(mat, asset);
+        else __matApplyMulVert(mat, asset);
+    }
+
+
+    void Transformer2D::__matApplyMulVert(mat3<deng_vec_t> &mat, das_Asset &asset) {
+        vec3<deng_vec_t> tmp;
         switch(asset.asset_mode) {
         case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
-            for(size_t i = 0; i < asset.vertices.v2d.pn; i++) {
-                tmp = asset.vertices.v2d.pos[i];
+            for(deng_ui64_t i = 0; i < asset.vertices.v2d.mul.pn; i++) {
+                tmp = asset.vertices.v2d.mul.pos[i];
                 tmp = mat * tmp;
 
-                asset.vertices.v2d.pos[i].vert_x = tmp.first;
-                asset.vertices.v2d.pos[i].vert_y = tmp.second;
+                asset.vertices.v2d.mul.pos[i].vert_x = tmp.first;
+                asset.vertices.v2d.mul.pos[i].vert_y = tmp.second;
             }
             break;
 
         case DAS_ASSET_MODE_2D_UNMAPPED:
-            for(size_t i = 0; i < asset.vertices.v2d.pn; i++) {
-                tmp = asset.vertices.v2d.pos[i];
+            for(deng_ui64_t i = 0; i < asset.vertices.v2d.mul.pn; i++) {
+                tmp = asset.vertices.v2d.mul.pos[i];
                 tmp = mat * tmp;
 
-                asset.vertices.v2d.pos[i].vert_x = tmp.first;
-                asset.vertices.v2d.pos[i].vert_y = tmp.second;
+                asset.vertices.v2d.mul.pos[i].vert_x = tmp.first;
+                asset.vertices.v2d.mul.pos[i].vert_y = tmp.second;
             }
             break;
 
@@ -109,6 +113,22 @@ namespace dengMath {
             break;
         }
     }
+
+
+    void Transformer2D::__matApplyMerVert(mat3<deng_vec_t> &mat, das_Asset &asset) {
+        vec3<deng_vec_t> tmp;
+
+        switch(asset.asset_mode) {
+        case DAS_ASSET_MODE_2D_UNMAPPED:
+            for(deng_ui64_t i = 0; i < asset.vertices.v2d.mer.n; i++) {
+                tmp = asset.vertices.v2d.mer.uvert[i];
+                
+            }
+            break;
+        }
+    }
+
+
 
 
     /// Rotate the given asset
@@ -231,9 +251,7 @@ namespace dengMath {
 
 
     /*******************************/
-    /*******************************/
-    /******** Transformer2D ********/
-    /*******************************/
+    /******** Transformer3D ********/
     /*******************************/
     Transformer3D::Transformer3D() {
         // Set all transformation matrices into identity matrices
@@ -241,46 +259,82 @@ namespace dengMath {
     }
 
 
-    /*
-     * Apply the matrix for each vertex in the asset
-     */
     void Transformer3D::__matApply(mat4<deng_vec_t> &mat, das_Asset &asset) {
+        if(asset.is_opengl) __matApplyMerVert(mat, asset);
+        else __matApplyMulVert(mat, asset);
+    }
+
+
+    /// Apply the matrix for each vertex in the asset
+    void Transformer3D::__matApplyMulVert(mat4<deng_vec_t> &mat, das_Asset &asset) {
         vec4<deng_vec_t> tmp;
 
         switch(asset.asset_mode) {
         case DAS_ASSET_MODE_3D_UNMAPPED:
-            for(size_t i = 0; i < asset.vertices.v3d.pn; i++) {
-                tmp = asset.vertices.v3d.pos[i];
+            for(deng_ui64_t i = 0; i < asset.vertices.v3d.mul.pn; i++) {
+                tmp = asset.vertices.v3d.mul.pos[i];
                 tmp = mat * tmp;
 
-                asset.vertices.v3d.pos[i].vert_x = tmp.first;
-                asset.vertices.v3d.pos[i].vert_y = tmp.second;
-                asset.vertices.v3d.pos[i].vert_z = tmp.third;
+                asset.vertices.v3d.mul.pos[i].vert_x = tmp.first;
+                asset.vertices.v3d.mul.pos[i].vert_y = tmp.second;
+                asset.vertices.v3d.mul.pos[i].vert_z = tmp.third;
             }
             break;
 
         case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-            for(size_t i = 0; i < asset.vertices.v3d.pn; i++) {
-                tmp = asset.vertices.v3d.pos[i];
+            for(deng_ui64_t i = 0; i < asset.vertices.v3d.mul.pn; i++) {
+                tmp = asset.vertices.v3d.mul.pos[i];
                 tmp.fourth = 1.0f;
                 tmp = mat * tmp;
 
-                asset.vertices.v3d.pos[i].vert_x = tmp.first;
-                asset.vertices.v3d.pos[i].vert_y = tmp.second;
-                asset.vertices.v3d.pos[i].vert_z = tmp.third;
+                asset.vertices.v3d.mul.pos[i].vert_x = tmp.first;
+                asset.vertices.v3d.mul.pos[i].vert_y = tmp.second;
+                asset.vertices.v3d.mul.pos[i].vert_z = tmp.third;
             }
             break;
 
         default:
-            RUN_ERR("dengMath::Transformer3D::__matApply()", "Asset must be a 3D asset!");
+            RUN_ERR("dengMath::Transformer3D::__matApplyMulVert()", "Asset type must be one of 3D types");
         }
     }
 
 
-    /*
-     * Rotate the given asset.
-     * Rotation must be in radians
-     */
+    void Transformer3D::__matApplyMerVert(mat4<deng_vec_t> &mat, das_Asset &asset) {
+        vec4<deng_vec_t> tmp;
+
+        switch(asset.asset_mode) {
+        case DAS_ASSET_MODE_3D_UNMAPPED:
+            for(deng_ui64_t i = 0; i < asset.vertices.v3d.mer.n; i++) {
+                tmp = asset.vertices.v3d.mer.uvert[i].pos;
+                tmp.fourth = 1.0f;
+                tmp = mat * tmp;
+
+                asset.vertices.v3d.mer.uvert[i].pos.vert_x = tmp.first;
+                asset.vertices.v3d.mer.uvert[i].pos.vert_y = tmp.second;
+                asset.vertices.v3d.mer.uvert[i].pos.vert_z = tmp.third;
+            }
+            break;
+
+        case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
+            for(deng_ui64_t i = 0; i < asset.vertices.v3d.mer.n; i++) {
+                tmp = asset.vertices.v3d.mer.vert[i].pos;
+                tmp.fourth = 1.0f;
+                tmp = mat * tmp;
+
+                asset.vertices.v3d.mer.uvert[i].pos.vert_x = tmp.first;
+                asset.vertices.v3d.mer.uvert[i].pos.vert_y = tmp.second;
+                asset.vertices.v3d.mer.uvert[i].pos.vert_z = tmp.third;
+            }
+            break;
+
+        default:
+            RUN_ERR("dengMath::Transformer3D::__matApplyMerVert()", "Asset type must be one of 3D types");
+        }
+    }
+
+
+    /// Rotate the given asset.
+    /// NOTE: Rotation must be in radians
     void Transformer3D::rotate(const vec3<deng_vec_t> &rot, das_Asset &asset) {
         mat4<deng_vec_t> x, y, z;
         LOG("Rot: " + std::to_string(rot.first) + ", " + std::to_string(rot.second) + ", " + std::to_string(rot.third));
@@ -305,9 +359,7 @@ namespace dengMath {
     }
 
 
-    /*
-     * Scale the given asset
-     */
+    /// Scale the given asset
     void Transformer3D::scale(const vec3<deng_vec_t> &scale, das_Asset &asset) {
         mat4<deng_vec_t> mat;
         mat.row1 = vec4<deng_vec_t>{scale.first, 0.0f, 0.0f, 0.0f};
@@ -319,10 +371,7 @@ namespace dengMath {
     }
 
 
-    /*
-     * Translate the given asset vertices from custom coordinate system into
-     * world coordinate system
-     */
+    /// Translate the given asset vertices from custom coordinate system into world coordinate system
     void Transformer3D::translate (
         const vec3<deng_vec_t> &u,
         const vec3<deng_vec_t> &v,
@@ -340,9 +389,7 @@ namespace dengMath {
     }
 
 
-    /*
-     * Set rotation for the class transformation matrix
-     */
+    /// Set rotation for the class transformation matrix
     void Transformer3D::setRotation(const vec3<deng_vec_t> &rot) {
         m_rot_x_mat.row1 = vec4<deng_vec_t>{1.0f, 0.0f, 0.0, 0.0f};
         m_rot_x_mat.row2 = vec4<deng_vec_t>{0.0f, cosf(rot.first), -sinf(rot.first), 0.0f};
@@ -361,9 +408,7 @@ namespace dengMath {
     }
 
 
-    /*
-     * Set scale for class transformation matrix
-     */
+    /// Set scale for class transformation matrix
     void Transformer3D::setScale(const vec3<deng_vec_t> &scale) {
         m_scale_mat.row1 = vec4<deng_vec_t>{scale.first, 0.0f, 0.0f, 0.0f};
         m_scale_mat.row2 = vec4<deng_vec_t>{0.0f, scale.second, 0.0f, 0.0f};
@@ -372,9 +417,7 @@ namespace dengMath {
     }
 
 
-    /*
-     * Set coordinate translation for class transformation matrix
-     */
+    /// Set coordinate translation for class transformation matrix
     void Transformer3D::setTranslation (
         const vec3<deng_vec_t> &u,
         const vec3<deng_vec_t> &v,
@@ -388,9 +431,7 @@ namespace dengMath {
     }
 
 
-    /*
-     * Get the class transformation matrix 
-     */
+    /// Get the class transformation matrix 
     mat4<deng_vec_t> Transformer3D::getTransformMat() {
         // Tranformation order: rotations, scaling and translation
         return (
@@ -403,9 +444,7 @@ namespace dengMath {
     }
 
 
-    /*
-     * Reset all transformations to identity matrices
-     */
+    /// Reset all transformations to identity matrices
     void Transformer3D::reset() {
         m_rot_x_mat.row1 = vec4<deng_vec_t>{1.0f, 0.0f, 0.0f, 0.0f};
         m_rot_x_mat.row2 = vec4<deng_vec_t>{0.0f, 1.0f, 0.0f, 0.0f};

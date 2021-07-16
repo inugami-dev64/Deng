@@ -89,6 +89,7 @@ typedef int64_t deng_px_t;
 typedef float deng_vec_t;
 
 typedef deng_ui32_t deng_idx_t;
+typedef deng_ui32_t deng_gl_t;
 
 
 // MSVC C++ compiler does not allow redefining true and false keywords C4005
@@ -107,7 +108,6 @@ typedef char* deng_Id;
 typedef enum deng_SupportedRegType {
     DENG_SUPPORTED_REG_TYPE_ASSET       = 0x00,
     DENG_SUPPORTED_REG_TYPE_VK_ASSET    = 0x01,
-    DENG_SUPPORTED_REG_TYPE_GL_ASSET    = 0x02,
     DENG_SUPPORTED_REG_TYPE_TEXTURE     = 0x04,
     DENG_SUPPORTED_REG_TYPE_VK_TEXTURE  = 0x08,
     DENG_SUPPORTED_REG_TYPE_GL_TEXTURE  = 0x10,

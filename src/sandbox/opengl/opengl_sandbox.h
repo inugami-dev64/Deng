@@ -72,6 +72,8 @@
     #include <common/base_types.h>
     #include <common/hashmap.h>
     #include <data/assets.h>
+    #include <data/das_reader.h>
+    #include <data/tex_loader.h>
 
     #include <math/deng_math.h>
     #include <deng/window.h>
@@ -81,7 +83,12 @@
     #include <imgui-layer/imgui_entity.h>
     #include <deng/cross_api/cross_api.h>
     #include <deng/opengl/cfg_vars.h>
-    #include <deng/opengl/shader_loader.h>
+    #include <deng/opengl/resources.h>
+    #include <deng/opengl/pipelines.h>
+    #include <deng/window.h>
+    #include <deng/camera.h>
+    #include <deng/opengl/ubm.h>
+    #include <deng/opengl/buffers.h>
     #include <deng/opengl/renderer.h>
 #endif
 
@@ -90,11 +97,16 @@ namespace deng {
     class OpenGLApplication {
     private:
         Window m_win;
+        Camera3D m_cam;
         opengl::__gl_ConfigVars m_cfg = {};
         __GlobalRegistry m_reg;
         std::vector<deng_Id> m_assets;
         std::vector<deng_Id> m_textures;
         std::unique_ptr<opengl::__gl_Renderer> m_rend;
+
+    private:
+        void __bindFPP();
+        void __bindEditor();
 
     public:
         OpenGLApplication();

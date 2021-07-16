@@ -121,9 +121,7 @@ extern "C" {
         0x2d02ef8dL
     };
 
-    /* 
-     * Create a new hashmap 
-     */
+    /// Create a new hashmap 
     void newHashmap (
         Hashmap *p_hashmap,
         size_t elem_c
@@ -263,20 +261,14 @@ extern "C" {
     }
 
     
-    /*
-     * Search for the bucket index of the key element
-     */
+    /// Search for the bucket index of the key element
     static deng_i64_t __findIndex (
         Hashmap *p_hm, 
         void *key, 
         size_t key_size
     ) {
         deng_i64_t out = INT64_MAX;
-        size_t index = __hashfunc (
-            key,
-            key_size,
-            p_hm->map_size
-        );
+        size_t index = __hashfunc(key, key_size, p_hm->map_size);
 
         if (!__keycmp(p_hm->map_data[index].key, p_hm->map_data[index].key_len, key, key_size))
             out = (deng_i64_t) index;
@@ -302,12 +294,8 @@ extern "C" {
             // If correct bucket was not found search from the front of the array
             if(!is_found) {
                 for(i = index; i >= 0; i--) {
-                    if
-                    (
-                        p_hm->map_data[i].key && 
-                        p_hm->map_data[i].key_len &&
-                        !__keycmp(p_hm->map_data[i].key, p_hm->map_data[i].key_len, key, key_size)
-                    ) {
+                    if(p_hm->map_data[i].key && p_hm->map_data[i].key_len &&
+                       !__keycmp(p_hm->map_data[i].key, p_hm->map_data[i].key_len, key, key_size)) {
                         out = (deng_i64_t) i;
                         is_found = true;
                         break;
@@ -435,9 +423,7 @@ extern "C" {
     }
 
 
-    /* 
-     * Find value with certain key 
-     */
+    /// Find value with certain key 
     void *findValue (
         Hashmap *p_hm,
         void *key,

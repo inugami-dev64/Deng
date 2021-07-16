@@ -93,7 +93,10 @@
     #include <deng/lighting/light_srcs.h>
     #include <deng/registry/registry.h>
 
-    #define __DEFAULT_ASSET_CAP     32
+    #define __DEFAULT_ASSET_CAP             32
+
+    // This is a fucking war crime
+    extern deng_ui32_t __max_frame_c;
 #endif
 
 
@@ -104,7 +107,7 @@ namespace deng {
         private:
             std::vector<deng_Id> &m_assets;
             const deng_ui64_t m_min_align;
-            deng_ui64_t m_ubo_chunk_size;
+            deng_ui64_t m_global_ubo_chunk_size;
             deng::__GlobalRegistry &m_reg;
             __vk_BufferData &m_buffer_data;
 
@@ -138,7 +141,7 @@ namespace deng {
 
             /// Update uniform transformation data for the frame according to 
             /// camera's view and projection matrix
-            void updateUboTransform3D( VkDevice device, 
+            void updateUboTransform3D(VkDevice device, 
                 deng_ui32_t current_image, Camera3D *p_cam);
 
             
@@ -151,11 +154,6 @@ namespace deng {
             void updateUboLighting(VkDevice device,
                 std::array<deng_Id, __DENG_MAX_LIGHT_SRC_COUNT> &light_srcs,
                 deng_ui32_t current_image);
-
-
-            /// Basically set the ambient lighting to 100%
-            /// Call this method when no light sources are specified
-            void mkStandardLight(VkDevice device);
 
 
             /// Initialise uniform buffer for storing data

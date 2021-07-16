@@ -201,7 +201,7 @@ namespace dengUtils {
         out_asset.tex_uuid = NULL;
 
         // Set the color and 2D hierarchy level
-        out_asset.vertices.v2d.hier = hier;
+        out_asset.vertices.v2d.mul.hier = hier;
         out_asset.diffuse = das_ObjColorData {
             color.first, 
             color.second,
@@ -210,8 +210,8 @@ namespace dengUtils {
         };
 
         // Nullify all of the non position vertices and indices
-        out_asset.vertices.v2d.tex = NULL;
-        out_asset.vertices.v2d.tn = 0;
+        out_asset.vertices.v2d.mul.tex = NULL;
+        out_asset.vertices.v2d.mul.tn = 0;
         out_asset.indices.tex = NULL;
         
         // Allocate memory for position indices and copy them over
@@ -223,11 +223,11 @@ namespace dengUtils {
             indices.size() * sizeof(deng_ui32_t));
 
         // Allocate memory and copy all vertices over
-        out_asset.vertices.v2d.pn = vert.size();
-        out_asset.vertices.v2d.pos = (das_ObjPosData2D*) calloc (
+        out_asset.vertices.v2d.mul.pn = vert.size();
+        out_asset.vertices.v2d.mul.pos = (das_ObjPosData2D*) calloc (
             vert.size(), sizeof(das_ObjPosData2D));
         
-        memcpy(out_asset.vertices.v2d.pos, vert.data(),
+        memcpy(out_asset.vertices.v2d.mul.pos, vert.data(),
             vert.size() * sizeof(das_ObjPosData2D));
 
         return out_asset;
@@ -251,15 +251,15 @@ namespace dengUtils {
         out_asset.tex_uuid = NULL;
 
         // Allocate memory for texture coordinates
-        out_asset.vertices.v2d.tex = (das_ObjTextureData*) calloc (
+        out_asset.vertices.v2d.mul.tex = (das_ObjTextureData*) calloc (
             4, sizeof(das_ObjTextureData));
-        out_asset.vertices.v2d.tn = 4;
+        out_asset.vertices.v2d.mul.tn = 4;
 
         // Set texture coordinates from top - left to bottom - right
-        out_asset.vertices.v2d.tex[0] = { 0.0f, 0.0f };
-        out_asset.vertices.v2d.tex[1] = { 1.0f, 0.0f };
-        out_asset.vertices.v2d.tex[2] = { 1.0f, 1.0f };
-        out_asset.vertices.v2d.tex[3] = { 0.0f, 1.0f };
+        out_asset.vertices.v2d.mul.tex[0] = { 0.0f, 0.0f };
+        out_asset.vertices.v2d.mul.tex[1] = { 1.0f, 0.0f };
+        out_asset.vertices.v2d.mul.tex[2] = { 1.0f, 1.0f };
+        out_asset.vertices.v2d.mul.tex[3] = { 0.0f, 1.0f };
 
         // Allocate memory for texture indices and set the indices
         out_asset.indices.tex = (deng_ui32_t*) calloc(out_asset.indices.n, sizeof(deng_ui32_t));
@@ -279,11 +279,11 @@ namespace dengUtils {
             indices.size() * sizeof(deng_ui32_t));
 
         // Allocate memory and copy vertices to asset instance
-        out_asset.vertices.v2d.pn = vert.size();
-        out_asset.vertices.v2d.pos = (das_ObjPosData2D*) calloc (
+        out_asset.vertices.v2d.mul.pn = vert.size();
+        out_asset.vertices.v2d.mul.pos = (das_ObjPosData2D*) calloc (
             vert.size(), sizeof(das_ObjPosData2D));
 
-        memcpy(out_asset.vertices.v2d.pos, vert.data(),
+        memcpy(out_asset.vertices.v2d.mul.pos, vert.data(),
             vert.size() * sizeof(das_ObjPosData2D));
 
         return out_asset;

@@ -1,4 +1,5 @@
-/*    ____         ________     __      _        ______  |  _ \_      |  ______|   |  \    | |     _/  ____\
+/*    ____         ________     __      _        ______  
+ *   |  _ \_      |  ______|   |  \    | |     _/  ____\
  *   | | \_ \_    |  |         |   \   | |    /  _/   
  *   | |   \  |   |  |_____    | |\ \  | |   |  |   _____ 
  *   | |    | |   |  ______|   | | \ \ | |   |  |  |___  | 
@@ -98,13 +99,14 @@ layout(location = 3) out vec3 out_normal;
 void main() {
     // Check how the position should be transformed
     if(asset_data.ignore_transform == 1)
-        gl_Position = ubo.view * vec4(in_pos[0], -in_pos[1], in_pos[2], 1.0f);
+        gl_Position = ubo.view * vec4(in_pos.x, -in_pos.y, in_pos.z, 1.0f);
 
-    else gl_Position = ubo.transform * vec4(in_pos[0], -in_pos[1], in_pos[2], 1.0f);
+    else gl_Position = ubo.transform * vec4(in_pos.x, -in_pos.y, in_pos.z, 1.0f);
+    /*gl_Position = vec4(in_pos.x, in_pos.y, in_pos.z, 1.0f);*/
 
     // Set all the output variables
     out_tex = in_tex_pos;
-    out_vert = vec3(in_pos[0], -in_pos[1], in_pos[2]);
+    out_vert = vec3(in_pos.x, -in_pos.y, in_pos.z);
     out_pos = gl_Position;
     out_normal = vec3(in_norm_pos[0], -in_norm_pos[1], in_norm_pos[2]);
 }

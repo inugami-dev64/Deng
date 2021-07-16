@@ -64,14 +64,12 @@
 #include <data/das_check.h>
 
 
-/*
- * Check if the requested memory size is available for reading otherwise
- * throw a runtime error
- */
+/// Check if the requested memory size is available for reading otherwise
+/// throw a runtime error
 void das_ErrBufferReadCheck (
     size_t req_size, 
     size_t max_size,
-    char *file_name
+    const char *file_name
 ) {
     if(req_size >= max_size) {
         fprintf(stdout, "Failed to read from file %s, possible file corruption\n", file_name);
@@ -80,10 +78,8 @@ void das_ErrBufferReadCheck (
 }
 
 
-/*
- * Check if the given header specifier is valid
- */
-void das_CheckHdrName(char *name, char *exp_name, char *file_name) {
+/// Check if the given header specifier is valid
+void das_CheckHdrName(char *name, char *exp_name, const char *file_name) {
     // Copy the non null terminated name to bigger string
     char nname[9] = { 0 };
     strncpy(nname, name, 8);
@@ -94,9 +90,7 @@ void das_CheckHdrName(char *name, char *exp_name, char *file_name) {
 }
 
 
-/*
- * Check if provided uuid is valid
- */
+/// Check if provided uuid is valid
 das_Error das_UuidCheck(char *uuid) {
     // Check if UUID length is correct and separators are in correct places
     if(strlen(uuid) != __DAS_UUID_LEN || uuid[8] != '-' || 
@@ -117,9 +111,7 @@ das_Error das_UuidCheck(char *uuid) {
 }
 
 
-/*
- * Check if magic number provided is valid or not
- */
+/// Check if magic number provided is valid or not
 das_Error das_MagicNumberCheck(deng_ui64_t num) {
     if(num != __DAS_STATIC_MAGIC_NUMBER && 
        num != __DAS_ANIMATION_MAGIC_NUMBER &&

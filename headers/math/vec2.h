@@ -71,6 +71,7 @@
  *  T * vec<T> (calculate vector dot product)
  *  vec<T> / T 
  *  void *= T
+ *  void *= matn<T>
  *  void +=  vec<T>
  *  void += T
  *  void -=  vec<T>
@@ -95,6 +96,8 @@
 
 namespace dengMath {
 
+    template<typename T> struct mat2;
+
     template<typename T>
     struct vec2 {
         T first, second;
@@ -103,34 +106,33 @@ namespace dengMath {
         /***** Operator overloads *****/
         /******************************/
 
-        vec2<T> operator+(const vec2<T> &vec) const;
-        vec2<T> operator+(const T &c) const;
-        vec2<T> operator-(const vec2<T> &vec) const;
-        vec2<T> operator-(const T &c) const;
-        vec2<T> operator*(const T &c) const;
-        T operator*(const vec2<T> &vec) const;
-        vec2<T> operator/(const T &c) const;
-        void operator*=(const T &c);
+        const vec2<T> operator+(const vec2<T> &vec) const;
+        const vec2<T> operator+(const T c) const;
+        const vec2<T> operator-(const vec2<T> &vec) const;
+        const vec2<T> operator-(const T c) const;
+        const vec2<T> operator*(const T c) const;
+        const T operator*(const vec2<T> &vec) const;
+        const vec2<T> operator/(const T c) const;
+        void operator*=(const T c);
+        void operator*=(const mat2<T> &m);
         void operator+=(const vec2<T> &vec);
-        void operator+=(const T &c);
+        void operator+=(const T c);
         void operator-=(const vec2<T> &vec);
-        void operator-=(const T &c);
-        void operator/=(const T &c);
-        deng_bool_t operator==(const vec2<T> &vec) const;
+        void operator-=(const T c);
+        void operator/=(const T c);
+        const deng_bool_t operator==(const vec2<T> &vec) const;
 
 
-        /*
-         * C vertices structure assignment operators
-         */
-        void operator=(const das_ObjTextureData &tex);
+        /// C vertices structure assignment operators
+        void operator=(const das_ObjTextureData tex);
+        void operator=(const das_ObjPosData2D pos);
 
         
-        /*
-         * C vertices structure comparison operators
-         */
-        deng_bool_t operator==(const das_ObjTextureData &tex) const;
+        /// C vertices structure comparison operators
+        const deng_bool_t operator==(const das_ObjTextureData tex) const;
+        const deng_bool_t operator==(const das_ObjPosData2D pos) const;
 
-        T length() const;
+        const T length() const;
         void norm();
     };
 }

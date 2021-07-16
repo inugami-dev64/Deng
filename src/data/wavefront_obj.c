@@ -64,9 +64,7 @@
 #include <data/wavefront_obj.h>
 
 
-/*
- * Read all file data from stream to heap allocated buffer
- */
+/// Read all file data from stream to heap allocated buffer
 void __das_ReadToBuffer(char *file_name) {
     // Start reading the file
     FILE *file = fopen(file_name, "rb");
@@ -224,56 +222,56 @@ void __das_AnalyseStatement (
 
     case DAS_WAVEFRONT_OBJ_SPEC_TYPE_VERT_DECL:
         // Check if vertex reallocation is needed
-        __das_ReallocCheck((void**) &(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.pos, 
-            (void*) &(*p_entities)[(*p_ent_c) - 1].data.v_cap, (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.pn + 1, 
+        __das_ReallocCheck((void**) &(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.pos, 
+            (void*) &(*p_entities)[(*p_ent_c) - 1].data.v_cap, (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.pn + 1, 
             sizeof(das_ObjPosData), "vertices array");
             
         // Set the entity vertices
-        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.pos[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.pn].vert_x = 
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.pos[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.pn].vert_x = 
         (deng_vec_t) atof(line_words[1]);
 
-        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.pos[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.pn].vert_y = 
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.pos[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.pn].vert_y = 
         (deng_vec_t) atof(line_words[2]);
 
-        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.pos[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.pn].vert_z = 
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.pos[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.pn].vert_z = 
         (deng_vec_t) atof(line_words[3]);
 
-        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.pn++;
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.pn++;
         break;
 
     case DAS_WAVEFRONT_OBJ_SPEC_TYPE_VERT_TEX_DECL:
         // Check if vertex reallocation is needed
-        __das_ReallocCheck((void**) &(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.tex, 
-            (void*) &(*p_entities)[(*p_ent_c) - 1].data.vt_cap, (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.tn + 1,
+        __das_ReallocCheck((void**) &(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.tex, 
+            (void*) &(*p_entities)[(*p_ent_c) - 1].data.vt_cap, (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.tn + 1,
             sizeof(das_ObjTextureData), "texture vertices array");
             
         // Set the entity texture vertices
-        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.tex[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.tn].tex_x = 
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.tex[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.tn].tex_x = 
         (deng_vec_t) atof(line_words[1]);
 
-        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.tex[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.tn].tex_y = 
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.tex[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.tn].tex_y = 
         (deng_vec_t) atof(line_words[2]);
 
-        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.tn++;
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.tn++;
         break;
 
     case DAS_WAVEFRONT_OBJ_SPEC_TYPE_VERT_NORM_DECL:
         /*// Check if vertex normal reallocation is needed*/
-        __das_ReallocCheck((void**) &(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.norm, 
-            (void*) &(*p_entities)[(*p_ent_c) - 1].data.vn_cap, (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.nn + 1,
+        __das_ReallocCheck((void**) &(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.norm, 
+            (void*) &(*p_entities)[(*p_ent_c) - 1].data.vn_cap, (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.nn + 1,
             sizeof(das_ObjNormalData), "vertex normals array");
             
         // Set the entity vertex normals
-        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.norm[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.nn].nor_x = 
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.norm[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.nn].nor_x = 
         (deng_vec_t) atof(line_words[1]);
 
-        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.norm[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.nn].nor_y = 
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.norm[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.nn].nor_y = 
         (deng_vec_t) atof(line_words[2]);
 
-        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.norm[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.nn].nor_z = 
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.norm[(*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.nn].nor_z = 
         (deng_vec_t) atof(line_words[3]);
 
-        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.nn++;
+        (*p_entities)[(*p_ent_c) - 1].data.vert_data.v3d.mul.nn++;
         break;
 
     case DAS_WAVEFRONT_OBJ_SPEC_TYPE_FACE_DECL:
@@ -371,15 +369,15 @@ void __das_NewEntity (
 
     // Allocate initial amount of memory for vertices 
     (*p_entities)[(*p_entity_c) - 1].data.v_cap = __DAS_DEFAULT_MEM_CAP;
-    (*p_entities)[(*p_entity_c) - 1].data.vert_data.v3d.pos = (das_ObjPosData*) calloc (
+    (*p_entities)[(*p_entity_c) - 1].data.vert_data.v3d.mul.pos = (das_ObjPosData*) calloc (
         __DAS_DEFAULT_MEM_CAP, sizeof(das_ObjPosData));
 
     (*p_entities)[(*p_entity_c) - 1].data.vt_cap = __DAS_DEFAULT_MEM_CAP;
-    (*p_entities)[(*p_entity_c) - 1].data.vert_data.v3d.tex = (das_ObjTextureData*) calloc (
+    (*p_entities)[(*p_entity_c) - 1].data.vert_data.v3d.mul.tex = (das_ObjTextureData*) calloc (
         __DAS_DEFAULT_MEM_CAP, sizeof(das_ObjTextureData));
 
     (*p_entities)[(*p_entity_c) - 1].data.vn_cap = __DAS_DEFAULT_MEM_CAP;
-    (*p_entities)[(*p_entity_c) - 1].data.vert_data.v3d.norm = (das_ObjNormalData*) calloc (
+    (*p_entities)[(*p_entity_c) - 1].data.vert_data.v3d.mul.norm = (das_ObjNormalData*) calloc (
         __DAS_DEFAULT_MEM_CAP, sizeof(das_ObjNormalData));
 }
 
@@ -523,21 +521,21 @@ void __das_PrintEntityData(das_WavefrontObjEntity *entities, size_t ent_c) {
         printf("o %s\n", entities[i].data.name);
 
         // Print all position vertices data
-        for(size_t j = 0; j < entities[i].data.vert_data.v3d.pn; j++) {
-            printf("v %f %f %f\n", entities[i].data.vert_data.v3d.pos[j].vert_x,
-                entities[i].data.vert_data.v3d.pos[j].vert_y, entities[i].data.vert_data.v3d.pos[j].vert_z);
+        for(size_t j = 0; j < entities[i].data.vert_data.v3d.mul.pn; j++) {
+            printf("v %f %f %f\n", entities[i].data.vert_data.v3d.mul.pos[j].vert_x,
+                entities[i].data.vert_data.v3d.mul.pos[j].vert_y, entities[i].data.vert_data.v3d.mul.pos[j].vert_z);
         }
 
         // Print all texture vertices data
-        for(size_t j = 0; j < entities[i].data.vert_data.v3d.tn; j++) {
-            printf("vt %f %f\n", entities[i].data.vert_data.v3d.tex[j].tex_x,
-                entities[i].data.vert_data.v3d.tex[j].tex_y);
+        for(size_t j = 0; j < entities[i].data.vert_data.v3d.mul.tn; j++) {
+            printf("vt %f %f\n", entities[i].data.vert_data.v3d.mul.tex[j].tex_x,
+                entities[i].data.vert_data.v3d.mul.tex[j].tex_y);
         }
 
         // Print all vertex normals data
-        for(size_t j = 0; j < entities[i].data.vert_data.v3d.nn; j++) {
-            printf("vn %f %f %f\n", entities[i].data.vert_data.v3d.norm[j].nor_x,
-                entities[i].data.vert_data.v3d.norm[j].nor_y, entities[i].data.vert_data.v3d.norm[j].nor_z);
+        for(size_t j = 0; j < entities[i].data.vert_data.v3d.mul.nn; j++) {
+            printf("vn %f %f %f\n", entities[i].data.vert_data.v3d.mul.norm[j].nor_x,
+                entities[i].data.vert_data.v3d.mul.norm[j].nor_y, entities[i].data.vert_data.v3d.mul.norm[j].nor_z);
         }
 
         // Print all indices
@@ -549,10 +547,8 @@ void __das_PrintEntityData(das_WavefrontObjEntity *entities, size_t ent_c) {
 }
 
 
-/*
- * Parse all data in Wavefront OBJ file and write
- * all information about vertices and indices to p_asset
- */
+/// Parse all data in Wavefront OBJ file and write
+/// all information about vertices and indices to p_asset
 void das_ParseWavefrontOBJ (
     das_WavefrontObjEntity **p_ents, 
     size_t *p_ent_c, 
@@ -621,10 +617,8 @@ void das_ParseWavefrontOBJ (
 }
 
 
-/*
- * Write entity data to a asset and if needed prompt to ask for the correct group
- * that will be used in the asset
- */
+/// Write entity data to a asset and if needed prompt to ask for the correct group
+/// that will be used in the asset
 void das_WavefrontObjEntityWritePrompt (
     das_Asset *p_asset, 
     das_WavefrontObjEntity *entities, 
@@ -642,7 +636,7 @@ void das_WavefrontObjEntityWritePrompt (
         // If the type is object then add it to the object array
         if(entities[i].type == DAS_ENTITY_TYPE_OBJECT) {
             // Check if the object is not a global object and that it has vertices
-            if(entities[i].data.name[0] && entities[i].data.vert_data.v3d.pn) {
+            if(entities[i].data.name[0] && entities[i].data.vert_data.v3d.mul.pn) {
                 obj_inds[obj_c] = i;
                 obj_c++;
             }
@@ -654,19 +648,19 @@ void das_WavefrontObjEntityWritePrompt (
     size_t oid = __das_PromptObjectIndex(obj_inds, obj_c, entities, ent_c, file_name);
 
     // Allocate initial amount of memory for vertices 
-    size_t pcap = cm_ToPow2I64(entities[oid].data.vert_data.v3d.pn + 128);
-    size_t tcap = cm_ToPow2I64(entities[oid].data.vert_data.v3d.tn + 128);
-    size_t ncap = cm_ToPow2I64(entities[oid].data.vert_data.v3d.nn + 128);
+    size_t pcap = cm_ToPow2I64(entities[oid].data.vert_data.v3d.mul.pn + 128);
+    size_t tcap = cm_ToPow2I64(entities[oid].data.vert_data.v3d.mul.tn + 128);
+    size_t ncap = cm_ToPow2I64(entities[oid].data.vert_data.v3d.mul.nn + 128);
 
     p_asset->uuid = uuid_Generate();
     p_asset->asset_mode = DAS_ASSET_MODE_3D_TEXTURE_MAPPED;
-    p_asset->vertices.v3d.pn = 0;
-    p_asset->vertices.v3d.tn = 0;
-    p_asset->vertices.v3d.nn = 0;
+    p_asset->vertices.v3d.mul.pn = 0;
+    p_asset->vertices.v3d.mul.tn = 0;
+    p_asset->vertices.v3d.mul.nn = 0;
 
-    p_asset->vertices.v3d.pos = (das_ObjPosData*) calloc(pcap, sizeof(das_ObjPosData));
-    p_asset->vertices.v3d.tex = (das_ObjTextureData*) calloc(tcap, sizeof(das_ObjTextureData));
-    p_asset->vertices.v3d.norm = (das_ObjNormalData*) calloc(ncap, sizeof(das_ObjNormalData));
+    p_asset->vertices.v3d.mul.pos = (das_ObjPosData*) calloc(pcap, sizeof(das_ObjPosData));
+    p_asset->vertices.v3d.mul.tex = (das_ObjTextureData*) calloc(tcap, sizeof(das_ObjTextureData));
+    p_asset->vertices.v3d.mul.norm = (das_ObjNormalData*) calloc(ncap, sizeof(das_ObjNormalData));
 
     // Allocate initial amount of memory for indices 
     size_t ind_cap = cm_ToPow2I64(entities[oid].data.ind_data.n + 128);
@@ -685,22 +679,22 @@ void das_WavefrontObjEntityWritePrompt (
         else if(read_next_obj) read_next_obj = false;
 
         // Check if vertices data can be read
-        if(entities[i].data.vert_data.v3d.pn) {
+        if(entities[i].data.vert_data.v3d.mul.pn) {
             // Check if any additional memory is needed for vertices
-            __das_ReallocCheck((void**) &p_asset->vertices.v3d.pos, &pcap, p_asset->vertices.v3d.pn + 
-                entities[i].data.vert_data.v3d.pn, sizeof(das_ObjPosData), "position vertices");
-            __das_ReallocCheck((void**) &p_asset->vertices.v3d.tex, &tcap, p_asset->vertices.v3d.tn +
-                entities[i].data.vert_data.v3d.tn, sizeof(das_ObjTextureData), "texture vertices");
-            __das_ReallocCheck((void**) &p_asset->vertices.v3d.norm, &ncap, p_asset->vertices.v3d.nn +
-                entities[i].data.vert_data.v3d.nn, sizeof(das_ObjNormalData), "vertex normals");
+            __das_ReallocCheck((void**) &p_asset->vertices.v3d.mul.pos, &pcap, p_asset->vertices.v3d.mul.pn + 
+                entities[i].data.vert_data.v3d.mul.pn, sizeof(das_ObjPosData), "position vertices");
+            __das_ReallocCheck((void**) &p_asset->vertices.v3d.mul.tex, &tcap, p_asset->vertices.v3d.mul.tn +
+                entities[i].data.vert_data.v3d.mul.tn, sizeof(das_ObjTextureData), "texture vertices");
+            __das_ReallocCheck((void**) &p_asset->vertices.v3d.mul.norm, &ncap, p_asset->vertices.v3d.mul.nn +
+                entities[i].data.vert_data.v3d.mul.nn, sizeof(das_ObjNormalData), "vertex normals");
 
             // Copy all vertices to the asset
-            memcpy(p_asset->vertices.v3d.pos + p_asset->vertices.v3d.pn, entities[i].data.vert_data.v3d.pos, 
-                entities[i].data.vert_data.v3d.pn * sizeof(das_ObjPosData));
-            memcpy(p_asset->vertices.v3d.tex + p_asset->vertices.v3d.tn, entities[i].data.vert_data.v3d.tex, 
-                entities[i].data.vert_data.v3d.tn * sizeof(das_ObjTextureData));
-            memcpy(p_asset->vertices.v3d.norm + p_asset->vertices.v3d.nn, entities[i].data.vert_data.v3d.norm, 
-                entities[i].data.vert_data.v3d.nn * sizeof(das_ObjNormalData));
+            memcpy(p_asset->vertices.v3d.mul.pos + p_asset->vertices.v3d.mul.pn, entities[i].data.vert_data.v3d.mul.pos, 
+                entities[i].data.vert_data.v3d.mul.pn * sizeof(das_ObjPosData));
+            memcpy(p_asset->vertices.v3d.mul.tex + p_asset->vertices.v3d.mul.tn, entities[i].data.vert_data.v3d.mul.tex, 
+                entities[i].data.vert_data.v3d.mul.tn * sizeof(das_ObjTextureData));
+            memcpy(p_asset->vertices.v3d.mul.norm + p_asset->vertices.v3d.mul.nn, entities[i].data.vert_data.v3d.mul.norm, 
+                entities[i].data.vert_data.v3d.mul.nn * sizeof(das_ObjNormalData));
         } else read_next_obj = true;
 
         if(entities[i].data.ind_data.n) {
@@ -723,9 +717,9 @@ void das_WavefrontObjEntityWritePrompt (
             memcpy(p_asset->indices.norm + p_asset->indices.n, entities[i].data.ind_data.norm, 
                 entities[i].data.ind_data.n * sizeof(deng_ui32_t));
 
-            p_asset->vertices.v3d.pn += entities[i].data.vert_data.v3d.pn;
-            p_asset->vertices.v3d.tn += entities[i].data.vert_data.v3d.tn;
-            p_asset->vertices.v3d.nn += entities[i].data.vert_data.v3d.nn;
+            p_asset->vertices.v3d.mul.pn += entities[i].data.vert_data.v3d.mul.pn;
+            p_asset->vertices.v3d.mul.tn += entities[i].data.vert_data.v3d.mul.tn;
+            p_asset->vertices.v3d.mul.nn += entities[i].data.vert_data.v3d.mul.nn;
 
             p_asset->indices.n += entities[i].data.ind_data.n;
         } else read_next_obj = true;
@@ -733,15 +727,13 @@ void das_WavefrontObjEntityWritePrompt (
 }
 
 
-/*
- * Perform cleanup operation for all the memory allocated for entities
- */
+/// Perform cleanup operation for all the memory allocated for entities
 void das_WavefrontObjDestroyEntities(das_WavefrontObjEntity *entities, size_t ent_c) {
     // For each entity free its vertices and indices
     for(size_t i = 0; i < ent_c; i++) {
-        free(entities[i].data.vert_data.v3d.pos);
-        free(entities[i].data.vert_data.v3d.tex);
-        free(entities[i].data.vert_data.v3d.norm);
+        free(entities[i].data.vert_data.v3d.mul.pos);
+        free(entities[i].data.vert_data.v3d.mul.tex);
+        free(entities[i].data.vert_data.v3d.mul.norm);
 
         free(entities[i].data.ind_data.pos);
         free(entities[i].data.ind_data.tex);

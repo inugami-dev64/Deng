@@ -93,7 +93,8 @@ namespace deng {
             ui_size = 0;
 
             ubo_cap = 0;
-            ubo_size = 0;
+            ubo_non_asset_size = 0;
+            ubo_asset_size = 0;
             ubo_asset_cap = 0;
         }
 
@@ -114,8 +115,19 @@ namespace deng {
         deng_ui64_t ui_size;
 
         // Uniform buffer data size information
+        // NOTE: Data alignment
+        // Data in uniform buffers is aligned as follows:
+        //  * Uniform data for different pipelines
+        //      Data is stored as follows:
+        //          - 3D uniform object transformation
+        //          - 2D object transformation
+        //          - Light source data
+        //  * Asset data: 
+        //      Each asset contains various coloring information about that certain asset
+        //      NOTE: Asset color data structure is different for 3D and 2D assets
         deng_ui64_t ubo_cap;
-        deng_ui64_t ubo_size;
+        deng_ui64_t ubo_non_asset_size;
+        deng_ui64_t ubo_asset_size;
         deng_ui64_t ubo_asset_cap;
     };
 }

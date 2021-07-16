@@ -79,13 +79,14 @@
     #include <deng/vulkan/qm.h>
     #include <deng/vulkan/resources.h>
     #include <deng/vulkan/rend_infos.h>
+
+    deng_ui32_t __max_frame_c;
 #endif
 
 namespace deng {
     namespace vulkan {
-        /* 
-         * Class for creating swapchains and swapchain image views 
-         */
+
+        /// Class for creating swapchains and swapchain image views 
         class __vk_SwapChainCreator : private __vk_SwapChainInfo, private __vk_DeviceInfo {
         private:
             __vk_QueueManager m_qff;

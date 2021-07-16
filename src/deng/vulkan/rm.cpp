@@ -65,7 +65,6 @@
 
 namespace deng {
     namespace vulkan {
-        extern deng_ui32_t __max_frame_c;       
 
         /*********************************************************/
         /********** __vk_ResourceManager class methods ***********/

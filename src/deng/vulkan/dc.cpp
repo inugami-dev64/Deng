@@ -65,7 +65,6 @@
 
 namespace deng {
     namespace vulkan {
-        extern deng_ui32_t __max_frame_c;
 
         __vk_DrawCaller::__vk_DrawCaller (
             VkDevice device,
@@ -163,7 +162,7 @@ namespace deng {
             const __vk_BufferData &bd,
             const deng::BufferSectionInfo &buf_sec
         ) {
-            VkDeviceSize vert_offset = buf_sec.asset_cap + m_p_ui_data->cmd_data[ent->cmd_list_ind].offset;
+            VkDeviceSize vert_offset = buf_sec.asset_cap + m_p_ui_data->cmd_data[ent->cmd_list_ind].voffset;
             vkCmdBindVertexBuffers(cur_buf, 0, 1, &bd.main_buffer, &vert_offset);
             vkCmdBindIndexBuffer(cur_buf, bd.main_buffer, buf_sec.asset_cap + ent->buf_offset, VK_INDEX_TYPE_UINT32);
         }

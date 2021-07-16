@@ -66,7 +66,6 @@
 
 namespace deng {
     namespace vulkan {
-        extern deng_ui32_t __max_frame_c;       
 
         __vk_BufferManager::__vk_BufferManager (
             VkDevice device,
@@ -140,23 +139,9 @@ namespace deng {
             VkQueue g_queue,
             const std::vector<VkFence> &fences
         ) {
-            // For each asset add its size to total asset size and calculate asset offsets
-            __OffsetFinder::getSectionInfo().asset_size = 0;
-            for(size_t i = 0; i < m_assets.size(); i++) {
-                // Retrieve the asset from registry
-                RegType &reg_asset = m_reg.retrieve(m_assets[i], DENG_SUPPORTED_REG_TYPE_ASSET, NULL);
-                __findAssetOffsets(reg_asset.asset);
-            }
-
-
-            // Calculate the total required memory for ui elements
-            if(m_p_imgui_data) {
-                __OffsetFinder::getSectionInfo().ui_size = 0;
-                __findGuiEntitiesOffsets();
-            }
-
-            const deng_bool_t asset_realloc = assetCapCheck();
-            const deng_bool_t ui_realloc = uiCapCheck();
+            __OffsetFinder::__calcOffsets(false);
+            const deng_bool_t asset_realloc = __OffsetFinder::assetCapCheck();
+            const deng_bool_t ui_realloc = __OffsetFinder::uiCapCheck();
 
             // Check if any reallocation should be done
             if(asset_realloc || ui_realloc) {
@@ -173,34 +158,6 @@ namespace deng {
             }
 
             return asset_realloc || ui_realloc;
-        }
-
-
-        /// Check if the current capacity is enough for assets and if it isn't resize the capacity and return true
-        deng_bool_t __vk_BufferManager::assetCapCheck() {
-            if(__OffsetFinder::getSectionInfo().asset_size < __OffsetFinder::getSectionInfo().asset_cap) return false;
-
-            // Scale the current or required capacity by a factor of 1.5 and set it as a new capacity
-            __OffsetFinder::getSectionInfo().asset_cap = (__OffsetFinder::getSectionInfo().asset_cap * 3 / 2 <= __OffsetFinder::getSectionInfo().asset_size ? 
-                __OffsetFinder::getSectionInfo().asset_size * 3 / 2 : __OffsetFinder::getSectionInfo().asset_cap * 3 / 2);
-
-            // Round asset capacity to the nearest multiple of index size 
-            __OffsetFinder::getSectionInfo().asset_cap += ZERO_MOD_CEIL_REM(__OffsetFinder::getSectionInfo().asset_cap, sizeof(deng_idx_t));
-
-            return true;
-        }
-
-
-        /// Check if the current capacity is enough for ImGui elements and if it isn't resize the capacity and return true
-        deng_bool_t __vk_BufferManager::uiCapCheck() {
-            if(__OffsetFinder::getSectionInfo().ui_size < __OffsetFinder::getSectionInfo().ui_cap) return false;
-
-            // Scale the current or required capacity by a factor of 1.5 and set it as a new capacity
-            __OffsetFinder::getSectionInfo().ui_cap = __OffsetFinder::getSectionInfo().ui_cap * 3 / 2 <= __OffsetFinder::getSectionInfo().ui_size ? 
-                __OffsetFinder::getSectionInfo().ui_size * 3 / 2 : __OffsetFinder::getSectionInfo().ui_cap * 3 / 2;
-
-            __OffsetFinder::getSectionInfo().ui_cap += ZERO_MOD_CEIL_REM(__OffsetFinder::getSectionInfo().ui_cap, sizeof(deng_idx_t));
-            return true;
         }
 
 
@@ -272,7 +229,7 @@ namespace deng {
             // Calculate offsets and required size 
             if(!no_offset_calc) {
                 __OffsetFinder::getSectionInfo().ui_size = 0;
-                __findGuiEntitiesOffsets();
+                __findGuiEntitiesOffsets(false);
             }
 
             // Create staging buffer for UI data

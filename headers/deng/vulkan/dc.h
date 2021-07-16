@@ -90,6 +90,9 @@
     #include <deng/registry/registry.h>
 
     #include <imgui-layer/imgui_entity.h>
+
+    /// External frame count variable declaration
+    extern deng_ui32_t __max_frame_c;
 #endif
 
 

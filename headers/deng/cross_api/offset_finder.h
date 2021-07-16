@@ -95,13 +95,22 @@ namespace deng {
         __ImGuiData *m_p_imgui_data = NULL;
         BufferSectionInfo m_buf_sec_info;
 
+    private:
+        /// Vertex buffer alignment specific offset finder methods
+        void __findGLAssetOffsets(das_Asset &asset);
+        void __findVkAssetOffsets(das_Asset &asset);
+
     protected:
         /// Find offsets for the current asset
         void __findAssetOffsets(das_Asset &asset);
 
 
-        /// Find offsets for all ImGui entities 
-        void __findGuiEntitiesOffsets();
+        /// Find offsets for all ImGui entities
+        void __findGuiEntitiesOffsets(const deng_bool_t is_opengl);
+
+
+        /// Calculate all offsets for all available assets and ui elements if possible
+        void __calcOffsets(const deng_bool_t is_opengl);
 
 
         /// Find the largest memory size required by a single asset 
@@ -109,6 +118,14 @@ namespace deng {
 
     public:
         __OffsetFinder(std::vector<deng_Id> &assets, __GlobalRegistry &reg);
+
+
+        /// Check if the current capacity is enough for assets and if it isn't resize the capacity and return true
+        deng_bool_t assetCapCheck();
+
+
+        /// Check if the current capacity is enough for ImGui elements and if it isn't resize the capacity and return true
+        deng_bool_t uiCapCheck();
 
     // Setters and getters
     public:

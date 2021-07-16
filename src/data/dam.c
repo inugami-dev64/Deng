@@ -269,26 +269,26 @@ void __dam_AssembleAsset(dam_AssemblyInfo *p_info) {
     else das_StaticAssemble(&asset, ext_file, NULL, 0);
 
     // Free position vertices and indices
-    free(asset.vertices.v3d.pos);
+    free(asset.vertices.v3d.mul.pos);
     free(asset.indices.pos);
 
     // Asset mode specific cleanup
     switch(asset.asset_mode) {
     case DAS_ASSET_MODE_3D_UNMAPPED:
         // Free vertex normals
-        free(asset.vertices.v3d.norm);
+        free(asset.vertices.v3d.mul.norm);
         free(asset.indices.norm);
         break;
 
     case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-        free(asset.vertices.v3d.tex);
+        free(asset.vertices.v3d.mul.tex);
         free(asset.indices.tex);
-        free(asset.vertices.v3d.norm);
+        free(asset.vertices.v3d.mul.norm);
         free(asset.indices.norm);
         break;
 
     case __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR:
-        free(asset.vertices.v3d.tex);
+        free(asset.vertices.v3d.mul.tex);
         free(asset.indices.tex);
         break;
 

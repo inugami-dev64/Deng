@@ -125,17 +125,11 @@ namespace deng {
 
 
         /// Move camera's position by delta_mov in camera's coordinate system
-        void moveCameraPOVC (
-            const dengMath::vec3<deng_vec_t> &delta_mov,
-            deng_bool_t ignore_pitch
-        );
+        void moveCameraPOVC(const dengMath::vec3<deng_vec_t> &delta_mov, deng_bool_t ignore_pitch);
 
 
         /// Move camera's position in world coordinate system
-        void moveCameraPOVW (
-            const dengMath::vec3<deng_vec_t> &delta_mov,
-            deng_bool_t ignore_pitch
-        );
+        void moveCameraPOVW(const dengMath::vec3<deng_vec_t> &delta_mov, deng_bool_t ignore_pitch);
 
 
         /// Rotate camera's position by rot in camera's coordinate system

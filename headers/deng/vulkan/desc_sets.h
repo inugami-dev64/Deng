@@ -94,6 +94,7 @@
 
     // Default capacity for descriptor pool
     #define __DEFAULT_DESC_POOL_CAP         32
+    extern deng_ui32_t __max_frame_c;
 #endif
 
 namespace deng {

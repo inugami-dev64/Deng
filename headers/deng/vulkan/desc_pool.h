@@ -86,6 +86,9 @@
     #include <deng/lighting/light_srcs.h>
     #include <deng/vulkan/resources.h>
     #include <deng/registry/registry.h>
+    
+    /// Maximum frame in flight count specifier
+    extern deng_ui32_t __max_frame_c;
 #endif
 
 

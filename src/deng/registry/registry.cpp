@@ -80,60 +80,71 @@ namespace deng {
             case DENG_SUPPORTED_REG_TYPE_ASSET:
                 // Initially clean the position indices and uuid
                 free(m_entries[i].element.asset.uuid);
+                if(m_entries[i].element.asset.is_opengl)
+                    free(m_entries[i].element.asset.indices.gl);
+
+                // Check which cleaup to perform
                 switch(m_entries[i].element.asset.asset_mode) {
                 case DAS_ASSET_MODE_2D_TEXTURE_MAPPED:
-                    // Clean position vertices and indices
-                    free(m_entries[i].element.asset.vertices.v2d.pos);
-                    free(m_entries[i].element.asset.indices.pos);
+                    if(m_entries[i].element.asset.is_opengl)
+                        free(m_entries[i].element.asset.vertices.v2d.mer.vert);
+                    else {
+                        free(m_entries[i].element.asset.vertices.v2d.mul.pos);
+                        free(m_entries[i].element.asset.indices.pos);
 
-                    // Clean texture vertices and indices
-                    free(m_entries[i].element.asset.vertices.v2d.tex);
-                    free(m_entries[i].element.asset.indices.tex);
+                        free(m_entries[i].element.asset.vertices.v2d.mul.tex);
+                        free(m_entries[i].element.asset.indices.tex);
+                    }
                     break;
 
                 case DAS_ASSET_MODE_2D_UNMAPPED:
-                    // Clean position vertices and indices
-                    free(m_entries[i].element.asset.vertices.v2d.pos);
-                    free(m_entries[i].element.asset.indices.pos);
+                    if(m_entries[i].element.asset.is_opengl)
+                        free(m_entries[i].element.asset.vertices.v2d.mer.uvert);
+                    else {
+                        free(m_entries[i].element.asset.vertices.v2d.mul.pos);
+                        free(m_entries[i].element.asset.indices.pos);
+                    }
                     break;
 
                 case DAS_ASSET_MODE_3D_UNMAPPED:
-                    // Clean position vertices and indices
-                    free(m_entries[i].element.asset.vertices.v3d.pos);
-                    free(m_entries[i].element.asset.indices.pos);
+                    if(m_entries[i].element.asset.is_opengl)
+                        free(m_entries[i].element.asset.vertices.v3d.mer.uvert);
+                    else {
+                        free(m_entries[i].element.asset.vertices.v3d.mul.pos);
+                        free(m_entries[i].element.asset.indices.pos);
 
-                    // Clean vertex normals and their indices
-                    free(m_entries[i].element.asset.vertices.v3d.norm);
-                    free(m_entries[i].element.asset.indices.norm);
+                        // Clean vertex normals and their indices
+                        free(m_entries[i].element.asset.indices.norm);
+                    }
                     break;
 
                 case __DAS_ASSET_MODE_3D_UNMAPPED_UNOR:
-                    // Clean position vertices and indices
-                    free(m_entries[i].element.asset.vertices.v3d.pos);
+                    // Irregular asset mode, assume multiple index buffers
+                    free(m_entries[i].element.asset.vertices.v3d.mul.pos);
                     free(m_entries[i].element.asset.indices.pos);
                     break;
 
                 case DAS_ASSET_MODE_3D_TEXTURE_MAPPED:
-                    // Clean position vertices and indices
-                    free(m_entries[i].element.asset.vertices.v3d.pos);
-                    free(m_entries[i].element.asset.indices.pos);
+                    if(m_entries[i].element.asset.is_opengl)
+                        free(m_entries[i].element.asset.vertices.v3d.mer.vert);
+                    else {
+                        free(m_entries[i].element.asset.vertices.v3d.mul.pos);
+                        free(m_entries[i].element.asset.indices.pos);
 
-                    // Clean texture vertices and indices
-                    free(m_entries[i].element.asset.vertices.v3d.tex);
-                    free(m_entries[i].element.asset.indices.tex);
+                        free(m_entries[i].element.asset.vertices.v3d.mul.tex);
+                        free(m_entries[i].element.asset.indices.tex);
 
-                    // Clean vertex normals and their indices
-                    free(m_entries[i].element.asset.vertices.v3d.norm);
-                    free(m_entries[i].element.asset.indices.norm);
+                        free(m_entries[i].element.asset.vertices.v3d.mul.norm);
+                        free(m_entries[i].element.asset.indices.norm);
+                    }
                     break;
 
                 case __DAS_ASSET_MODE_3D_TEXTURE_MAPPED_UNOR:
-                    // Clean position vertices and indices
-                    free(m_entries[i].element.asset.vertices.v3d.pos);
+                    // Irregular asset mode, assume multiple index buffers
+                    free(m_entries[i].element.asset.vertices.v3d.mul.pos);
                     free(m_entries[i].element.asset.indices.pos);
 
-                    // Clean texture vertices and indices
-                    free(m_entries[i].element.asset.vertices.v3d.tex);
+                    free(m_entries[i].element.asset.vertices.v3d.mul.tex);
                     free(m_entries[i].element.asset.indices.tex);
                     break;
 
@@ -143,7 +154,6 @@ namespace deng {
                 break;
 
             case DENG_SUPPORTED_REG_TYPE_VK_ASSET:
-                LOG("Descriptor set count: " + std::to_string(m_entries[i].element.vk_asset.desc_c));
                 free(m_entries[i].element.vk_asset.uuid);
                 free(m_entries[i].element.vk_asset.desc_sets);
                 break;
