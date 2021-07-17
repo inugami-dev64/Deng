@@ -79,10 +79,6 @@ namespace deng {
             #ifdef __linux__
                 int status = gladLoadGL();
             #endif
-            LOG("Status: " + std::to_string(status));
-            DENG_ASSERT("Failed to load OpenGL process loader", status);
-
-            status = gladLoadGL();
             DENG_ASSERT("Failed to load OpenGL functions", status);
 
             // Load all shaders into OpenGL

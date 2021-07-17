@@ -87,6 +87,7 @@ namespace deng {
     class Window {
     private:
         deng_SurfaceWindow *m_p_surface;
+        deng_RendererHintBits m_api;
         const char *m_title;
         deng_bool_t m_is_vc = false;
         dengMath::vec2<deng_px_t> m_prev_vc_pos;

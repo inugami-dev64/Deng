@@ -91,6 +91,7 @@ namespace deng {
             glErrorCheck("glGenBuffers");
             glBindBuffer(GL_UNIFORM_BUFFER, m_resources.ubo_buffer);
             glErrorCheck("glBindBuffer");
+
             LOG("vert, idx, ubo buffer values: " + std::to_string(m_resources.vert_buffer) + " " + std::to_string(m_resources.idx_buffer) + " " +
                 std::to_string(m_resources.ubo_buffer));
             glErrorCheck("glGenBuffers");

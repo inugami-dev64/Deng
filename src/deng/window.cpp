@@ -67,6 +67,7 @@ namespace deng {
     Window::Window(deng_i32_t x, deng_i32_t y, deng_RendererHintBits api, const char *title) {
         m_title = title;
         m_p_surface = deng_InitSurfaceWindow(x, y, api, m_title, DENG_WINDOW_MODE_FIXED);
+        m_api = api;
     }
 
     Window::~Window() {
@@ -122,6 +123,10 @@ namespace deng {
     void Window::update() {
         m_prev_vc_pos.first = m_p_surface->vc_data.x;
         m_prev_vc_pos.second = m_p_surface->vc_data.y;
+
+        if(m_api == DENG_RENDERER_HINT_API_OPENGL)
+            glViewport(0, 0, m_p_surface->width, m_p_surface->height);
+
         deng_UpdateWindow(m_p_surface);
     }
 
@@ -148,12 +153,7 @@ namespace deng {
         deng_bool_t enable_vl
     ) {
         char **exts;
-        deng_GetRequiredVKSurfaceExt (
-            m_p_surface,
-            &exts,
-            p_ext_c,
-            enable_vl
-        );
+        deng_GetRequiredVKSurfaceExt(m_p_surface, &exts, p_ext_c, enable_vl);
 
         return exts;
     }

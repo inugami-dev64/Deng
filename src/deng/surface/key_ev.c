@@ -100,11 +100,11 @@ deng_InputEv *deng_UnmaskInput(deng_InputBits bits) {
         ev = bits & 0b11111111;
 
         if(ev >= DENG_KEY_UNKNOWN && ev <= DENG_KEY_MENU)
-            out_ev[i].key = ev;
+            out_ev[i].key = (deng_Key) ev;
         else if(ev >= DENG_MOUSE_BTN_UNKNOWN && ev <= DENG_MOUSE_SCROLL_UP)
-            out_ev[i].btn = ev;
+            out_ev[i].btn = (deng_MouseButton) ev;
         else if(ev >= DENG_MOUSE_DELTA_UNKNOWN && ev <= DENG_MOUSE_DELTA_NY)
-            out_ev[i].md_mov = ev;
+            out_ev[i].md_mov = (deng_MouseDeltaMovement) ev;
     }
 
     return out_ev;
